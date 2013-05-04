@@ -20,7 +20,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         String version = "UNKNOWN/DEVELOPMENT";
-        InputStream is = Main.class.getResourceAsStream("/META-INF/maven/biz.neustar/browsermob-proxy/pom.properties");
+        InputStream is = Main.class.getResourceAsStream("/META-INF/maven/net.lightbody.bmp/browsermob-proxy/pom.properties");
         if (is != null) {
             Properties props = new Properties();
             props.load(is);

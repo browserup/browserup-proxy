@@ -111,9 +111,9 @@ Embedded Mode
 If you're using Java and Selenium, the easiest way to get started is to embed the project directly in your test. First, you'll need to make sure that all the dependencies are imported in to the project. You can find them in the *lib* directory. Or, if you're using Maven, you can add this to your pom:
 
     <dependency>
-        <groupId>biz.neustar</groupId>
+        <groupId>net.lightbody.bmp</groupId>
         <artifactId>browsermob-proxy</artifactId>
-        <version>LATEST_VERSION (ex: 2.0-beta-7)</version>
+        <version>LATEST_VERSION (ex: 2.0-beta-8)</version>
         <scope>test</scope>
     </dependency>
 
@@ -127,9 +127,9 @@ This class supports every feature that the proxy supports. In fact, the REST API
 If your project already defines a Selenium dependency then you may want to exclude the version that browsermob-proxy pulls in, like so:
 
     <dependency>
-        <groupId>biz.neustar</groupId>
+        <groupId>net.lightbody.bmp</groupId>
         <artifactId>browsermob-proxy</artifactId>
-        <version>LATEST_VERSION (ex: 2.0-beta-7)</version>
+        <version>LATEST_VERSION (ex: 2.0-beta-8)</version>
         <scope>test</scope>
         <exclusions>
             <exclusion>
