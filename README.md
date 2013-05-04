@@ -117,7 +117,7 @@ If you're using Java and Selenium, the easiest way to get started is to embed th
         <scope>test</scope>
     </dependency>
 
-Once done, you can start a proxy using `org.browsermob.proxy.ProxyServer`:
+Once done, you can start a proxy using `net.lightbody.bmp.proxy.ProxyServer`:
 
     ProxyServer server = new ProxyServer(9090);
     server.start();

@@ -60,7 +60,7 @@
                             <repositoryName>lib</repositoryName>
                             <programs>
                                 <program>
-                                    <mainClass>org.browsermob.proxy.Main</mainClass>
+                                    <mainClass>net.lightbody.bmp.proxy.Main</mainClass>
                                     <name>browsermob-proxy</name>
                                 </program>
                             </programs>
