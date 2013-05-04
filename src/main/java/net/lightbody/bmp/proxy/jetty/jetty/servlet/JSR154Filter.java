@@ -34,7 +34,7 @@ import java.io.IOException;
  * tell the jetty lists what they are and why you can't use a normal filter/wrapper for
  * this?</li>
  * <li>SRV.6.2.2 Dispatachers where the container cannot wrap the request or
- * response. See http://jetty.mortbay.org/browsermob/proxy/jetty/doc/servlet24.html#d0e711
+ * response. See xxx
  * to find out why this is stupid.</li>
  * </ul>
  * 

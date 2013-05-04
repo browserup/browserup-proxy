@@ -26,7 +26,7 @@ import java.util.StringTokenizer;
 /**
  * Main start class. This class is intended to be the main class listed in the MANIFEST.MF of the
  * start.jar archive. It allows an application to be started with the command "java -jar
- * start.jar". The behaviour of Main is controlled by the "org/browsermob/proxy/jetty/start/start.config" file
+ * start.jar". The behaviour of Main is controlled by the "net/lightbody/bmp/proxy/jetty/start/start.config" file
  * obtained as a resource or file. This can be overridden with the START system property. The
  * format of each line in this file is:
  * 
@@ -78,7 +78,7 @@ public class Main
     static boolean _debug=System.getProperty("DEBUG",null)!=null;
     private String _classname=null;
     private Classpath _classpath=new Classpath();
-    private String _config=System.getProperty("START","org/browsermob/proxy/jetty/start/start.config");
+    private String _config=System.getProperty("START","net/lightbody/bmp/proxy/jetty/start/start.config");
     private ArrayList _xml=new ArrayList();
 
     public static void main(String[] args)

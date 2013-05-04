@@ -56,7 +56,7 @@ public class WebApplicationContext extends ServletHttpContext implements Externa
     private static Log log= LogFactory.getLog(WebApplicationContext.class);
 
     /* ------------------------------------------------------------ */
-    private String _defaultsDescriptor= "org/browsermob/proxy/jetty/jetty/servlet/webdefault.xml";
+    private String _defaultsDescriptor= "net/lightbody/bmp/proxy/jetty/jetty/servlet/webdefault.xml";
     private String _war;
     private boolean _extract;
     private boolean _ignorewebjetty;
@@ -670,7 +670,7 @@ public class WebApplicationContext extends ServletHttpContext implements Externa
     /** Set the defaults web.xml file.
      * The default web.xml is used to configure all webapplications
      * before the WEB-INF/web.xml file is applied.  By default the
-     * org/browsermob/proxy/jetty/jetty/servlet/webdefault.xml resource from the
+     * net/lightbody/bmp/proxy/jetty/jetty/servlet/webdefault.xml resource from the
      * org.mortbay.jetty.jar is used.
      * @param defaults File, Resource, URL or null.
      */

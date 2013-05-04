@@ -40,14 +40,14 @@ public class ResourceCache implements LifeCycle,
     private final static Map __encodings = new HashMap();
     static
     {
-        ResourceBundle mime = ResourceBundle.getBundle("org/browsermob/proxy/jetty/http/mime");
+        ResourceBundle mime = ResourceBundle.getBundle("net/lightbody/bmp/proxy/jetty/http/mime");
         Enumeration i = mime.getKeys();
         while(i.hasMoreElements())
         {
             String ext = (String)i.nextElement();
             __dftMimeMap.put(StringUtil.asciiToLowerCase(ext),mime.getString(ext));
         }
-        ResourceBundle encoding = ResourceBundle.getBundle("org/browsermob/proxy/jetty/http/encoding");
+        ResourceBundle encoding = ResourceBundle.getBundle("net/lightbody/bmp/proxy/jetty/http/encoding");
         i = encoding.getKeys();
         while(i.hasMoreElements())
         {

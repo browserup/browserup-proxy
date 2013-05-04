@@ -14,7 +14,7 @@
 <!--                                                                       -->
 <!-- If a defaults descriptor is set, it is first looked for as a system   -->
 <!-- resource. The jetty jar contains a webdefault.xml file as a resource  -->
-<!-- at "org/browsermob/proxy/jetty/jetty/servlet/webdefault.xml".   If a system resource -->
+<!-- at "net/lightbody/bmp/proxy/jetty/jetty/servlet/webdefault.xml".   If a system resource -->
 <!-- is not found, then a normal resource is tried, thus a filename or URL -->
 <!-- may be used to specify an arbitrary file.                             -->
 <!--                                                                       -->
@@ -350,7 +350,7 @@
   <!--       can't use a normal filter/wrapper for this?                    -->
   <!--    SRV.6.2.2 Dispatachers  - where the container cannot wrap the     -->
   <!--       request or response. See                                       -->
-  <!--       http://jetty.jetty.org/browsermob/proxy/jetty/doc/servlet24.html#d0e711       -->
+  <!--       xxxx       -->
   <!--       to find out why this is stupid.                                -->
   <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -->
   <!-- UNCOMMENT For compliant behaviour

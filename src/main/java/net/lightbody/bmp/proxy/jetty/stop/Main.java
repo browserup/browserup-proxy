@@ -40,7 +40,7 @@ import java.net.Socket;
 public class Main
 {
     private boolean _debug = System.getProperty("DEBUG",null)!=null;
-    private String _config = System.getProperty("START","org/browsermob/proxy/jetty/start/start.config");
+    private String _config = System.getProperty("START","net/lightbody/bmp/proxy/jetty/start/start.config");
     private int _port = Integer.getInteger("STOP.PORT",8079).intValue();
     private String _key = System.getProperty("STOP.KEY","jetty");
        

@@ -62,7 +62,7 @@ public class XmlConfiguration
 
         __parser = new XmlParser();
         URL config13URL = XmlConfiguration.class.getClassLoader().getResource(
-                "org/browsermob/proxy/jetty/xml/configure_1_3.dtd");
+                "net/lightbody/bmp/proxy/jetty/xml/configure_1_3.dtd");
         __parser.redirectEntity("configure.dtd", config13URL);
         __parser.redirectEntity("configure_1_3.dtd", config13URL);
         __parser.redirectEntity("http://jetty.jetty.org/configure_1_3.dtd", config13URL);
@@ -71,19 +71,19 @@ public class XmlConfiguration
         __parser.redirectEntity("-//Mort Bay Consulting//DTD Configure//EN", config13URL);
 
         URL config12URL = XmlConfiguration.class.getClassLoader().getResource(
-                "org/browsermob/proxy/jetty/xml/configure_1_2.dtd");
+                "net/lightbody/bmp/proxy/jetty/xml/configure_1_2.dtd");
         __parser.redirectEntity("configure_1_2.dtd", config12URL);
         __parser.redirectEntity("http://jetty.jetty.org/configure_1_2.dtd", config12URL);
         __parser.redirectEntity("-//Mort Bay Consulting//DTD Configure 1.2//EN", config12URL);
 
         URL config11URL = XmlConfiguration.class.getClassLoader().getResource(
-                "org/browsermob/proxy/jetty/xml/configure_1_1.dtd");
+                "net/lightbody/bmp/proxy/jetty/xml/configure_1_1.dtd");
         __parser.redirectEntity("configure_1_1.dtd", config11URL);
         __parser.redirectEntity("http://jetty.jetty.org/configure_1_1.dtd", config11URL);
         __parser.redirectEntity("-//Mort Bay Consulting//DTD Configure 1.1//EN", config11URL);
 
         URL config10URL = XmlConfiguration.class.getClassLoader().getResource(
-                "org/browsermob/proxy/jetty/xml/configure_1_0.dtd");
+                "net/lightbody/bmp/proxy/jetty/xml/configure_1_0.dtd");
         __parser.redirectEntity("configure_1_0.dtd", config10URL);
         __parser.redirectEntity("http://jetty.jetty.org/configure_1_0.dtd", config10URL);
         __parser.redirectEntity("-//Mort Bay Consulting//DTD Configure 1.0//EN", config10URL);
