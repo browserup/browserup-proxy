@@ -285,7 +285,7 @@ public class BrowserMobHttpClient {
     public BrowserMobHttpRequest newDelete(String url, net.lightbody.bmp.proxy.jetty.http.HttpRequest proxyRequest) {
         try {
             URI uri = makeUri(url);
-            return new BrowserMobHttpRequest(new HttpDelete(uri), this, -1, captureContent, proxyRequest);
+            return new BrowserMobHttpRequest(new HttpDeleteWithBody(uri), this, -1, captureContent, proxyRequest);
         } catch (URISyntaxException e) {
             throw reportBadURI(url, "DELETE");
         }
