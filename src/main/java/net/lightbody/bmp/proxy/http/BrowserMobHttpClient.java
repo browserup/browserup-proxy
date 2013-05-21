@@ -518,7 +518,7 @@ public class BrowserMobHttpClient {
         if (this.har != null && harPageRef != null) {
             har.getLog().addEntry(entry);
         }
-        
+
     	String query = method.getURI().getRawQuery();
     	if (query != null) {
 	        MultiMap<String> params = new MultiMap<String>();
@@ -740,7 +740,7 @@ public class BrowserMobHttpClient {
                             }
                         }
 
-                        if (contentType != null && (contentType.startsWith("text/")  || 
+                        if (contentType != null && (contentType.startsWith("text/")  ||
                         		contentType.startsWith("application/x-javascript")) ||
                         		contentType.startsWith("application/javascript")  ||
                         		contentType.startsWith("application/json")  ||
@@ -839,7 +839,7 @@ public class BrowserMobHttpClient {
                 LOG.warn("Could not parse URL", e);
             }
         }
-        
+
 
         return new BrowserMobHttpResponse(entry, method, response, contentMatched, verificationText, errorMessage, responseBody, contentType, charSet);
     }
@@ -971,7 +971,7 @@ public class BrowserMobHttpClient {
     public void setCaptureContent(boolean captureContent) {
         this.captureContent = captureContent;
     }
-    
+
     public void setCaptureBinaryContent(boolean captureBinaryContent) {
         this.captureBinaryContent = captureBinaryContent;
     }
