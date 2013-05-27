@@ -572,7 +572,10 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
 
       protected void wireUpSslWithCyberVilliansCA(String host, SslRelay listener) {
           try {
-              File root = File.createTempFile("seleniumSslSupport", host);
+              // see https://github.com/webmetrics/browsermob-proxy/issues/105
+              String escapedHost = host.replace('*', '_');
+
+              File root = File.createTempFile("seleniumSslSupport", escapedHost);
               root.delete();
               root.mkdirs();
 
