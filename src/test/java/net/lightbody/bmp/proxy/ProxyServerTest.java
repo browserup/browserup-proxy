@@ -21,6 +21,10 @@ import org.junit.Before;
 import java.security.KeyStore;
 
 public abstract class ProxyServerTest {
+    static {
+        Main.configureLogging();
+    }
+
     protected ProxyServer proxy = new ProxyServer(8081);
     protected DefaultHttpClient client = getNewHttpClient();
 
