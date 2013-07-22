@@ -22,4 +22,5 @@ public class HarCache {
     public void setAfterRequest(HarCacheStatus afterRequest) {
         this.afterRequest = afterRequest;
     }
+
 }
