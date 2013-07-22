@@ -9,7 +9,7 @@ public class HarContent {
     private String mimeType = "";
     private String text;
     private String encoding;
-    private Strinc comment;
+    private String comment;
 
     public long getSize() {
         return size;
