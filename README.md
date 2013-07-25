@@ -45,7 +45,6 @@ Once that is done, a new proxy will be available on the port returned. All you h
   - captureBinaryContent - Boolean, capture binary content
  - PUT /proxy/[port]/har/pageRef - starts a new page on the existing HAR. Supports the following parameters:
   - pageRef - the string name of the first page ref that should be used in the HAR. Defaults to "Page N" where N is the next page number.
- - PUT /proxy/[port]/har/pageRef - creates a new HAR attached to the proxy and returns the HAR content if there was a previous HAR
  - DELETE /proxy/[port] - shuts down the proxy and closes the port
  - GET /proxy/[port]/har - returns the JSON/HAR content representing all the HTTP traffic passed through the proxy
  - PUT /proxy/[port]/whitelist - Sets a list of URL patterns to whitelist. Takes the following parameters:
