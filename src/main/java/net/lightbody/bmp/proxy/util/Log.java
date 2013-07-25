@@ -1,26 +1,10 @@
 package net.lightbody.bmp.proxy.util;
 
-import java.util.logging.*;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 public class Log {
-    static {
-        Logger logger = Logger.getLogger("");
-        Handler[] handlers = logger.getHandlers();
-        for (Handler handler : handlers) {
-            logger.removeHandler(handler);
-        }
-
-        ConsoleHandler handler = new ConsoleHandler();
-        handler.setFormatter(new StandardFormatter());
-        handler.setLevel(Level.FINE);
-        logger.addHandler(handler);
-    }
-
-    static {
-        // tell commons-logging to use the JDK logging (otherwise it would default to log4j
-        System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.Jdk14Logger");
-    }
-
     protected Logger logger;
     private String className;
 
