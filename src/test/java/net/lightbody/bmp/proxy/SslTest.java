@@ -14,6 +14,11 @@ public class SslTest extends ProxyServerTest {
     }
 
     @Test
+    public void testSalesforce() throws Exception {
+        get("https://login.salesforce.com/");
+    }
+
+    @Test
     public void testNewRelic() throws Exception {
         // see https://github.com/webmetrics/browsermob-proxy/issues/105
         proxy.remapHost("foo.newrelic.com", "rpm.newrelic.com");
