@@ -127,6 +127,14 @@ public class ProxyResource {
 
         return Reply.saying().ok();
     }
+    
+    @Delete
+    @At("/:port/whitelist")
+    public Reply<?> clearWhitelist(@Named("port") int port, Request request) {
+    	ProxyServer proxy = proxyManager.get(port);
+    	proxy.clearWhitelist();
+    	return Reply.saying().ok();
+    }
 
     @Post
     @At("/:port/auth/basic/:domain")

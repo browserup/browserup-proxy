@@ -946,6 +946,10 @@ public class BrowserMobHttpClient {
         whitelistEntry = new WhitelistEntry(patterns, responseCode);
     }
 
+    public void clearWhitelist() {
+    	whitelistEntry = null;
+    }
+    
     public void addHeader(String name, String value) {
         additionalHeaders.put(name, value);
     }
