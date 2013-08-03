@@ -942,6 +942,12 @@ public class BrowserMobHttpClient {
         blacklistEntries.add(new BlacklistEntry(pattern, responseCode));
     }
 
+    public void clearBlacklist() {
+    	if (blacklistEntries != null) {
+    		blacklistEntries.clear();
+    	}
+    }
+    
     public void whitelistRequests(String[] patterns, int responseCode) {
         whitelistEntry = new WhitelistEntry(patterns, responseCode);
     }
