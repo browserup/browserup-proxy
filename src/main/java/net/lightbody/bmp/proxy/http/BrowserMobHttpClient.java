@@ -457,20 +457,20 @@ public class BrowserMobHttpClient {
         // handle whitelist and blacklist entries
         int mockResponseCode = -1;
         synchronized (this) {
-        	// guard against concurrent modification of whitelistEntry
-			if (whitelistEntry != null) {
-				boolean found = false;
-				for (Pattern pattern : whitelistEntry.patterns) {
-					if (pattern.matcher(url).matches()) {
-						found = true;
-						break;
-					}
-				}
+            // guard against concurrent modification of whitelistEntry
+            if (whitelistEntry != null) {
+                boolean found = false;
+                for (Pattern pattern : whitelistEntry.patterns) {
+                    if (pattern.matcher(url).matches()) {
+                        found = true;
+                        break;
+                    }
+                }
 
-				if (!found) {
-					mockResponseCode = whitelistEntry.responseCode;
-				}
-			}
+                if (!found) {
+                    mockResponseCode = whitelistEntry.responseCode;
+                }
+            }
         }
 
         if (blacklistEntries != null) {
