@@ -455,18 +455,21 @@ public class BrowserMobHttpClient {
 
         // handle whitelist and blacklist entries
         int mockResponseCode = -1;
-        if (whitelistEntry != null) {
-            boolean found = false;
-            for (Pattern pattern : whitelistEntry.patterns) {
-                if (pattern.matcher(url).matches()) {
-                    found = true;
-                    break;
-                }
-            }
+        synchronized (this) {
+        	// guard against concurrent modification of whitelistEntry
+			if (whitelistEntry != null) {
+				boolean found = false;
+				for (Pattern pattern : whitelistEntry.patterns) {
+					if (pattern.matcher(url).matches()) {
+						found = true;
+						break;
+					}
+				}
 
-            if (!found) {
-                mockResponseCode = whitelistEntry.responseCode;
-            }
+				if (!found) {
+					mockResponseCode = whitelistEntry.responseCode;
+				}
+			}
         }
 
         if (blacklistEntries != null) {
@@ -926,11 +929,13 @@ public class BrowserMobHttpClient {
     	blacklistEntries.clear();
     }
     
-    public void whitelistRequests(String[] patterns, int responseCode) {
+    public synchronized void whitelistRequests(String[] patterns, int responseCode) {
+    	// synchronized to guard against concurrent modification 
         whitelistEntry = new WhitelistEntry(patterns, responseCode);
     }
 
-    public void clearWhitelist() {
+    public synchronized void clearWhitelist() {
+    	// synchronized to guard against concurrent modification 
     	whitelistEntry = null;
     }
     
