@@ -848,6 +848,7 @@ public class BrowserMobHttpClient {
         shutdown = true;
         abortActiveRequests();
         rewriteRules.clear();
+        blacklistEntries.clear();
         credsProvider.clear();
         httpClientConnMgr.shutdown();
         HttpClientInterrupter.release(this);
