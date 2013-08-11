@@ -88,7 +88,7 @@ public class BrowserMobHttpClient {
     private TrustingSSLSocketFactory sslSocketFactory;
     private ThreadSafeClientConnManager httpClientConnMgr;
     private DefaultHttpClient httpClient;
-    private List<BlacklistEntry> blacklistEntries = null;
+    private List<BlacklistEntry> blacklistEntries = new CopyOnWriteArrayList<BrowserMobHttpClient.BlacklistEntry>();
     private WhitelistEntry whitelistEntry = null;
     private List<RewriteRule> rewriteRules = new CopyOnWriteArrayList<RewriteRule>();
     private List<RequestInterceptor> requestInterceptors = new CopyOnWriteArrayList<RequestInterceptor>();
@@ -939,17 +939,11 @@ public class BrowserMobHttpClient {
     }
 
     public void blacklistRequests(String pattern, int responseCode) {
-        if (blacklistEntries == null) {
-            blacklistEntries = new CopyOnWriteArrayList<BlacklistEntry>();
-        }
-
         blacklistEntries.add(new BlacklistEntry(pattern, responseCode));
     }
 
     public void clearBlacklist() {
-    	if (blacklistEntries != null) {
-    		blacklistEntries.clear();
-    	}
+    	blacklistEntries.clear();
     }
     
     public void whitelistRequests(String[] patterns, int responseCode) {
