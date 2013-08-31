@@ -112,6 +112,9 @@ public class ProxyServer {
     }
 
     public void setLocalHost(InetAddress localHost) {
+        if (!localHost.isAnyLocalAddress()) {
+            throw new IllegalArgumentException("Must be address of a local adapter");
+        }
         this.localHost = localHost;
     }
 
