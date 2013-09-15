@@ -12,6 +12,11 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicNameValuePair;
 import org.junit.Test;
+import org.openqa.selenium.Proxy;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
@@ -312,5 +317,44 @@ public class MailingListIssuesTest extends DummyServerTest {
         Assert.assertEquals(true,postDataCapturedAndLoggedCorrectly);
 
     }
+
+    @Test
+    public void issue27() throws Exception{
+        // see: https://github.com/lightbody/browsermob-proxy/issues/27
+
+        // start the proxy
+        ProxyServer server = new ProxyServer(4444);
+        server.start();
+        server.setCaptureHeaders(true);
+        server.setCaptureContent(true);
+
+        // get the selenium proxy object
+        Proxy proxy = server.seleniumProxy();
+        DesiredCapabilities capabilities = new DesiredCapabilities();
+
+        capabilities.setCapability(CapabilityType.PROXY, proxy);
+
+        // start the browser up
+        WebDriver driver = new FirefoxDriver(capabilities);
+
+        server.newHar("assertselenium.com");
+
+        driver.get("http://whatsmyuseragent.com");
+        //driver.get("https://google.com");
+
+        // get the HAR data
+        Har har = server.getHar();
+
+        // make sure something came back in the har
+        Assert.assertTrue(!har.getLog().getEntries().isEmpty());
+
+        // show that we can capture the HTML of the root page
+        String text = har.getLog().getEntries().get(0).getResponse().getContent().getText();
+        Assert.assertTrue(text.contains("<title>Whats My User Agent?</title>"));
+
+        server.stop();
+        driver.quit();
+    }
+
 
 }
