@@ -106,7 +106,7 @@ public class ProxyServer {
 
     public InetAddress getLocalHost() throws UnknownHostException {
         if (localHost == null) {
-            localHost = InetAddress.getLocalHost();
+            localHost = InetAddress.getByName("0.0.0.0");
         }
         return localHost;
     }
