@@ -52,6 +52,10 @@ public class BrowserMobHttpRequest {
         this.proxyRequest = proxyRequest;
     }
 
+    public RepeatableInputStreamRequestEntity getInputStreamEntity(){
+        return inputStreamEntity;
+    }
+
     public String getExpectedLocation() {
         return expectedLocation;
     }
