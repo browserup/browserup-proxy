@@ -3,25 +3,36 @@ package net.lightbody.bmp.proxy;
 import junit.framework.Assert;
 import net.lightbody.bmp.proxy.http.BrowserMobHttpRequest;
 import net.lightbody.bmp.proxy.http.RequestInterceptor;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 public class RepeatableInputStreamTest extends DummyServerTest{
 
     @Test
-    public void test() {
+    public void test()
+            throws UnsupportedEncodingException {
         TestRequestInterceptor testRequestInterceptor = new TestRequestInterceptor();
 
         proxy.addRequestInterceptor(testRequestInterceptor);
 
+        HttpPost post = new HttpPost("http://127.0.0.1:8080/jsonrpc/");
+        HttpEntity entity = new StringEntity("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"test\",\"params\":{}}");
+        post.setEntity(entity);
+        post.addHeader("Accept", "application/json-rpc");
+        post.addHeader("Content-Type", "application/json; charset=UTF-8");
+
         HttpResponse response = null;
         try {
-            response = client.execute(new HttpGet("http://127.0.0.1:8080/echo"));
+            response = client.execute(post);
         } catch (ClientProtocolException e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
@@ -33,8 +44,7 @@ public class RepeatableInputStreamTest extends DummyServerTest{
             EntityUtils.consumeQuietly(response.getEntity());
         }
 
-        int responseCode = response.getStatusLine().getStatusCode();
-        Assert.assertTrue(responseCode == 200);
+        Assert.assertTrue(response.getStatusLine().getStatusCode() == 200);
         Assert.assertNotNull(testRequestInterceptor.getBrowserMobHttpRequest());
         Assert.assertNotNull(testRequestInterceptor.getBrowserMobHttpRequest().getInputStreamEntity());
         Assert.assertTrue(testRequestInterceptor.getBrowserMobHttpRequest().getInputStreamEntity().isRepeatable());
