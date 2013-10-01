@@ -23,6 +23,7 @@ import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.cookie.*;
 import org.apache.http.cookie.params.CookieSpecPNames;
+import org.apache.http.entity.ContentType;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
@@ -45,6 +46,7 @@ import org.xbill.DNS.DClass;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -741,7 +743,7 @@ public class BrowserMobHttpClient {
                         }
 
                         if (hasTextualContent(contentType)) {
-                            entry.getResponse().getContent().setText(new String(copy.toByteArray()));
+                        	setTextOfEntry(entry, copy, contentType);
                         } else if(captureBinaryContent){
                             entry.getResponse().getContent().setText(Base64.byteArrayToBase64(copy.toByteArray()));
                         }
@@ -848,6 +850,18 @@ public class BrowserMobHttpClient {
 				contentType.startsWith("application/xhtml+xml");
 	}
 
+	private void setTextOfEntry(HarEntry entry,
+			ByteArrayOutputStream copy, String contentType) {
+		ContentType contentTypeCharset = ContentType.parse(contentType);
+		Charset charset = contentTypeCharset.getCharset();
+		if (charset != null) {
+			entry.getResponse().getContent().setText(new String(copy.toByteArray(), charset));
+		} else {
+			entry.getResponse().getContent().setText(new String(copy.toByteArray()));
+		}
+	}
+
+    
     public void shutdown() {
         shutdown = true;
         abortActiveRequests();
