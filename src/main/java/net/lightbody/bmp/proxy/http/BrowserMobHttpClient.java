@@ -745,7 +745,7 @@ public class BrowserMobHttpClient {
                         if (hasTextualContent(contentType)) {
                         	setTextOfEntry(entry, copy, contentType);
                         } else if(captureBinaryContent){
-                            entry.getResponse().getContent().setText(Base64.byteArrayToBase64(copy.toByteArray()));
+                            setBinaryContentOfEntry(entry, copy);
                         }
                     }
 
@@ -848,6 +848,11 @@ public class BrowserMobHttpClient {
 				contentType.startsWith("application/json")  ||
 				contentType.startsWith("application/xml")  ||
 				contentType.startsWith("application/xhtml+xml");
+	}
+
+	private void setBinaryContentOfEntry(HarEntry entry,
+			ByteArrayOutputStream copy) {
+		entry.getResponse().getContent().setText(Base64.byteArrayToBase64(copy.toByteArray()));
 	}
 
 	private void setTextOfEntry(HarEntry entry,
