@@ -740,12 +740,7 @@ public class BrowserMobHttpClient {
                             }
                         }
 
-                        if (contentType != null && (contentType.startsWith("text/")  ||
-                        		contentType.startsWith("application/x-javascript")) ||
-                        		contentType.startsWith("application/javascript")  ||
-                        		contentType.startsWith("application/json")  ||
-                        		contentType.startsWith("application/xml")  ||
-                        		contentType.startsWith("application/xhtml+xml")) {
+                        if (hasTextualContent(contentType)) {
                             entry.getResponse().getContent().setText(new String(copy.toByteArray()));
                         } else if(captureBinaryContent){
                             entry.getResponse().getContent().setText(Base64.byteArrayToBase64(copy.toByteArray()));
@@ -843,6 +838,15 @@ public class BrowserMobHttpClient {
 
         return new BrowserMobHttpResponse(entry, method, response, contentMatched, verificationText, errorMessage, responseBody, contentType, charSet);
     }
+
+	private boolean hasTextualContent(String contentType) {
+		return contentType != null && contentType.startsWith("text/") ||
+				contentType.startsWith("application/x-javascript") ||
+				contentType.startsWith("application/javascript")  ||
+				contentType.startsWith("application/json")  ||
+				contentType.startsWith("application/xml")  ||
+				contentType.startsWith("application/xhtml+xml");
+	}
 
     public void shutdown() {
         shutdown = true;
