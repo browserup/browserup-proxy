@@ -9,7 +9,7 @@ public class HarPostData {
     private String mimeType;
     private List<HarPostDataParam> params;
     private String text;
-    private String comment;
+    private String comment = "";
 
     public String getMimeType() {
         return mimeType;
