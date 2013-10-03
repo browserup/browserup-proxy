@@ -15,7 +15,7 @@ public class HarCookie {
     private Date expires;
     private Boolean httpOnly;
     private Boolean secure;
-    private String comment;
+    private String comment = "";
 
     public String getName() {
         return name;

@@ -3,7 +3,7 @@ package net.lightbody.bmp.core.har;
 public class HarNameVersion {
     private String name;
     private String version;
-    private String comment;
+    private String comment = "";
 
     public HarNameVersion() {
     }

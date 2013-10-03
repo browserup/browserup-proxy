@@ -12,7 +12,7 @@ public class HarLog {
     private HarNameVersion browser;
     private List<HarPage> pages = new CopyOnWriteArrayList<HarPage>();
     private List<HarEntry> entries = new CopyOnWriteArrayList<HarEntry>();
-    private String comment;
+    private String comment = "";
 
     public HarLog() {
     }

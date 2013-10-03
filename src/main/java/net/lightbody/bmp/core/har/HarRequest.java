@@ -16,7 +16,7 @@ public class HarRequest {
     private HarPostData postData;
     private long headersSize; // Odd grammar in spec
     private long bodySize;
-    private String comment;
+    private String comment = "";
 
     public HarRequest() {
     }

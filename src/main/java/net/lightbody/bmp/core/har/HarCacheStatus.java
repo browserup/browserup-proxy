@@ -12,7 +12,7 @@ public class HarCacheStatus {
     private Date lastAccess;
     private String eTag;
     private int hitCount;
-    private String comment;
+    private String comment = "";
 
     @JsonSerialize(using = ISO8601DateFormatter.class)
     public Date getExpires() {
