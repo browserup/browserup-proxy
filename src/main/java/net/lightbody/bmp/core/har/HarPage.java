@@ -11,7 +11,7 @@ public class HarPage {
     private Date startedDateTime;
     private String title = "";
     private HarPageTimings pageTimings = new HarPageTimings();
-    private String comment;
+    private String comment = "";
 
     public HarPage() {
     }

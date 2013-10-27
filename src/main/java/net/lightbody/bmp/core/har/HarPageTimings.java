@@ -6,7 +6,7 @@ import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 public class HarPageTimings {
     private Long onContentLoad;
     private Long onLoad;
-    private String comment;
+    private String comment = "";
 
     public HarPageTimings() {
     }

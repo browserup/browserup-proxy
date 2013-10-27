@@ -8,7 +8,7 @@ public class HarPostDataParam {
     private String value;
     private String fileName;
     private String contentType;
-    private String comment;
+    private String comment = "";
 
     public HarPostDataParam() {
     }
