@@ -5,7 +5,6 @@ import net.lightbody.bmp.proxy.util.*;
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
-
 import org.apache.http.*;
 import org.apache.http.auth.*;
 import org.apache.http.client.CredentialsProvider;
@@ -147,17 +146,14 @@ public class BrowserMobHttpClient {
 								requestBodySize += Integer.valueOf(header.getValue());
 							}
 						}
-						LOG.info("doSendRequest  request headers size = " + requestHeadersSize);
-						LOG.info("doSendRequest  request body size = " + requestBodySize);
-						HarEntry entry = har.getLog().getEntries().get(har.getLog().getEntries().size()-1);
-						if (entry != null) {
-							entry.getRequest().setHeadersSize(requestHeadersSize);
-							entry.getRequest().setBodySize(requestBodySize);
-						} else {
-							LOG.warn("cannot set Request Headers and Body Size in HarEntry");
-						}
 
-						Date start = new Date();
+                        HarEntry entry = RequestInfo.get().getEntry();
+                        if (entry != null) {
+                            entry.getRequest().setHeadersSize(requestHeadersSize);
+                            entry.getRequest().setBodySize(requestBodySize);
+                        }
+
+                        Date start = new Date();
                         HttpResponse response = super.doSendRequest(request, conn, context);
                         RequestInfo.get().send(start, new Date());
                         return response;
@@ -171,13 +167,12 @@ public class BrowserMobHttpClient {
 						for (Header header : response.getAllHeaders()) {
 							responseHeadersSize += header.toString().length() + 2;
 						}
-						LOG.info("doReceiveResponse  response headers size = " + responseHeadersSize);
-						HarEntry entry = har.getLog().getEntries().get(har.getLog().getEntries().size()-1);
-						if (entry != null) {
+
+                        HarEntry entry = RequestInfo.get().getEntry();
+                        if (entry != null) {
 							entry.getResponse().setHeadersSize(responseHeadersSize);
-						} else {
-							LOG.warn("cannot set Response Headers in HarEntry");
 						}
+
                         RequestInfo.get().wait(start, new Date());
                         return response;
                     }
