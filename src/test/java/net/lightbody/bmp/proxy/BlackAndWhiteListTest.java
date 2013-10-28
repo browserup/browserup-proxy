@@ -24,7 +24,7 @@ public class BlackAndWhiteListTest extends DummyServerTest {
 	/*
 	 * Some tests were hanging when trying to GET un-whitelisted URLs.
 	 * Implementing a timeouts prevents these from blocking a test indefinitely.
-	 * 
+	 *
 	 * Applied to each test, rather with a global Timeout rule, as global
 	 * timeout rule was preventing parent's @After rule from running, and dummy
 	 * server from being shut down.
