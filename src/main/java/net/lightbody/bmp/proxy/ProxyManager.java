@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -43,6 +44,10 @@ public class ProxyManager {
 
     public ProxyServer get(int port) {
         return proxies.get(port);
+    }
+
+    public Collection<ProxyServer> get() {
+        return proxies.values();
     }
 
     public void delete(int port) throws Exception {

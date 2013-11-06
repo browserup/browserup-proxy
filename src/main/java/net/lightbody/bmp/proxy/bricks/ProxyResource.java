@@ -24,6 +24,8 @@ import org.java_bandwidthlimiter.StreamManager;
 import javax.script.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
@@ -38,6 +40,15 @@ public class ProxyResource {
     @Inject
     public ProxyResource(ProxyManager proxyManager) {
         this.proxyManager = proxyManager;
+    }
+
+    @Get
+    public Reply<?> getProxies(Request request) throws Exception {
+        Collection<ProxyDescriptor> proxyList = new ArrayList<ProxyDescriptor> ();
+        for (ProxyServer proxy : proxyManager.get()) {
+            proxyList.add(new ProxyDescriptor(proxy.getPort()));
+        }
+        return Reply.with(new ProxyListDescriptor(proxyList)).as(Json.class);
     }
 
     @Post
@@ -481,6 +492,25 @@ public class ProxyResource {
 
         public void setPort(int port) {
             this.port = port;
+        }
+    }
+
+    public static class ProxyListDescriptor {
+        private Collection<ProxyDescriptor> proxyList;
+
+        public ProxyListDescriptor() {
+        }
+
+        public ProxyListDescriptor(Collection<ProxyDescriptor> proxyList) {
+            this.proxyList = proxyList;
+        }
+
+        public Collection<ProxyDescriptor> getProxyList() {
+            return proxyList;
+        }
+
+        public void setProxyList(Collection<ProxyDescriptor> proxyList) {
+            this.proxyList = proxyList;
         }
     }
 }

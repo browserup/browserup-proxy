@@ -38,6 +38,7 @@ or optionally specify your own port:
 
 Once that is done, a new proxy will be available on the port returned. All you have to do is point a browser to that proxy on that port and you should be able to browse the internet. The following additional APIs will then be available:
 
+ - GET /proxy - get a list of ports attached to `ProxyServer` instances managed by `ProxyManager`
  - PUT /proxy/[port]/har - creates a new HAR attached to the proxy and returns the HAR content if there was a previous HAR. Supports the following parameters:
   - initialPageRef - the string name of the first page ref that should be used in the HAR. Defaults to "Page 1".
   - captureHeaders - Boolean, capture headers
