@@ -38,6 +38,11 @@ public class BrowserMobHostNameResolver implements HostNameResolver {
         }
     }
 
+    public BrowserMobHostNameResolver(Cache cache, Resolver resolver) {
+        this.cache = cache;
+        this.resolver = resolver;
+    }
+
     @Override
     public InetAddress resolve(String hostname) throws IOException {
         String remapping = remappings.get(hostname);
@@ -52,13 +57,17 @@ public class BrowserMobHostNameResolver implements HostNameResolver {
         }
 
         boolean isCached = this.isCached(hostname);
-
-        Lookup lookup = new Lookup(Name.fromString(hostname), Type.A);
-        lookup.setCache(cache);
-        lookup.setResolver(resolver);
-
         Date start = new Date();
-        Record[] records = lookup.run();
+        InetAddress addr;
+
+        try {
+            addr = findByDNSJava(hostname);
+        } catch(UnknownHostException e) {
+            addr = findByNativeJava(hostname);
+        }
+
+        Date end = new Date();
+
         if (fakeSlow.get()) {
             fakeSlow.set(false);
             try {
@@ -67,15 +76,6 @@ public class BrowserMobHostNameResolver implements HostNameResolver {
                 e.printStackTrace();
             }
         }
-        Date end = new Date();
-
-        if (records == null || records.length == 0) {
-            throw new UnknownHostException(hostname);
-        }
-
-        // assembly the addr object
-        ARecord a = (ARecord) records[0];
-        InetAddress addr = InetAddress.getByAddress(hostname, a.getAddress().getAddress());
 
         if (!isCached) {
             // TODO: Associate the the host name with the connection. We do this because when using persistent
@@ -89,6 +89,27 @@ public class BrowserMobHostNameResolver implements HostNameResolver {
         }
 
         return addr;
+    }
+
+    private InetAddress findByDNSJava(String hostname) throws IOException {
+        Lookup lookup = new Lookup(Name.fromString(hostname), Type.A);
+        lookup.setCache(cache);
+        lookup.setResolver(resolver);
+
+        Record[] records = lookup.run();
+
+        if (records == null || records.length == 0) {
+            throw new UnknownHostException(hostname);
+        }
+
+        // assembly the addr object
+        ARecord a = (ARecord) records[0];
+
+        return InetAddress.getByAddress(hostname, a.getAddress().getAddress());
+    }
+
+    private InetAddress findByNativeJava(String hostname) throws IOException {
+        return InetAddress.getByName(hostname);
     }
 
     public void remap(String source, String target) {
