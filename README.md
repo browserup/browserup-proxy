@@ -36,6 +36,11 @@ or optionally specify your own port:
     [~]$ curl -X POST -d 'port=9099' http://localhost:9090/proxy
     {"port":9099}
 
+or if running BrowserMob Proxy in a multi-homed environment, specify a desired bind address (default is `0.0.0.0`):
+
+    [~]$ curl -X POST -d 'bindAddress=192.168.1.222' http://localhost:9090/proxy
+    {"port":9096}
+
 Once that is done, a new proxy will be available on the port returned. All you have to do is point a browser to that proxy on that port and you should be able to browse the internet. The following additional APIs will then be available:
 
  - GET /proxy - get a list of ports attached to `ProxyServer` instances managed by `ProxyManager`
