@@ -28,7 +28,7 @@ public class HarResultsTest extends DummyServerTest {
 
         Assert.assertEquals(100, entry.getRequest().getHeadersSize());
         Assert.assertEquals(0, entry.getRequest().getBodySize());
-        Assert.assertEquals(229, entry.getResponse().getHeadersSize());
+        Assert.assertEquals(227, entry.getResponse().getHeadersSize());
         Assert.assertEquals(13, entry.getResponse().getBodySize());
     }
 
