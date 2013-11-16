@@ -16,13 +16,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class BrowserMobHostNameResolver implements HostNameResolver {
     private static final Log LOG = new Log();
 
-    public static ThreadLocal<Boolean> fakeSlow = new ThreadLocal<Boolean>() {
-        @Override
-        protected Boolean initialValue() {
-            return false;
-        }
-    };
-
     private Map<String, String> remappings = new ConcurrentHashMap<String, String>();
     private Map<String, List<String>> reverseMapping = new ConcurrentHashMap<String, List<String>>();
 
@@ -59,14 +52,6 @@ public class BrowserMobHostNameResolver implements HostNameResolver {
 
         Date start = new Date();
         Record[] records = lookup.run();
-        if (fakeSlow.get()) {
-            fakeSlow.set(false);
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
         Date end = new Date();
 
         if (records == null || records.length == 0) {
