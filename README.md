@@ -174,17 +174,17 @@ You can use the REST API with Selenium however you want. But if you're writing y
 HTTP Request Manipulation
 -------------------
 
-While not yet available via the REST interface, you can manipulate the requests like so:
+You can manipulate the requests like so:
 
     server.addRequestInterceptor(new RequestInterceptor() {
         @Override
-        public void process(BrowserMobHttpRequest request) {
+        public void process(BrowserMobHttpRequest request, Har har) {
             request.getMethod().removeHeaders("User-Agent");
             request.getMethod().addHeader("User-Agent", "Bananabot/1.0");
         }
     });
 
-We will soon be adding support for this advanced capability in the REST interface as well, using JavaScript snippets that can be posted as the interceptor code.
+You can also POST a JavaScript payload to `/:port/interceptor/request` and `/:port/interceptor/response` using the REST interface. The functions will have a `request`/`response` variable, respectively, and a `har` variable (which may be null if a HAR isn't set up yet). The JavaScript code will be run by [Rhino](https://github.com/mozilla/rhino) and have access to the same Java API in the example above. Consult the Java API docs for more info.
 
 SSL Support
 -----------

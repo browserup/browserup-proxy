@@ -395,12 +395,12 @@ public class BrowserMobHttpClient {
             requestCounter.incrementAndGet();
 
             for (RequestInterceptor interceptor : requestInterceptors) {
-                interceptor.process(req);
+                interceptor.process(req, har);
             }
 
             BrowserMobHttpResponse response = execute(req, 1);
             for (ResponseInterceptor interceptor : responseInterceptors) {
-                interceptor.process(response);
+                interceptor.process(response, har);
             }
 
             return response;
