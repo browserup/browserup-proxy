@@ -9,6 +9,11 @@ import java.io.IOException;
 
 public class SslTest extends ProxyServerTest {
     @Test
+    public void testGoogleCa() throws Exception {
+        get("https://www.google.ca/");
+    }
+
+    @Test
     public void testFidelity() throws Exception {
         get("https://www.fidelity.com/");
     }

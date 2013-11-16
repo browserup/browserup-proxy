@@ -5,7 +5,6 @@ import net.lightbody.bmp.proxy.util.*;
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
-
 import org.apache.http.*;
 import org.apache.http.auth.*;
 import org.apache.http.client.CredentialsProvider;
@@ -139,6 +138,21 @@ public class BrowserMobHttpClient {
                 return new HttpRequestExecutor() {
                     @Override
                     protected HttpResponse doSendRequest(HttpRequest request, HttpClientConnection conn, HttpContext context) throws IOException, HttpException {
+						long requestHeadersSize = request.getRequestLine().toString().length() + 4;
+						long requestBodySize = 0;
+						for (Header header : request.getAllHeaders()) {
+							requestHeadersSize += header.toString().length() + 2;
+							if (header.getName().equals("Content-Length")) {
+								requestBodySize += Integer.valueOf(header.getValue());
+							}
+						}
+
+                        HarEntry entry = RequestInfo.get().getEntry();
+                        if (entry != null) {
+                            entry.getRequest().setHeadersSize(requestHeadersSize);
+                            entry.getRequest().setBodySize(requestBodySize);
+                        }
+
                         Date start = new Date();
                         HttpResponse response = super.doSendRequest(request, conn, context);
                         RequestInfo.get().send(start, new Date());
@@ -149,6 +163,16 @@ public class BrowserMobHttpClient {
                     protected HttpResponse doReceiveResponse(HttpRequest request, HttpClientConnection conn, HttpContext context) throws HttpException, IOException {
                         Date start = new Date();
                         HttpResponse response = super.doReceiveResponse(request, conn, context);
+						long responseHeadersSize = response.getStatusLine().toString().length() + 4;
+						for (Header header : response.getAllHeaders()) {
+							responseHeadersSize += header.toString().length() + 2;
+						}
+
+                        HarEntry entry = RequestInfo.get().getEntry();
+                        if (entry != null) {
+							entry.getResponse().setHeadersSize(responseHeadersSize);
+						}
+
                         RequestInfo.get().wait(start, new Date());
                         return response;
                     }
@@ -542,7 +566,7 @@ public class BrowserMobHttpClient {
             // was the request mocked out?
             if (mockResponseCode != -1) {
                 statusCode = mockResponseCode;
-                
+
                 // TODO: HACKY!!
                 callback.handleHeaders(new Header[]{
                         new Header(){
@@ -562,7 +586,7 @@ public class BrowserMobHttpClient {
                             }
                         }
                 });
-                // Make sure we set the status line here too. 
+                // Make sure we set the status line here too.
                 // Use the version number from the request
                 ProtocolVersion version = null;
                 int reqDotVersion = req.getProxyRequest().getDotVersion();
@@ -572,11 +596,11 @@ public class BrowserMobHttpClient {
                 	version = new HttpVersion(1, 0);
                 } else if (reqDotVersion == 1) {
                    	version = new HttpVersion(1, 1);
-                } 
-                // and if not any of these, trust that a Null version will 
+                }
+                // and if not any of these, trust that a Null version will
                 // cause an appropriate error
 				callback.handleStatusLine(new BasicStatusLine(version, statusCode, "Status set by browsermob-proxy"));
-				// No mechanism to look up the response text by status code, 
+				// No mechanism to look up the response text by status code,
 				// so include a notification that this is a synthetic error code.
             } else {
                 response = httpClient.execute(method, ctx);
@@ -911,7 +935,7 @@ public class BrowserMobHttpClient {
     public void rewriteUrl(String match, String replace) {
         rewriteRules.add(new RewriteRule(match, replace));
     }
-    
+
     public void clearRewriteRules() {
     	rewriteRules.clear();
     }
@@ -929,14 +953,14 @@ public class BrowserMobHttpClient {
     public void clearBlacklist() {
     	blacklistEntries.clear();
     }
-    
+
     public synchronized void whitelistRequests(String[] patterns, int responseCode) {
-    	// synchronized to guard against concurrent modification 
+    	// synchronized to guard against concurrent modification
         whitelistEntry = new WhitelistEntry(patterns, responseCode);
     }
 
     public synchronized void clearWhitelist() {
-    	// synchronized to guard against concurrent modification 
+    	// synchronized to guard against concurrent modification
     	whitelistEntry = null;
     }
     

@@ -18,7 +18,7 @@ public class HarEntry {
     private HarTimings timings;
     private String serverIPAddress;
     private String connection;
-    private String comment;
+    private String comment = "";
 
     public HarEntry() {
     }

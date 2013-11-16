@@ -8,7 +8,7 @@ public class HarTimings {
     private long wait;
     private long receive;
     private long ssl;
-    private String comment;
+    private String comment = "";
 
     public HarTimings() {
     }

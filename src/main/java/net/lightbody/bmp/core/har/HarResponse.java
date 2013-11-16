@@ -16,7 +16,7 @@ public class HarResponse {
     private String redirectURL = "";
     private long headersSize;
     private long bodySize;
-    private String comment;
+    private String comment = "";
 
     public HarResponse() {
     }
