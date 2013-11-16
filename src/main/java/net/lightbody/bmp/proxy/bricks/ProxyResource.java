@@ -221,9 +221,10 @@ public class ProxyResource {
 
         proxy.addResponseInterceptor(new ResponseInterceptor() {
             @Override
-            public void process(BrowserMobHttpResponse response) {
+            public void process(BrowserMobHttpResponse response, Har har) {
                 Bindings bindings = engine.createBindings();
                 bindings.put("response", response);
+                bindings.put("har", har);
                 bindings.put("log", LOG);
                 try {
                     script.eval(bindings);
@@ -253,9 +254,10 @@ public class ProxyResource {
 
         proxy.addRequestInterceptor(new RequestInterceptor() {
             @Override
-            public void process(BrowserMobHttpRequest request) {
+            public void process(BrowserMobHttpRequest request, Har har) {
                 Bindings bindings = engine.createBindings();
                 bindings.put("request", request);
+                bindings.put("har", har);
                 bindings.put("log", LOG);
                 try {
                     script.eval(bindings);
