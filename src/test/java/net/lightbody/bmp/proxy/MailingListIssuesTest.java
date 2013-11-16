@@ -35,7 +35,7 @@ public class MailingListIssuesTest extends DummyServerTest {
         final boolean[] interceptorHit = {false};
         proxy.addRequestInterceptor(new RequestInterceptor() {
             @Override
-            public void process(BrowserMobHttpRequest request) {
+            public void process(BrowserMobHttpRequest request, Har har) {
                 interceptorHit[0] = true;
             }
         });
@@ -51,7 +51,7 @@ public class MailingListIssuesTest extends DummyServerTest {
         final String[] remoteHost = {null};
         proxy.addRequestInterceptor(new RequestInterceptor() {
             @Override
-            public void process(BrowserMobHttpRequest request) {
+            public void process(BrowserMobHttpRequest request, Har har) {
                 remoteHost[0] = request.getProxyRequest().getRemoteHost();
             }
         });
@@ -66,7 +66,7 @@ public class MailingListIssuesTest extends DummyServerTest {
     public void testThatWeCanChangeTheUserAgent() throws IOException, InterruptedException {
         proxy.addRequestInterceptor(new RequestInterceptor() {
             @Override
-            public void process(BrowserMobHttpRequest request) {
+            public void process(BrowserMobHttpRequest request, Har har) {
                 request.getMethod().removeHeaders("User-Agent");
                 request.getMethod().addHeader("User-Agent", "Bananabot/1.0");
             }
@@ -81,7 +81,7 @@ public class MailingListIssuesTest extends DummyServerTest {
     public void testThatInterceptorsCanRewriteUrls() throws IOException, InterruptedException {
         proxy.addRequestInterceptor(new RequestInterceptor() {
             @Override
-            public void process(BrowserMobHttpRequest request) {
+            public void process(BrowserMobHttpRequest request, Har har) {
                 try {
                     request.getMethod().setURI(new URI("http://127.0.0.1:8080/b.txt"));
                 } catch (URISyntaxException e) {
@@ -289,7 +289,7 @@ public class MailingListIssuesTest extends DummyServerTest {
 
         proxy.addRequestInterceptor(new RequestInterceptor() {
             @Override
-            final public void process(BrowserMobHttpRequest request) {
+            public void process(BrowserMobHttpRequest request, Har har) {
                 capturedPostData[0] = request.getProxyRequest().getParameter("testParam");
             }
         });
