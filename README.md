@@ -121,7 +121,7 @@ If you're using Java and Selenium, the easiest way to get started is to embed th
     <dependency>
         <groupId>net.lightbody.bmp</groupId>
         <artifactId>browsermob-proxy</artifactId>
-        <version>LATEST_VERSION (ex: 2.0-beta-8)</version>
+        <version>LATEST_VERSION (ex: 2.0-beta-9)</version>
         <scope>test</scope>
     </dependency>
 
@@ -137,7 +137,7 @@ If your project already defines a Selenium dependency then you may want to exclu
     <dependency>
         <groupId>net.lightbody.bmp</groupId>
         <artifactId>browsermob-proxy</artifactId>
-        <version>LATEST_VERSION (ex: 2.0-beta-8)</version>
+        <version>LATEST_VERSION (ex: 2.0-beta-9)</version>
         <scope>test</scope>
         <exclusions>
             <exclusion>
