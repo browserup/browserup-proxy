@@ -11,6 +11,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicNameValuePair;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openqa.selenium.Proxy;
 import org.openqa.selenium.WebDriver;
@@ -280,6 +281,7 @@ public class MailingListIssuesTest extends DummyServerTest {
     }
 
     @Test
+    @Ignore
     public void testThatInterceptorsCanReadPostParamaters() throws IOException, InterruptedException {
 
         proxy.setCaptureContent(true);
