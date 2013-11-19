@@ -29,7 +29,6 @@ public class BrowserMobHttpRequest {
     private HttpRequestBase method;
     private BrowserMobHttpClient client;
     private int expectedStatusCode;
-    private String verificationText;
     private List<NameValuePair> nvps = new ArrayList<NameValuePair>();
     private StringEntity stringEntity;
     private ByteArrayEntity byteArrayEntity;
@@ -104,14 +103,6 @@ public class BrowserMobHttpRequest {
         inputStreamEntity = new RepeatableInputStreamRequestEntity(is, length);
     }
 
-
-    public String getVerificationText() {
-        return verificationText;
-    }
-
-    public void setVerificationText(String verificationText) {
-        this.verificationText = verificationText;
-    }
 
     public HttpRequestBase getMethod() {
         return method;

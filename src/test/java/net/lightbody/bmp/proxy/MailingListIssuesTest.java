@@ -2,8 +2,11 @@ package net.lightbody.bmp.proxy;
 
 import junit.framework.Assert;
 import net.lightbody.bmp.core.har.*;
+import net.lightbody.bmp.core.util.ThreadUtils;
 import net.lightbody.bmp.proxy.http.BrowserMobHttpRequest;
+import net.lightbody.bmp.proxy.http.BrowserMobHttpResponse;
 import net.lightbody.bmp.proxy.http.RequestInterceptor;
+import net.lightbody.bmp.proxy.http.ResponseInterceptor;
 import net.lightbody.bmp.proxy.util.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -28,6 +31,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
 public class MailingListIssuesTest extends DummyServerTest {
@@ -94,6 +98,30 @@ public class MailingListIssuesTest extends DummyServerTest {
         String body = IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/a.txt")).getEntity().getContent());
 
         Assert.assertTrue(body.contains("this is b.txt"));
+    }
+
+    @Test
+    public void testThatInterceptorsCanReadResponseBodies() throws IOException, InterruptedException {
+        final String[] interceptedBody = {null};
+
+        proxy.setCaptureContent(true);
+        proxy.addResponseInterceptor(new ResponseInterceptor() {
+            @Override
+            public void process(BrowserMobHttpResponse response, Har har) {
+                interceptedBody[0] = response.getEntry().getResponse().getContent().getText();
+            }
+        });
+
+        String body = IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/a.txt")).getEntity().getContent());
+
+        ThreadUtils.waitFor(new ThreadUtils.WaitCondition() {
+            @Override
+            public boolean checkCondition(long elapsedTimeInMs) {
+                return interceptedBody[0] != null;
+            }
+        }, TimeUnit.SECONDS, 10);
+
+        Assert.assertEquals(interceptedBody[0], body);
     }
 
     @Test
