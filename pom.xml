@@ -138,6 +138,35 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <!-- Fetch PhantomJS for us -->
+            	<groupId>com.github.klieber</groupId>
+            	<artifactId>phantomjs-maven-plugin</artifactId>
+            	<version>0.2.1</version>
+            	<executions>
+            		<execution>
+            			<id>fetch-phantom-js</id>
+            			<goals>
+            				<goal>install</goal>
+            			</goals>
+            		</execution>
+            	</executions>
+				<configuration>
+					<!-- Fetch this version of PhantomJS -->
+					<version>1.9.2</version>
+        		</configuration>
+            </plugin>
+            <plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<!--  use parent version  -->
+				<configuration>
+					<!-- Make downloaded PhantomJS available to tests -->
+					<systemPropertyVariables>
+						<phantomjs.binary.path>${phantomjs.binary}</phantomjs.binary.path>
+					</systemPropertyVariables>
+				</configuration>
+     		</plugin>
         </plugins>
     </build>
     <dependencies>
