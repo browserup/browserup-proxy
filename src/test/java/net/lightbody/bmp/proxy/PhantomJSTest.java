@@ -1,9 +1,10 @@
 package net.lightbody.bmp.proxy;
 
-import junit.framework.Assert;
 import net.lightbody.bmp.core.har.Har;
 
+import org.hamcrest.CoreMatchers;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.selenium.Proxy;
@@ -49,6 +50,7 @@ public class PhantomJSTest {
     
             driver.get("http://www.yahoo.com");
     
+            Assert.assertThat(driver.getTitle(), CoreMatchers.containsString("Yahoo"));
             // get the HAR data
             Har har = server.getHar();
     
@@ -80,6 +82,7 @@ public class PhantomJSTest {
             server.newHar("Google");
     
             driver.get("https://www.google.com/");
+            Assert.assertThat(driver.getTitle(), CoreMatchers.containsString("Google"));
     
             // get the HAR data
             Har har = server.getHar();
