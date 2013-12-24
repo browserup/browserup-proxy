@@ -1,6 +1,7 @@
 package net.lightbody.bmp.proxy;
 
 import net.lightbody.bmp.core.har.Har;
+import net.lightbody.bmp.core.har.HarEntry;
 
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
@@ -81,7 +82,8 @@ public class PhantomJSTest {
         try {
             server.newHar("Google");
     
-            driver.get("https://www.google.com/");
+            // No Country Redirect - always go to the US site
+            driver.get("https://www.google.com/ncr");
             Assert.assertThat(driver.getTitle(), CoreMatchers.containsString("Google"));
     
             // get the HAR data
@@ -91,9 +93,18 @@ public class PhantomJSTest {
             Assert.assertTrue(!har.getLog().getEntries().isEmpty());
     
             // show that we can capture the HTML of the root page
-            String text = har.getLog().getEntries().get(0).getResponse().getContent().getText();
-            Assert.assertTrue(text.contains("<title>Google</title>"));
-    
+            String text = null;
+            for (HarEntry entry : har.getLog().getEntries()) {
+                // find the first proper response, and check it
+                if (entry.getResponse().getStatus() == 200) {
+                    text = entry.getResponse().getContent().getText();
+                    Assert.assertTrue(text.contains("<title>Google</title>"));
+                    // nothing left to prove
+                    return;
+                }
+                
+            }
+            Assert.fail("No normal (Status 200) response found in HAR");
         } finally {
             driver.quit();
         }
