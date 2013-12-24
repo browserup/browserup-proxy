@@ -351,74 +351,83 @@ public class MailingListIssuesTest extends DummyServerTest {
     @Test
     public void issue27() throws Exception{
         // see: https://github.com/lightbody/browsermob-proxy/issues/27
-
+        WebDriver driver = null;
         // start the proxy
         ProxyServer server = new ProxyServer(4444);
         server.start();
-        server.setCaptureHeaders(true);
-        server.setCaptureContent(true);
-
-        // get the selenium proxy object
-        Proxy proxy = server.seleniumProxy();
-        DesiredCapabilities capabilities = new DesiredCapabilities();
-
-        capabilities.setCapability(CapabilityType.PROXY, proxy);
-
-        // start the browser up
-        WebDriver driver = new FirefoxDriver(capabilities);
-
-        server.newHar("assertselenium.com");
-
-        driver.get("http://whatsmyuseragent.com");
-        //driver.get("https://google.com");
-
-        // get the HAR data
-        Har har = server.getHar();
-
-        // make sure something came back in the har
-        Assert.assertTrue(!har.getLog().getEntries().isEmpty());
-
-        // show that we can capture the HTML of the root page
-        String text = har.getLog().getEntries().get(0).getResponse().getContent().getText();
-        Assert.assertTrue(text.contains("<title>Whats My User Agent?</title>"));
-
-        server.stop();
-        driver.quit();
+        try {
+            server.setCaptureHeaders(true);
+            server.setCaptureContent(true);
+    
+            // get the selenium proxy object
+            Proxy proxy = server.seleniumProxy();
+            DesiredCapabilities capabilities = new DesiredCapabilities();
+    
+            capabilities.setCapability(CapabilityType.PROXY, proxy);
+    
+            // start the browser up
+            driver = new FirefoxDriver(capabilities);
+    
+            server.newHar("assertselenium.com");
+    
+            driver.get("http://whatsmyuseragent.com");
+            //driver.get("https://google.com");
+    
+            // get the HAR data
+            Har har = server.getHar();
+    
+            // make sure something came back in the har
+            Assert.assertTrue(!har.getLog().getEntries().isEmpty());
+    
+            // show that we can capture the HTML of the root page
+            String text = har.getLog().getEntries().get(0).getResponse().getContent().getText();
+            Assert.assertTrue(text.contains("<title>Whats My User Agent?</title>"));
+        } finally {
+            server.stop();
+            if (driver != null) {
+                driver.quit();
+            }
+        }
     }
 
     @Test
     public void googleCaSslNotWorkingInFirefox() throws Exception{
+        WebDriver driver = null;
         // start the proxy
         ProxyServer server = new ProxyServer(4444);
         server.start();
-        server.setCaptureHeaders(true);
-        server.setCaptureContent(true);
-
-        // get the selenium proxy object
-        Proxy proxy = server.seleniumProxy();
-        DesiredCapabilities capabilities = new DesiredCapabilities();
-
-        capabilities.setCapability(CapabilityType.PROXY, proxy);
-
-        // start the browser up
-        WebDriver driver = new FirefoxDriver(capabilities);
-
-        server.newHar("Google.ca");
-
-        driver.get("https://www.google.ca/");
-
-        // get the HAR data
-        Har har = server.getHar();
-
-        // make sure something came back in the har
-        Assert.assertTrue(!har.getLog().getEntries().isEmpty());
-
-        // show that we can capture the HTML of the root page
-        String text = har.getLog().getEntries().get(0).getResponse().getContent().getText();
-        Assert.assertTrue(text.contains("<title>Google</title>"));
-
-        server.stop();
-        driver.quit();
+        try {
+            server.setCaptureHeaders(true);
+            server.setCaptureContent(true);
+    
+            // get the selenium proxy object
+            Proxy proxy = server.seleniumProxy();
+            DesiredCapabilities capabilities = new DesiredCapabilities();
+    
+            capabilities.setCapability(CapabilityType.PROXY, proxy);
+    
+            // start the browser up
+            driver = new FirefoxDriver(capabilities);
+    
+            server.newHar("Google.ca");
+    
+            driver.get("https://www.google.ca/");
+    
+            // get the HAR data
+            Har har = server.getHar();
+    
+            // make sure something came back in the har
+            Assert.assertTrue(!har.getLog().getEntries().isEmpty());
+    
+            // show that we can capture the HTML of the root page
+            String text = har.getLog().getEntries().get(0).getResponse().getContent().getText();
+            Assert.assertTrue(text.contains("<title>Google</title>"));
+        } finally {
+            server.stop();
+            if (driver != null) {
+                driver.quit();
+            }
+        }
     }
 
 
