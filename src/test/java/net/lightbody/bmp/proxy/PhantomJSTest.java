@@ -48,7 +48,7 @@ public class PhantomJSTest {
         try {
             server.newHar("Yahoo");
     
-            driver.get("http://www.yahoo.com");
+            driver.get("http://us.yahoo.com");
     
             Assert.assertThat(driver.getTitle(), CoreMatchers.containsString("Yahoo"));
             // get the HAR data
