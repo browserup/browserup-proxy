@@ -4,6 +4,7 @@ import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.core.har.HarEntry;
 
 import org.hamcrest.CoreMatchers;
+import org.jboss.arquillian.phantom.resolver.ResolvingPhantomJSDriverService;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -44,7 +45,11 @@ public class PhantomJSTest {
 
         capabilities.setCapability(CapabilityType.PROXY, proxy);
 
-        PhantomJSDriver driver = new PhantomJSDriver(capabilities);
+        // ResolvingPhantomJSDriverService downloads PhantomJS if it's not found
+		PhantomJSDriver driver = new PhantomJSDriver(
+				ResolvingPhantomJSDriverService
+						.createDefaultService(capabilities),
+				capabilities);
         
         try {
             server.newHar("Yahoo");
@@ -78,7 +83,12 @@ public class PhantomJSTest {
         capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, new String[] {"--ignore-ssl-errors=true", "--ssl-protocol=any"});
         capabilities.setCapability(CapabilityType.PROXY, proxy);
 
-        PhantomJSDriver driver = new PhantomJSDriver(capabilities);
+        // ResolvingPhantomJSDriverService downloads PhantomJS if it's not found
+		PhantomJSDriver driver = new PhantomJSDriver(
+				ResolvingPhantomJSDriverService
+						.createDefaultService(capabilities),
+				capabilities);
+		
         try {
             server.newHar("Google");
     
