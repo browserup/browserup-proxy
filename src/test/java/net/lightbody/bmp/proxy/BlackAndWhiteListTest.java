@@ -133,6 +133,16 @@ public class BlackAndWhiteListTest extends DummyServerTest {
         assertThat(httpStatusWhenGetting("http://127.0.0.1:8080/c.png"), is(200));
     }
 
+    @Test
+    public void testFacebook() throws IOException {
+        proxy.blacklistRequests("https?://.*\\.facebook\\.com/.*", 678);
+
+        assertThat("Unexpected status code from blacklisted URL",
+                httpStatusWhenGetting("http://www.facebook.com/something-not-really-there"),
+                is(678));
+
+    }
+
 
     /**
      * Makes a HTTP Get request to the supplied URI, and returns the HTTP status
