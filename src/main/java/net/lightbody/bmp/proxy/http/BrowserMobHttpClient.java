@@ -5,6 +5,7 @@ import net.lightbody.bmp.proxy.util.*;
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
+
 import org.apache.http.*;
 import org.apache.http.auth.*;
 import org.apache.http.client.CredentialsProvider;
@@ -36,6 +37,7 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestExecutor;
+import org.apache.http.util.EntityUtils;
 import org.eclipse.jetty.util.MultiMap;
 import org.eclipse.jetty.util.UrlEncoded;
 import org.java_bandwidthlimiter.StreamManager;
@@ -142,17 +144,26 @@ public class BrowserMobHttpClient {
                     protected HttpResponse doSendRequest(HttpRequest request, HttpClientConnection conn, HttpContext context) throws IOException, HttpException {
 						long requestHeadersSize = request.getRequestLine().toString().length() + 4;
 						long requestBodySize = 0;
+						String requestBody = null;
 						for (Header header : request.getAllHeaders()) {
 							requestHeadersSize += header.toString().length() + 2;
 							if (header.getName().equals("Content-Length")) {
 								requestBodySize += Integer.valueOf(header.getValue());
 							}
 						}
+						
+					    if(request instanceof HttpEntityEnclosingRequest){
+					        HttpEntity entity = ((HttpEntityEnclosingRequest) request).getEntity();
+					           if (entity != null && entity.getContentLength() > 0) {
+					            requestBody = EntityUtils.toString(entity, "UTF-8");
+					           }
+					       }
 
                         HarEntry entry = RequestInfo.get().getEntry();
                         if (entry != null) {
                             entry.getRequest().setHeadersSize(requestHeadersSize);
                             entry.getRequest().setBodySize(requestBodySize);
+                            entry.getRequest().setRequestBody(requestBody);
                         }
 
                         Date start = new Date();
