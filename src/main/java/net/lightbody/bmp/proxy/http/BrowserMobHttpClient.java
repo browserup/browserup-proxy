@@ -857,6 +857,7 @@ public class BrowserMobHttpClient {
 
 	private void setBinaryContentOfEntry(HarEntry entry, ByteArrayOutputStream copy) {
 		entry.getResponse().getContent().setText(Base64.byteArrayToBase64(copy.toByteArray()));
+		entry.getResponse().getContent().setEncoding("base64");
 	}
 
 	private void setTextOfEntry(HarEntry entry, ByteArrayOutputStream copy, String contentType) {
