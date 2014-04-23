@@ -133,8 +133,8 @@ public class BrowserMobHttpClient {
         };
 
         // MOB-338: 30 total connections and 6 connections per host matches the behavior in Firefox 3
-        httpClientConnMgr.setMaxTotal(30);
-        httpClientConnMgr.setDefaultMaxPerRoute(6);
+        httpClientConnMgr.setMaxTotal(600);
+        httpClientConnMgr.setDefaultMaxPerRoute(300);
 
         httpClient = new DefaultHttpClient(httpClientConnMgr) {
             @Override
