@@ -58,44 +58,139 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 public class BrowserMobHttpClient {
-    private static final Log LOG = new Log();
-    public static UserAgentStringParser PARSER = UADetectorServiceFactory.getCachingAndUpdatingParser();
-
+	private static final Log LOG = new Log();
+	public static UserAgentStringParser PARSER = UADetectorServiceFactory.getCachingAndUpdatingParser();
+	
     private static final int BUFFER = 4096;
 
     private Har har;
     private String harPageRef;
 
+    /**
+     * keep headers
+     */
     private boolean captureHeaders;
+    
+    /**
+     * keep contents
+     */
     private boolean captureContent;
-    // if captureContent is set to true, default policy is to capture binary contents too
+    
+    /**
+     * keep binary contents (if captureContent is set to true, default policy is to capture binary contents too)
+     */
     private boolean captureBinaryContent = true;
 
+    /**
+     * socket dedicated to port 80 (HTTP)
+     */
     private SimulatedSocketFactory socketFactory;
+    
+    /**
+     * socket dedicated to port 443 (HTTPS)
+     */
     private TrustingSSLSocketFactory sslSocketFactory;
+    
     private ThreadSafeClientConnManager httpClientConnMgr;
+    
+    /**
+     * The BrowserMobHTTPClient object
+     */
     private DefaultHttpClient httpClient;
+ 
+    
+    /**
+     * List of refused URL patterns
+     */
     private List<BlacklistEntry> blacklistEntries = new CopyOnWriteArrayList<BrowserMobHttpClient.BlacklistEntry>();
+    
+    /**
+     * List of accepted URL patterns
+     */
     private WhitelistEntry whitelistEntry = null;
+    
+    /**
+     * List of URLs to rewrite
+     */
     private List<RewriteRule> rewriteRules = new CopyOnWriteArrayList<RewriteRule>();
+    
+    /**
+     * triggers to process when sending request
+     */
     private List<RequestInterceptor> requestInterceptors = new CopyOnWriteArrayList<RequestInterceptor>();
+    
+    /**
+     * triggers to process when receiving response
+     */
     private List<ResponseInterceptor> responseInterceptors = new CopyOnWriteArrayList<ResponseInterceptor>();
+    
+    /**
+     * additional headers sent with request
+     */
     private HashMap<String, String> additionalHeaders = new LinkedHashMap<String, String>();
+    
+    /**
+     * request timeout: set to -1 to disable timeout
+     */
     private int requestTimeout;
+    
+    /**
+     * is it possible to add a new request?
+     */
     private AtomicBoolean allowNewRequests = new AtomicBoolean(true);
+    
+    /**
+     * DNS lookup handler
+     */
     private BrowserMobHostNameResolver hostNameResolver;
+    
+    /**
+     * does the proxy support gzip compression? (set to false if you go through a browser)
+     */
     private boolean decompress = true;
+    
+    /**
+     * set of active requests
+     */
     // not using CopyOnWriteArray because we're WRITE heavy and it is for READ heavy operations
     // instead doing it the old fashioned way with a synchronized block
     private final Set<ActiveRequest> activeRequests = new HashSet<ActiveRequest>();
+    
+    /**
+     * credentials used for authentication
+     */
     private WildcardMatchingCredentialsProvider credsProvider;
+    
+    /**
+     * is the client shutdown?
+     */
     private boolean shutdown = false;
+    
+    /**
+     * authentication type used
+     */
     private AuthType authType;
 
+    /**
+     * does the proxy follow redirects? (set to false if you go through a browser)
+     */
     private boolean followRedirects = true;
+    
+    /**
+     * maximum redirects supported by the proxy
+     */
     private static final int MAX_REDIRECT = 10;
+    
+    /**
+     * remaining requests counter
+     */
     private AtomicInteger requestCounter;
 
+    /**
+     * Init HTTP client
+     * @param streamManager will be capped to 100 Megabits (by default it is disabled)
+     * @param requestCounter indicates the number of remaining requests
+     */
     public BrowserMobHttpClient(StreamManager streamManager, AtomicInteger requestCounter) {
         this.requestCounter = requestCounter;
         SchemeRegistry schemeRegistry = new SchemeRegistry();
@@ -142,11 +237,14 @@ public class BrowserMobHttpClient {
                 return new HttpRequestExecutor() {
                     @Override
                     protected HttpResponse doSendRequest(HttpRequest request, HttpClientConnection conn, HttpContext context) throws IOException, HttpException {
+                    	// +4 => header/data separation
 						long requestHeadersSize = request.getRequestLine().toString().length() + 4;
 						long requestBodySize = 0;
 						String requestBody = null;
 						for (Header header : request.getAllHeaders()) {
+							// +2 => new line
 							requestHeadersSize += header.toString().length() + 2;
+							// get body size
 							if (header.getName().equals("Content-Length")) {
 								requestBodySize += Integer.valueOf(header.getValue());
 							}
@@ -159,33 +257,47 @@ public class BrowserMobHttpClient {
 					           }
 					       }
 
-                        HarEntry entry = RequestInfo.get().getEntry();
+					    // set current entry request
+					    HarEntry entry = RequestInfo.get().getEntry();
                         if (entry != null) {
                             entry.getRequest().setHeadersSize(requestHeadersSize);
                             entry.getRequest().setBodySize(requestBodySize);
                             entry.getRequest().setRequestBody(requestBody);
                         }
 
+                        // set date before sending
                         Date start = new Date();
+                        
+                        // send request
                         HttpResponse response = super.doSendRequest(request, conn, context);
+                        
+                        // set "sending" for resource
                         RequestInfo.get().send(start, new Date());
                         return response;
                     }
 
                     @Override
                     protected HttpResponse doReceiveResponse(HttpRequest request, HttpClientConnection conn, HttpContext context) throws HttpException, IOException {
-                        Date start = new Date();
+                        // set date on receive
+                    	Date start = new Date();
+                    	
+                    	// receive response
                         HttpResponse response = super.doReceiveResponse(request, conn, context);
-						long responseHeadersSize = response.getStatusLine().toString().length() + 4;
+						
+                        // +4 => header/data separation
+                        long responseHeadersSize = response.getStatusLine().toString().length() + 4;
 						for (Header header : response.getAllHeaders()) {
+							// +2 => new line
 							responseHeadersSize += header.toString().length() + 2;
 						}
 
+						// set current entry response
                         HarEntry entry = RequestInfo.get().getEntry();
                         if (entry != null) {
 							entry.getResponse().setHeadersSize(responseHeadersSize);
 						}
-
+                        
+                        // set "waiting" for resource
                         RequestInfo.get().wait(start, new Date());
                         return response;
                     }
@@ -206,6 +318,7 @@ public class BrowserMobHttpClient {
         HttpClientInterrupter.watch(this);
         setConnectionTimeout(60000);
         setSocketOperationTimeout(60000);
+        // no request timeout
         setRequestTimeout(-1);
     }
 
@@ -485,7 +598,8 @@ public class BrowserMobHttpClient {
                         break;
                     }
                 }
-
+                
+                // url does not match whitelist, set the response code
                 if (!found) {
                     mockResponseCode = whitelistEntry.responseCode;
                 }
@@ -494,7 +608,8 @@ public class BrowserMobHttpClient {
 
         if (blacklistEntries != null) {
             for (BlacklistEntry blacklistEntry : blacklistEntries) {
-                if (blacklistEntry.pattern.matcher(url).matches()) {
+            	// url does match whitelist, set the response code
+            	if (blacklistEntry.pattern.matcher(url).matches()) {
                     mockResponseCode = blacklistEntry.responseCode;
                     break;
                 }
@@ -987,6 +1102,9 @@ public class BrowserMobHttpClient {
         additionalHeaders.put(name, value);
     }
 
+    /**
+     * init HTTP client, using a browser which handle cookies, gzip compression and redirects
+     */
     public void prepareForBrowser() {
         // Clear cookies, let the browser handle them
         httpClient.setCookieStore(new BlankCookieStore());
@@ -1106,6 +1224,7 @@ public class BrowserMobHttpClient {
 
     private class WhitelistEntry {
         private List<Pattern> patterns = new CopyOnWriteArrayList<Pattern>();
+        // the HTTP status code to return for URLs that do not match the whitelist
         private int responseCode;
 
         private WhitelistEntry(String[] patterns, int responseCode) {
