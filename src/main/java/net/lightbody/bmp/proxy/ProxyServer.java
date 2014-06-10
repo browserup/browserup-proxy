@@ -32,7 +32,18 @@ public class ProxyServer {
     private static final HarNameVersion CREATOR = new HarNameVersion("BrowserMob Proxy", "2.0");
     private static final Log LOG = new Log();
 
+    /*
+     * The Jetty HttpServer use in BrowserMobProxyHandler
+     * 
+     * TODO I still don't know what is it use for
+     */
     private Server server;
+    /*
+     * Init the port use to bind the socket
+     * value -1 means that the ProxyServer is it well configured yet
+     * 
+     * The port value can be change thanks to the setter method or by directly giving it as a constructor param
+     */
     private int port = -1;
     private InetAddress localHost;
     private BrowserMobHttpClient client;

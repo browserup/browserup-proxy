@@ -68,7 +68,7 @@ public class BrowserMobHttpClient {
 
     private boolean captureHeaders;
     private boolean captureContent;
-    // if captureContent is set, default policy is to capture binary contents too
+    // if captureContent is set to true, default policy is to capture binary contents too
     private boolean captureBinaryContent = true;
 
     private SimulatedSocketFactory socketFactory;
@@ -132,7 +132,7 @@ public class BrowserMobHttpClient {
             }
         };
 
-        // MOB-338: 30 total connections and 6 connections per host matches the behavior in Firefox 3
+        // we set high limit for request parallelism to let the browser set is own limit 
         httpClientConnMgr.setMaxTotal(600);
         httpClientConnMgr.setDefaultMaxPerRoute(300);
 
@@ -425,6 +425,9 @@ public class BrowserMobHttpClient {
     //
     //If we were making cake, this would be the filling :)
     //
+    /**
+     *  
+     */
     private BrowserMobHttpResponse execute(BrowserMobHttpRequest req, int depth) {
         if (depth >= MAX_REDIRECT) {
             throw new IllegalStateException("Max number of redirects (" + MAX_REDIRECT + ") reached");
@@ -527,6 +530,8 @@ public class BrowserMobHttpClient {
         // clear out any connection-related information so that it's not stale from previous use of this thread.
         RequestInfo.clear(url, entry);
 
+        
+        // default init ? why the NO RESPONSE ?
         entry.setRequest(new HarRequest(method.getMethod(), url, method.getProtocolVersion().getProtocol()));
         entry.setResponse(new HarResponse(-999, "NO RESPONSE", method.getProtocolVersion().getProtocol()));
         if (this.har != null && harPageRef != null) {
