@@ -491,10 +491,6 @@ public class BrowserMobHttpClient {
         HttpRequestBase method = req.getMethod();
         String url = method.getURI().toString();
         
-        if (method.getMethod().equals("POST")) {
-        	System.out.println("[[begin execute]["+System.currentTimeMillis()+"]"+method.getMethod()+" "+url);
-        }
-        
         // save the browser and version if it's not yet been set
         if (har != null && har.getLog().getBrowser() == null) {
             Header[] uaHeaders = method.getHeaders("User-Agent");
@@ -668,19 +664,9 @@ public class BrowserMobHttpClient {
 				// No mechanism to look up the response text by status code,
 				// so include a notification that this is a synthetic error code.
             } else {
-            	if (method.getMethod().equals("POST")) {
-                	System.out.println("[[begin execute http client]["+System.currentTimeMillis()+"]"+method.getMethod()+" "+url);
-                }
-            	
                 response = httpClient.execute(method, ctx);
-                if (method.getMethod().equals("POST")) {
-                	System.out.println("[[after execute http client]["+System.currentTimeMillis()+"]"+method.getMethod()+" "+url);
-                }
                 statusLine = response.getStatusLine();
                 statusCode = statusLine.getStatusCode();
-                if (method.getMethod().equals("POST")) {
-                	System.out.println("[[after execute http client]["+System.currentTimeMillis()+"]"+method.getMethod()+" "+url);
-                }
                 if (callback != null) {
                     callback.handleStatusLine(statusLine);
                     callback.handleHeaders(response.getAllHeaders());
@@ -707,13 +693,7 @@ public class BrowserMobHttpClient {
                         os = new ClonedOutputStream(os);
 
                     }
-                    if (method.getMethod().equals("POST")) {
-                    	System.out.println("[[before copy with stats]["+System.currentTimeMillis()+"]"+method.getMethod()+" "+url);
-                    }
                     bytes = copyWithStats(is, os);
-                    if (method.getMethod().equals("POST")) {
-                    	System.out.println("[[after copy with stats]["+System.currentTimeMillis()+"]"+method.getMethod()+" "+url);
-                    }
                 }
             }
         } catch (Exception e) {
