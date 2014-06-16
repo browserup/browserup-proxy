@@ -1,15 +1,80 @@
 package net.lightbody.bmp.proxy.http;
 
-import net.lightbody.bmp.core.har.*;
-import net.lightbody.bmp.proxy.util.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
+
+import net.lightbody.bmp.core.har.Har;
+import net.lightbody.bmp.core.har.HarCookie;
+import net.lightbody.bmp.core.har.HarEntry;
+import net.lightbody.bmp.core.har.HarNameValuePair;
+import net.lightbody.bmp.core.har.HarNameVersion;
+import net.lightbody.bmp.core.har.HarPostData;
+import net.lightbody.bmp.core.har.HarPostDataParam;
+import net.lightbody.bmp.core.har.HarRequest;
+import net.lightbody.bmp.core.har.HarResponse;
+import net.lightbody.bmp.core.har.HarTimings;
+import net.lightbody.bmp.proxy.util.Base64;
+import net.lightbody.bmp.proxy.util.CappedByteArrayOutputStream;
+import net.lightbody.bmp.proxy.util.ClonedOutputStream;
+import net.lightbody.bmp.proxy.util.IOUtils;
+import net.lightbody.bmp.proxy.util.Log;
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
 
-import org.apache.http.*;
-import org.apache.http.auth.*;
+import org.apache.http.Header;
+import org.apache.http.HeaderElement;
+import org.apache.http.HttpClientConnection;
+import org.apache.http.HttpConnection;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpException;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpRequestInterceptor;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpResponseInterceptor;
+import org.apache.http.HttpVersion;
+import org.apache.http.NameValuePair;
+import org.apache.http.ParseException;
+import org.apache.http.ProtocolVersion;
+import org.apache.http.StatusLine;
+import org.apache.http.auth.AuthScheme;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.AuthState;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.NTCredentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.methods.*;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpOptions;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.params.ClientPNames;
 import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.client.protocol.ClientContext;
@@ -21,7 +86,11 @@ import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.cookie.*;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.cookie.CookieOrigin;
+import org.apache.http.cookie.CookieSpec;
+import org.apache.http.cookie.CookieSpecFactory;
+import org.apache.http.cookie.MalformedCookieException;
 import org.apache.http.cookie.params.CookieSpecPNames;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.auth.BasicScheme;
@@ -43,19 +112,6 @@ import org.eclipse.jetty.util.UrlEncoded;
 import org.java_bandwidthlimiter.StreamManager;
 import org.xbill.DNS.Cache;
 import org.xbill.DNS.DClass;
-
-import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.Charset;
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.GZIPInputStream;
 
 public class BrowserMobHttpClient {
 	private static final Log LOG = new Log();
@@ -185,20 +241,18 @@ public class BrowserMobHttpClient {
      * remaining requests counter
      */
     private AtomicInteger requestCounter;
-
+    
     /**
      * Init HTTP client
      * @param streamManager will be capped to 100 Megabits (by default it is disabled)
      * @param requestCounter indicates the number of remaining requests
      */
-    public BrowserMobHttpClient(StreamManager streamManager, AtomicInteger requestCounter) {
+    public BrowserMobHttpClient(final StreamManager streamManager, AtomicInteger requestCounter) {
         this.requestCounter = requestCounter;
         SchemeRegistry schemeRegistry = new SchemeRegistry();
         hostNameResolver = new BrowserMobHostNameResolver(new Cache(DClass.ANY));
-
         this.socketFactory = new SimulatedSocketFactory(hostNameResolver, streamManager);
         this.sslSocketFactory = new TrustingSSLSocketFactory(hostNameResolver, streamManager);
-
         this.sslSocketFactory.setHostnameVerifier(new AllowAllHostnameVerifier());
 
         schemeRegistry.register(new Scheme("http", 80, socketFactory));
@@ -278,27 +332,35 @@ public class BrowserMobHttpClient {
 
                     @Override
                     protected HttpResponse doReceiveResponse(HttpRequest request, HttpClientConnection conn, HttpContext context) throws HttpException, IOException {
-                        // set date on receive
-                    	Date start = new Date();
-                    	
-                    	// receive response
+                        Date start = new Date();    
                         HttpResponse response = super.doReceiveResponse(request, conn, context);
-						
+                        
                         // +4 => header/data separation
                         long responseHeadersSize = response.getStatusLine().toString().length() + 4;
 						for (Header header : response.getAllHeaders()) {
 							// +2 => new line
 							responseHeadersSize += header.toString().length() + 2;
 						}
-
 						// set current entry response
                         HarEntry entry = RequestInfo.get().getEntry();
                         if (entry != null) {
 							entry.getResponse().setHeadersSize(responseHeadersSize);
 						}
+                        if(streamManager.getLatency() > 0){
+                            // retrieve real latency discovered in connect (SimulatedSocket or SimulatedSSLSocket)
+                        	long realLatency = RequestInfo.get().getLatency();
+                            // add latency
+                        	if(realLatency<streamManager.getLatency()){
+                                try {
+									Thread.sleep(streamManager.getLatency()-realLatency);
+								} catch (InterruptedException e) {
+									Thread.interrupted();
+								}
+                            }  
+                        }  
+                        // set waiting time
+                        RequestInfo.get().wait(start,new Date());
                         
-                        // set "waiting" for resource
-                        RequestInfo.get().wait(start, new Date());
                         return response;
                     }
                 };

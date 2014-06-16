@@ -1,14 +1,5 @@
 package net.lightbody.bmp.proxy.http;
 
-import net.lightbody.bmp.proxy.util.Log;
-import org.apache.http.conn.ConnectTimeoutException;
-import org.apache.http.conn.HttpInetSocketAddress;
-import org.apache.http.conn.scheme.HostNameResolver;
-import org.apache.http.conn.scheme.SchemeSocketFactory;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
-import org.java_bandwidthlimiter.StreamManager;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -20,6 +11,16 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
 import java.util.Date;
+
+import net.lightbody.bmp.proxy.util.Log;
+
+import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.http.conn.HttpInetSocketAddress;
+import org.apache.http.conn.scheme.HostNameResolver;
+import org.apache.http.conn.scheme.SchemeSocketFactory;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
+import org.java_bandwidthlimiter.StreamManager;
 
 public class SimulatedSocketFactory implements SchemeSocketFactory {
     private static Log LOG = new Log();
@@ -70,15 +71,46 @@ public class SimulatedSocketFactory implements SchemeSocketFactory {
             public void connect(SocketAddress endpoint) throws IOException {
                 Date start = new Date();
                 super.connect(endpoint);
-                Date end = new Date();
-                RequestInfo.get().connect(start, end);
+	       		Date end = new Date();
+	       		Date realEnd= end;
+	       		long connectReal = end.getTime() - start.getTime();
+	       		 
+	       		if(connectReal < streamManager.getLatency()){
+	       		    try {
+	       				Thread.sleep(streamManager.getLatency()-connectReal);
+	       			} catch (InterruptedException e) {
+	    				Thread.interrupted();
+	       			}
+	       		    end = new Date();
+	       		}
+	       		RequestInfo.get().latency(start, realEnd);
+	       		RequestInfo.get().connect(start, end);
+       		
             }
             @Override
             public void connect(SocketAddress endpoint, int timeout) throws IOException {
                 Date start = new Date();
                 super.connect(endpoint, timeout);
                 Date end = new Date();
-                RequestInfo.get().connect(start, end);
+				// the end before adding latency
+                Date realEnd= end;
+				long connectReal = end.getTime() - start.getTime();
+				 
+				// add latency
+				if(connectReal < streamManager.getLatency()){
+					try {
+						Thread.sleep(streamManager.getLatency()-connectReal);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					// the end after adding latency
+				    end = new Date();
+				}
+				// set real latency time
+				RequestInfo.get().latency(start, realEnd);
+				// set connect time
+				RequestInfo.get().connect(start, end);
+	       		
             }
             @Override
             public InputStream getInputStream() throws IOException {
