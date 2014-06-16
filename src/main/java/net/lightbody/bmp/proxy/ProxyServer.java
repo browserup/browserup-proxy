@@ -1,6 +1,19 @@
 package net.lightbody.bmp.proxy;
 
-import net.lightbody.bmp.core.har.*;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import net.lightbody.bmp.core.har.Har;
+import net.lightbody.bmp.core.har.HarEntry;
+import net.lightbody.bmp.core.har.HarLog;
+import net.lightbody.bmp.core.har.HarNameVersion;
+import net.lightbody.bmp.core.har.HarPage;
 import net.lightbody.bmp.core.util.ThreadUtils;
 import net.lightbody.bmp.proxy.http.BrowserMobHttpClient;
 import net.lightbody.bmp.proxy.http.RequestInterceptor;
@@ -12,20 +25,9 @@ import net.lightbody.bmp.proxy.jetty.jetty.Server;
 import net.lightbody.bmp.proxy.jetty.util.InetAddrPort;
 import net.lightbody.bmp.proxy.util.Log;
 
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.HttpResponseInterceptor;
 import org.java_bandwidthlimiter.BandwidthLimiter;
 import org.java_bandwidthlimiter.StreamManager;
 import org.openqa.selenium.Proxy;
-
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class ProxyServer {
@@ -84,7 +86,6 @@ public class ProxyServer {
         handler.setHttpClient(client);
 
         context.addHandler(handler);
-
         server.start();
 
         setPort(listener.getPort());
@@ -220,27 +221,27 @@ public class ProxyServer {
         currentPage = null;
     }
 
-    public void setRetryCount(int count) {
-        client.setRetryCount(count);
-    }
+//    public void setRetryCount(int count) {
+//        client.setRetryCount(count);
+//    }
 
     public void remapHost(String source, String target) {
         client.remapHost(source, target);
     }
 
-    @Deprecated
-    public void addRequestInterceptor(HttpRequestInterceptor i) {
-        client.addRequestInterceptor(i);
-    }
+//    @Deprecated
+//    public void addRequestInterceptor(HttpRequestInterceptor i) {
+//        client.addRequestInterceptor(i);
+//    }
 
     public void addRequestInterceptor(RequestInterceptor interceptor) {
         client.addRequestInterceptor(interceptor);
     }
 
-    @Deprecated
-    public void addResponseInterceptor(HttpResponseInterceptor i) {
-        client.addResponseInterceptor(i);
-    }
+//    @Deprecated
+//    public void addResponseInterceptor(HttpResponseInterceptor i) {
+//        client.addResponseInterceptor(i);
+//    }
 
     public void addResponseInterceptor(ResponseInterceptor interceptor) {
         client.addResponseInterceptor(interceptor);
@@ -336,7 +337,6 @@ public class ProxyServer {
     }
 
     public void waitForNetworkTrafficToStop(final long quietPeriodInMs, long timeoutInMs) {
-        long start = System.currentTimeMillis();
         boolean result = ThreadUtils.waitFor(new ThreadUtils.WaitCondition() {
             @Override
             public boolean checkCondition(long elapsedTimeInMs) {
@@ -363,8 +363,6 @@ public class ProxyServer {
                 return lastCompleted != null && System.currentTimeMillis() - lastCompleted.getTime() >= quietPeriodInMs;
             }
         }, TimeUnit.MILLISECONDS, timeoutInMs);
-        long end = System.currentTimeMillis();
-        long time = (end - start);
 
         if (!result) {
             throw new RuntimeException("Timed out after " + timeoutInMs + " ms while waiting for network traffic to stop");
