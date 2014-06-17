@@ -56,6 +56,7 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpResponseInterceptor;
 import org.apache.http.HttpVersion;
 import org.apache.http.NameValuePair;
 import org.apache.http.ParseException;
@@ -68,7 +69,9 @@ import org.apache.http.auth.Credentials;
 import org.apache.http.auth.NTCredentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.config.RequestConfig.Builder;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
@@ -87,14 +90,22 @@ import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.cookie.Cookie;
+import org.apache.http.cookie.CookieOrigin;
+import org.apache.http.cookie.CookieSpec;
+import org.apache.http.cookie.CookieSpecProvider;
+import org.apache.http.cookie.MalformedCookieException;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.impl.cookie.BestMatchSpecFactory;
+import org.apache.http.impl.cookie.BrowserCompatSpec;
+import org.apache.http.impl.cookie.BrowserCompatSpecFactory;
 import org.apache.http.message.BasicStatusLine;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.ExecutionContext;
@@ -125,6 +136,8 @@ public class BrowserMobHttpClient {
     private SimulatedSocketFactory socketFactory;
     private TrustingSSLSocketFactory sslSocketFactory;
     private PoolingHttpClientConnectionManager httpClientConnMgr;
+	private Builder requestConfigBuilder;
+    private HttpClientBuilder httpClientBuilder;
     private CloseableHttpClient httpClient;
     private BasicCookieStore cookieStore = new BasicCookieStore();;
     private List<BlacklistEntry> blacklistEntries = new CopyOnWriteArrayList<BrowserMobHttpClient.BlacklistEntry>();
@@ -188,8 +201,15 @@ public class BrowserMobHttpClient {
         httpClientConnMgr.setDefaultMaxPerRoute(300);
         
         credsProvider = new WildcardMatchingCredentialsProvider();
+        httpClientBuilder = getDefaultHttpClientBuilder();
+        httpClient = httpClientBuilder.build();
+        
+        HttpClientInterrupter.watch(this);
+    }
 
-        httpClient = HttpClientBuilder.create()
+	private HttpClientBuilder getDefaultHttpClientBuilder() {
+		this.requestConfigBuilder=getRequestConfigBuilder();
+		return HttpClientBuilder.create()
         	.setConnectionManager(httpClientConnMgr)
         	.setRequestExecutor(new HttpRequestExecutor() {
 	            @Override
@@ -243,11 +263,7 @@ public class BrowserMobHttpClient {
 	            }
 	        })
 	        .setDefaultRequestConfig(
-	        		RequestConfig.custom()
-		        		.setConnectionRequestTimeout(60000)
-		        		.setConnectTimeout(2000)
-		        		.setSocketTimeout(60000)
-		        		.build()
+	        		requestConfigBuilder.build()
 	        )
 	        .setDefaultCredentialsProvider(credsProvider)
 	        .setDefaultCookieStore(cookieStore)
@@ -256,29 +272,40 @@ public class BrowserMobHttpClient {
 	        // we set an empty httpProcessorBuilder to remove the automatic compression management
 	        .setHttpProcessor(HttpProcessorBuilder.create().build())
 	        // we always set this to false so it can be handled manually:
-	        .disableRedirectHandling()
-	        .build();
-        
-        HttpClientInterrupter.watch(this);
-    }
+	        .disableRedirectHandling();
+	}
 
+	private Builder getRequestConfigBuilder() {
+		return RequestConfig.custom()
+			.setConnectionRequestTimeout(60000)
+			.setConnectTimeout(2000)
+			.setSocketTimeout(60000);
+	}
+
+    public void setRetryCount(int count) {
+    	httpClientBuilder.setRetryHandler(new DefaultHttpRequestRetryHandler(count, false));
+    	updateHttpClient();
+    }
+	
     public void remapHost(String source, String target) {
         hostNameResolver.remap(source, target);
     }
 
-//    @Deprecated
-//    public void addRequestInterceptor(HttpRequestInterceptor i) {
-//        httpClient.addInterceptorLast(i);
-//    }
+    @Deprecated
+    public void addRequestInterceptor(HttpRequestInterceptor i) {
+    	httpClientBuilder.addInterceptorLast(i);
+    	updateHttpClient();
+    }
 
     public void addRequestInterceptor(RequestInterceptor interceptor) {
         requestInterceptors.add(interceptor);
     }
 
-//    @Deprecated
-//    public void addResponseInterceptor(HttpResponseInterceptor i) {
-//        httpClient.addInterceptorLast(i);
-//    }
+    @Deprecated
+    public void addResponseInterceptor(HttpResponseInterceptor i) {
+    	httpClientBuilder.addInterceptorLast(i);
+    	updateHttpClient();
+    }
 
     public void addResponseInterceptor(ResponseInterceptor interceptor) {
         responseInterceptors.add(interceptor);
@@ -996,11 +1023,15 @@ public class BrowserMobHttpClient {
     }
 
     public void setSocketOperationTimeout(int readTimeout) {
-//        httpClient.getParams().setIntParameter(CoreConnectionPNames.SO_TIMEOUT, readTimeout);
+        requestConfigBuilder.setSocketTimeout(readTimeout);
+    	httpClientBuilder.setDefaultRequestConfig(requestConfigBuilder.build());
+    	updateHttpClient();
     }
 
     public void setConnectionTimeout(int connectionTimeout) {
-//        httpClient.getParams().setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, connectionTimeout);
+        requestConfigBuilder.setConnectTimeout(connectionTimeout);
+    	httpClientBuilder.setDefaultRequestConfig(requestConfigBuilder.build());
+    	updateHttpClient();
     }
 
     public void setFollowRedirects(boolean followRedirects) {
@@ -1062,25 +1093,52 @@ public class BrowserMobHttpClient {
         additionalHeaders.put(name, value);
     }
 
-    public void prepareForBrowser() {
+    public  void prepareForBrowser() {
         // Clear cookies, let the browser handle them
     	cookieStore.clear();
-//    	cookieStore.register("easy", new CookieSpecFactory() {
-//            @Override
-//            public CookieSpec newInstance(HttpParams params) {
-//                return new BrowserCompatSpec() {
-//                    @Override
-//                    public void validate(Cookie cookie, CookieOrigin origin) throws MalformedCookieException {
-//                        // easy!
-//                    }
-//                };
-//            }
-//        });
-//        httpClient.getParams().setParameter(ClientPNames.COOKIE_POLICY, "easy");
-        decompress = false;
+    	CookieSpecProvider easySpecProvider = new CookieSpecProvider() {
+    	    public CookieSpec create(HttpContext context) {
+    	        return new BrowserCompatSpec() {
+    	            @Override
+    	            public void validate(Cookie cookie, CookieOrigin origin)
+    	                    throws MalformedCookieException {
+    	                // Oh, I am easy
+    	            }
+    	        };
+    	    }
+    	};
+    	
+    	Registry<CookieSpecProvider> r = RegistryBuilder.<CookieSpecProvider>create()
+    	        .register(CookieSpecs.BEST_MATCH,
+    	            new BestMatchSpecFactory())
+    	        .register(CookieSpecs.BROWSER_COMPATIBILITY,
+    	            new BrowserCompatSpecFactory())
+    	        .register("easy", easySpecProvider)
+    	        .build();
+    	
+    	RequestConfig requestConfig = RequestConfig.custom()
+    	        .setCookieSpec("easy")
+    	        .build();
+    	
+    	httpClientBuilder.setDefaultCookieSpecRegistry(r)
+	    .setDefaultRequestConfig(requestConfig);
+    	updateHttpClient();
+    	
+        decompress =  false;
         setFollowRedirects(false);
     }
 
+    /**
+     * CloseableHttpClient doesn't permit anymore to change parameters easily.
+     * This method allow you to rebuild the httpClientBuilder to get the CloseableHttpClient
+     * When the config is changed.
+     * 
+     * So httpClient reference change this may lead to concurrency issue.
+     */
+    private void updateHttpClient(){
+    	httpClient = httpClientBuilder.build();
+    }
+    
     public String remappedHost(String host) {
         return hostNameResolver.remapping(host);
     }

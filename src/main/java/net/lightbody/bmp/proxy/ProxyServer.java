@@ -25,6 +25,8 @@ import net.lightbody.bmp.proxy.jetty.jetty.Server;
 import net.lightbody.bmp.proxy.jetty.util.InetAddrPort;
 import net.lightbody.bmp.proxy.util.Log;
 
+import org.apache.http.HttpRequestInterceptor;
+import org.apache.http.HttpResponseInterceptor;
 import org.java_bandwidthlimiter.BandwidthLimiter;
 import org.java_bandwidthlimiter.StreamManager;
 import org.openqa.selenium.Proxy;
@@ -221,27 +223,27 @@ public class ProxyServer {
         currentPage = null;
     }
 
-//    public void setRetryCount(int count) {
-//        client.setRetryCount(count);
-//    }
+    public void setRetryCount(int count) {
+        client.setRetryCount(count);
+    }
 
     public void remapHost(String source, String target) {
         client.remapHost(source, target);
     }
 
-//    @Deprecated
-//    public void addRequestInterceptor(HttpRequestInterceptor i) {
-//        client.addRequestInterceptor(i);
-//    }
+    @Deprecated
+    public void addRequestInterceptor(HttpRequestInterceptor i) {
+        client.addRequestInterceptor(i);
+    }
 
     public void addRequestInterceptor(RequestInterceptor interceptor) {
         client.addRequestInterceptor(interceptor);
     }
 
-//    @Deprecated
-//    public void addResponseInterceptor(HttpResponseInterceptor i) {
-//        client.addResponseInterceptor(i);
-//    }
+    @Deprecated
+    public void addResponseInterceptor(HttpResponseInterceptor i) {
+        client.addResponseInterceptor(i);
+    }
 
     public void addResponseInterceptor(ResponseInterceptor interceptor) {
         client.addResponseInterceptor(interceptor);
