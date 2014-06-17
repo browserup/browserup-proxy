@@ -81,6 +81,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
@@ -517,10 +518,6 @@ public class BrowserMobHttpClient {
         HttpRequestBase method = req.getMethod();
         String url = method.getURI().toString();
         
-        if (method.getMethod().equals("POST")) {
-        	System.out.println("[[begin execute]["+System.currentTimeMillis()+"]"+method.getMethod()+" "+url);
-        }
-        
         // save the browser and version if it's not yet been set
         if (har != null && har.getLog().getBrowser() == null) {
             Header[] uaHeaders = method.getHeaders("User-Agent");
@@ -694,19 +691,9 @@ public class BrowserMobHttpClient {
 				// No mechanism to look up the response text by status code,
 				// so include a notification that this is a synthetic error code.
             } else {
-            	if (method.getMethod().equals("POST")) {
-                	System.out.println("[[begin execute http client]["+System.currentTimeMillis()+"]"+method.getMethod()+" "+url);
-                }
-            	
                 response = httpClient.execute(method, ctx);
-                if (method.getMethod().equals("POST")) {
-                	System.out.println("[[after execute http client]["+System.currentTimeMillis()+"]"+method.getMethod()+" "+url);
-                }
                 statusLine = response.getStatusLine();
                 statusCode = statusLine.getStatusCode();
-                if (method.getMethod().equals("POST")) {
-                	System.out.println("[[after execute http client]["+System.currentTimeMillis()+"]"+method.getMethod()+" "+url);
-                }
                 if (callback != null) {
                     callback.handleStatusLine(statusLine);
                     callback.handleHeaders(response.getAllHeaders());
@@ -733,13 +720,7 @@ public class BrowserMobHttpClient {
                         os = new ClonedOutputStream(os);
 
                     }
-                    if (method.getMethod().equals("POST")) {
-                    	System.out.println("[[before copy with stats]["+System.currentTimeMillis()+"]"+method.getMethod()+" "+url);
-                    }
                     bytes = copyWithStats(is, os);
-                    if (method.getMethod().equals("POST")) {
-                    	System.out.println("[[after copy with stats]["+System.currentTimeMillis()+"]"+method.getMethod()+" "+url);
-                    }
                 }
             }
         } catch (Exception e) {
@@ -1171,29 +1152,19 @@ public class BrowserMobHttpClient {
     }
 
     static class PreemptiveAuth implements HttpRequestInterceptor {
-        public void process(
-                final HttpRequest request,
-                final HttpContext context) throws HttpException, IOException {
+        public void process(final HttpRequest request, final HttpContext context) throws HttpException, IOException {
 
-            AuthState authState = (AuthState) context.getAttribute(
-                    ClientContext.TARGET_AUTH_STATE);
+            AuthState authState = (AuthState) context.getAttribute(HttpClientContext.TARGET_AUTH_STATE);
 
             // If no auth scheme avaialble yet, try to initialize it preemptively
             if (authState.getAuthScheme() == null) {
-                AuthScheme authScheme = (AuthScheme) context.getAttribute(
-                        "preemptive-auth");
-                CredentialsProvider credsProvider = (CredentialsProvider) context.getAttribute(
-                        ClientContext.CREDS_PROVIDER);
-                HttpHost targetHost = (HttpHost) context.getAttribute(
-                        ExecutionContext.HTTP_TARGET_HOST);
+                AuthScheme authScheme = (AuthScheme) context.getAttribute("preemptive-auth");
+                CredentialsProvider credsProvider = (CredentialsProvider) context.getAttribute(HttpClientContext.CREDS_PROVIDER);
+                HttpHost targetHost = (HttpHost) context.getAttribute(ExecutionContext.HTTP_TARGET_HOST);
                 if (authScheme != null) {
-                    Credentials creds = credsProvider.getCredentials(
-                            new AuthScope(
-                                    targetHost.getHostName(),
-                                    targetHost.getPort()));
+                    Credentials creds = credsProvider.getCredentials(new AuthScope(targetHost.getHostName(), targetHost.getPort()));
                     if (creds != null) {
-                        authState.setAuthScheme(authScheme);
-                        authState.setCredentials(creds);
+                        authState.update(authScheme, creds);
                     }
                 }
             }
