@@ -24,7 +24,6 @@ import org.java_bandwidthlimiter.StreamManager;
 
 public class SimulatedSocketFactory implements ConnectionSocketFactory {
 	private static final int DEFAULT_SOCKET_TIMEOUT = 2000;
-	
     private static Log LOG = new Log();
 
     private StreamManager streamManager;
@@ -67,15 +66,46 @@ public class SimulatedSocketFactory implements ConnectionSocketFactory {
             public void connect(SocketAddress endpoint) throws IOException {
                 Date start = new Date();
                 super.connect(endpoint);
-                Date end = new Date();
-                RequestInfo.get().connect(start, end);
+	       		Date end = new Date();
+	       		Date realEnd= end;
+	       		long connectReal = end.getTime() - start.getTime();
+	       		 
+	       		if(connectReal < streamManager.getLatency()){
+	       		    try {
+	       				Thread.sleep(streamManager.getLatency()-connectReal);
+	       			} catch (InterruptedException e) {
+	    				Thread.interrupted();
+	       			}
+	       		    end = new Date();
+	       		}
+	       		RequestInfo.get().latency(start, realEnd);
+	       		RequestInfo.get().connect(start, end);
+       		
             }
             @Override
             public void connect(SocketAddress endpoint, int timeout) throws IOException {
                 Date start = new Date();
                 super.connect(endpoint, timeout);
                 Date end = new Date();
-                RequestInfo.get().connect(start, end);
+				// the end before adding latency
+                Date realEnd= end;
+				long connectReal = end.getTime() - start.getTime();
+				 
+				// add latency
+				if(connectReal < streamManager.getLatency()){
+					try {
+						Thread.sleep(streamManager.getLatency()-connectReal);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					// the end after adding latency
+				    end = new Date();
+				}
+				// set real latency time
+				RequestInfo.get().latency(start, realEnd);
+				// set connect time
+				RequestInfo.get().connect(start, end);
+	       		
             }
             @Override
             public InputStream getInputStream() throws IOException {

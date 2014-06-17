@@ -80,7 +80,6 @@ import org.apache.http.client.methods.HttpOptions;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.config.Registry;
@@ -101,7 +100,6 @@ import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.impl.cookie.BestMatchSpecFactory;
@@ -242,13 +240,13 @@ public class BrowserMobHttpClient {
      * remaining requests counter
      */
     private AtomicInteger requestCounter;
-
+    
     /**
      * Init HTTP client
      * @param streamManager will be capped to 100 Megabits (by default it is disabled)
      * @param requestCounter indicates the number of remaining requests
      */
-    public BrowserMobHttpClient(StreamManager streamManager, AtomicInteger requestCounter) {
+    public BrowserMobHttpClient(final StreamManager streamManager, AtomicInteger requestCounter) {
         this.requestCounter = requestCounter;
         hostNameResolver = new BrowserMobHostNameResolver(new Cache(DClass.ANY));
         this.socketFactory = new SimulatedSocketFactory(streamManager);
@@ -287,24 +285,27 @@ public class BrowserMobHttpClient {
         httpClientConnMgr.setMaxTotal(600);
         httpClientConnMgr.setDefaultMaxPerRoute(300);
         credsProvider = new WildcardMatchingCredentialsProvider();
-        httpClientBuilder = getDefaultHttpClientBuilder();
+        httpClientBuilder = getDefaultHttpClientBuilder(streamManager);
         httpClient = httpClientBuilder.build();
         
         HttpClientInterrupter.watch(this);
     }
 
-	private HttpClientBuilder getDefaultHttpClientBuilder() {
+	private HttpClientBuilder getDefaultHttpClientBuilder(final StreamManager streamManager) {
 		this.requestConfigBuilder=getRequestConfigBuilder();
 		return HttpClientBuilder.create()
         	.setConnectionManager(httpClientConnMgr)
         	.setRequestExecutor(new HttpRequestExecutor() {
-	            @Override
-	            protected HttpResponse doSendRequest(HttpRequest request, HttpClientConnection conn, HttpContext context) throws IOException, HttpException {
+        		@Override
+                protected HttpResponse doSendRequest(HttpRequest request, HttpClientConnection conn, HttpContext context) throws IOException, HttpException {
+                	// +4 => header/data separation
 					long requestHeadersSize = request.getRequestLine().toString().length() + 4;
 					long requestBodySize = 0;
 					String requestBody = null;
 					for (Header header : request.getAllHeaders()) {
+						// +2 => new line
 						requestHeadersSize += header.toString().length() + 2;
+						// get body size
 						if (header.getName().equals("Content-Length")) {
 							requestBodySize += Integer.valueOf(header.getValue());
 						}
@@ -312,41 +313,63 @@ public class BrowserMobHttpClient {
 					
 				    if(request instanceof HttpEntityEnclosingRequest){
 				        HttpEntity entity = ((HttpEntityEnclosingRequest) request).getEntity();
-			           if (entity != null && entity.getContentLength() > 0) {
-			            requestBody = EntityUtils.toString(entity, "UTF-8");
-			           }
-			       }
-	
-	                HarEntry entry = RequestInfo.get().getEntry();
-	                if (entry != null) {
-	                    entry.getRequest().setHeadersSize(requestHeadersSize);
-	                    entry.getRequest().setBodySize(requestBodySize);
-	                    entry.getRequest().setRequestBody(requestBody);
-	                }
-	
-	                Date start = new Date();
-	                HttpResponse response = super.doSendRequest(request, conn, context);
-	                RequestInfo.get().send(start, new Date());
-	                return response;
-	            }
-	
-	            @Override
-	            protected HttpResponse doReceiveResponse(HttpRequest request, HttpClientConnection conn, HttpContext context) throws HttpException, IOException {
-	                Date start = new Date();
-	                HttpResponse response = super.doReceiveResponse(request, conn, context);
-					long responseHeadersSize = response.getStatusLine().toString().length() + 4;
+				           if (entity != null && entity.getContentLength() > 0) {
+				            requestBody = EntityUtils.toString(entity, "UTF-8");
+				           }
+				       }
+
+				    // set current entry request
+				    HarEntry entry = RequestInfo.get().getEntry();
+                    if (entry != null) {
+                        entry.getRequest().setHeadersSize(requestHeadersSize);
+                        entry.getRequest().setBodySize(requestBodySize);
+                        entry.getRequest().setRequestBody(requestBody);
+                    }
+
+                    // set date before sending
+                    Date start = new Date();
+                    
+                    // send request
+                    HttpResponse response = super.doSendRequest(request, conn, context);
+                    
+                    // set "sending" for resource
+                    RequestInfo.get().send(start, new Date());
+                    return response;
+                }
+
+                @Override
+                protected HttpResponse doReceiveResponse(HttpRequest request, HttpClientConnection conn, HttpContext context) throws HttpException, IOException {
+                    Date start = new Date();    
+                    HttpResponse response = super.doReceiveResponse(request, conn, context);
+                    
+                    // +4 => header/data separation
+                    long responseHeadersSize = response.getStatusLine().toString().length() + 4;
 					for (Header header : response.getAllHeaders()) {
+						// +2 => new line
 						responseHeadersSize += header.toString().length() + 2;
 					}
-	
-	                HarEntry entry = RequestInfo.get().getEntry();
-	                if (entry != null) {
+					// set current entry response
+                    HarEntry entry = RequestInfo.get().getEntry();
+                    if (entry != null) {
 						entry.getResponse().setHeadersSize(responseHeadersSize);
 					}
-	
-	                RequestInfo.get().wait(start, new Date());
-	                return response;
-	            }
+                    if(streamManager.getLatency() > 0){
+                        // retrieve real latency discovered in connect (SimulatedSocket or SimulatedSSLSocket)
+                    	long realLatency = RequestInfo.get().getLatency();
+                        // add latency
+                    	if(realLatency<streamManager.getLatency()){
+                            try {
+								Thread.sleep(streamManager.getLatency()-realLatency);
+							} catch (InterruptedException e) {
+								Thread.interrupted();
+							}
+                        }  
+                    }  
+                    // set waiting time
+                    RequestInfo.get().wait(start,new Date());
+                    
+                    return response;
+                }
 	        })
 	        .setDefaultRequestConfig(
 	        		requestConfigBuilder.build()

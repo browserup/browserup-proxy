@@ -3,6 +3,7 @@ package net.lightbody.bmp.proxy.http;
 import org.java_bandwidthlimiter.StreamManager;
 
 import javax.net.ssl.*;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -129,10 +130,23 @@ public class SimulatedSSLSocket extends SSLSocket {
 
     @Override
     public void connect(SocketAddress endpoint, int timeout) throws IOException {
-        Date start = new Date();
-        socket.connect(endpoint, timeout);
-        Date end = new Date();
-        RequestInfo.get().connect(start, end);
+		 Date start = new Date();
+		 socket.connect(endpoint, timeout);
+		 Date end = new Date();
+		 Date realEnd= end;
+		 long connectReal = end.getTime() - start.getTime();
+		 
+		 if(connectReal < streamManager.getLatency()){
+		    try {
+				Thread.sleep(streamManager.getLatency()-connectReal);
+			} catch (InterruptedException e) {
+				Thread.interrupted();
+			}
+		    end = new Date();
+		 }
+		RequestInfo.get().latency(start, realEnd);
+		RequestInfo.get().connect(start, end);
+    	
         handshakeStart = new Date();
         startHandshake();
         this.addHandshakeCompletedListener(new HandshakeCompletedListener() {
