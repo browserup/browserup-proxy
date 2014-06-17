@@ -86,7 +86,7 @@ public class StreamManager implements BandwidthLimiter {
     private StreamParams downStream = new StreamParams();
     private StreamParams upStream = new StreamParams();
 
-    private long latency = 200;
+    private long latency = 0;
     private Random randomGenerator = new Random();
 
     /**
