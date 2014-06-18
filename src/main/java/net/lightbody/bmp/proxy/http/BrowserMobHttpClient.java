@@ -276,7 +276,7 @@ public class BrowserMobHttpClient {
         	.register("https", this.sslSocketFactory)
         	.build();
         
-        httpClientConnMgr = new PoolingHttpClientConnectionManager(registry) {
+        httpClientConnMgr = new PoolingHttpClientConnectionManager(registry, hostNameResolver) {
             @Override
             public ConnectionRequest requestConnection(HttpRoute route, Object state) {
                 final ConnectionRequest wrapped = super.requestConnection(route, state);

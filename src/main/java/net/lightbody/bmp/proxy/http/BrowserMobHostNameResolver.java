@@ -1,10 +1,5 @@
 package net.lightbody.bmp.proxy.http;
 
-import net.lightbody.bmp.proxy.util.Log;
-import org.apache.http.conn.scheme.HostNameResolver;
-import org.xbill.DNS.*;
-
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -13,7 +8,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class BrowserMobHostNameResolver implements HostNameResolver {
+import net.lightbody.bmp.proxy.util.Log;
+
+import org.apache.http.conn.DnsResolver;
+import org.xbill.DNS.ARecord;
+import org.xbill.DNS.Address;
+import org.xbill.DNS.Cache;
+import org.xbill.DNS.ExtendedResolver;
+import org.xbill.DNS.Lookup;
+import org.xbill.DNS.Name;
+import org.xbill.DNS.Record;
+import org.xbill.DNS.Resolver;
+import org.xbill.DNS.TextParseException;
+import org.xbill.DNS.Type;
+
+public class BrowserMobHostNameResolver implements DnsResolver {
     private static final Log LOG = new Log();
 
     private Map<String, String> remappings = new ConcurrentHashMap<String, String>();
@@ -32,21 +41,27 @@ public class BrowserMobHostNameResolver implements HostNameResolver {
     }
 
     @Override
-    public InetAddress resolve(String hostname) throws IOException {
+    public InetAddress[] resolve(String hostname) throws UnknownHostException {
         String remapping = remappings.get(hostname);
         if (remapping != null) {
             hostname = remapping;
         }
 
         try {
-            return Address.getByAddress(hostname);
+            return new InetAddress[]{Address.getByAddress(hostname)};
         } catch (UnknownHostException e) {
             // that's fine, this just means it's not an IP address and we gotta look it up, which is common
         }
 
-        boolean isCached = this.isCached(hostname);
+        boolean isCached;
+        Lookup lookup;
+		try {
+			isCached = this.isCached(hostname);
+			lookup = new Lookup(Name.fromString(hostname), Type.A);
+		} catch (TextParseException e) {
+			throw new UnknownHostException(hostname);
+		}
 
-        Lookup lookup = new Lookup(Name.fromString(hostname), Type.A);
         lookup.setCache(cache);
         lookup.setResolver(resolver);
 
@@ -73,7 +88,7 @@ public class BrowserMobHostNameResolver implements HostNameResolver {
             RequestInfo.get().dns(end, end, addr.getHostAddress());
         }
 
-        return addr;
+        return new InetAddress[]{addr};
     }
 
     public void remap(String source, String target) {
