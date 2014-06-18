@@ -7,11 +7,15 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Date;
 
+import javax.net.ssl.HandshakeCompletedEvent;
+import javax.net.ssl.HandshakeCompletedListener;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
+
+import net.lightbody.bmp.proxy.util.TrustEverythingSSLTrustManager;
 
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContexts;
@@ -31,28 +35,6 @@ public class TrustingSSLSocketFactory extends SSLConnectionSocketFactory {
     private StreamManager streamManager;
 
     static {
-        TrustManager easyTrustManager = new X509TrustManager() {
-            @Override
-            public void checkClientTrusted(
-                    X509Certificate[] chain,
-                    String authType) throws CertificateException {
-                // Oh, I am easy!
-            }
-
-            @Override
-            public void checkServerTrusted(
-                    X509Certificate[] chain,
-                    String authType) throws CertificateException {
-                // Oh, I am easy!
-            }
-
-            @Override
-            public X509Certificate[] getAcceptedIssuers() {
-                return null;
-            }
-
-        };
-        
         sslContext = SSLContexts.createDefault();
 		try {
 			sslContext = SSLContexts.custom().loadTrustMaterial(null, 
@@ -64,7 +46,7 @@ public class TrustingSSLSocketFactory extends SSLConnectionSocketFactory {
 				}
 			).build();
 			
-			sslContext.init(null, new TrustManager[]{easyTrustManager}, null);
+			sslContext.init(null, new TrustManager[]{new TrustEverythingSSLTrustManager()}, null);
 		} catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
 			throw new RuntimeException("Unexpected key management error", e);
 		}
@@ -80,17 +62,40 @@ public class TrustingSSLSocketFactory extends SSLConnectionSocketFactory {
          this.streamManager = streamManager;
     }
     
-    //just an helper function to wrap a normal sslSocket into a simulated one so we can do throttling
-    private SSLSocket createSimulatedSocket(SSLSocket socket) {
-    	SimulatedSocketFactory.configure(socket);
-    	socket.setEnabledProtocols(new String[] { SSLAlgorithm.SSLv3.name(), SSLAlgorithm.TLSv1.name() } );
-		socket.setEnabledCipherSuites(new String[] { "SSL_RSA_WITH_RC4_128_MD5" });
-        return new SimulatedSSLSocket(socket, streamManager);
+    @Override
+    public Socket createSocket(HttpContext context) throws IOException {
+    	//creating an anonymous class deriving from socket
+        //we just need to override methods for connect to get some metrics
+        //and get-in-out streams to provide throttling
+        Socket newSocket = new SimulatedSocket(streamManager);
+        SimulatedSocketFactory.configure(newSocket);
+		return newSocket;
     }
     
     @Override
     public Socket createLayeredSocket(final Socket socket, final String target, final int port, final HttpContext context) throws IOException {
     	SSLSocket sslSocket = (SSLSocket) super.createLayeredSocket(socket, target, port, context);
-    	return createSimulatedSocket(sslSocket);
+//    	sslSocket.setEnabledProtocols(new String[] { SSLAlgorithm.SSLv3.name(), SSLAlgorithm.TLSv1.name() } );
+//    	sslSocket.setEnabledCipherSuites(new String[] { "SSL_RSA_WITH_RC4_128_MD5" });
+    	return sslSocket;
+    }
+    
+    @Override
+    /**
+     * This function is call just before the handshake
+     * 
+     * @see http://hc.apache.org/httpcomponents-client-ga/httpclient/xref/org/apache/http/conn/ssl/SSLConnectionSocketFactory.html
+     */
+    protected void prepareSocket (SSLSocket socket) throws IOException {
+	    socket.addHandshakeCompletedListener(new HandshakeCompletedListener() {
+	    	private final Date handshakeStart = new Date();
+	    	
+	    	@Override
+	    	public void handshakeCompleted(HandshakeCompletedEvent handshakeCompletedEvent) {
+	    		if(handshakeStart != null) {
+    	       		RequestInfo.get().ssl(handshakeStart, new Date());
+	    		}
+	    	}
+	    });
     }
 }

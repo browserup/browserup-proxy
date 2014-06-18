@@ -86,7 +86,6 @@ import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.ConnectionPoolTimeoutException;
 import org.apache.http.conn.ConnectionRequest;
-import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.cookie.Cookie;
@@ -143,20 +142,34 @@ public class BrowserMobHttpClient {
     private boolean captureBinaryContent = true;
 
     /**
-     * socket dedicated to port 80 (HTTP)
+     * socket factory dedicated to port 80 (HTTP)
      */
     private SimulatedSocketFactory socketFactory;
     
     /**
-     * socket dedicated to port 443 (HTTPS)
+     * socket factory dedicated to port 443 (HTTPS)
      */
     private TrustingSSLSocketFactory sslSocketFactory;
 
     private PoolingHttpClientConnectionManager httpClientConnMgr;
+    
+    /**
+     * Builders for httpClient
+     * Each time you change their configuration you should call updateHttpClient()
+     */
 	private Builder requestConfigBuilder;
     private HttpClientBuilder httpClientBuilder;
+    
+    /**
+     * The current httpClient which will execute HTTP requests
+     */
     private CloseableHttpClient httpClient;
-    private BasicCookieStore cookieStore = new BasicCookieStore();;
+    
+    private BasicCookieStore cookieStore = new BasicCookieStore();
+    
+    /**
+     * List of rejected URL patterns
+     */
     private List<BlacklistEntry> blacklistEntries = new CopyOnWriteArrayList<BrowserMobHttpClient.BlacklistEntry>();
     
     /**
@@ -187,7 +200,7 @@ public class BrowserMobHttpClient {
     /**
      * request timeout: set to -1 to disable timeout
      */
-    private int requestTimeout;
+    private int requestTimeout = -1;
     
     /**
      * is it possible to add a new request?
@@ -249,12 +262,17 @@ public class BrowserMobHttpClient {
     public BrowserMobHttpClient(final StreamManager streamManager, AtomicInteger requestCounter) {
         this.requestCounter = requestCounter;
         hostNameResolver = new BrowserMobHostNameResolver(new Cache(DClass.ANY));
-        this.socketFactory = new SimulatedSocketFactory(streamManager);
-        this.sslSocketFactory = new TrustingSSLSocketFactory(new AllowAllHostnameVerifier(), streamManager);
+        socketFactory = new SimulatedSocketFactory(streamManager);
+        sslSocketFactory = new TrustingSSLSocketFactory(new AllowAllHostnameVerifier(), streamManager);
 
+        requestConfigBuilder = RequestConfig.custom()
+    		.setConnectionRequestTimeout(60000)
+    		.setConnectTimeout(2000)
+    		.setSocketTimeout(60000);
+        
         // we associate each SocketFactory with their protocols
         Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
-        	.register("http", socketFactory)
+        	.register("http", this.socketFactory)
         	.register("https", this.sslSocketFactory)
         	.build();
         
@@ -281,7 +299,7 @@ public class BrowserMobHttpClient {
             }
         };
 
-        // we set high limit for request parallelism to let the browser set is own limit 
+        // we set high limits for request parallelism to let the browser set is own limit 
         httpClientConnMgr.setMaxTotal(600);
         httpClientConnMgr.setDefaultMaxPerRoute(300);
         credsProvider = new WildcardMatchingCredentialsProvider();
@@ -292,7 +310,7 @@ public class BrowserMobHttpClient {
     }
 
 	private HttpClientBuilder getDefaultHttpClientBuilder(final StreamManager streamManager) {
-		this.requestConfigBuilder=getRequestConfigBuilder();
+		assert requestConfigBuilder != null;
 		return HttpClientBuilder.create()
         	.setConnectionManager(httpClientConnMgr)
         	.setRequestExecutor(new HttpRequestExecutor() {
@@ -353,11 +371,11 @@ public class BrowserMobHttpClient {
                     if (entry != null) {
 						entry.getResponse().setHeadersSize(responseHeadersSize);
 					}
-                    if(streamManager.getLatency() > 0){
-                        // retrieve real latency discovered in connect (SimulatedSocket or SimulatedSSLSocket)
+                    if(streamManager.getLatency() > 0 && RequestInfo.get().getLatency() != null){
+                        // retrieve real latency discovered in connect SimulatedSocket
                     	long realLatency = RequestInfo.get().getLatency();
                         // add latency
-                    	if(realLatency<streamManager.getLatency()){
+                    	if(realLatency < streamManager.getLatency()){
                             try {
 								Thread.sleep(streamManager.getLatency()-realLatency);
 							} catch (InterruptedException e) {
@@ -371,9 +389,7 @@ public class BrowserMobHttpClient {
                     return response;
                 }
 	        })
-	        .setDefaultRequestConfig(
-	        		requestConfigBuilder.build()
-	        )
+	        .setDefaultRequestConfig(requestConfigBuilder.build())
 	        .setDefaultCredentialsProvider(credsProvider)
 	        .setDefaultCookieStore(cookieStore)
 	        .addInterceptorLast(new PreemptiveAuth())
@@ -382,13 +398,6 @@ public class BrowserMobHttpClient {
 	        .setHttpProcessor(HttpProcessorBuilder.create().build())
 	        // we always set this to false so it can be handled manually:
 	        .disableRedirectHandling();
-	}
-
-	private Builder getRequestConfigBuilder() {
-		return RequestConfig.custom()
-			.setConnectionRequestTimeout(60000)
-			.setConnectTimeout(2000)
-			.setSocketTimeout(60000);
 	}
 
     public void setRetryCount(int count) {
@@ -1261,7 +1270,8 @@ public class BrowserMobHttpClient {
         String host = httpProxy.split(":")[0];
         Integer port = Integer.parseInt(httpProxy.split(":")[1]);
         HttpHost proxy = new HttpHost(host, port);
-        httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY,proxy);
+        httpClientBuilder.setProxy(proxy);
+        updateHttpClient();
     }
 
     static class PreemptiveAuth implements HttpRequestInterceptor {

@@ -1,16 +1,12 @@
 package net.lightbody.bmp.proxy.http;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
-import java.util.Date;
 
 import net.lightbody.bmp.proxy.util.Log;
 
@@ -58,72 +54,7 @@ public class SimulatedSocketFactory implements ConnectionSocketFactory {
 
 	@Override
 	public Socket createSocket(HttpContext context) throws IOException {
-		//creating an anonymous class deriving from socket
-        //we just need to override methods for connect to get some metrics
-        //and get-in-out streams to provide throttling
-        Socket newSocket = new Socket() {
-            @Override
-            public void connect(SocketAddress endpoint) throws IOException {
-                Date start = new Date();
-                super.connect(endpoint);
-	       		Date end = new Date();
-	       		Date realEnd= end;
-	       		long connectReal = end.getTime() - start.getTime();
-	       		 
-	       		if(connectReal < streamManager.getLatency()){
-	       		    try {
-	       				Thread.sleep(streamManager.getLatency()-connectReal);
-	       			} catch (InterruptedException e) {
-	    				Thread.interrupted();
-	       			}
-	       		    end = new Date();
-	       		}
-	       		RequestInfo.get().latency(start, realEnd);
-	       		RequestInfo.get().connect(start, end);
-       		
-            }
-            @Override
-            public void connect(SocketAddress endpoint, int timeout) throws IOException {
-                Date start = new Date();
-                super.connect(endpoint, timeout);
-                Date end = new Date();
-				// the end before adding latency
-                Date realEnd= end;
-				long connectReal = end.getTime() - start.getTime();
-				 
-				// add latency
-				if(connectReal < streamManager.getLatency()){
-					try {
-						Thread.sleep(streamManager.getLatency()-connectReal);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					// the end after adding latency
-				    end = new Date();
-				}
-				// set real latency time
-				RequestInfo.get().latency(start, realEnd);
-				// set connect time
-				RequestInfo.get().connect(start, end);
-	       		
-            }
-            @Override
-            public InputStream getInputStream() throws IOException {
-                // whenever this socket is asked for its input stream
-                // we get it ourselves via socket.getInputStream()
-                // and register it to the stream manager so it will
-                // automatically be throttled
-                return streamManager.registerStream(super.getInputStream());
-            }
-            @Override
-            public OutputStream getOutputStream() throws IOException {
-                // whenever this socket is asked for its output stream
-                // we get it ourselves via socket.getOutputStream()
-                // and register it to the stream manager so it will
-                // automatically be throttled
-                return streamManager.registerStream(super.getOutputStream());
-            }
-        };
+        Socket newSocket = new SimulatedSocket(streamManager);
         SimulatedSocketFactory.configure(newSocket);
 		return newSocket;
 	}

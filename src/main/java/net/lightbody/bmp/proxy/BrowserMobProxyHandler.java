@@ -301,6 +301,7 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
         String shortDesc = String.format(error.getShortDesc(), url.getHost());
         String text = String.format(FirefoxErrorConstants.ERROR_PAGE, error.getTitle(), shortDesc, error.getLongDesc());
 
+        e.printStackTrace();
 
         try {
             response.setStatus(HttpResponse.__502_Bad_Gateway);
