@@ -59,7 +59,6 @@ public class SimulatedSocket extends Socket {
     }
     
     private void simulateLatency (Date start, Date end, StreamManager streamManager) {
-    	System.out.println("simulate latency");
 		// the end before adding latency
         Date realEnd = end;
 		long connectReal = end.getTime() - start.getTime();

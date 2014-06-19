@@ -38,8 +38,6 @@ public class ProxyServer {
 
     /*
      * The Jetty HttpServer use in BrowserMobProxyHandler
-     * 
-     * TODO I still don't know what is it use for
      */
     private Server server;
     /*
