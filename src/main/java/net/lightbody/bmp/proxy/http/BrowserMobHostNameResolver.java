@@ -23,7 +23,9 @@ import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
 
 public class BrowserMobHostNameResolver implements DnsResolver {
-    private static final Log LOG = new Log();
+    private static final int MAX_RETRY_COUNT = 5;
+
+	private static final Log LOG = new Log();
 
     private Map<String, String> remappings = new ConcurrentHashMap<String, String>();
     private Map<String, List<String>> reverseMapping = new ConcurrentHashMap<String, List<String>>();
@@ -64,31 +66,44 @@ public class BrowserMobHostNameResolver implements DnsResolver {
 
         lookup.setCache(cache);
         lookup.setResolver(resolver);
-
+        // we set the retry count to -1 because we want the first execution not be counted as a retry.
+        int retryCount = -1;
+        Record[] records;
         Date start = new Date();
-        Record[] records = lookup.run();
+        
+        // we iterate while the status is TRY_AGAIN and MAX_RETRY_COUNT is not exceeded
+        do{
+        	records = lookup.run();
+        	retryCount++;
+        }while(lookup.getResult() == Lookup.TRY_AGAIN && retryCount < MAX_RETRY_COUNT );
+        
         Date end = new Date();
 
         if (records == null || records.length == 0) {
             throw new UnknownHostException(hostname);
         }
 
-        // assembly the addr object
-        ARecord a = (ARecord) records[0];
-        InetAddress addr = InetAddress.getByAddress(hostname, a.getAddress().getAddress());
+        List<InetAddress> addrList = new ArrayList<>();
+        
+        for(Record record : records){
+	        // assembly the addr object
+	        ARecord a = (ARecord) record;
+	        InetAddress addr = InetAddress.getByAddress(hostname, a.getAddress().getAddress());
+			addrList.add(addr);
+        }
 
         if (!isCached) {
             // TODO: Associate the the host name with the connection. We do this because when using persistent
             // connections there won't be a lookup on the 2nd, 3rd, etc requests, and as such we wouldn't be able to
             // know what IP address we were requesting.
-            RequestInfo.get().dns(start, end, addr.getHostAddress());
+            RequestInfo.get().dns(start, end, addrList.get(0).getHostAddress());
         } else {
             // if it is a cached hit, we just record zero since we don't want
             // to skew the data with method call timings (specially under load)
-            RequestInfo.get().dns(end, end, addr.getHostAddress());
+            RequestInfo.get().dns(end, end, addrList.get(0).getHostAddress());
         }
 
-        return new InetAddress[]{addr};
+        return addrList.toArray(new InetAddress[0]);
     }
 
     public void remap(String source, String target) {
