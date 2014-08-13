@@ -1,6 +1,8 @@
 package net.lightbody.bmp.proxy.http;
 
 import net.lightbody.bmp.core.har.*;
+import net.lightbody.bmp.proxy.BlacklistEntry;
+import net.lightbody.bmp.proxy.WhitelistEntry;
 import net.lightbody.bmp.proxy.util.*;
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
@@ -75,7 +77,7 @@ public class BrowserMobHttpClient {
     private TrustingSSLSocketFactory sslSocketFactory;
     private ThreadSafeClientConnManager httpClientConnMgr;
     private DefaultHttpClient httpClient;
-    private List<BlacklistEntry> blacklistEntries = new CopyOnWriteArrayList<BrowserMobHttpClient.BlacklistEntry>();
+    private List<BlacklistEntry> blacklistEntries = new CopyOnWriteArrayList<BlacklistEntry>();
     private WhitelistEntry whitelistEntry = null;
     private List<RewriteRule> rewriteRules = new CopyOnWriteArrayList<RewriteRule>();
     private List<RequestInterceptor> requestInterceptors = new CopyOnWriteArrayList<RequestInterceptor>();
@@ -476,7 +478,7 @@ public class BrowserMobHttpClient {
             // guard against concurrent modification of whitelistEntry
             if (whitelistEntry != null) {
                 boolean found = false;
-                for (Pattern pattern : whitelistEntry.patterns) {
+                for (Pattern pattern : whitelistEntry.getPatterns()) {
                     if (pattern.matcher(url).matches()) {
                         found = true;
                         break;
@@ -484,15 +486,15 @@ public class BrowserMobHttpClient {
                 }
 
                 if (!found) {
-                    mockResponseCode = whitelistEntry.responseCode;
+                    mockResponseCode = whitelistEntry.getResponseCode();
                 }
             }
         }
 
         if (blacklistEntries != null) {
             for (BlacklistEntry blacklistEntry : blacklistEntries) {
-                if (blacklistEntry.pattern.matcher(url).matches()) {
-                    mockResponseCode = blacklistEntry.responseCode;
+                if (blacklistEntry.getPattern().matcher(url).matches()) {
+                    mockResponseCode = blacklistEntry.getResponseCode();
                     break;
                 }
             }
@@ -964,18 +966,26 @@ public class BrowserMobHttpClient {
         blacklistEntries.add(new BlacklistEntry(pattern, responseCode));
     }
 
+    public List<BlacklistEntry> getBlacklistedRequests() {
+        return blacklistEntries;
+    }
+
     public void clearBlacklist() {
-    	blacklistEntries.clear();
+        blacklistEntries.clear();
+    }
+
+    public WhitelistEntry getWhitelistRequests() {
+        return whitelistEntry;
     }
 
     public synchronized void whitelistRequests(String[] patterns, int responseCode) {
-    	// synchronized to guard against concurrent modification
+        // synchronized to guard against concurrent modification
         whitelistEntry = new WhitelistEntry(patterns, responseCode);
     }
 
     public synchronized void clearWhitelist() {
-    	// synchronized to guard against concurrent modification
-    	whitelistEntry = null;
+        // synchronized to guard against concurrent modification
+        whitelistEntry = null;
     }
     
     public void addHeader(String name, String value) {
@@ -1099,27 +1109,6 @@ public class BrowserMobHttpClient {
         }
     }
 
-    private class WhitelistEntry {
-        private List<Pattern> patterns = new CopyOnWriteArrayList<Pattern>();
-        private int responseCode;
-
-        private WhitelistEntry(String[] patterns, int responseCode) {
-            for (String pattern : patterns) {
-                this.patterns.add(Pattern.compile(pattern));
-            }
-            this.responseCode = responseCode;
-        }
-    }
-
-    private class BlacklistEntry {
-        private Pattern pattern;
-        private int responseCode;
-
-        private BlacklistEntry(String pattern, int responseCode) {
-            this.pattern = Pattern.compile(pattern);
-            this.responseCode = responseCode;
-        }
-    }
 
     private class RewriteRule {
         private Pattern match;
