@@ -126,6 +126,17 @@ public class ProxyResource {
         return Reply.saying().ok();
     }
 
+    @Get
+    @At("/:port/blacklist")
+    public Reply<?> getBlacklist(@Named("port") int port, Request request) {
+        ProxyServer proxy = proxyManager.get(port);
+        if (proxy == null) {
+            return Reply.saying().notFound();
+        }
+
+        return Reply.with(proxy.getBlacklistedRequests()).as(Json.class);
+    }
+
     @Put
     @At("/:port/blacklist")
     public Reply<?> blacklist(@Named("port") int port, Request request) {
