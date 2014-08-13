@@ -25,6 +25,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.InflaterInputStream;
+import java.util.zip.Inflater;
 
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.core.har.HarCookie;
@@ -117,6 +119,10 @@ import org.java_bandwidthlimiter.StreamManager;
 import org.xbill.DNS.Cache;
 import org.xbill.DNS.DClass;
 
+
+/**
+ WARN : Require zlib > 1.1.4 (deflate support)
+*/
 public class BrowserMobHttpClient {
 	private static final Log LOG = new Log();
 	public static UserAgentStringParser PARSER = UADetectorServiceFactory.getCachingAndUpdatingParser();
@@ -716,6 +722,7 @@ public class BrowserMobHttpClient {
         int statusCode = -998;
         long bytes = 0;
         boolean gzipping = false;
+	boolean deflating = false;
         OutputStream os = req.getOutputStream();
         if (os == null) {
             os = new CappedByteArrayOutputStream(1024 * 1024); // MOB-216 don't buffer more than 1 MB
@@ -825,13 +832,26 @@ public class BrowserMobHttpClient {
                 // check for null (resp 204 can cause HttpClient to return null, which is what Google does with http://clients1.google.com/generate_204)
                 if (is != null) {
                     Header contentEncodingHeader = response.getFirstHeader("Content-Encoding");
-                    if (contentEncodingHeader != null && "gzip".equalsIgnoreCase(contentEncodingHeader.getValue())) {
-                        gzipping = true;
-                    }
+		    if(contentEncodingHeader != null) {
+                        if ("gzip".equalsIgnoreCase(contentEncodingHeader.getValue())) {
+                            gzipping = true;
+                        } 
+                        else if ("deflate".equalsIgnoreCase(contentEncodingHeader.getValue())) {
+		    	    deflating = true;
+		        }
+		    }
 
                     // deal with GZIP content!
-                    if (decompress && gzipping) {
-                        is = new GZIPInputStream(is);
+	             
+                    if(decompress && response.getEntity().getContentLength() != 0) { //getContentLength<0 if unknown
+                        if (gzipping) {
+                            is = new GZIPInputStream(is);
+                        }
+		        else if (deflating) {  //RAW deflate only
+			     // WARN : if system is using zlib<=1.1.4 the stream must be append with a dummy byte
+			     // that is not requiered for zlib>1.1.4 (not mentioned on current Inflater javadoc)	        
+			     is = new InflaterInputStream(is, new Inflater(true));
+                        }
                     }
 
                     if (captureContent) {
@@ -965,16 +985,25 @@ public class BrowserMobHttpClient {
                 if (captureContent && os != null && os instanceof ClonedOutputStream) {
                     ByteArrayOutputStream copy = ((ClonedOutputStream) os).getOutput();
 
-                    if (gzipping) {
+                    if (entry.getResponse().getBodySize() != 0 && (gzipping || deflating)) {
                         // ok, we need to decompress it before we can put it in the har file
                         try {
-                            InputStream temp = new GZIPInputStream(new ByteArrayInputStream(copy.toByteArray()));
+                            InputStream temp = null;
+                            if(gzipping){	
+                                temp = new GZIPInputStream(new ByteArrayInputStream(copy.toByteArray()));
+                            }
+                            else if (deflating) {
+			        //RAW deflate only
+				// WARN : if system is using zlib<=1.1.4 the stream must be append with a dummy byte
+			        // that is not requiered for zlib>1.1.4 (not mentioned on current Inflater javadoc)		        
+				temp = new InflaterInputStream(new ByteArrayInputStream(copy.toByteArray()), new Inflater(true));
+                            }
                             copy = new ByteArrayOutputStream();
                             IOUtils.copy(temp, copy);
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
-                    }
+                    } 
 
                     if (hasTextualContent(contentType)) {
                         setTextOfEntry(entry, copy, contentType);
