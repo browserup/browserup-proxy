@@ -974,6 +974,10 @@ public class BrowserMobHttpClient {
         blacklistEntries.clear();
     }
 
+    public WhitelistEntry getWhitelistRequests() {
+        return whitelistEntry;
+    }
+
     public synchronized void whitelistRequests(String[] patterns, int responseCode) {
         // synchronized to guard against concurrent modification
         whitelistEntry = new WhitelistEntry(patterns, responseCode);

@@ -292,6 +292,10 @@ public class ProxyServer {
     public List<BlacklistEntry> getBlacklistedRequests() {
         return client.getBlacklistedRequests();
     }
+
+    public WhitelistEntry getWhitelistRequests() {
+        return client.getWhitelistRequests();
+    }
     
     public void clearBlacklist() {
     	client.clearBlacklist();

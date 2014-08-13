@@ -160,8 +160,19 @@ public class ProxyResource {
             return Reply.saying().notFound();
         }
 
-    	proxy.clearBlacklist();
-    	return Reply.saying().ok();
+        proxy.clearBlacklist();
+        return Reply.saying().ok();
+    }
+
+    @Get
+    @At("/:port/whitelist")
+    public Reply<?> getWhitelist(@Named("port") int port, Request request) {
+        ProxyServer proxy = proxyManager.get(port);
+        if (proxy == null) {
+            return Reply.saying().notFound();
+        }
+
+        return Reply.with(proxy.getWhitelistRequests()).as(Json.class);
     }
 
     @Put
