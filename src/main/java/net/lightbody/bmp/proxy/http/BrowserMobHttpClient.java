@@ -2,6 +2,7 @@ package net.lightbody.bmp.proxy.http;
 
 import net.lightbody.bmp.core.har.*;
 import net.lightbody.bmp.proxy.BlacklistEntry;
+import net.lightbody.bmp.proxy.WhitelistEntry;
 import net.lightbody.bmp.proxy.util.*;
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
@@ -477,7 +478,7 @@ public class BrowserMobHttpClient {
             // guard against concurrent modification of whitelistEntry
             if (whitelistEntry != null) {
                 boolean found = false;
-                for (Pattern pattern : whitelistEntry.patterns) {
+                for (Pattern pattern : whitelistEntry.getPatterns()) {
                     if (pattern.matcher(url).matches()) {
                         found = true;
                         break;
@@ -485,7 +486,7 @@ public class BrowserMobHttpClient {
                 }
 
                 if (!found) {
-                    mockResponseCode = whitelistEntry.responseCode;
+                    mockResponseCode = whitelistEntry.getResponseCode();
                 }
             }
         }
@@ -979,8 +980,8 @@ public class BrowserMobHttpClient {
     }
 
     public synchronized void clearWhitelist() {
-    	// synchronized to guard against concurrent modification
-    	whitelistEntry = null;
+        // synchronized to guard against concurrent modification
+        whitelistEntry = null;
     }
     
     public void addHeader(String name, String value) {
@@ -1104,17 +1105,6 @@ public class BrowserMobHttpClient {
         }
     }
 
-    private class WhitelistEntry {
-        private List<Pattern> patterns = new CopyOnWriteArrayList<Pattern>();
-        private int responseCode;
-
-        private WhitelistEntry(String[] patterns, int responseCode) {
-            for (String pattern : patterns) {
-                this.patterns.add(Pattern.compile(pattern));
-            }
-            this.responseCode = responseCode;
-        }
-    }
 
     private class RewriteRule {
         private Pattern match;

@@ -182,13 +182,13 @@ public class ProxyResource {
     @Delete
     @At("/:port/whitelist")
     public Reply<?> clearWhitelist(@Named("port") int port, Request request) {
-    	ProxyServer proxy = proxyManager.get(port);
+        ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
 
-    	proxy.clearWhitelist();
-    	return Reply.saying().ok();
+        proxy.clearWhitelist();
+        return Reply.saying().ok();
     }
 
     @Post
