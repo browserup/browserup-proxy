@@ -209,3 +209,11 @@ NodeJS Support
 --------------
 
 NodeJS bindings for browswermob-proxy are available [here](https://github.com/zzo/browsermob-node).  Built-in support for [Selenium](http://seleniumhq.org) or use [CapserJS-on-PhantomJS](http://casperjs.org) or anything else to drive traffic for HAR generation.
+
+Creating the batch files from source
+------------------------------------
+
+You'll need maven (`brew install maven` if you're on OS X); use the `release` profile to generate the batch files from this repository. Optionally, proceed at your own risk and append the `-DskipTests` option if the tests are failing.
+
+    [~]$ mvn -P release
+    [~]$ mvn -DskipTests -P release
