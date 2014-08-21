@@ -4,6 +4,7 @@ import net.lightbody.bmp.core.har.*;
 import net.lightbody.bmp.proxy.BlacklistEntry;
 import net.lightbody.bmp.proxy.WhitelistEntry;
 import net.lightbody.bmp.proxy.util.*;
+import net.lightbody.bmp.proxy.util.Base64;
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
