@@ -201,18 +201,19 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
                 if (!isGet && HttpFields.__ContentType.equals(hdr)) {
                     hasContent = true;
                 }
-                if (!isGet && HttpFields.__ContentLength.equals(hdr)) {
-                    contentLength = Long.parseLong(request.getField(hdr));
-                    continue;
-                }
+
 
                 Enumeration vals = request.getFieldValues(hdr);
                 while (vals.hasMoreElements()) {
                     String val = (String) vals.nextElement();
                     if (val != null) {
-                        if (!isGet && HttpFields.__ContentLength.equals(hdr) && Integer.parseInt(val) > 0) {
-                            hasContent = true;
-                        }
+                    	
+                        if (!isGet && HttpFields.__ContentLength.equals(hdr)) {
+                            contentLength = Long.parseLong(request.getField(hdr));
+                            if(contentLength > 0) {
+                            	hasContent = true;
+                            }
+                        }  
 
                         if (!_DontProxyHeaders.containsKey(hdr)) {
                             httpReq.addRequestHeader(hdr, val);
