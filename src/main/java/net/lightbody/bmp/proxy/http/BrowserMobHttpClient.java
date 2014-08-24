@@ -122,8 +122,8 @@ import org.xbill.DNS.DClass;
 
 
 /**
- WARN : Require zlib > 1.1.4 (deflate support)
-*/
+ * WARN : Require zlib > 1.1.4 (deflate support)
+ */
 public class BrowserMobHttpClient {
 	private static final Log LOG = new Log();
 	public static UserAgentStringParser PARSER = UADetectorServiceFactory.getCachingAndUpdatingParser();
@@ -697,7 +697,7 @@ public class BrowserMobHttpClient {
         int statusCode = -998;
         long bytes = 0;
         boolean gzipping = false;
-	boolean deflating = false;
+        boolean deflating = false;
         OutputStream os = req.getOutputStream();
         if (os == null) {
             os = new CappedByteArrayOutputStream(1024 * 1024); // MOB-216 don't buffer more than 1 MB
@@ -807,32 +807,29 @@ public class BrowserMobHttpClient {
                 // check for null (resp 204 can cause HttpClient to return null, which is what Google does with http://clients1.google.com/generate_204)
                 if (is != null) {
                     Header contentEncodingHeader = response.getFirstHeader("Content-Encoding");
-		    if(contentEncodingHeader != null) {
+                	if(contentEncodingHeader != null) {
                         if ("gzip".equalsIgnoreCase(contentEncodingHeader.getValue())) {
                             gzipping = true;
-                        } 
-                        else if ("deflate".equalsIgnoreCase(contentEncodingHeader.getValue())) {
-		    	    deflating = true;
-		        }
-		    }
+                        } else if ("deflate".equalsIgnoreCase(contentEncodingHeader.getValue())) {
+                        	deflating = true;
+                        }
+                	}
 
                     // deal with GZIP content!
-	             
                     if(decompress && response.getEntity().getContentLength() != 0) { //getContentLength<0 if unknown
                         if (gzipping) {
                             is = new GZIPInputStream(is);
-                        }
-		        else if (deflating) {  //RAW deflate only
-			     // WARN : if system is using zlib<=1.1.4 the stream must be append with a dummy byte
-			     // that is not requiered for zlib>1.1.4 (not mentioned on current Inflater javadoc)	        
-			     is = new InflaterInputStream(is, new Inflater(true));
+                        } else if (deflating) {  
+                        	// RAW deflate only
+                        	// WARN : if system is using zlib<=1.1.4 the stream must be append with a dummy byte
+                        	// that is not requiered for zlib>1.1.4 (not mentioned on current Inflater javadoc)	        
+                        	is = new InflaterInputStream(is, new Inflater(true));
                         }
                     }
 
                     if (captureContent) {
                         // todo - something here?
                         os = new ClonedOutputStream(os);
-
                     }
                     bytes = copyWithStats(is, os);
                 }
@@ -983,9 +980,8 @@ public class BrowserMobHttpClient {
                             InputStream temp = null;
                             if(gzipping){	
                                 temp = new GZIPInputStream(new ByteArrayInputStream(copy.toByteArray()));
-                            }
-                            else if (deflating) {
-                            	//RAW deflate only ?
+                            } else if (deflating) {
+                            	// RAW deflate only?
                             	// WARN : if system is using zlib<=1.1.4 the stream must be append with a dummy byte
                             	// that is not requiered for zlib>1.1.4 (not mentioned on current Inflater javadoc)		        
                             	temp = new InflaterInputStream(new ByteArrayInputStream(copy.toByteArray()), new Inflater(true));
@@ -1003,7 +999,6 @@ public class BrowserMobHttpClient {
                         setBinaryContentOfEntry(entry, copy);
                     }
                 }
-
 
                 NameValuePair nvp = contentTypeHdr.getElements()[0].getParameterByName("charset");
 
@@ -1080,7 +1075,6 @@ public class BrowserMobHttpClient {
                 LOG.warn("Could not parse URL", e);
             }
         }
-
 
         return new BrowserMobHttpResponse(entry, method, response, errorMessage, contentType, charSet);
     }
@@ -1297,7 +1291,6 @@ public class BrowserMobHttpClient {
 
     static class PreemptiveAuth implements HttpRequestInterceptor {
         public void process(final HttpRequest request, final HttpContext context) throws HttpException, IOException {
-
             AuthState authState = (AuthState) context.getAttribute(HttpClientContext.TARGET_AUTH_STATE);
 
             // If no auth scheme avaialble yet, try to initialize it preemptively
