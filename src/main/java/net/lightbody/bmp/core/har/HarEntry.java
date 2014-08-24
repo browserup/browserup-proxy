@@ -1,6 +1,7 @@
 package net.lightbody.bmp.core.har;
 
-import net.lightbody.bmp.core.json.ISO8601DateFormatter;
+import net.lightbody.bmp.core.json.ISO8601WithTDZDateFormatter;
+
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
@@ -36,7 +37,7 @@ public class HarEntry {
         this.pageref = pageref;
     }
 
-    @JsonSerialize(using = ISO8601DateFormatter.class)
+    @JsonSerialize(using = ISO8601WithTDZDateFormatter.class)
     public Date getStartedDateTime() {
         return startedDateTime;
     }
