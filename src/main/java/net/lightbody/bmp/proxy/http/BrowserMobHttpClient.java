@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -322,33 +323,7 @@ public class BrowserMobHttpClient {
         	.setRequestExecutor(new HttpRequestExecutor() {
         		@Override
                 protected HttpResponse doSendRequest(HttpRequest request, HttpClientConnection conn, HttpContext context) throws IOException, HttpException {
-                	// +4 => header/data separation
-					long requestHeadersSize = request.getRequestLine().toString().length() + 4;
-					long requestBodySize = 0;
-					String requestBody = null;
-					for (Header header : request.getAllHeaders()) {
-						// +2 => new line
-						requestHeadersSize += header.toString().length() + 2;
-						// get body size
-						if (header.getName().equals("Content-Length")) {
-							requestBodySize += Integer.valueOf(header.getValue());
-						}
-					}
-					
-				    if(request instanceof HttpEntityEnclosingRequest){
-				        HttpEntity entity = ((HttpEntityEnclosingRequest) request).getEntity();
-				           if (entity != null && entity.getContentLength() > 0) {
-				            requestBody = EntityUtils.toString(entity, "UTF-8");
-				           }
-				       }
 
-				    // set current entry request
-				    HarEntry entry = RequestInfo.get().getEntry();
-                    if (entry != null) {
-                        entry.getRequest().setHeadersSize(requestHeadersSize);
-                        entry.getRequest().setBodySize(requestBodySize);
-                        entry.getRequest().setRequestBody(requestBody);
-                    }
 
                     // set date before sending
                     Date start = new Date();
@@ -930,12 +905,28 @@ public class BrowserMobHttpClient {
                 }
             }
         }
-
+        
+        
+    	// +4 => header/data separation
+		long requestHeadersSize = method.getRequestLine().toString().length() + 4;
+		long requestBodySize = 0;
+		for (Header header : method.getAllHeaders()) {
+			// +2 => new line
+			requestHeadersSize += header.toString().length() + 2;
+			// get body size
+			if (header.getName().equals("Content-Length")) {
+				requestBodySize += Integer.valueOf(header.getValue());
+			}
+		}
+        entry.getRequest().setHeadersSize(requestHeadersSize);
+        entry.getRequest().setBodySize(requestBodySize);
         if (captureContent) {
+        	
             // can we understand the POST data at all?
             if (method instanceof HttpEntityEnclosingRequestBase && req.getCopy() != null) {
                 HttpEntityEnclosingRequestBase enclosingReq = (HttpEntityEnclosingRequestBase) method;
                 HttpEntity entity = enclosingReq.getEntity();
+
 
                 HarPostData data = new HarPostData();
                 data.setMimeType(req.getMethod().getFirstHeader("Content-Type").getValue());
@@ -943,7 +934,8 @@ public class BrowserMobHttpClient {
 
                 if (urlEncoded || URLEncodedUtils.isEncoded(entity)) {
                     try {
-                        final String content = new String(req.getCopy().toByteArray(), "UTF-8");
+    					final String content = new String(req.getCopy().toByteArray(), "UTF-8");
+
                         if (content != null && content.length() > 0) {
                             List<NameValuePair> result = new ArrayList<NameValuePair>();
                             URLEncodedUtils.parse(result, new Scanner(content), null);
@@ -993,10 +985,10 @@ public class BrowserMobHttpClient {
                                 temp = new GZIPInputStream(new ByteArrayInputStream(copy.toByteArray()));
                             }
                             else if (deflating) {
-			        //RAW deflate only
-				// WARN : if system is using zlib<=1.1.4 the stream must be append with a dummy byte
-			        // that is not requiered for zlib>1.1.4 (not mentioned on current Inflater javadoc)		        
-				temp = new InflaterInputStream(new ByteArrayInputStream(copy.toByteArray()), new Inflater(true));
+                            	//RAW deflate only ?
+                            	// WARN : if system is using zlib<=1.1.4 the stream must be append with a dummy byte
+                            	// that is not requiered for zlib>1.1.4 (not mentioned on current Inflater javadoc)		        
+                            	temp = new InflaterInputStream(new ByteArrayInputStream(copy.toByteArray()), new Inflater(true));
                             }
                             copy = new ByteArrayOutputStream();
                             IOUtils.copy(temp, copy);
