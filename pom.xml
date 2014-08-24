@@ -65,7 +65,7 @@
                                 </program>
                             </programs>
                         </configuration>
-                        <executions>BET
+                        <executions>
                             <execution>
                                 <id>make-assembly</id>
                                 <phase>install</phase>
