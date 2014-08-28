@@ -104,7 +104,7 @@
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
                 <includes>
-                    <include>**/*.prop</include>
+                    <include>**/**</include>
                 </includes>
             </resource>
         </resources>
