@@ -52,11 +52,11 @@ public class PhantomJSTest {
 				capabilities);
         
         try {
-            server.newHar("Yahoo");
+            server.newHar("Selenium - Web Browser Automation");
     
-            driver.get("http://us.yahoo.com");
+            driver.get("http://docs.seleniumhq.org");
     
-            Assert.assertThat(driver.getTitle(), CoreMatchers.containsString("Yahoo"));
+            Assert.assertThat(driver.getTitle(), CoreMatchers.containsString("Selenium - Web Browser Automation"));
             // get the HAR data
             Har har = server.getHar();
     
@@ -65,7 +65,7 @@ public class PhantomJSTest {
     
             // show that we can capture the HTML of the root page
             String text = har.getLog().getEntries().get(0).getResponse().getContent().getText();
-            Assert.assertTrue(text.contains("<title>Yahoo</title>"));
+            Assert.assertTrue(text.contains("<title>Selenium - Web Browser Automation</title>"));
         } finally {
             driver.quit();
         }

@@ -29,21 +29,11 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 import java.util.zip.Inflater;
 
-import net.lightbody.bmp.core.har.Har;
-import net.lightbody.bmp.core.har.HarCookie;
-import net.lightbody.bmp.core.har.HarEntry;
-import net.lightbody.bmp.core.har.HarNameValuePair;
-import net.lightbody.bmp.core.har.HarNameVersion;
-import net.lightbody.bmp.core.har.HarPostData;
-import net.lightbody.bmp.core.har.HarPostDataParam;
-import net.lightbody.bmp.core.har.HarRequest;
-import net.lightbody.bmp.core.har.HarResponse;
-import net.lightbody.bmp.core.har.HarTimings;
-import net.lightbody.bmp.proxy.util.Base64;
-import net.lightbody.bmp.proxy.util.CappedByteArrayOutputStream;
-import net.lightbody.bmp.proxy.util.ClonedOutputStream;
-import net.lightbody.bmp.proxy.util.IOUtils;
-import net.lightbody.bmp.proxy.util.Log;
+import net.lightbody.bmp.core.har.*;
+import net.lightbody.bmp.proxy.BlacklistEntry;
+import net.lightbody.bmp.proxy.WhitelistEntry;
+import net.lightbody.bmp.proxy.util.*;
+
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
@@ -158,6 +148,7 @@ public class BrowserMobHttpClient {
      */
     private TrustingSSLSocketFactory sslSocketFactory;
 
+
     private PoolingHttpClientConnectionManager httpClientConnMgr;
     
     /**
@@ -182,6 +173,7 @@ public class BrowserMobHttpClient {
     /**
      * List of accepted URL patterns
      */
+
     private WhitelistEntry whitelistEntry = null;
     
     /**
@@ -657,7 +649,7 @@ public class BrowserMobHttpClient {
             // guard against concurrent modification of whitelistEntry
             if (whitelistEntry != null) {
                 boolean found = false;
-                for (Pattern pattern : whitelistEntry.patterns) {
+                for (Pattern pattern : whitelistEntry.getPatterns()) {
                     if (pattern.matcher(url).matches()) {
                         found = true;
                         break;
@@ -666,16 +658,15 @@ public class BrowserMobHttpClient {
                 
                 // url does not match whitelist, set the response code
                 if (!found) {
-                    mockResponseCode = whitelistEntry.responseCode;
+                    mockResponseCode = whitelistEntry.getResponseCode();
                 }
             }
         }
 
         if (blacklistEntries != null) {
             for (BlacklistEntry blacklistEntry : blacklistEntries) {
-            	// url does match whitelist, set the response code
-            	if (blacklistEntry.pattern.matcher(url).matches()) {
-                    mockResponseCode = blacklistEntry.responseCode;
+                if (blacklistEntry.getPattern().matcher(url).matches()) {
+                    mockResponseCode = blacklistEntry.getResponseCode();
                     break;
                 }
             }
@@ -710,8 +701,8 @@ public class BrowserMobHttpClient {
         // clear out any connection-related information so that it's not stale from previous use of this thread.
         RequestInfo.clear(url, entry);
 
-        entry.setRequest(new HarRequest(method.getMethod(), url, method.getProtocolVersion().getProtocol()));
-        entry.setResponse(new HarResponse(-999, "NO RESPONSE", method.getProtocolVersion().getProtocol()));
+        entry.setRequest(new HarRequest(method.getMethod(), url, method.getProtocolVersion().toString()));
+        entry.setResponse(new HarResponse(-999, "NO RESPONSE", method.getProtocolVersion().toString()));
         if (this.har != null && harPageRef != null) {
             har.getLog().addEntry(entry);
         }
@@ -882,6 +873,7 @@ public class BrowserMobHttpClient {
         entry.getResponse().setBodySize(bytes);
         entry.getResponse().getContent().setSize(bytes);
         entry.getResponse().setStatus(statusCode);
+        entry.getResponse().setHttpVersion(response.getProtocolVersion().toString());
         if (statusLine != null) {
             entry.getResponse().setStatusText(statusLine.getReasonPhrase());
         }
@@ -1190,18 +1182,26 @@ public class BrowserMobHttpClient {
         blacklistEntries.add(new BlacklistEntry(pattern, responseCode));
     }
 
+    public List<BlacklistEntry> getBlacklistedRequests() {
+        return blacklistEntries;
+    }
+
     public void clearBlacklist() {
-    	blacklistEntries.clear();
+        blacklistEntries.clear();
+    }
+
+    public WhitelistEntry getWhitelistRequests() {
+        return whitelistEntry;
     }
 
     public synchronized void whitelistRequests(String[] patterns, int responseCode) {
-    	// synchronized to guard against concurrent modification
+        // synchronized to guard against concurrent modification
         whitelistEntry = new WhitelistEntry(patterns, responseCode);
     }
 
     public synchronized void clearWhitelist() {
-    	// synchronized to guard against concurrent modification
-    	whitelistEntry = null;
+        // synchronized to guard against concurrent modification
+        whitelistEntry = null;
     }
     
     public void addHeader(String name, String value) {
@@ -1342,29 +1342,6 @@ public class BrowserMobHttpClient {
                     // this is fine, we're shutting it down anyway
                 }
             }
-        }
-    }
-
-    private class WhitelistEntry {
-        private List<Pattern> patterns = new CopyOnWriteArrayList<Pattern>();
-        // the HTTP status code to return for URLs that do not match the whitelist
-        private int responseCode;
-
-        private WhitelistEntry(String[] patterns, int responseCode) {
-            for (String pattern : patterns) {
-                this.patterns.add(Pattern.compile(pattern));
-            }
-            this.responseCode = responseCode;
-        }
-    }
-
-    private class BlacklistEntry {
-        private Pattern pattern;
-        private int responseCode;
-
-        private BlacklistEntry(String pattern, int responseCode) {
-            this.pattern = Pattern.compile(pattern);
-            this.responseCode = responseCode;
         }
     }
 

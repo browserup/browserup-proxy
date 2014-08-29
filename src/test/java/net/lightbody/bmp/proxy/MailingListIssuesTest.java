@@ -1,6 +1,6 @@
 package net.lightbody.bmp.proxy;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 import net.lightbody.bmp.core.har.*;
 import net.lightbody.bmp.core.util.ThreadUtils;
 import net.lightbody.bmp.proxy.http.BrowserMobHttpRequest;
@@ -214,6 +214,10 @@ public class MailingListIssuesTest extends DummyServerTest {
         Assert.assertEquals(1, postdata.getParams().size());
         Assert.assertEquals("foo", postdata.getParams().get(0).getName());
         Assert.assertEquals("bar", postdata.getParams().get(0).getValue());
+        /** TODO
+         It runs fine until the bar assert which is different.
+         it expects bar but gets bar\u0000\u0000\u0000\u0000...foo=bar where the \u0000 repeats a lot, total char array for value has size of 8195
+         */
     }
 
     @Test
@@ -385,7 +389,7 @@ public class MailingListIssuesTest extends DummyServerTest {
     
             // show that we can capture the HTML of the root page
             String text = har.getLog().getEntries().get(0).getResponse().getContent().getText();
-            Assert.assertTrue(text.contains("<title>Whats My User Agent?</title>"));
+            Assert.assertTrue(text.contains("<title>\r\n\tWhat's My User Agent?\r\n</title>"));
         } finally {
             server.stop();
             if (driver != null) {
