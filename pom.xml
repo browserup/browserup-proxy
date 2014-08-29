@@ -102,9 +102,19 @@
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
-                <filtering>true</filtering>
+                <filtering>false</filtering>
                 <includes>
                     <include>**/**</include>
+                </includes>
+                <excludes>
+                    <exclude>version.prop</exclude>
+                </excludes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>version.prop</include>
                 </includes>
             </resource>
         </resources>
