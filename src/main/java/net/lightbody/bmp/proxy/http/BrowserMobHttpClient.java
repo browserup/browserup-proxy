@@ -686,7 +686,9 @@ public class BrowserMobHttpClient {
         entry.getResponse().setBodySize(bytes);
         entry.getResponse().getContent().setSize(bytes);
         entry.getResponse().setStatus(statusCode);
-        entry.getResponse().setHttpVersion(response.getProtocolVersion().toString());
+        if (response != null) {
+        	entry.getResponse().setHttpVersion(response.getProtocolVersion().toString());
+        }
         if (statusLine != null) {
             entry.getResponse().setStatusText(statusLine.getReasonPhrase());
         }
