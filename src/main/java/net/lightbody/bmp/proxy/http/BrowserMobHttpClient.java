@@ -168,7 +168,7 @@ public class BrowserMobHttpClient {
     /**
      * List of rejected URL patterns
      */
-    private List<BlacklistEntry> blacklistEntries = new CopyOnWriteArrayList<BrowserMobHttpClient.BlacklistEntry>();
+    private List<BlacklistEntry> blacklistEntries = new CopyOnWriteArrayList<BlacklistEntry>();
     
     /**
      * List of accepted URL patterns
