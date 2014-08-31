@@ -43,6 +43,7 @@ public class RequestInfo {
 
     private Long blocked;
     private Long dns;
+    private Long latency;
     private Long connect;
     private Long ssl;
     private Long send;
@@ -112,6 +113,10 @@ public class RequestInfo {
     public void connect(Date start, Date end) {
         connect = ping(start, end);
     }
+    
+    public void latency(Date start, Date end) {
+    	latency = ping(start, end);
+	}
 
     public void ssl(Date start, Date end) {
         ssl = ping(start, end);
@@ -230,4 +235,8 @@ public class RequestInfo {
     public HarEntry getEntry() {
         return entry;
     }
+
+	public Long getLatency() {
+		return latency;
+	}
 }

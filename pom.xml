@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.lightbody.bmp</groupId>
     <artifactId>browsermob-proxy</artifactId>
-    <version>2.0-beta-10-SNAPSHOT</version>
+    <version>2.0-beta-15-SNAPSHOT</version>
     <name>BrowserMob Proxy</name>
     <description>A programmatic HTTP/S designed for performance and functional testing</description>
     <url>http://bmp.lightbody.net</url>
@@ -115,8 +115,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>1.7</source>
+                    <target>1.7</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -190,12 +190,12 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.2.6</version>
+            <version>4.3.4</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpmime</artifactId>
-            <version>4.2.3</version>
+            <version>4.3.4</version>
         </dependency>
 
         <dependency>
@@ -279,11 +279,10 @@
             <artifactId>uadetector-resources</artifactId>
             <version>2013.10</version>
         </dependency>
-
         <dependency>
-        	<groupId>org.jboss.arquillian.extension</groupId>
-        	<artifactId>arquillian-phantom-driver</artifactId>
-        	<version>1.1.1.Final</version>
+            <groupId>org.jboss.arquillian.extension</groupId>
+            <artifactId>arquillian-phantom-driver</artifactId>
+            <version>1.1.1.Final</version>
         </dependency>
     </dependencies>
 

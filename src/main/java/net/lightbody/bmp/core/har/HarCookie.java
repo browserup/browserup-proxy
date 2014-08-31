@@ -1,10 +1,11 @@
 package net.lightbody.bmp.core.har;
 
-import net.lightbody.bmp.core.json.ISO8601DateFormatter;
+import java.util.Date;
+
+import net.lightbody.bmp.core.json.ISO8601WithTDZDateFormatter;
+
 import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
-
-import java.util.Date;
 
 @JsonWriteNullProperties(value=false)
 public class HarCookie {
@@ -49,7 +50,7 @@ public class HarCookie {
         this.domain = domain;
     }
 
-    @JsonSerialize(using = ISO8601DateFormatter.class)
+    @JsonSerialize(using = ISO8601WithTDZDateFormatter.class)
     public Date getExpires() {
         return expires;
     }

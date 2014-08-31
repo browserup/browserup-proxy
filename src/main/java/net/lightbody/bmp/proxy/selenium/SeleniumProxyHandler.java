@@ -755,7 +755,6 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
           {
               super.customizeRequest(socket,request);
               URI uri=request.getURI();
-
               // Convert the URI to a proxy URL
               //
               // NOTE: Don't just add a host + port to the request URI, since this causes the URI to

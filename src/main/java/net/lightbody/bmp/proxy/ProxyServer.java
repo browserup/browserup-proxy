@@ -1,6 +1,20 @@
 package net.lightbody.bmp.proxy;
 
-import net.lightbody.bmp.core.har.*;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import net.lightbody.bmp.core.har.Har;
+import net.lightbody.bmp.core.har.HarEntry;
+import net.lightbody.bmp.core.har.HarLog;
+import net.lightbody.bmp.core.har.HarNameVersion;
+import net.lightbody.bmp.core.har.HarPage;
 import net.lightbody.bmp.core.util.ThreadUtils;
 import net.lightbody.bmp.proxy.http.BrowserMobHttpClient;
 import net.lightbody.bmp.proxy.http.RequestInterceptor;
@@ -18,22 +32,20 @@ import org.java_bandwidthlimiter.BandwidthLimiter;
 import org.java_bandwidthlimiter.StreamManager;
 import org.openqa.selenium.Proxy;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
-
 public class ProxyServer {
     private static final HarNameVersion CREATOR = new HarNameVersion("BrowserMob Proxy", "2.0");
     private static final Log LOG = new Log();
 
+    /*
+     * The Jetty HttpServer use in BrowserMobProxyHandler
+     */
     private Server server;
+    /*
+     * Init the port use to bind the socket
+     * value -1 means that the ProxyServer is it well configured yet
+     * 
+     * The port value can be change thanks to the setter method or by directly giving it as a constructor param
+     */
     private int port = -1;
     private InetAddress localHost;
     private BrowserMobHttpClient client;
@@ -74,7 +86,6 @@ public class ProxyServer {
         handler.setHttpClient(client);
 
         context.addHandler(handler);
-
         server.start();
 
         setPort(listener.getPort());
@@ -334,7 +345,6 @@ public class ProxyServer {
     }
 
     public void waitForNetworkTrafficToStop(final long quietPeriodInMs, long timeoutInMs) {
-        long start = System.currentTimeMillis();
         boolean result = ThreadUtils.waitFor(new ThreadUtils.WaitCondition() {
             @Override
             public boolean checkCondition(long elapsedTimeInMs) {
@@ -361,8 +371,6 @@ public class ProxyServer {
                 return lastCompleted != null && System.currentTimeMillis() - lastCompleted.getTime() >= quietPeriodInMs;
             }
         }, TimeUnit.MILLISECONDS, timeoutInMs);
-        long end = System.currentTimeMillis();
-        long time = (end - start);
 
         if (!result) {
             throw new RuntimeException("Timed out after " + timeoutInMs + " ms while waiting for network traffic to stop");
