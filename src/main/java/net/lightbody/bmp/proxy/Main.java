@@ -13,6 +13,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
 import javax.servlet.ServletContextEvent;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.ConsoleHandler;
@@ -22,18 +23,10 @@ import java.util.logging.Logger;
 
 public class Main {
     private static final Log LOG = new Log();
+    private static String VERSION = null;
 
     public static void main(String[] args) throws Exception {
         configureLogging();
-
-        String version = "UNKNOWN/DEVELOPMENT";
-        InputStream is = Main.class.getResourceAsStream("/version.prop");
-
-        if (is != null) {
-            Properties props = new Properties();
-            props.load(is);
-            version = props.getProperty("version");
-        }
 
         final Injector injector = Guice.createInjector(new ConfigModule(args), new JettyModule(), new SitebricksModule() {
             @Override
@@ -42,7 +35,7 @@ public class Main {
             }
         });
 
-        LOG.info("Starting BrowserMob Proxy version {}", version);
+        LOG.info("Starting BrowserMob Proxy version {}", getVersion());
 
         Server server = injector.getInstance(Server.class);
         GuiceServletContextListener gscl = new GuiceServletContextListener() {
@@ -57,6 +50,23 @@ public class Main {
         gscl.contextInitialized(new ServletContextEvent(context.getServletContext()));
 
         server.join();
+    }
+
+    public static String getVersion() throws IOException {
+        if (VERSION == null) {
+            String version = "UNKNOWN/DEVELOPMENT";
+            InputStream is = Main.class.getResourceAsStream("/version.prop");
+
+            if (is != null) {
+                Properties props = new Properties();
+                props.load(is);
+                version = props.getProperty("version");
+            }
+
+            VERSION = version;
+        }
+
+        return VERSION;
     }
 
     public static void configureLogging() {

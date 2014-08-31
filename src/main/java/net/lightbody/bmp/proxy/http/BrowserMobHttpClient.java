@@ -31,6 +31,7 @@ import java.util.zip.Inflater;
 
 import net.lightbody.bmp.core.har.*;
 import net.lightbody.bmp.proxy.BlacklistEntry;
+import net.lightbody.bmp.proxy.Main;
 import net.lightbody.bmp.proxy.WhitelistEntry;
 import net.lightbody.bmp.proxy.util.*;
 
@@ -740,7 +741,7 @@ public class BrowserMobHttpClient {
         try {
             // set the User-Agent if it's not already set
             if (method.getHeaders("User-Agent").length == 0) {
-                method.addHeader("User-Agent", "BrowserMob VU/1.0");
+                method.addHeader("User-Agent", "bmp.lightbody.net/" + Main.getVersion());
             }
 
             // was the request mocked out?
