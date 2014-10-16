@@ -1,27 +1,37 @@
 package net.lightbody.bmp.proxy.http;
 
-import net.lightbody.bmp.proxy.util.Log;
-import org.apache.http.conn.scheme.HostNameResolver;
-import org.xbill.DNS.*;
-
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class BrowserMobHostNameResolver implements HostNameResolver {
-    private static final Log LOG = new Log();
+import net.lightbody.bmp.proxy.util.Log;
 
-    public static ThreadLocal<Boolean> fakeSlow = new ThreadLocal<Boolean>() {
-        @Override
-        protected Boolean initialValue() {
-            return false;
-        }
-    };
+import org.apache.http.conn.DnsResolver;
+import org.xbill.DNS.ARecord;
+import org.xbill.DNS.Address;
+import org.xbill.DNS.Cache;
+import org.xbill.DNS.ExtendedResolver;
+import org.xbill.DNS.Lookup;
+import org.xbill.DNS.Name;
+import org.xbill.DNS.Record;
+import org.xbill.DNS.Resolver;
+import org.xbill.DNS.TextParseException;
+import org.xbill.DNS.Type;
+
+public class BrowserMobHostNameResolver implements DnsResolver {
+    /**
+     * Allows fallback to the native Java lookup mechanism when xbill cannot resolve the hostname. Controlled by bmp.allowNativeDnsFallback system property.
+     */
+	public static final String ALLOW_NATIVE_DNS_FALLBACK = "bmp.allowNativeDnsFallback";
+    
+	private static final int MAX_RETRY_COUNT = 5;
+
+	private static final Log LOG = new Log();
 
     private Map<String, String> remappings = new ConcurrentHashMap<String, String>();
     private Map<String, List<String>> reverseMapping = new ConcurrentHashMap<String, List<String>>();
@@ -44,73 +54,92 @@ public class BrowserMobHostNameResolver implements HostNameResolver {
     }
 
     @Override
-    public InetAddress resolve(String hostname) throws IOException {
+    public InetAddress[] resolve(String hostname) throws UnknownHostException {
         String remapping = remappings.get(hostname);
         if (remapping != null) {
             hostname = remapping;
         }
 
         try {
-            return Address.getByAddress(hostname);
+            return new InetAddress[]{Address.getByAddress(hostname)};
         } catch (UnknownHostException e) {
             // that's fine, this just means it's not an IP address and we gotta look it up, which is common
         }
 
-        boolean isCached = this.isCached(hostname);
-        Date start = new Date();
-        InetAddress addr;
+        boolean isCached;
+		try {
+			isCached = this.isCached(hostname);
+		} catch (TextParseException e) {
+			throw new UnknownHostException(hostname);
+		}
 
-        try {
-            addr = findByDNSJava(hostname);
-        } catch(UnknownHostException e) {
-            addr = findByNativeJava(hostname);
-        }
-
+		Date start = new Date();
+		
+		Record[] records = findByDNS(hostname);
+        
         Date end = new Date();
 
-        if (fakeSlow.get()) {
-            fakeSlow.set(false);
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        List<InetAddress> addrList;
+        
+        if (records == null || records.length == 0) {
+        	// if native java fallback is enabled, attempt to resolve the hostname natively before giving up
+        	if (Boolean.getBoolean(ALLOW_NATIVE_DNS_FALLBACK)) {
+        		InetAddress[] addresses = findByNativeLookup(hostname);
+        		addrList = Arrays.asList(addresses);
+        	} else {
+        		throw new UnknownHostException(hostname);
+        	}
+        } else {
+        	// found records using the non-native lookup mechanism
+        	addrList = new ArrayList<>(records.length);
+        	 
+        	for(Record record : records){
+    	        // assembly the addr object
+    	        ARecord a = (ARecord) record;
+    	        InetAddress addr = InetAddress.getByAddress(hostname, a.getAddress().getAddress());
+    			addrList.add(addr);
+            }        	
         }
 
         if (!isCached) {
             // TODO: Associate the the host name with the connection. We do this because when using persistent
             // connections there won't be a lookup on the 2nd, 3rd, etc requests, and as such we wouldn't be able to
             // know what IP address we were requesting.
-            RequestInfo.get().dns(start, end, addr.getHostAddress());
+            RequestInfo.get().dns(start, end, addrList.get(0).getHostAddress());
         } else {
             // if it is a cached hit, we just record zero since we don't want
             // to skew the data with method call timings (specially under load)
-            RequestInfo.get().dns(end, end, addr.getHostAddress());
+            RequestInfo.get().dns(end, end, addrList.get(0).getHostAddress());
         }
 
-        return addr;
+        return addrList.toArray(new InetAddress[0]);
     }
 
-    private InetAddress findByDNSJava(String hostname) throws IOException {
-        Lookup lookup = new Lookup(Name.fromString(hostname), Type.A);
+	private InetAddress[] findByNativeLookup(String hostname) throws UnknownHostException {
+		return InetAddress.getAllByName(hostname);
+	}
+
+	private Record[] findByDNS(String hostname) throws UnknownHostException {
+		Lookup lookup;
+		try {
+			lookup = new Lookup(Name.fromString(hostname), Type.A);
+		} catch (TextParseException e) {
+			throw new UnknownHostException(hostname);
+		}
+
         lookup.setCache(cache);
         lookup.setResolver(resolver);
-
-        Record[] records = lookup.run();
-
-        if (records == null || records.length == 0) {
-            throw new UnknownHostException(hostname);
-        }
-
-        // assembly the addr object
-        ARecord a = (ARecord) records[0];
-
-        return InetAddress.getByAddress(hostname, a.getAddress().getAddress());
-    }
-
-    private InetAddress findByNativeJava(String hostname) throws IOException {
-        return InetAddress.getByName(hostname);
-    }
+        // we set the retry count to -1 because we want the first execution not be counted as a retry.
+        int retryCount = -1;
+        Record[] records;
+        
+        // we iterate while the status is TRY_AGAIN and MAX_RETRY_COUNT is not exceeded
+        do{
+        	records = lookup.run();
+        	retryCount++;
+        }while(lookup.getResult() == Lookup.TRY_AGAIN && retryCount < MAX_RETRY_COUNT );
+		return records;
+	}
 
     public void remap(String source, String target) {
         remappings.put(source, target);

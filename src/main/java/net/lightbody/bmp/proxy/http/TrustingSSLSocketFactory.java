@@ -1,27 +1,32 @@
 package net.lightbody.bmp.proxy.http;
 
-import org.apache.http.conn.ConnectTimeoutException;
-import org.apache.http.conn.scheme.HostNameResolver;
-import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.params.HttpParams;
-import org.java_bandwidthlimiter.StreamManager;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.security.KeyManagementException;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Date;
 
-public class TrustingSSLSocketFactory extends SSLSocketFactory {
+import javax.net.ssl.HandshakeCompletedEvent;
+import javax.net.ssl.HandshakeCompletedListener;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.TrustManager;
 
-    public enum SSLAlgorithm {
+import net.lightbody.bmp.proxy.util.TrustEverythingSSLTrustManager;
+
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLContexts;
+import org.apache.http.conn.ssl.TrustStrategy;
+import org.apache.http.conn.ssl.X509HostnameVerifier;
+import org.apache.http.protocol.HttpContext;
+import org.java_bandwidthlimiter.StreamManager;
+
+public class TrustingSSLSocketFactory extends SSLConnectionSocketFactory {
+
+	public enum SSLAlgorithm {
         SSLv3,
         TLSv1
     }
@@ -30,88 +35,67 @@ public class TrustingSSLSocketFactory extends SSLSocketFactory {
     private StreamManager streamManager;
 
     static {
-        try {
-            sslContext = SSLContext.getInstance( SSLAlgorithm.SSLv3.name() );
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("TLS algorithm not found! Critical SSL error!", e);
-        }
-        TrustManager easyTrustManager = new X509TrustManager() {
-            @Override
-            public void checkClientTrusted(
-                    X509Certificate[] chain,
-                    String authType) throws CertificateException {
-                // Oh, I am easy!
-            }
-
-            @Override
-            public void checkServerTrusted(
-                    X509Certificate[] chain,
-                    String authType) throws CertificateException {
-                // Oh, I am easy!
-            }
-
-            @Override
-            public X509Certificate[] getAcceptedIssuers() {
-                return null;
-            }
-
-        };
-        try {
-            sslContext.init(null, new TrustManager[]{easyTrustManager}, null);
-        } catch (KeyManagementException e) {
-            throw new RuntimeException("Unexpected key management error", e);
-        }
+        sslContext = SSLContexts.createDefault();
+		try {
+			sslContext = SSLContexts.custom().loadTrustMaterial(null, 
+				new TrustStrategy() {
+					@Override
+				    public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+				        return true;
+				    }
+				}
+			).build();
+			
+			sslContext.init(null, new TrustManager[]{new TrustEverythingSSLTrustManager()}, null);
+		} catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
+			throw new RuntimeException("Unexpected key management error", e);
+		}
     }
 
-    public TrustingSSLSocketFactory(HostNameResolver nameResolver, StreamManager streamManager) {
-        super(sslContext, nameResolver);
-        assert nameResolver != null;
-        assert streamManager != null;
-        this.streamManager = streamManager;
+    public TrustingSSLSocketFactory(StreamManager streamManager) {
+    	this(new AllowAllHostnameVerifier(), streamManager);
     }
-
-    //just an helper function to wrap a normal sslSocket into a simulated one so we can do throttling
-    private Socket createSimulatedSocket(SSLSocket socket) {
-        SimulatedSocketFactory.configure(socket);
-        socket.setEnabledProtocols(new String[] { SSLAlgorithm.SSLv3.name(), SSLAlgorithm.TLSv1.name() } );
-        //socket.setEnabledCipherSuites(new String[] { "SSL_RSA_WITH_RC4_128_MD5" });
-        return new SimulatedSSLSocket(socket, streamManager);
+    
+    public TrustingSSLSocketFactory(X509HostnameVerifier hostnameVerifier, StreamManager streamManager) {
+    	 super(sslContext, hostnameVerifier);
+         assert streamManager != null;
+         this.streamManager = streamManager;
     }
-
-    @SuppressWarnings("deprecation")
+    
     @Override
-    public Socket createSocket() throws java.io.IOException {
-        SSLSocket sslSocket = (SSLSocket) super.createSocket();
-        return createSimulatedSocket(sslSocket);
+    public Socket createSocket(HttpContext context) throws IOException {
+    	//creating an anonymous class deriving from socket
+        //we just need to override methods for connect to get some metrics
+        //and get-in-out streams to provide throttling
+        Socket newSocket = new SimulatedSocket(streamManager);
+        SimulatedSocketFactory.configure(newSocket);
+		return newSocket;
     }
-
-    @SuppressWarnings("deprecation")
+    
     @Override
-    public Socket connectSocket(Socket socket, String host, int port, InetAddress localAddress, int localPort, HttpParams params)
-            throws java.io.IOException, java.net.UnknownHostException, org.apache.http.conn.ConnectTimeoutException {
-        SSLSocket sslSocket = (SSLSocket) super.connectSocket(socket, host, port, localAddress, localPort, params);
-        if( sslSocket instanceof SimulatedSSLSocket ) {
-            return sslSocket;
-        } else {
-            return createSimulatedSocket(sslSocket);
-        }
+    public Socket createLayeredSocket(final Socket socket, final String target, final int port, final HttpContext context) throws IOException {
+    	SSLSocket sslSocket = (SSLSocket) super.createLayeredSocket(socket, target, port, context);
+//    	sslSocket.setEnabledProtocols(new String[] { SSLAlgorithm.SSLv3.name(), SSLAlgorithm.TLSv1.name() } );
+//    	sslSocket.setEnabledCipherSuites(new String[] { "SSL_RSA_WITH_RC4_128_MD5" });
+    	return sslSocket;
     }
-
+    
     @Override
-    public Socket createSocket(org.apache.http.params.HttpParams params) throws java.io.IOException {
-        SSLSocket sslSocket = (SSLSocket) super.createSocket(params);
-        return createSimulatedSocket(sslSocket);
-    }
-
-    @Override
-    public Socket connectSocket(Socket socket, InetSocketAddress remoteAddress, InetSocketAddress localAddress, HttpParams params)
-            throws IOException, ConnectTimeoutException {
-        SSLSocket sslSocket = (SSLSocket) super.connectSocket(socket, remoteAddress, localAddress, params);
-        if( sslSocket instanceof SimulatedSSLSocket ) {
-            return sslSocket;
-        } else {
-            //not sure this is needed
-            return createSimulatedSocket(sslSocket);
-        }
+    /**
+     * This function is call just before the handshake
+     * 
+     * @see http://hc.apache.org/httpcomponents-client-ga/httpclient/xref/org/apache/http/conn/ssl/SSLConnectionSocketFactory.html
+     */
+    protected void prepareSocket (SSLSocket socket) throws IOException {
+	    socket.addHandshakeCompletedListener(new HandshakeCompletedListener() {
+	    	private final Date handshakeStart = new Date();
+	    	
+	    	@Override
+	    	public void handshakeCompleted(HandshakeCompletedEvent handshakeCompletedEvent) {
+	    		if(handshakeStart != null) {
+    	       		RequestInfo.get().ssl(handshakeStart, new Date());
+	    		}
+	    	}
+	    });
     }
 }

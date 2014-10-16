@@ -36,8 +36,14 @@ or optionally specify your own port:
     [~]$ curl -X POST -d 'port=9099' http://localhost:9090/proxy
     {"port":9099}
 
+or if running BrowserMob Proxy in a multi-homed environment, specify a desired bind address (default is `0.0.0.0`):
+
+    [~]$ curl -X POST -d 'bindAddress=192.168.1.222' http://localhost:9090/proxy
+    {"port":9096}
+
 Once that is done, a new proxy will be available on the port returned. All you have to do is point a browser to that proxy on that port and you should be able to browse the internet. The following additional APIs will then be available:
 
+ - GET /proxy - get a list of ports attached to `ProxyServer` instances managed by `ProxyManager`
  - PUT /proxy/[port]/har - creates a new HAR attached to the proxy and returns the HAR content if there was a previous HAR. Supports the following parameters:
   - initialPageRef - the string name of the first page ref that should be used in the HAR. Defaults to "Page 1".
   - captureHeaders - Boolean, capture headers
@@ -47,10 +53,12 @@ Once that is done, a new proxy will be available on the port returned. All you h
   - pageRef - the string name of the first page ref that should be used in the HAR. Defaults to "Page N" where N is the next page number.
  - DELETE /proxy/[port] - shuts down the proxy and closes the port
  - GET /proxy/[port]/har - returns the JSON/HAR content representing all the HTTP traffic passed through the proxy
+ - GET /proxy/[port]/whitelist - Displays whitelisted items
  - PUT /proxy/[port]/whitelist - Sets a list of URL patterns to whitelist. Takes the following parameters:
   - regex - a comma separated list of regular expressions
   - status - the HTTP status code to return for URLs that do not match the whitelist
  - DELETE /proxy/[port]/whitelist - Clears all URL patterns from the whitelist 
+ - GET /proxy/[port]/blacklist - Displays blacklisted items
  - PUT /proxy/[port]/blacklist - Set a URL to blacklist. Takes the following parameters:
   - regex - the blacklist regular expression
   - status - the HTTP status code to return for URLs that are blacklisted
@@ -115,7 +123,7 @@ If you're using Java and Selenium, the easiest way to get started is to embed th
     <dependency>
         <groupId>net.lightbody.bmp</groupId>
         <artifactId>browsermob-proxy</artifactId>
-        <version>LATEST_VERSION (ex: 2.0-beta-8)</version>
+        <version>LATEST_VERSION (ex: 2.0-beta-9)</version>
         <scope>test</scope>
     </dependency>
 
@@ -131,7 +139,7 @@ If your project already defines a Selenium dependency then you may want to exclu
     <dependency>
         <groupId>net.lightbody.bmp</groupId>
         <artifactId>browsermob-proxy</artifactId>
-        <version>LATEST_VERSION (ex: 2.0-beta-8)</version>
+        <version>LATEST_VERSION (ex: 2.0-beta-9)</version>
         <scope>test</scope>
         <exclusions>
             <exclusion>
@@ -174,17 +182,21 @@ You can use the REST API with Selenium however you want. But if you're writing y
 HTTP Request Manipulation
 -------------------
 
-While not yet available via the REST interface, you can manipulate the requests like so:
+You can manipulate the requests like so:
 
     server.addRequestInterceptor(new RequestInterceptor() {
         @Override
-        public void process(BrowserMobHttpRequest request) {
+        public void process(BrowserMobHttpRequest request, Har har) {
             request.getMethod().removeHeaders("User-Agent");
             request.getMethod().addHeader("User-Agent", "Bananabot/1.0");
         }
     });
 
-We will soon be adding support for this advanced capability in the REST interface as well, using JavaScript snippets that can be posted as the interceptor code.
+You can also POST a JavaScript payload to `/:port/interceptor/request` and `/:port/interceptor/response` using the REST interface. The functions will have a `request`/`response` variable, respectively, and a `har` variable (which may be null if a HAR isn't set up yet). The JavaScript code will be run by [Rhino](https://github.com/mozilla/rhino) and have access to the same Java API in the example above:
+
+    [~]$ curl -X POST -H 'Content-Type: text/plain' -d 'request.getMethod().removeHeaders("User-Agent");' http://localhost:9090/proxy/9091/interceptor/request
+
+Consult the Java API docs for more info.
 
 SSL Support
 -----------
@@ -197,3 +209,11 @@ NodeJS Support
 --------------
 
 NodeJS bindings for browswermob-proxy are available [here](https://github.com/zzo/browsermob-node).  Built-in support for [Selenium](http://seleniumhq.org) or use [CapserJS-on-PhantomJS](http://casperjs.org) or anything else to drive traffic for HAR generation.
+
+Creating the batch files from source
+------------------------------------
+
+You'll need maven (`brew install maven` if you're on OS X); use the `release` profile to generate the batch files from this repository. Optionally, proceed at your own risk and append the `-DskipTests` option if the tests are failing.
+
+    [~]$ mvn -P release
+    [~]$ mvn -DskipTests -P release

@@ -105,9 +105,10 @@ public class BrowserMobHostNameResolverTest {
     public void shouldResolveIPAddress() throws Exception {
         String hostname = "127.0.0.1";
 
-        InetAddress result = browserMobHostNameResolver.resolve(hostname);
+        InetAddress[] result = browserMobHostNameResolver.resolve(hostname);
 
         assertNotNull(result);
+        assertTrue(result.length >= 1);
 
         // should not consult DNS for an IP address
         verify(cache, never()).lookupRecords(any(Name.class), anyInt(), anyInt());
@@ -157,24 +158,31 @@ public class BrowserMobHostNameResolverTest {
             }
         });
 
-        InetAddress result = browserMobHostNameResolver.resolve(hostname);
+        InetAddress[] result = browserMobHostNameResolver.resolve(hostname);
 
         assertNotNull(result);
+        assertTrue(result.length >= 1);
     }
 
     @Test
     public void shouldFallbackToResolvingHostNameWithNativeJava() throws Exception {
-        String hostname = "localhost";
+    	String previousAllowFallback =  System.getProperty(BrowserMobHostNameResolver.ALLOW_NATIVE_DNS_FALLBACK, "false");
+    	System.setProperty(BrowserMobHostNameResolver.ALLOW_NATIVE_DNS_FALLBACK, "true");
+    	
+    	String hostname = "localhost";
 
         when(cache.lookupRecords(any(Name.class), anyInt(), anyInt())).thenReturn(setResponse);
         when(setResponse.isSuccessful()).thenReturn(false);
         when(setResponse.isNXDOMAIN()).thenReturn(true);
 
-        InetAddress result = browserMobHostNameResolver.resolve(hostname);
+        InetAddress[] result = browserMobHostNameResolver.resolve(hostname);
 
         assertNotNull(result);
+        assertTrue(result.length >= 1);
 
         // should never have asked the lookup any answers as it's unsuccessful
         verify(setResponse, never()).answers();
+        
+        System.setProperty(BrowserMobHostNameResolver.ALLOW_NATIVE_DNS_FALLBACK, previousAllowFallback);
     }
 }

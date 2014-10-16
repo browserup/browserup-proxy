@@ -24,6 +24,8 @@ import org.java_bandwidthlimiter.StreamManager;
 import javax.script.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
@@ -40,6 +42,15 @@ public class ProxyResource {
         this.proxyManager = proxyManager;
     }
 
+    @Get
+    public Reply<?> getProxies(Request request) throws Exception {
+        Collection<ProxyDescriptor> proxyList = new ArrayList<ProxyDescriptor> ();
+        for (ProxyServer proxy : proxyManager.get()) {
+            proxyList.add(new ProxyDescriptor(proxy.getPort()));
+        }
+        return Reply.with(new ProxyListDescriptor(proxyList)).as(Json.class);
+    }
+
     @Post
     public Reply<ProxyDescriptor> newProxy(Request request) throws Exception {
         String systemProxyHost = System.getProperty("http.proxyHost");
@@ -54,16 +65,13 @@ public class ProxyResource {
             options.put("httpProxy", String.format("%s:%s", systemProxyHost, systemProxyPort));
         }
 
-        String paramPort = request.param("port");
-        int port = 0;
-        if (paramPort != null) {
-            port = Integer.parseInt(paramPort);
-            ProxyServer proxy = proxyManager.create(options, port);
-        } else {
-            ProxyServer proxy = proxyManager.create(options);
-            port = proxy.getPort();
-        }
-        return Reply.with(new ProxyDescriptor(port)).as(Json.class);
+        String paramBindAddr = request.param("bindAddress");
+        Integer paramPort = request.param("port") == null ? null : Integer.parseInt(request.param("port"));
+        LOG.fine("POST proxy instance on bindAddress `{}` & port `{}`", 
+                paramBindAddr, paramPort);
+        ProxyServer proxy = proxyManager.create(options, paramPort, paramBindAddr);
+
+        return Reply.with(new ProxyDescriptor(proxy.getPort())).as(Json.class);
     }
 
     @Get
@@ -118,6 +126,17 @@ public class ProxyResource {
         return Reply.saying().ok();
     }
 
+    @Get
+    @At("/:port/blacklist")
+    public Reply<?> getBlacklist(@Named("port") int port, Request request) {
+        ProxyServer proxy = proxyManager.get(port);
+        if (proxy == null) {
+            return Reply.saying().notFound();
+        }
+
+        return Reply.with(proxy.getBlacklistedRequests()).as(Json.class);
+    }
+
     @Put
     @At("/:port/blacklist")
     public Reply<?> blacklist(@Named("port") int port, Request request) {
@@ -141,8 +160,19 @@ public class ProxyResource {
             return Reply.saying().notFound();
         }
 
-    	proxy.clearBlacklist();
-    	return Reply.saying().ok();
+        proxy.clearBlacklist();
+        return Reply.saying().ok();
+    }
+
+    @Get
+    @At("/:port/whitelist")
+    public Reply<?> getWhitelist(@Named("port") int port, Request request) {
+        ProxyServer proxy = proxyManager.get(port);
+        if (proxy == null) {
+            return Reply.saying().notFound();
+        }
+
+        return Reply.with(proxy.getWhitelistRequests()).as(Json.class);
     }
 
     @Put
@@ -163,13 +193,13 @@ public class ProxyResource {
     @Delete
     @At("/:port/whitelist")
     public Reply<?> clearWhitelist(@Named("port") int port, Request request) {
-    	ProxyServer proxy = proxyManager.get(port);
+        ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
 
-    	proxy.clearWhitelist();
-    	return Reply.saying().ok();
+        proxy.clearWhitelist();
+        return Reply.saying().ok();
     }
 
     @Post
@@ -221,9 +251,10 @@ public class ProxyResource {
 
         proxy.addResponseInterceptor(new ResponseInterceptor() {
             @Override
-            public void process(BrowserMobHttpResponse response) {
+            public void process(BrowserMobHttpResponse response, Har har) {
                 Bindings bindings = engine.createBindings();
                 bindings.put("response", response);
+                bindings.put("har", har);
                 bindings.put("log", LOG);
                 try {
                     script.eval(bindings);
@@ -253,9 +284,10 @@ public class ProxyResource {
 
         proxy.addRequestInterceptor(new RequestInterceptor() {
             @Override
-            public void process(BrowserMobHttpRequest request) {
+            public void process(BrowserMobHttpRequest request, Har har) {
                 Bindings bindings = engine.createBindings();
                 bindings.put("request", request);
+                bindings.put("har", har);
                 bindings.put("log", LOG);
                 try {
                     script.eval(bindings);
@@ -481,6 +513,25 @@ public class ProxyResource {
 
         public void setPort(int port) {
             this.port = port;
+        }
+    }
+
+    public static class ProxyListDescriptor {
+        private Collection<ProxyDescriptor> proxyList;
+
+        public ProxyListDescriptor() {
+        }
+
+        public ProxyListDescriptor(Collection<ProxyDescriptor> proxyList) {
+            this.proxyList = proxyList;
+        }
+
+        public Collection<ProxyDescriptor> getProxyList() {
+            return proxyList;
+        }
+
+        public void setProxyList(Collection<ProxyDescriptor> proxyList) {
+            this.proxyList = proxyList;
         }
     }
 }

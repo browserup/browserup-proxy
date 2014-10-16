@@ -1,27 +1,30 @@
 package net.lightbody.bmp.proxy.http;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnsupportedCharsetException;
+import java.util.ArrayList;
+import java.util.List;
+
 import net.lightbody.bmp.proxy.jetty.http.HttpRequest;
 import net.lightbody.bmp.proxy.util.Base64;
 import net.lightbody.bmp.proxy.util.ClonedInputStream;
 import net.lightbody.bmp.proxy.util.Log;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.HTTP;
-
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class BrowserMobHttpRequest {
     private static final Log LOG = new Log();
@@ -29,7 +32,6 @@ public class BrowserMobHttpRequest {
     private HttpRequestBase method;
     private BrowserMobHttpClient client;
     private int expectedStatusCode;
-    private String verificationText;
     private List<NameValuePair> nvps = new ArrayList<NameValuePair>();
     private StringEntity stringEntity;
     private ByteArrayEntity byteArrayEntity;
@@ -74,16 +76,10 @@ public class BrowserMobHttpRequest {
 
     public void setRequestBody(String body, String contentType, String charSet) {
         try {
-            stringEntity = new StringEntity(body, charSet);
-        } catch (UnsupportedEncodingException e) {
-            try {
-                stringEntity = new StringEntity(body, (String) null);
-            } catch (UnsupportedEncodingException e1) {
-                // this won't happen
-            }
+        	stringEntity = new StringEntity(body, ContentType.create(contentType, charSet));
+        } catch (UnsupportedCharsetException e) {
+            stringEntity = new StringEntity(body, ContentType.create(contentType, (String) null));
         }
-
-        stringEntity.setContentType(contentType);
     }
 
     public void setRequestBody(String body) {
@@ -104,14 +100,6 @@ public class BrowserMobHttpRequest {
         inputStreamEntity = new RepeatableInputStreamRequestEntity(is, length);
     }
 
-
-    public String getVerificationText() {
-        return verificationText;
-    }
-
-    public void setVerificationText(String verificationText) {
-        this.verificationText = verificationText;
-    }
 
     public HttpRequestBase getMethod() {
         return method;
@@ -136,7 +124,7 @@ public class BrowserMobHttpRequest {
             if (!nvps.isEmpty()) {
                 try {
                     if (!multiPart) {
-                        enclodingRequest.setEntity(new UrlEncodedFormEntity(nvps, HTTP.UTF_8));
+                        enclodingRequest.setEntity(new UrlEncodedFormEntity(nvps, StandardCharsets.UTF_8));
                     } else {
                         for (NameValuePair nvp : nvps) {
                             multipartEntity.addPart(nvp.getName(), new StringBody(nvp.getValue()));

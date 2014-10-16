@@ -106,4 +106,5 @@ public class HarRequest {
     public void setComment(String comment) {
         this.comment = comment;
     }
+
 }

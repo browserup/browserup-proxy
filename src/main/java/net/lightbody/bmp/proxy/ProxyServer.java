@@ -1,6 +1,20 @@
 package net.lightbody.bmp.proxy;
 
-import net.lightbody.bmp.core.har.*;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import net.lightbody.bmp.core.har.Har;
+import net.lightbody.bmp.core.har.HarEntry;
+import net.lightbody.bmp.core.har.HarLog;
+import net.lightbody.bmp.core.har.HarNameVersion;
+import net.lightbody.bmp.core.har.HarPage;
 import net.lightbody.bmp.core.util.ThreadUtils;
 import net.lightbody.bmp.proxy.http.BrowserMobHttpClient;
 import net.lightbody.bmp.proxy.http.RequestInterceptor;
@@ -11,25 +25,27 @@ import net.lightbody.bmp.proxy.jetty.http.SocketListener;
 import net.lightbody.bmp.proxy.jetty.jetty.Server;
 import net.lightbody.bmp.proxy.jetty.util.InetAddrPort;
 import net.lightbody.bmp.proxy.util.Log;
+
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponseInterceptor;
 import org.java_bandwidthlimiter.BandwidthLimiter;
 import org.java_bandwidthlimiter.StreamManager;
 import org.openqa.selenium.Proxy;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
-
 public class ProxyServer {
     private static final HarNameVersion CREATOR = new HarNameVersion("BrowserMob Proxy", "2.0");
     private static final Log LOG = new Log();
 
+    /*
+     * The Jetty HttpServer use in BrowserMobProxyHandler
+     */
     private Server server;
+    /*
+     * Init the port use to bind the socket
+     * value -1 means that the ProxyServer is it well configured yet
+     * 
+     * The port value can be change thanks to the setter method or by directly giving it as a constructor param
+     */
     private int port = -1;
     private InetAddress localHost;
     private BrowserMobHttpClient client;
@@ -70,7 +86,6 @@ public class ProxyServer {
         handler.setHttpClient(client);
 
         context.addHandler(handler);
-
         server.start();
 
         setPort(listener.getPort());
@@ -79,7 +94,7 @@ public class ProxyServer {
     public org.openqa.selenium.Proxy seleniumProxy() throws UnknownHostException {
         Proxy proxy = new Proxy();
         proxy.setProxyType(Proxy.ProxyType.MANUAL);
-        String proxyStr = String.format("%s:%d", getLocalHost().getCanonicalHostName(), getPort());
+        String proxyStr = String.format("%s:%d", getConnectableLocalHost().getCanonicalHostName(), getPort());
         proxy.setHttpProxy(proxyStr);
         proxy.setSslProxy(proxyStr);
 
@@ -104,18 +119,54 @@ public class ProxyServer {
         this.port = port;
     }
 
+    /**
+     * Get the the InetAddress that the Proxy server binds to when it starts.
+     * 
+     * If not otherwise set via {@link #setLocalHost(InetAddress)}, defaults to
+     * 0.0.0.0 (i.e. bind to any interface).
+     * 
+     * Note - just because we bound to the address, doesn't mean that it can be
+     * reached. E.g. trying to connect to 0.0.0.0 is going to fail. Use
+     * {@link #getConnectableLocalHost()} if you're looking for a host that can be
+     * connected to.
+     */
     public InetAddress getLocalHost() throws UnknownHostException {
         if (localHost == null) {
-            localHost = InetAddress.getLocalHost();
+            localHost = InetAddress.getByName("0.0.0.0");
         }
         return localHost;
     }
+    
+    /**
+     * Return a plausible {@link InetAddress} that other processes can use to
+     * contact the proxy.
+     * 
+     * In essence, this is the same as {@link #getLocalHost()}, but avoids
+     * returning 0.0.0.0. as no-one can connect to that. If no other host has
+     * been set via {@link #setLocalHost(InetAddress)}, will return
+     * {@link InetAddress#getLocalHost()}
+     * 
+     * No attempt is made to check the address for reachability before it is
+     * returned.
+     */
+    public InetAddress getConnectableLocalHost() throws UnknownHostException {
+        if (getLocalHost().equals(InetAddress.getByName("0.0.0.0"))) {
+            return InetAddress.getLocalHost();
+        } else {
+            return getLocalHost();
+        }
+    }
 
-    public void setLocalHost(InetAddress localHost) {
-        if (!localHost.isAnyLocalAddress()) {
+    public void setLocalHost(InetAddress localHost) throws SocketException {
+        if (localHost.isAnyLocalAddress() ||
+            localHost.isLoopbackAddress() ||
+            NetworkInterface.getByInetAddress(localHost) != null)
+        {
+            this.localHost = localHost;
+        } else
+        {
             throw new IllegalArgumentException("Must be address of a local adapter");
         }
-        this.localHost = localHost;
     }
 
     public Har getHar() {
@@ -248,6 +299,14 @@ public class ProxyServer {
     public void blacklistRequests(String pattern, int responseCode) {
         client.blacklistRequests(pattern, responseCode);
     }
+
+    public List<BlacklistEntry> getBlacklistedRequests() {
+        return client.getBlacklistedRequests();
+    }
+
+    public WhitelistEntry getWhitelistRequests() {
+        return client.getWhitelistRequests();
+    }
     
     public void clearBlacklist() {
     	client.clearBlacklist();
@@ -286,7 +345,6 @@ public class ProxyServer {
     }
 
     public void waitForNetworkTrafficToStop(final long quietPeriodInMs, long timeoutInMs) {
-        long start = System.currentTimeMillis();
         boolean result = ThreadUtils.waitFor(new ThreadUtils.WaitCondition() {
             @Override
             public boolean checkCondition(long elapsedTimeInMs) {
@@ -313,8 +371,6 @@ public class ProxyServer {
                 return lastCompleted != null && System.currentTimeMillis() - lastCompleted.getTime() >= quietPeriodInMs;
             }
         }, TimeUnit.MILLISECONDS, timeoutInMs);
-        long end = System.currentTimeMillis();
-        long time = (end - start);
 
         if (!result) {
             throw new RuntimeException("Timed out after " + timeoutInMs + " ms while waiting for network traffic to stop");

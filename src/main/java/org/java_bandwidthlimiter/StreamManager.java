@@ -154,6 +154,10 @@ public class StreamManager implements BandwidthLimiter {
     public void setLatency(long latency) {
         this.latency = latency;
     }
+    
+    public long getLatency() {
+        return latency;
+    }
 
     /**
      * To take into account overhead due to underlying protocols (e.g. TCP/IP)
@@ -283,18 +287,14 @@ public class StreamManager implements BandwidthLimiter {
             int allowed = getAllowedBytesRead(stream, len);
             if(allowed > 0) {
                 // Read a maximum of "allowed" bytes
-                long start = System.currentTimeMillis();
                 int bytesRead = stream.doRead(b, off, allowed);
-                long end = System.currentTimeMillis();
 
                 // If less than the "allowed" bytes were read, adjust how many we can still read for this period of time
                 adjustBytes(this.downStream, allowed - bytesRead);
 
                 //apply latency if it's the case, we only apply it if the last activity
                 //happened more than the latency itself ago.
-                long latency = (start - stream.getLastActivity()) > this.latency ? this.latency : 0;
-                // sleep for the amount of time it should have taken to read the amount of bytes read
-                StreamManager.simulate(this.downStream.adjustedMaxBps, latency, bytesRead, end - start, stream.getRoundUp());
+//                long latency = (start - stream.getLastActivity()) > this.latency ? this.latency : 0;
                 return bytesRead;
             } else {
                 long sleepTime = timeToNextReset(this.downStream);
@@ -322,7 +322,6 @@ public class StreamManager implements BandwidthLimiter {
             // we need a while loop since the write doesn't return a "written bytes" count,
             // rather it expects that all of them are written
             // hence we loop here until all of them have been written
-            long start = System.currentTimeMillis();
             while(bytesWritten < len) {
                 allowed = getAllowedBytesWrite(stream, len);
                 if(allowed > 0) {
@@ -340,32 +339,9 @@ public class StreamManager implements BandwidthLimiter {
                     }
                 }
             }
-            long end = System.currentTimeMillis();
-
             //sleep for the amount of time it should have taken to write the amount of bytes written
-            long latency = (start - stream.getLastActivity()) > this.latency ? this.latency : 0;
-            StreamManager.simulate(this.upStream.adjustedMaxBps, latency, bytesWritten, end - start, stream.getRoundUp());
+//            long latency = (start - stream.getLastActivity()) > this.latency ? this.latency : 0;
         }
-    }
-
-    // this function emulates the time a stream should take to read/write a @bytesPerSecond
-    // it takes a parameter @timeTaken which is the time it actually took so we can subtract it
-    // to adjust the waiting time
-    private static long simulate(long bytesPerSecond, long latency, int bytes, long timeTaken, boolean roundUp) {
-        if ( bytesPerSecond <= 0) { //< defensive code
-            return 0;
-        }
-
-        // workout how much we should have waited to read this amount of bytes
-        double d = ((double) bytes / bytesPerSecond) * 1000;
-
-        long expectedTime = (long) (roundUp ? Math.ceil(d) : Math.floor(d)) + latency;
-        long diff = expectedTime - timeTaken;       //< subtract the amount of time ALREADY taken to get those bytes
-
-        if (diff > 0) {
-            StreamManager.threadSleep(diff);
-        }
-        return diff;
     }
 
     private static void threadSleep(long sleepTime) {
