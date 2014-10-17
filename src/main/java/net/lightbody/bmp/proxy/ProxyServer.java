@@ -16,6 +16,8 @@ import net.lightbody.bmp.core.har.HarLog;
 import net.lightbody.bmp.core.har.HarNameVersion;
 import net.lightbody.bmp.core.har.HarPage;
 import net.lightbody.bmp.core.util.ThreadUtils;
+import net.lightbody.bmp.exception.JettyException;
+import net.lightbody.bmp.exception.NameResolutionException;
 import net.lightbody.bmp.proxy.http.BrowserMobHttpClient;
 import net.lightbody.bmp.proxy.http.RequestInterceptor;
 import net.lightbody.bmp.proxy.http.ResponseInterceptor;
@@ -62,7 +64,7 @@ public class ProxyServer {
         this.port = port;
     }
 
-    public void start() throws Exception {
+    public void start() {
         if (port == -1) {
             throw new IllegalStateException("Must set port before starting");
         }
@@ -86,15 +88,28 @@ public class ProxyServer {
         handler.setHttpClient(client);
 
         context.addHandler(handler);
-        server.start();
+       	try {
+			server.start();
+		} catch (Exception e) {
+			// wrapping unhelpful Jetty Exception into a RuntimeException
+			throw new JettyException("Exception occurred when starting the server", e);
+		}
 
         setPort(listener.getPort());
     }
 
-    public org.openqa.selenium.Proxy seleniumProxy() throws UnknownHostException {
+    public org.openqa.selenium.Proxy seleniumProxy() throws NameResolutionException {
         Proxy proxy = new Proxy();
         proxy.setProxyType(Proxy.ProxyType.MANUAL);
-        String proxyStr = String.format("%s:%d", getConnectableLocalHost().getCanonicalHostName(), getPort());
+        InetAddress connectableLocalHost;
+		try {
+			connectableLocalHost = getConnectableLocalHost();
+		} catch (UnknownHostException e) {
+			// InetAddress cannot resolve a local host. since seleniumProxy() is designed to be called within a Selenium test,
+			// this is most likely a fatal error that does not need to be a checked exception.
+			throw new NameResolutionException("Error getting local host when creating seleniumProxy", e);
+		}
+        String proxyStr = String.format("%s:%d", connectableLocalHost.getCanonicalHostName(), getPort());
         proxy.setHttpProxy(proxyStr);
         proxy.setSslProxy(proxyStr);
 
@@ -105,10 +120,15 @@ public class ProxyServer {
         handler.cleanup();
     }
 
-    public void stop() throws Exception {
+    public void stop() {
         cleanup();
         client.shutdown();
-        server.stop();
+        try {
+			server.stop();
+		} catch (InterruptedException e) {
+			// the try/catch block in server.stop() is manufacturing a phantom InterruptedException, so this should not occur 
+			throw new JettyException("Exception occurred when stopping the server", e);
+		}
     }
 
     public int getPort() {
@@ -130,9 +150,15 @@ public class ProxyServer {
      * {@link #getConnectableLocalHost()} if you're looking for a host that can be
      * connected to.
      */
-    public InetAddress getLocalHost() throws UnknownHostException {
+    public InetAddress getLocalHost() {
         if (localHost == null) {
-            localHost = InetAddress.getByName("0.0.0.0");
+        	try {
+        		localHost = InetAddress.getByName("0.0.0.0");
+        	} catch (UnknownHostException e) {
+        		// InetAddress.getByName javadocs state: "If a literal IP address is supplied, only the validity of the address format is checked."
+        		// Since the format of 0.0.0.0 is valid, getByName should never throw UnknownHostException
+        		throw new RuntimeException("InetAddress.getByName failed to look up 0.0.0.0", e);
+        	}
         }
         return localHost;
     }
@@ -150,23 +176,33 @@ public class ProxyServer {
      * returned.
      */
     public InetAddress getConnectableLocalHost() throws UnknownHostException {
-        if (getLocalHost().equals(InetAddress.getByName("0.0.0.0"))) {
+        
+    	if (getLocalHost().equals(InetAddress.getByName("0.0.0.0"))) {
             return InetAddress.getLocalHost();
         } else {
             return getLocalHost();
         }
     }
 
-    public void setLocalHost(InetAddress localHost) throws SocketException {
+    public void setLocalHost(InetAddress localHost) {
         if (localHost.isAnyLocalAddress() ||
-            localHost.isLoopbackAddress() ||
-            NetworkInterface.getByInetAddress(localHost) != null)
-        {
-            this.localHost = localHost;
-        } else
-        {
-            throw new IllegalArgumentException("Must be address of a local adapter");
+            localHost.isLoopbackAddress()) {
+        	this.localHost = localHost;
+        } else {
+        	// address is not a local/loopback address, but might still be bound to a local network interface
+        	NetworkInterface localInterface;
+			try {
+				localInterface = NetworkInterface.getByInetAddress(localHost);
+			} catch (SocketException e) {
+				throw new IllegalArgumentException("localHost address must be address of a local adapter (attempted to use: " + localHost + ")", e);
+			}
+        	if (localInterface != null) {
+        		this.localHost = localHost;	
+        	} else {
+                throw new IllegalArgumentException("localHost address must be address of a local adapter (attempted to use: " + localHost + ")");
+            }
         }
+        
     }
 
     public Har getHar() {
