@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.sitebricks.At;
 import com.google.sitebricks.client.transport.Json;
+import com.google.sitebricks.client.transport.Text;
 import com.google.sitebricks.headless.Reply;
 import com.google.sitebricks.headless.Request;
 import com.google.sitebricks.headless.Service;
@@ -11,8 +12,25 @@ import com.google.sitebricks.http.Delete;
 import com.google.sitebricks.http.Get;
 import com.google.sitebricks.http.Post;
 import com.google.sitebricks.http.Put;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
+import javax.script.Bindings;
+import javax.script.Compilable;
+import javax.script.CompiledScript;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import net.lightbody.bmp.core.har.Har;
+import net.lightbody.bmp.proxy.ProxyExistsException;
 import net.lightbody.bmp.proxy.ProxyManager;
+import net.lightbody.bmp.proxy.ProxyPortsExhaustedException;
 import net.lightbody.bmp.proxy.ProxyServer;
 import net.lightbody.bmp.proxy.http.BrowserMobHttpRequest;
 import net.lightbody.bmp.proxy.http.BrowserMobHttpResponse;
@@ -20,15 +38,6 @@ import net.lightbody.bmp.proxy.http.RequestInterceptor;
 import net.lightbody.bmp.proxy.http.ResponseInterceptor;
 import net.lightbody.bmp.proxy.util.Log;
 import org.java_bandwidthlimiter.StreamManager;
-
-import javax.script.*;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Map;
 
 @At("/proxy")
 @Service
@@ -50,9 +59,9 @@ public class ProxyResource {
         }
         return Reply.with(new ProxyListDescriptor(proxyList)).as(Json.class);
     }
-
+            
     @Post
-    public Reply<ProxyDescriptor> newProxy(Request request) throws Exception {
+    public Reply<?> newProxy(Request request) throws Exception {
         String systemProxyHost = System.getProperty("http.proxyHost");
         String systemProxyPort = System.getProperty("http.proxyPort");
         String httpProxy = request.param("httpProxy");
@@ -69,8 +78,18 @@ public class ProxyResource {
         Integer paramPort = request.param("port") == null ? null : Integer.parseInt(request.param("port"));
         LOG.fine("POST proxy instance on bindAddress `{}` & port `{}`", 
                 paramBindAddr, paramPort);
-        ProxyServer proxy = proxyManager.create(options, paramPort, paramBindAddr);
-
+        ProxyServer proxy;
+        try{
+            proxy = proxyManager.create(options, paramPort, paramBindAddr);            
+        }catch(ProxyExistsException ex){
+            return Reply.with(new ProxyDescriptor(ex.getPort())).status(455).as(Json.class);
+        }catch(ProxyPortsExhaustedException ex){
+            return Reply.saying().status(456);
+        }catch(Exception ex){
+            StringWriter s = new StringWriter();            
+            ex.printStackTrace(new PrintWriter(s));
+            return Reply.with(s).as(Text.class).status(550);
+        }
         return Reply.with(new ProxyDescriptor(proxy.getPort())).as(Json.class);
     }
 
