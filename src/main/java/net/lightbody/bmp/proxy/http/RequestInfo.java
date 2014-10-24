@@ -2,12 +2,14 @@ package net.lightbody.bmp.proxy.http;
 
 import net.lightbody.bmp.core.har.HarEntry;
 import net.lightbody.bmp.core.har.HarTimings;
-import net.lightbody.bmp.proxy.util.Log;
 
 import java.util.Date;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class RequestInfo {
-    private static final Log LOG = new Log();
+    private static final Logger LOG = LoggerFactory.getLogger(RequestInfo.class);
 
     private static ThreadLocal<RequestInfo> instance = new ThreadLocal<RequestInfo>() {
         @Override
@@ -59,7 +61,7 @@ public class RequestInfo {
         if (this.start == null) {
             this.start = start;
         } else if (this.start.after(start)) {
-            LOG.severe("Saw a later start time that was before the first start time for URL %s", url);
+            LOG.error("Saw a later start time that was before the first start time for URL %s", url);
         }
 
         return end.getTime() - start.getTime();
@@ -148,7 +150,7 @@ public class RequestInfo {
         }
 
         if (receive < 0) {
-            LOG.severe("Got a negative receiving time (%d) for URL %s", receive, url);
+            LOG.error("Got a negative receiving time (%d) for URL %s", receive, url);
             receive = 0L;
         }
     }

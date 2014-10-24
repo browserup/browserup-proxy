@@ -11,6 +11,7 @@ import com.google.sitebricks.http.Delete;
 import com.google.sitebricks.http.Get;
 import com.google.sitebricks.http.Post;
 import com.google.sitebricks.http.Put;
+
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.proxy.ProxyManager;
 import net.lightbody.bmp.proxy.ProxyServer;
@@ -18,10 +19,13 @@ import net.lightbody.bmp.proxy.http.BrowserMobHttpRequest;
 import net.lightbody.bmp.proxy.http.BrowserMobHttpResponse;
 import net.lightbody.bmp.proxy.http.RequestInterceptor;
 import net.lightbody.bmp.proxy.http.ResponseInterceptor;
-import net.lightbody.bmp.proxy.util.Log;
+
 import org.java_bandwidthlimiter.StreamManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.script.*;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,7 +37,7 @@ import java.util.Map;
 @At("/proxy")
 @Service
 public class ProxyResource {
-    private static final Log LOG = new Log();
+    private static final Logger LOG = LoggerFactory.getLogger(ProxyResource.class);
 
     private ProxyManager proxyManager;
 
@@ -67,7 +71,7 @@ public class ProxyResource {
 
         String paramBindAddr = request.param("bindAddress");
         Integer paramPort = request.param("port") == null ? null : Integer.parseInt(request.param("port"));
-        LOG.fine("POST proxy instance on bindAddress `{}` & port `{}`", 
+        LOG.debug("POST proxy instance on bindAddress `{}` & port `{}`", 
                 paramBindAddr, paramPort);
         ProxyServer proxy = proxyManager.create(options, paramPort, paramBindAddr);
 
@@ -259,7 +263,7 @@ public class ProxyResource {
                 try {
                     script.eval(bindings);
                 } catch (ScriptException e) {
-                    LOG.severe("Could not execute JS-based response interceptor", e);
+                    LOG.error("Could not execute JS-based response interceptor", e);
                 }
             }
         });
@@ -292,7 +296,7 @@ public class ProxyResource {
                 try {
                     script.eval(bindings);
                 } catch (ScriptException e) {
-                    LOG.severe("Could not execute JS-based response interceptor", e);
+                    LOG.error("Could not execute JS-based response interceptor", e);
                 }
             }
         });

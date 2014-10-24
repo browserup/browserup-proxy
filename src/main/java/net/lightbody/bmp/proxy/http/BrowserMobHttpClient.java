@@ -34,7 +34,6 @@ import net.lightbody.bmp.proxy.BlacklistEntry;
 import net.lightbody.bmp.proxy.Main;
 import net.lightbody.bmp.proxy.WhitelistEntry;
 import net.lightbody.bmp.proxy.util.*;
-
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
@@ -44,7 +43,6 @@ import org.apache.http.HeaderElement;
 import org.apache.http.HttpClientConnection;
 import org.apache.http.HttpConnection;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -104,10 +102,11 @@ import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpProcessorBuilder;
 import org.apache.http.protocol.HttpRequestExecutor;
-import org.apache.http.util.EntityUtils;
 import org.eclipse.jetty.util.MultiMap;
 import org.eclipse.jetty.util.UrlEncoded;
 import org.java_bandwidthlimiter.StreamManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xbill.DNS.Cache;
 import org.xbill.DNS.DClass;
 
@@ -116,7 +115,8 @@ import org.xbill.DNS.DClass;
  * WARN : Require zlib > 1.1.4 (deflate support)
  */
 public class BrowserMobHttpClient {
-	private static final Log LOG = new Log();
+	private static final Logger LOG = LoggerFactory.getLogger(BrowserMobHttpClient.class);
+	
 	public static UserAgentStringParser PARSER = UADetectorServiceFactory.getCachingAndUpdatingParser();
 	
     private static final int BUFFER = 4096;
@@ -232,7 +232,7 @@ public class BrowserMobHttpClient {
     /**
      * is the client shutdown?
      */
-    private boolean shutdown = false;
+    private volatile boolean shutdown = false;
     
     /**
      * authentication type used
@@ -353,7 +353,7 @@ public class BrowserMobHttpClient {
                             try {
 								Thread.sleep(streamManager.getLatency()-realLatency);
 							} catch (InterruptedException e) {
-								Thread.interrupted();
+								Thread.currentThread().interrupt();
 							}
                         }  
                     }  
@@ -450,7 +450,7 @@ public class BrowserMobHttpClient {
             URI uri = makeUri(url);
             return new BrowserMobHttpRequest(new HttpPost(uri), this, -1, captureContent, proxyRequest);
         } catch (URISyntaxException e) {
-            throw reportBadURI(url, "POST");
+            throw reportBadURI(url, "POST", e);
         }
     }
 
@@ -459,7 +459,7 @@ public class BrowserMobHttpClient {
             URI uri = makeUri(url);
             return new BrowserMobHttpRequest(new HttpGet(uri), this, -1, captureContent, proxyRequest);
         } catch (URISyntaxException e) {
-            throw reportBadURI(url, "GET");
+            throw reportBadURI(url, "GET", e);
         }
     }
 
@@ -467,8 +467,8 @@ public class BrowserMobHttpClient {
         try {
             URI uri = makeUri(url);
             return new BrowserMobHttpRequest(new HttpPut(uri), this, -1, captureContent, proxyRequest);
-        } catch (Exception e) {
-            throw reportBadURI(url, "PUT");
+        } catch (URISyntaxException e) {
+            throw reportBadURI(url, "PUT", e);
         }
     }
 
@@ -477,7 +477,7 @@ public class BrowserMobHttpClient {
             URI uri = makeUri(url);
             return new BrowserMobHttpRequest(new HttpDeleteWithBody(uri), this, -1, captureContent, proxyRequest);
         } catch (URISyntaxException e) {
-            throw reportBadURI(url, "DELETE");
+            throw reportBadURI(url, "DELETE", e);
         }
     }
 
@@ -486,7 +486,7 @@ public class BrowserMobHttpClient {
             URI uri = makeUri(url);
             return new BrowserMobHttpRequest(new HttpOptions(uri), this, -1, captureContent, proxyRequest);
         } catch (URISyntaxException e) {
-            throw reportBadURI(url, "OPTIONS");
+            throw reportBadURI(url, "OPTIONS", e);
         }
     }
 
@@ -495,7 +495,7 @@ public class BrowserMobHttpClient {
             URI uri = makeUri(url);
             return new BrowserMobHttpRequest(new HttpHead(uri), this, -1, captureContent, proxyRequest);
         } catch (URISyntaxException e) {
-            throw reportBadURI(url, "HEAD");
+            throw reportBadURI(url, "HEAD", e);
         }
     }
 
@@ -546,7 +546,7 @@ public class BrowserMobHttpClient {
         return uri;
     }
 
-    private RuntimeException reportBadURI(String url, String method) {
+    private BadURIException reportBadURI(String url, String method, URISyntaxException cause) {
         if (this.har != null && harPageRef != null) {
             HarEntry entry = new HarEntry(harPageRef);
             entry.setTime(0);
@@ -556,7 +556,7 @@ public class BrowserMobHttpClient {
             har.getLog().addEntry(entry);
         }
 
-        throw new BadURIException("Bad URI requested: " + url);
+        throw new BadURIException("Bad URI requested: " + url, cause);
     }
 
     public void checkTimeout() {
@@ -620,7 +620,7 @@ public class BrowserMobHttpClient {
                     String browser = uai.getName();
                     String version = uai.getVersionNumber().toVersionString();
                     har.getLog().setBrowser(new HarNameVersion(browser, version));
-                } catch (Exception e) {
+                } catch (RuntimeException e) {
                 	LOG.warn("Failed to parse user agent string", e);
                 }
             }
@@ -640,7 +640,7 @@ public class BrowserMobHttpClient {
                 method.setURI(new URI(newUrl));
                 url = newUrl;
             } catch (URISyntaxException e) {
-                LOG.warn("Could not rewrite url to %s", newUrl);
+                LOG.warn("Could not rewrite url to " + newUrl, e);
             }
         }
 
@@ -826,7 +826,7 @@ public class BrowserMobHttpClient {
                     bytes = copyWithStats(is, os);
                 }
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             errorMessage = e.toString();
 
             if (callback != null) {
@@ -835,10 +835,15 @@ public class BrowserMobHttpClient {
 
             // only log it if we're not shutdown (otherwise, errors that happen during a shutdown can likely be ignored)
             if (!shutdown) {
-                LOG.info(String.format("%s when requesting %s", errorMessage, url));
+            	if (LOG.isDebugEnabled()) {
+            		LOG.info(String.format("%s when requesting %s", errorMessage, url), e);
+            	} else {
+            		LOG.info(String.format("%s when requesting %s", errorMessage, url));
+            	}
             }
         } finally {
             // the request is done, get it out of here
+        	//FIXME: use set backed by ConcurrentHashMap
             synchronized (activeRequests) {
                 activeRequests.remove(activeRequest);
             }
@@ -848,6 +853,7 @@ public class BrowserMobHttpClient {
                     is.close();
                 } catch (IOException e) {
                     // this is OK to ignore
+                	LOG.info("Error closing input stream", e);
                 }
             }
             if (response != null) {
@@ -855,7 +861,7 @@ public class BrowserMobHttpClient {
 					response.close();
 				} catch (IOException e) {
 					// nothing to do
-					e.printStackTrace();
+					LOG.info("Error closing response stream", e);
 				}
             }
         }
@@ -926,22 +932,25 @@ public class BrowserMobHttpClient {
 
                 if (urlEncoded || URLEncodedUtils.isEncoded(entity)) {
                     try {
-    					final String content = new String(req.getCopy().toByteArray(), "UTF-8");
+    					String content = new String(req.getCopy().toByteArray(), "UTF-8");
 
                         if (content != null && content.length() > 0) {
                             List<NameValuePair> result = new ArrayList<NameValuePair>();
                             URLEncodedUtils.parse(result, new Scanner(content), null);
 
-                            ArrayList<HarPostDataParam> params = new ArrayList<HarPostDataParam>();
+                            List<HarPostDataParam> params = new ArrayList<HarPostDataParam>();
                             data.setParams(params);
 
                             for (NameValuePair pair : result) {
                                 params.add(new HarPostDataParam(pair.getName(), pair.getValue()));
                             }
                         }
-                    } catch (Exception e) {
+                    } catch (UnsupportedEncodingException e) {
+						// realistically this should never happen, since UTF-8 is always a supported encoding
+                    	LOG.info("Unexpected problem when parsing input copy", e);
+					} catch (RuntimeException e) {
                         LOG.info("Unexpected problem when parsing input copy", e);
-                    }
+                    } 
                 } else {
                     // not URL encoded, so let's grab the body of the POST and capture that
                     data.setText(new String(req.getCopy().toByteArray()));
@@ -984,7 +993,7 @@ public class BrowserMobHttpClient {
                             copy = new ByteArrayOutputStream();
                             IOUtils.copy(temp, copy);
                         } catch (IOException e) {
-                            throw new RuntimeException(e);
+                            throw new RuntimeException("Error when decompressing input stream", e);
                         }
                     } 
 

@@ -4,15 +4,18 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.sitebricks.SitebricksModule;
+
 import net.lightbody.bmp.proxy.bricks.ProxyResource;
 import net.lightbody.bmp.proxy.guice.ConfigModule;
 import net.lightbody.bmp.proxy.guice.JettyModule;
-import net.lightbody.bmp.proxy.util.Log;
 import net.lightbody.bmp.proxy.util.StandardFormatter;
+
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContextEvent;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -22,11 +25,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Main {
-    private static final Log LOG = new Log();
+    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(Main.class);
     private static String VERSION = null;
 
     public static void main(String[] args) throws Exception {
-        configureLogging();
+        configureJdkLogging();
 
         final Injector injector = Guice.createInjector(new ConfigModule(args), new JettyModule(), new SitebricksModule() {
             @Override
@@ -69,7 +72,10 @@ public class Main {
         return VERSION;
     }
 
-    public static void configureLogging() {
+    /**
+     * Configures JDK logging when running the proxy in stand-alone mode.
+     */
+    static void configureJdkLogging() {
         Logger logger = Logger.getLogger("");
         Handler[] handlers = logger.getHandlers();
         for (Handler handler : handlers) {
