@@ -1334,7 +1334,7 @@ public class BrowserMobHttpClient {
         void checkTimeout() {
             if (requestTimeout != -1) {
                 if (request != null && start != null && new Date(System.currentTimeMillis() - requestTimeout).after(start)) {
-                    LOG.info("Aborting request to %s after it failed to complete in %d ms", request.getURI().toString(), requestTimeout);
+                    LOG.info("Aborting request to {} after it failed to complete in {} ms", request.getURI().toString(), requestTimeout);
 
                     abort();
                 }
