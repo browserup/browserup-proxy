@@ -61,7 +61,7 @@ public class RequestInfo {
         if (this.start == null) {
             this.start = start;
         } else if (this.start.after(start)) {
-            LOG.error("Saw a later start time that was before the first start time for URL %s", url);
+            LOG.error("Saw a later start time that was before the first start time for URL {}", url);
         }
 
         return end.getTime() - start.getTime();
@@ -150,7 +150,7 @@ public class RequestInfo {
         }
 
         if (receive < 0) {
-            LOG.error("Got a negative receiving time (%d) for URL %s", receive, url);
+            LOG.error("Got a negative receiving time ({}) for URL {}", receive, url);
             receive = 0L;
         }
     }

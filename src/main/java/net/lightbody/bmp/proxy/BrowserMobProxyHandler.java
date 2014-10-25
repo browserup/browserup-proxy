@@ -126,9 +126,9 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
         } catch (BindException e) {
             // doh - the port is being used up, let's pick a new port
             if (LOG.isDebugEnabled()) {
-            	LOG.info("Unable to bind to port %d, going to try port %d now", relay.getPort(), relay.getPort() + 1, e);
+            	LOG.info("Unable to bind to port {}, going to try port {} now", relay.getPort(), relay.getPort() + 1, e);
             } else {
-            	LOG.info("Unable to bind to port %d, going to try port %d now", relay.getPort(), relay.getPort() + 1);
+            	LOG.info("Unable to bind to port {}, going to try port {} now", relay.getPort(), relay.getPort() + 1);
             }
             relay.setPort(relay.getPort() + 1);
             startRelayWithPortTollerance(server, relay, tries + 1);
@@ -191,7 +191,7 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
             } else if ("HEAD".equals(request.getMethod())) {
                 httpReq = httpClient.newHead(urlStr, request);
             } else {
-                LOG.warn("Unexpected request method %s, giving up", request.getMethod());
+                LOG.warn("Unexpected request method {}, giving up", request.getMethod());
                 request.setHandled(true);
                 return -1;
             }
