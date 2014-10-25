@@ -7,7 +7,7 @@
     <description>A programmatic HTTP/S designed for performance and functional testing</description>
     <url>http://bmp.lightbody.net</url>
     <packaging>jar</packaging>
-
+    
     <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
@@ -43,6 +43,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <selenium.version>2.43.0</selenium.version>
     </properties>
 
     <profiles>
@@ -258,13 +259,13 @@
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-api</artifactId>
-            <version>2.39.0</version>
+            <version>${selenium.version}</version>
         </dependency>
 
        <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-firefox-driver</artifactId>
-            <version>2.39.0</version>
+            <version>${selenium.version}</version>
             <scope>test</scope>
        </dependency>
  
@@ -281,6 +282,12 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.9.5</version>
             <scope>test</scope>
         </dependency>
 
@@ -324,7 +331,7 @@
     		<dependency>
     			<groupId>org.seleniumhq.selenium</groupId>
     			<artifactId>selenium-remote-driver</artifactId>
-    			<version>2.39.0</version>
+    			<version>${selenium.version}</version>
     		</dependency>
     	</dependencies>
     </dependencyManagement>

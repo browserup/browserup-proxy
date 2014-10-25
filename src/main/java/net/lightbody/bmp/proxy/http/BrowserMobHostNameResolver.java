@@ -3,6 +3,7 @@ package net.lightbody.bmp.proxy.http;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +24,12 @@ import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
 
 public class BrowserMobHostNameResolver implements DnsResolver {
-    private static final int MAX_RETRY_COUNT = 5;
+    /**
+     * Allows fallback to the native Java lookup mechanism when xbill cannot resolve the hostname. Controlled by bmp.allowNativeDnsFallback system property.
+     */
+	public static final String ALLOW_NATIVE_DNS_FALLBACK = "bmp.allowNativeDnsFallback";
+    
+	private static final int MAX_RETRY_COUNT = 5;
 
 	private static final Log LOG = new Log();
 
@@ -42,6 +48,11 @@ public class BrowserMobHostNameResolver implements DnsResolver {
         }
     }
 
+    public BrowserMobHostNameResolver(Cache cache, Resolver resolver) {
+        this.cache = cache;
+        this.resolver = resolver;
+    }
+
     @Override
     public InetAddress[] resolve(String hostname) throws UnknownHostException {
         String remapping = remappings.get(hostname);
@@ -56,40 +67,38 @@ public class BrowserMobHostNameResolver implements DnsResolver {
         }
 
         boolean isCached;
-        Lookup lookup;
 		try {
 			isCached = this.isCached(hostname);
-			lookup = new Lookup(Name.fromString(hostname), Type.A);
 		} catch (TextParseException e) {
 			throw new UnknownHostException(hostname);
 		}
 
-        lookup.setCache(cache);
-        lookup.setResolver(resolver);
-        // we set the retry count to -1 because we want the first execution not be counted as a retry.
-        int retryCount = -1;
-        Record[] records;
-        Date start = new Date();
-        
-        // we iterate while the status is TRY_AGAIN and MAX_RETRY_COUNT is not exceeded
-        do{
-        	records = lookup.run();
-        	retryCount++;
-        }while(lookup.getResult() == Lookup.TRY_AGAIN && retryCount < MAX_RETRY_COUNT );
+		Date start = new Date();
+		
+		Record[] records = findByDNS(hostname);
         
         Date end = new Date();
 
-        if (records == null || records.length == 0) {
-            throw new UnknownHostException(hostname);
-        }
-
-        List<InetAddress> addrList = new ArrayList<>();
+        List<InetAddress> addrList;
         
-        for(Record record : records){
-	        // assembly the addr object
-	        ARecord a = (ARecord) record;
-	        InetAddress addr = InetAddress.getByAddress(hostname, a.getAddress().getAddress());
-			addrList.add(addr);
+        if (records == null || records.length == 0) {
+        	// if native java fallback is enabled, attempt to resolve the hostname natively before giving up
+        	if (Boolean.getBoolean(ALLOW_NATIVE_DNS_FALLBACK)) {
+        		InetAddress[] addresses = findByNativeLookup(hostname);
+        		addrList = Arrays.asList(addresses);
+        	} else {
+        		throw new UnknownHostException(hostname);
+        	}
+        } else {
+        	// found records using the non-native lookup mechanism
+        	addrList = new ArrayList<>(records.length);
+        	 
+        	for(Record record : records){
+    	        // assembly the addr object
+    	        ARecord a = (ARecord) record;
+    	        InetAddress addr = InetAddress.getByAddress(hostname, a.getAddress().getAddress());
+    			addrList.add(addr);
+            }        	
         }
 
         if (!isCached) {
@@ -105,6 +114,32 @@ public class BrowserMobHostNameResolver implements DnsResolver {
 
         return addrList.toArray(new InetAddress[0]);
     }
+
+	private InetAddress[] findByNativeLookup(String hostname) throws UnknownHostException {
+		return InetAddress.getAllByName(hostname);
+	}
+
+	private Record[] findByDNS(String hostname) throws UnknownHostException {
+		Lookup lookup;
+		try {
+			lookup = new Lookup(Name.fromString(hostname), Type.A);
+		} catch (TextParseException e) {
+			throw new UnknownHostException(hostname);
+		}
+
+        lookup.setCache(cache);
+        lookup.setResolver(resolver);
+        // we set the retry count to -1 because we want the first execution not be counted as a retry.
+        int retryCount = -1;
+        Record[] records;
+        
+        // we iterate while the status is TRY_AGAIN and MAX_RETRY_COUNT is not exceeded
+        do{
+        	records = lookup.run();
+        	retryCount++;
+        }while(lookup.getResult() == Lookup.TRY_AGAIN && retryCount < MAX_RETRY_COUNT );
+		return records;
+	}
 
     public void remap(String source, String target) {
         remappings.put(source, target);

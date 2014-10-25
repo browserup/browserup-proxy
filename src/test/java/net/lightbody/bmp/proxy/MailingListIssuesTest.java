@@ -1,6 +1,7 @@
 package net.lightbody.bmp.proxy;
 
 import org.junit.Assert;
+
 import net.lightbody.bmp.core.har.*;
 import net.lightbody.bmp.core.util.ThreadUtils;
 import net.lightbody.bmp.proxy.http.BrowserMobHttpRequest;
@@ -8,6 +9,7 @@ import net.lightbody.bmp.proxy.http.BrowserMobHttpResponse;
 import net.lightbody.bmp.proxy.http.RequestInterceptor;
 import net.lightbody.bmp.proxy.http.ResponseInterceptor;
 import net.lightbody.bmp.proxy.util.IOUtils;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
@@ -19,6 +21,7 @@ import org.junit.Test;
 import org.openqa.selenium.Proxy;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
@@ -437,6 +440,43 @@ public class MailingListIssuesTest extends DummyServerTest {
             }
         }
     }
+    
+	@Test
+	public void testProxyConfigurationThroughFirefoxProfile() {
+		ProxyServer server = new ProxyServer(0);
+		server.start();
+		
+		int port = server.getPort();
+		
+		WebDriver driver = null;
 
+		try {
+			FirefoxProfile profile = new FirefoxProfile();
+			profile.setAcceptUntrustedCertificates(true);
+			profile.setAssumeUntrustedCertificateIssuer(true);
+			profile.setPreference("network.proxy.http", "localhost");
+			profile.setPreference("network.proxy.http_port", port);
+			profile.setPreference("network.proxy.ssl", "localhost");
+			profile.setPreference("network.proxy.ssl_port", port);
+			profile.setPreference("network.proxy.type", 1);
+			profile.setPreference("network.proxy.no_proxies_on", "");
+
+			DesiredCapabilities capabilities = new DesiredCapabilities();
+
+			capabilities.setCapability(CapabilityType.ACCEPT_SSL_CERTS, true);
+			capabilities.setCapability(FirefoxDriver.PROFILE, profile);
+			capabilities.setCapability(CapabilityType.PROXY,
+					server.seleniumProxy());
+
+			driver = new FirefoxDriver(capabilities);
+			driver.get("https://www.gmail.com/");
+		} finally {
+			server.stop();
+			
+			if (driver != null) {
+				driver.close();
+			}
+		}
+	}
 
 }
