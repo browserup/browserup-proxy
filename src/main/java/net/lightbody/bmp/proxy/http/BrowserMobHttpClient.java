@@ -10,14 +10,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -32,7 +34,7 @@ import java.util.zip.Inflater;
 import net.lightbody.bmp.core.har.*;
 import net.lightbody.bmp.proxy.BlacklistEntry;
 import net.lightbody.bmp.proxy.Main;
-import net.lightbody.bmp.proxy.WhitelistEntry;
+import net.lightbody.bmp.proxy.Whitelist;
 import net.lightbody.bmp.proxy.util.*;
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
@@ -169,13 +171,12 @@ public class BrowserMobHttpClient {
     /**
      * List of rejected URL patterns
      */
-    private List<BlacklistEntry> blacklistEntries = new CopyOnWriteArrayList<BlacklistEntry>();
+    private final Set<BlacklistEntry> blacklistEntries = Collections.newSetFromMap(new ConcurrentHashMap<BlacklistEntry, Boolean>());
     
     /**
      * List of accepted URL patterns
      */
-
-    private WhitelistEntry whitelistEntry = null;
+    private volatile Whitelist whitelist = new Whitelist();
     
     /**
      * List of URLs to rewrite
@@ -220,9 +221,7 @@ public class BrowserMobHttpClient {
     /**
      * set of active requests
      */
-    // not using CopyOnWriteArray because we're WRITE heavy and it is for READ heavy operations
-    // instead doing it the old fashioned way with a synchronized block
-    private final Set<ActiveRequest> activeRequests = new HashSet<ActiveRequest>();
+    private final Set<ActiveRequest> activeRequests = Collections.newSetFromMap(new ConcurrentHashMap<ActiveRequest, Boolean>());
     
     /**
      * credentials used for authentication
@@ -560,10 +559,8 @@ public class BrowserMobHttpClient {
     }
 
     public void checkTimeout() {
-        synchronized (activeRequests) {
-            for (ActiveRequest activeRequest : activeRequests) {
-                activeRequest.checkTimeout();
-            }
+        for (ActiveRequest activeRequest : activeRequests) {
+            activeRequest.checkTimeout();
         }
         
         // Close expired connections
@@ -646,21 +643,20 @@ public class BrowserMobHttpClient {
 
         // handle whitelist and blacklist entries
         int mockResponseCode = -1;
-        synchronized (this) {
-            // guard against concurrent modification of whitelistEntry
-            if (whitelistEntry != null) {
-                boolean found = false;
-                for (Pattern pattern : whitelistEntry.getPatterns()) {
-                    if (pattern.matcher(url).matches()) {
-                        found = true;
-                        break;
-                    }
+        // alias the current whitelist, in case the whitelist is changed while processing this request
+        Whitelist currentWhitelist = whitelist;
+        if (currentWhitelist.isEnabled()) {
+            boolean found = false;
+            for (Pattern pattern : currentWhitelist.getPatterns()) {
+                if (pattern.matcher(url).matches()) {
+                    found = true;
+                    break;
                 }
-                
-                // url does not match whitelist, set the response code
-                if (!found) {
-                    mockResponseCode = whitelistEntry.getResponseCode();
-                }
+            }
+            
+            // url does not match whitelist, set the response code
+            if (!found) {
+                mockResponseCode = currentWhitelist.getResponseCode();
             }
         }
 
@@ -725,9 +721,7 @@ public class BrowserMobHttpClient {
         BasicHttpContext ctx = new BasicHttpContext();
 
         ActiveRequest activeRequest = new ActiveRequest(method, ctx, entry.getStartedDateTime());
-        synchronized (activeRequests) {
-            activeRequests.add(activeRequest);
-        }
+        activeRequests.add(activeRequest);
 
         // for dealing with automatic authentication
         if (authType == AuthType.NTLM) {
@@ -843,10 +837,7 @@ public class BrowserMobHttpClient {
             }
         } finally {
             // the request is done, get it out of here
-        	//FIXME: use set backed by ConcurrentHashMap
-            synchronized (activeRequests) {
-                activeRequests.remove(activeRequest);
-            }
+            activeRequests.remove(activeRequest);
 
             if (is != null) {
                 try {
@@ -1119,14 +1110,13 @@ public class BrowserMobHttpClient {
     }
 
     public void abortActiveRequests() {
-        allowNewRequests.set(true);
+        allowNewRequests.set(false);
 
-        synchronized (activeRequests) {
-            for (ActiveRequest activeRequest : activeRequests) {
-                activeRequest.abort();
-            }
-            activeRequests.clear();
+        for (ActiveRequest activeRequest : activeRequests) {
+            activeRequest.abort();
         }
+        
+        activeRequests.clear();
     }
 
     public void setHar(Har har) {
@@ -1184,8 +1174,11 @@ public class BrowserMobHttpClient {
     	rewriteRules.clear();
     }
 
-    // this method is provided for backwards compatibility before we renamed it to
-    // blacklistRequests (note the plural)
+    /**
+     * this method is provided for backwards compatibility before we renamed it to blacklistRequests (note the plural)
+     * @deprecated use blacklistRequests(String pattern, int responseCode)
+     */
+    @Deprecated
     public void blacklistRequest(String pattern, int responseCode) {
         blacklistRequests(pattern, responseCode);
     }
@@ -1194,26 +1187,51 @@ public class BrowserMobHttpClient {
         blacklistEntries.add(new BlacklistEntry(pattern, responseCode));
     }
 
+    /**
+     * @deprecated Use getBlacklistedUrls()
+     */
+    @Deprecated
     public List<BlacklistEntry> getBlacklistedRequests() {
-        return blacklistEntries;
+    	List<BlacklistEntry> blacklist = new ArrayList<BlacklistEntry>(blacklistEntries.size());
+    	blacklist.addAll(blacklistEntries);
+    	
+        return blacklist;
+    }
+    
+    public Collection<BlacklistEntry> getBlacklistedUrls() {
+    	return blacklistEntries;
     }
 
     public void clearBlacklist() {
         blacklistEntries.clear();
     }
 
-    public WhitelistEntry getWhitelistRequests() {
-        return whitelistEntry;
+    public boolean isWhitelistEnabled() {
+    	return whitelist.isEnabled();
+    }
+    
+    /**
+     * @deprecated use getWhitelistUrls()
+     */
+    @Deprecated
+    public List<Pattern> getWhitelistRequests() {
+        return whitelist.getPatterns();
+    }
+    
+    public Collection<Pattern> getWhitelistUrls() {
+    	return whitelist.getPatterns();
+    }
+    
+    public int getWhitelistResponseCode() {
+    	return whitelist.getResponseCode();
     }
 
-    public synchronized void whitelistRequests(String[] patterns, int responseCode) {
-        // synchronized to guard against concurrent modification
-        whitelistEntry = new WhitelistEntry(patterns, responseCode);
+    public void whitelistRequests(String[] patterns, int responseCode) {
+    	whitelist = new Whitelist(patterns, responseCode);
     }
 
-    public synchronized void clearWhitelist() {
-        // synchronized to guard against concurrent modification
-        whitelistEntry = null;
+    public void clearWhitelist() {
+    	whitelist = new Whitelist();
     }
     
     public void addHeader(String name, String value) {
@@ -1321,9 +1339,9 @@ public class BrowserMobHttpClient {
     }
 
     class ActiveRequest {
-        HttpRequestBase request;
-        BasicHttpContext ctx;
-        Date start;
+        private final HttpRequestBase request;
+        private final BasicHttpContext ctx;
+        private final Date start;
 
         ActiveRequest(HttpRequestBase request, BasicHttpContext ctx, Date start) {
             this.request = request;
@@ -1358,8 +1376,8 @@ public class BrowserMobHttpClient {
     }
 
     private class RewriteRule {
-        private Pattern match;
-        private String replace;
+        private final Pattern match;
+        private final String replace;
 
         private RewriteRule(String match, String replace) {
             this.match = Pattern.compile(match);

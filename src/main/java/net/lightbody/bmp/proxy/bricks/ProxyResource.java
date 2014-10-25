@@ -138,7 +138,7 @@ public class ProxyResource {
             return Reply.saying().notFound();
         }
 
-        return Reply.with(proxy.getBlacklistedRequests()).as(Json.class);
+        return Reply.with(proxy.getBlacklistedUrls()).as(Json.class);
     }
 
     @Put
@@ -176,7 +176,7 @@ public class ProxyResource {
             return Reply.saying().notFound();
         }
 
-        return Reply.with(proxy.getWhitelistRequests()).as(Json.class);
+        return Reply.with(proxy.getWhitelistUrls()).as(Json.class);
     }
 
     @Put

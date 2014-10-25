@@ -2,21 +2,20 @@ package net.lightbody.bmp.proxy;
 
 import java.util.regex.Pattern;
 
-public class BlacklistEntry
-{
-    private Pattern pattern;
-    private int responseCode;
+public class BlacklistEntry {
+	private final Pattern pattern;
+	private final int responseCode;
 
-    public BlacklistEntry(String pattern, int responseCode) {
-        this.pattern = Pattern.compile(pattern);
-        this.responseCode = responseCode;
-    }
+	public BlacklistEntry(String pattern, int responseCode) {
+		this.pattern = Pattern.compile(pattern);
+		this.responseCode = responseCode;
+	}
 
-    public Pattern getPattern() {
-        return this.pattern;
-    }
+	public Pattern getPattern() {
+		return this.pattern;
+	}
 
-    public int getResponseCode() {
-        return this.responseCode;
-    }
+	public int getResponseCode() {
+		return this.responseCode;
+	}
 }
