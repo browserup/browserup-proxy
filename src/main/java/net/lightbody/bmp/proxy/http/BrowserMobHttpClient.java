@@ -34,7 +34,6 @@ import net.lightbody.bmp.proxy.BlacklistEntry;
 import net.lightbody.bmp.proxy.Main;
 import net.lightbody.bmp.proxy.WhitelistEntry;
 import net.lightbody.bmp.proxy.util.*;
-
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
@@ -71,6 +70,7 @@ import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpOptions;
+import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -461,6 +461,15 @@ public class BrowserMobHttpClient {
         } catch (URISyntaxException e) {
             throw reportBadURI(url, "GET");
         }
+    }
+    
+    public BrowserMobHttpRequest newPatch(String url, net.lightbody.bmp.proxy.jetty.http.HttpRequest proxyRequest) {
+    	try {
+    		URI uri = makeUri(url);
+    		return new BrowserMobHttpRequest(new HttpPatch(uri), this, -1, captureContent, proxyRequest);
+    	} catch (URISyntaxException e) {
+    		throw reportBadURI(url, "PATCH");
+    	}
     }
 
     public BrowserMobHttpRequest newPut(String url, net.lightbody.bmp.proxy.jetty.http.HttpRequest proxyRequest) {
