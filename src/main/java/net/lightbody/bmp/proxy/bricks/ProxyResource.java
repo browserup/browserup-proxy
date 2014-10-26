@@ -47,7 +47,7 @@ public class ProxyResource {
     }
 
     @Get
-    public Reply<?> getProxies(Request request) throws Exception {
+    public Reply<?> getProxies(Request request) {
         Collection<ProxyDescriptor> proxyList = new ArrayList<ProxyDescriptor> ();
         for (ProxyServer proxy : proxyManager.get()) {
             proxyList.add(new ProxyDescriptor(proxy.getPort()));
@@ -56,7 +56,7 @@ public class ProxyResource {
     }
 
     @Post
-    public Reply<ProxyDescriptor> newProxy(Request request) throws Exception {
+    public Reply<ProxyDescriptor> newProxy(Request request) {
         String systemProxyHost = System.getProperty("http.proxyHost");
         String systemProxyPort = System.getProperty("http.proxyPort");
         String httpProxy = request.param("httpProxy");
@@ -394,7 +394,7 @@ public class ProxyResource {
 
     @Delete
     @At("/:port")
-    public Reply<?> delete(@Named("port") int port) throws Exception {
+    public Reply<?> delete(@Named("port") int port) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -442,7 +442,7 @@ public class ProxyResource {
     
     @Delete
     @At("/:port/dns/cache")
-    public Reply<?> clearDnsCache(@Named("port") int port) throws Exception {
+    public Reply<?> clearDnsCache(@Named("port") int port) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();

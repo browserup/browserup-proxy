@@ -5,6 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,13 +27,21 @@ public class ProxyManager {
         this.proxyServerProvider = proxyServerProvider;
     }
 
-    public ProxyServer create(Map<String, String> options, Integer port, String bindAddr) throws Exception {
+    public ProxyServer create(Map<String, String> options, Integer port, String bindAddr) {
         LOG.trace("Instantiate ProxyServer...");
         ProxyServer proxy = proxyServerProvider.get();
 
         if (bindAddr != null) {
             LOG.trace("Bind ProxyServer to `{}`...", bindAddr);
-            proxy.setLocalHost(InetAddress.getByName(bindAddr));
+            InetAddress inetAddress;
+			try {
+				inetAddress = InetAddress.getByName(bindAddr);
+			} catch (UnknownHostException e) {
+				LOG.error("Unable to bind proxy to address: " + bindAddr + "; proxy will not be created.", e);
+				
+				throw new RuntimeException("Unable to bind proxy to address: ", e);
+			}
+            proxy.setLocalHost(inetAddress);
         }
 
         if (port != null) {
@@ -49,11 +58,11 @@ public class ProxyManager {
         return proxy;
     }
 
-    public ProxyServer create(Map<String, String> options, Integer port) throws Exception {
+    public ProxyServer create(Map<String, String> options, Integer port) {
         return create(options, port, null);
     }
 
-    public ProxyServer create(Map<String, String> options) throws Exception {
+    public ProxyServer create(Map<String, String> options) {
         return create(options, null, null);
     }
 
@@ -65,7 +74,7 @@ public class ProxyManager {
         return proxies.values();
     }
 
-    public void delete(int port) throws Exception {
+    public void delete(int port) {
         ProxyServer proxy = proxies.remove(port);
         proxy.stop();
     }
