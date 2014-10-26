@@ -69,6 +69,7 @@ import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpOptions;
+import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -461,6 +462,15 @@ public class BrowserMobHttpClient {
         } catch (URISyntaxException e) {
             throw reportBadURI(url, "GET", e);
         }
+    }
+    
+    public BrowserMobHttpRequest newPatch(String url, net.lightbody.bmp.proxy.jetty.http.HttpRequest proxyRequest) {
+    	try {
+    		URI uri = makeUri(url);
+    		return new BrowserMobHttpRequest(new HttpPatch(uri), this, -1, captureContent, proxyRequest);
+    	} catch (URISyntaxException e) {
+    		throw reportBadURI(url, "PATCH");
+    	}
     }
 
     public BrowserMobHttpRequest newPut(String url, net.lightbody.bmp.proxy.jetty.http.HttpRequest proxyRequest) {

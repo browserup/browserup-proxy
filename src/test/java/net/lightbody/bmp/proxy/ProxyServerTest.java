@@ -33,7 +33,11 @@ public abstract class ProxyServerTest {
         proxy.start();
     }
 
-    public DefaultHttpClient getNewHttpClient() {
+    public static DefaultHttpClient getNewHttpClient() {
+    	return getNewHttpClient(8081);
+    }
+    
+    public static DefaultHttpClient getNewHttpClient(int proxyPort) {
         try {
             KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
             trustStore.load(null, null);
@@ -42,7 +46,7 @@ public abstract class ProxyServerTest {
             sf.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
 
             HttpParams params = new BasicHttpParams();
-            params.setParameter(ConnRoutePNames.DEFAULT_PROXY, new HttpHost("127.0.0.1", 8081, "http"));
+            params.setParameter(ConnRoutePNames.DEFAULT_PROXY, new HttpHost("127.0.0.1", proxyPort, "http"));
             HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
             HttpProtocolParams.setContentCharset(params, HTTP.UTF_8);
 
