@@ -469,7 +469,7 @@ public class BrowserMobHttpClient {
     		URI uri = makeUri(url);
     		return new BrowserMobHttpRequest(new HttpPatch(uri), this, -1, captureContent, proxyRequest);
     	} catch (URISyntaxException e) {
-    		throw reportBadURI(url, "PATCH");
+    		throw reportBadURI(url, "PATCH", e);
     	}
     }
 
