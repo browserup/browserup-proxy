@@ -63,7 +63,9 @@ public class ConfigModule implements Module {
         }   
         Integer port = portSpec.value(options);
         if(port >= minPort && port <= maxPort){
-            throw new IllegalArgumentException();
+            int num = maxPort - minPort;
+            minPort = port + 1;
+            maxPort = minPort + num;
         }
 
         binder.bind(Key.get(Integer.class, new NamedImpl("port"))).toInstance(port);
