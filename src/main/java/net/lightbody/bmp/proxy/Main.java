@@ -4,15 +4,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.sitebricks.SitebricksModule;
-import net.lightbody.bmp.proxy.bricks.ProxyResource;
-import net.lightbody.bmp.proxy.guice.ConfigModule;
-import net.lightbody.bmp.proxy.guice.JettyModule;
-import net.lightbody.bmp.proxy.util.Log;
-import net.lightbody.bmp.proxy.util.StandardFormatter;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-
-import javax.servlet.ServletContextEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -20,6 +11,15 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.ServletContextEvent;
+import net.lightbody.bmp.proxy.bricks.ProxyResource;
+import net.lightbody.bmp.proxy.guice.ConfigModule;
+import net.lightbody.bmp.proxy.guice.JettyModule;
+import net.lightbody.bmp.proxy.util.Log;
+import net.lightbody.bmp.proxy.util.StandardFormatter;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.guiceyfruit.jsr250.Jsr250Module;
 
 public class Main {
     private static final Log LOG = new Log();
@@ -28,7 +28,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         configureLogging();
 
-        final Injector injector = Guice.createInjector(new ConfigModule(args), new JettyModule(), new SitebricksModule() {
+        final Injector injector = Guice.createInjector(new ConfigModule(args), new Jsr250Module(), new JettyModule(), new SitebricksModule() {
             @Override
             protected void configureSitebricks() {
                 scan(ProxyResource.class.getPackage());

@@ -118,10 +118,12 @@ system properties will be used to specify the upstream proxy.
 Command-line Arguments
 ----------------------
 
- - -port <port>
+ - -port \<port\>
   - Port on which the API listens. Default value is 8080.
- - -proxyPortRange <from>-<to>
-  - Range of ports reserved for proxies. Only applies if *port* parameter is not supplied in the POST request. Default values are <port>+1 to <port>+500+1.
+ - -proxyPortRange \<from\>-\<to\>
+  - Range of ports reserved for proxies. Only applies if *port* parameter is not supplied in the POST request. Default values are \<port\>+1 to \<port\>+500+1.
+ - -ttl \<seconds\>
+  - Proxy will be automatically deleted after a specified time period. Off by default.
 
 Embedded Mode
 -------------

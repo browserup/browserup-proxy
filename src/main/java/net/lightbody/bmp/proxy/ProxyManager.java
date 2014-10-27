@@ -8,6 +8,8 @@ import java.net.InetAddress;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.annotation.PreDestroy;
+import net.lightbody.bmp.proxy.util.ExpirableMap;
 import net.lightbody.bmp.proxy.util.Log;
 
 @Singleton
@@ -17,15 +19,28 @@ public class ProxyManager {
     private int lastPort;
     private final int minPort; 
     private final int maxPort;
-    private Provider<ProxyServer> proxyServerProvider;
-    private ConcurrentHashMap<Integer, ProxyServer> proxies = new ConcurrentHashMap<Integer, ProxyServer>();
+    private final Provider<ProxyServer> proxyServerProvider;
+    private final ConcurrentHashMap<Integer, ProxyServer> proxies;
 
     @Inject
-    public ProxyManager(Provider<ProxyServer> proxyServerProvider, @Named("minPort") Integer minPort, @Named("maxPort") Integer maxPort) {
+    public ProxyManager(Provider<ProxyServer> proxyServerProvider, @Named("minPort") Integer minPort, @Named("maxPort") Integer maxPort, @Named("ttl") Integer ttl) {
         this.proxyServerProvider = proxyServerProvider;
         this.minPort = minPort;
         this.maxPort = maxPort;
         this.lastPort = maxPort; 
+        this.proxies = ttl > 0 ?                
+                new ExpirableMap<Integer, ProxyServer>(ttl, new ExpirableMap.OnExpire<ProxyServer>(){
+                    @Override
+                    public void run(ProxyServer proxy) {
+                        try {
+                            LOG.fine("Expiring ProxyServer `{}`...", proxy.getPort());
+                            proxy.stop();
+                        } catch (Exception ex) {
+                            LOG.warn("Error while stopping an expired proxy", ex);
+                        }
+                    }
+                }) : 
+                new ConcurrentHashMap<Integer, ProxyServer>();    
     }
 
     public ProxyServer create(Map<String, String> options, Integer port, String bindAddr) throws Exception {
@@ -100,5 +115,12 @@ public class ProxyManager {
     public void delete(int port) throws Exception {
         ProxyServer proxy = proxies.remove(port);
         proxy.stop();
+    }
+    
+    @PreDestroy
+    public void stop(){
+        if(proxies instanceof ExpirableMap){                   
+            ((ExpirableMap)proxies).stop();
+        }
     }
 }
