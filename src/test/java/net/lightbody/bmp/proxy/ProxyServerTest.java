@@ -22,7 +22,7 @@ import java.security.KeyStore;
 
 public abstract class ProxyServerTest {
     static {
-        Main.configureLogging();
+        Main.configureJdkLogging();
     }
 
     protected ProxyServer proxy = new ProxyServer(8081);

@@ -6,11 +6,13 @@ import net.lightbody.bmp.proxy.jetty.jetty.Server;
 import net.lightbody.bmp.proxy.jetty.util.InetAddrPort;
 import net.lightbody.bmp.proxy.jetty.util.URI;
 import net.lightbody.bmp.proxy.selenium.SeleniumProxyHandler;
-import net.lightbody.bmp.proxy.util.Log;
+
 import org.apache.http.Header;
 import org.apache.http.NoHttpResponseException;
 import org.apache.http.StatusLine;
 import org.apache.http.conn.ConnectTimeoutException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,8 +22,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@SuppressWarnings("serial")
 public class BrowserMobProxyHandler extends SeleniumProxyHandler {
-    private static final Log LOG = new Log();
+    private static final Logger LOG = LoggerFactory.getLogger(BrowserMobProxyHandler.class);
 
     private static final int HEADER_BUFFER_DEFAULT = 2;
 
@@ -122,7 +125,11 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
             }
         } catch (BindException e) {
             // doh - the port is being used up, let's pick a new port
-            LOG.info("Unable to bind to port %d, going to try port %d now", relay.getPort(), relay.getPort() + 1);
+            if (LOG.isDebugEnabled()) {
+            	LOG.info("Unable to bind to port {}, going to try port {} now", relay.getPort(), relay.getPort() + 1, e);
+            } else {
+            	LOG.info("Unable to bind to port {}, going to try port {} now", relay.getPort(), relay.getPort() + 1);
+            }
             relay.setPort(relay.getPort() + 1);
             startRelayWithPortTollerance(server, relay, tries + 1);
         }
@@ -136,7 +143,6 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
         return super.newHttpTunnel(httpRequest, httpResponse, inetAddress, i, i1);
     }
 
-    @SuppressWarnings({"unchecked"})
     protected long proxyPlainTextRequest(final URL url, String pathInContext, String pathParams, HttpRequest request, final HttpResponse response) throws IOException {
         try {
             String urlStr = url.toString();
@@ -187,7 +193,7 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
             } else if ("PATCH".equals(request.getMethod())) {
             	httpReq = httpClient.newPatch(urlStr, request);
             } else {
-                LOG.warn("Unexpected request method %s, giving up", request.getMethod());
+                LOG.warn("Unexpected request method {}, giving up", request.getMethod());
                 request.setHandled(true);
                 return -1;
             }
@@ -224,15 +230,11 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
                 }
             }
 
-            try {
-                // do input thang!
-                InputStream in = request.getInputStream();
-                if (hasContent) {
-                    httpReq.setRequestInputStream(in, contentLength);
-                }
-            } catch (Exception e) {
-                LOG.fine(e.getMessage(), e);
-            }
+			// do input thang!
+			InputStream in = request.getInputStream();
+			if (hasContent) {
+				httpReq.setRequestInputStream(in, contentLength);
+			}
 
             // execute the request
             httpReq.setOutputStream(response.getOutputStream());
@@ -273,10 +275,10 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
             return httpRes.getEntry().getResponse().getBodySize();
         } catch (BadURIException e) {
             // this is a known error case (see MOB-93)
-            LOG.info(e.getMessage());
+            LOG.info("Encountered bad URI exception while proxying " + url, e);
             BrowserMobProxyHandler.reportError(e, url, response);
             return -1;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             LOG.info("Exception while proxying " + url, e);
             BrowserMobProxyHandler.reportError(e, url, response);
             return -1;
@@ -304,14 +306,12 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
         String shortDesc = String.format(error.getShortDesc(), url.getHost());
         String text = String.format(FirefoxErrorConstants.ERROR_PAGE, error.getTitle(), shortDesc, error.getLongDesc());
 
-        e.printStackTrace();
-
         try {
             response.setStatus(HttpResponse.__502_Bad_Gateway);
             response.setContentLength(text.length());
             response.getOutputStream().write(text.getBytes());
         } catch (IOException e1) {
-            LOG.warn("IOException while trying to report an HTTP error");
+            LOG.warn("IOException while trying to report an HTTP error", e1);
         }
     }
 

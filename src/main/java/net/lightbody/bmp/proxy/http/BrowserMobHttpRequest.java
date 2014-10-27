@@ -12,7 +12,6 @@ import java.util.List;
 import net.lightbody.bmp.proxy.jetty.http.HttpRequest;
 import net.lightbody.bmp.proxy.util.Base64;
 import net.lightbody.bmp.proxy.util.ClonedInputStream;
-import net.lightbody.bmp.proxy.util.Log;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -25,9 +24,11 @@ import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.message.BasicNameValuePair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BrowserMobHttpRequest {
-    private static final Log LOG = new Log();
+    private static final Logger LOG = LoggerFactory.getLogger(BrowserMobHttpRequest.class);
 
     private HttpRequestBase method;
     private BrowserMobHttpClient client;
@@ -132,7 +133,7 @@ public class BrowserMobHttpRequest {
                         enclodingRequest.setEntity(multipartEntity);
                     }
                 } catch (UnsupportedEncodingException e) {
-                    LOG.severe("Could not find UTF-8 encoding, something is really wrong", e);
+                    LOG.error("Could not find UTF-8 encoding, something is really wrong", e);
                 }
             } else if (multipartEntity != null) {
                 enclodingRequest.setEntity(multipartEntity);

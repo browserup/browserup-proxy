@@ -26,17 +26,18 @@ import net.lightbody.bmp.proxy.jetty.http.HttpListener;
 import net.lightbody.bmp.proxy.jetty.http.SocketListener;
 import net.lightbody.bmp.proxy.jetty.jetty.Server;
 import net.lightbody.bmp.proxy.jetty.util.InetAddrPort;
-import net.lightbody.bmp.proxy.util.Log;
 
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponseInterceptor;
 import org.java_bandwidthlimiter.BandwidthLimiter;
 import org.java_bandwidthlimiter.StreamManager;
 import org.openqa.selenium.Proxy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ProxyServer {
     private static final HarNameVersion CREATOR = new HarNameVersion("BrowserMob Proxy", "2.0");
-    private static final Log LOG = new Log();
+    private static final Logger LOG = LoggerFactory.getLogger(ProxyServer.class);
 
     /*
      * The Jetty HttpServer use in BrowserMobProxyHandler
