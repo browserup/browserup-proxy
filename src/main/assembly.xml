@@ -30,6 +30,13 @@
             <outputDirectory>/</outputDirectory>
         </fileSet>
         <fileSet>
+            <directory>${project.basedir}/conf</directory>
+            <includes>
+                <include>bmp-logging.properties</include>
+            </includes>
+            <outputDirectory>/bin/conf</outputDirectory>
+        </fileSet>
+        <fileSet>
             <directory>${project.basedir}</directory>
             <includes>
                 <include>LICENSE.txt</include>
