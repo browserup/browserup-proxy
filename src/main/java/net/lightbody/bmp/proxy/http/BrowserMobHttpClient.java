@@ -934,7 +934,7 @@ public class BrowserMobHttpClient {
                             List<NameValuePair> result = new ArrayList<NameValuePair>();
                             URLEncodedUtils.parse(result, new Scanner(content), null);
 
-                            List<HarPostDataParam> params = new ArrayList<HarPostDataParam>();
+                            List<HarPostDataParam> params = new ArrayList<HarPostDataParam>(result.size());
                             data.setParams(params);
 
                             for (NameValuePair pair : result) {
