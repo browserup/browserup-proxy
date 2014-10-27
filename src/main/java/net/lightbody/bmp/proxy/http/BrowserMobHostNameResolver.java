@@ -9,9 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.lightbody.bmp.proxy.util.Log;
-
 import org.apache.http.conn.DnsResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xbill.DNS.ARecord;
 import org.xbill.DNS.Address;
 import org.xbill.DNS.Cache;
@@ -31,7 +31,7 @@ public class BrowserMobHostNameResolver implements DnsResolver {
     
 	private static final int MAX_RETRY_COUNT = 5;
 
-	private static final Log LOG = new Log();
+	private static final Logger LOG = LoggerFactory.getLogger(BrowserMobHostNameResolver.class);
 
     private Map<String, String> remappings = new ConcurrentHashMap<String, String>();
     private Map<String, List<String>> reverseMapping = new ConcurrentHashMap<String, List<String>>();
