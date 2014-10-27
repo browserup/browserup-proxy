@@ -139,10 +139,10 @@ public class Main {
         Handler[] handlers = logger.getHandlers();
         for (Handler handler : handlers) {
             logger.removeHandler(handler);
-            handler.setFormatter(new StandardFormatter());
         }
 
         ConsoleHandler handler = new ConsoleHandler();
+        handler.setFormatter(new StandardFormatter());
         
         handler.setLevel(Level.FINE);
         logger.addHandler(handler);
