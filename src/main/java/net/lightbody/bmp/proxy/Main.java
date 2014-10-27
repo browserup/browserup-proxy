@@ -18,16 +18,20 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContextEvent;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 public class Main {
-    private static final String VERSION_PROP = "/version.prop";
+    private static final String LOGGING_PROPERTIES_FILENAME = "conf/bmp-logging.properties";
+	private static final String VERSION_PROP = "/version.prop";
 	private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(Main.class);
     private static String VERSION = null;
 
@@ -91,21 +95,57 @@ public class Main {
     }
 
     /**
-     * Configures JDK logging when running the proxy in stand-alone mode.
+     * Configures JDK logging when running the proxy in stand-alone mode. By default, loads logging settings from a file called bmp-logging.properties.
      */
     static void configureJdkLogging() {
-        Logger logger = Logger.getLogger("");
-        Handler[] handlers = logger.getHandlers();
-        for (Handler handler : handlers) {
-            logger.removeHandler(handler);
-        }
+    	boolean useDefaultLogging = false;
+    	
+    	FileInputStream logFile;
+		try {
+			logFile = new FileInputStream(LOGGING_PROPERTIES_FILENAME);
+			
+	    	try {
+				LogManager.getLogManager().readConfiguration(logFile);
+			} catch (SecurityException e) {
+				System.out.println("Unable to read " + LOGGING_PROPERTIES_FILENAME + ". Using default logging configuration.");
+				useDefaultLogging = true;
+			} catch (IOException e) {
+				System.out.println("Unable to read " + LOGGING_PROPERTIES_FILENAME + ". Using default logging configuration.");
+				useDefaultLogging = true;
+			} finally {
+				try {
+					logFile.close();
+				} catch (IOException e) {
+					// safely ignore file-closing exceptions
+				}
+			}
 
-        ConsoleHandler handler = new ConsoleHandler();
-        handler.setFormatter(new StandardFormatter());
-        handler.setLevel(Level.FINE);
-        logger.addHandler(handler);
+		} catch (FileNotFoundException e) {
+			System.out.println("Unable to find " + LOGGING_PROPERTIES_FILENAME + ". Using default logging configuration.");
+			useDefaultLogging = true;
+		}
+    	
+		// if we couldn't find/read the bmp-logging.properties file, configure a default logger
+		if (useDefaultLogging) {
+			configureDefaultLogger();
+		}
 
         // tell commons-logging to use the JDK logging (otherwise it would default to log4j
         System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.Jdk14Logger");
     }
+
+	private static void configureDefaultLogger() {
+		Logger logger = Logger.getLogger("");
+        Handler[] handlers = logger.getHandlers();
+        for (Handler handler : handlers) {
+            logger.removeHandler(handler);
+            handler.setFormatter(new StandardFormatter());
+        }
+
+        ConsoleHandler handler = new ConsoleHandler();
+        
+        handler.setLevel(Level.FINE);
+        logger.addHandler(handler);
+	}
 }
+ 
