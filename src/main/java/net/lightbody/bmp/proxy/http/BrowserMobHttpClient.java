@@ -117,7 +117,7 @@ import org.xbill.DNS.DClass;
 public class BrowserMobHttpClient {
 	private static final Logger LOG = LoggerFactory.getLogger(BrowserMobHttpClient.class);
 	
-	public static UserAgentStringParser PARSER = UADetectorServiceFactory.getCachingAndUpdatingParser();
+	private static volatile UserAgentStringParser parser;
 	
     private static final int BUFFER = 4096;
 
@@ -620,7 +620,7 @@ public class BrowserMobHttpClient {
                 String userAgent = uaHeaders[0].getValue();
                 try {
                     // note: this doesn't work for 'Fandango/4.5.1 CFNetwork/548.1.4 Darwin/11.0.0'
-                    ReadableUserAgent uai = PARSER.parse(userAgent);
+                    ReadableUserAgent uai = getUserAgentStringParser().parse(userAgent);
                     String browser = uai.getName();
                     String version = uai.getVersionNumber().toVersionString();
                     har.getLog().setBrowser(new HarNameVersion(browser, version));
@@ -1126,6 +1126,9 @@ public class BrowserMobHttpClient {
 
     public void setHar(Har har) {
         this.har = har;
+        
+        // eagerly initialize the User Agent String Parser, since it will be needed for the HAR
+        getUserAgentStringParser();
     }
 
     public void setHarPageRef(String harPageRef) {
@@ -1450,4 +1453,22 @@ public class BrowserMobHttpClient {
 
         return bytesCopied;
     }
+    
+    private static final Object PARSER_INIT_LOCK = new Object();
+    
+    /**
+     * Retrieve the User Agent String Parser. Create the parser if it has not yet been initialized.
+     * @return
+     */
+    public static UserAgentStringParser getUserAgentStringParser() {
+		if (parser == null) {
+			synchronized (PARSER_INIT_LOCK) {
+				if (parser == null) {
+					parser = UADetectorServiceFactory.getCachingAndUpdatingParser();
+				}
+			}
+		}
+		
+		return parser;
+	}
 }
