@@ -18,9 +18,9 @@ import org.slf4j.LoggerFactory;
 public class ProxyManager {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyManager.class);
 
-    private AtomicInteger portCounter = new AtomicInteger(9090);
-    private Provider<ProxyServer> proxyServerProvider;
-    private Map<Integer, ProxyServer> proxies = new ConcurrentHashMap<Integer, ProxyServer>();
+    private final AtomicInteger portCounter = new AtomicInteger(9090);
+    private final Provider<ProxyServer> proxyServerProvider;
+    private final Map<Integer, ProxyServer> proxies = new ConcurrentHashMap<Integer, ProxyServer>();
 
     @Inject
     public ProxyManager(Provider<ProxyServer> proxyServerProvider) {

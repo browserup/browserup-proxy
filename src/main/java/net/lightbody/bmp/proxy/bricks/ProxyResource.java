@@ -39,7 +39,7 @@ import java.util.Map;
 public class ProxyResource {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyResource.class);
 
-    private ProxyManager proxyManager;
+    private final ProxyManager proxyManager;
 
     @Inject
     public ProxyResource(ProxyManager proxyManager) {

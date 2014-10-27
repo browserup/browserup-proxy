@@ -348,7 +348,7 @@ public class StreamManager implements BandwidthLimiter {
         try {
             Thread.sleep(sleepTime);
         } catch (InterruptedException e) {
-            Thread.interrupted();
+            Thread.currentThread().interrupt();
         }
     }
 

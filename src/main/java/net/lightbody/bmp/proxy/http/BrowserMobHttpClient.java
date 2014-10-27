@@ -13,8 +13,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -43,7 +41,6 @@ import net.sf.uadetector.service.UADetectorServiceFactory;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpClientConnection;
-import org.apache.http.HttpConnection;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
@@ -124,55 +121,55 @@ public class BrowserMobHttpClient {
 	
     private static final int BUFFER = 4096;
 
-    private Har har;
-    private String harPageRef;
+    private volatile Har har;
+    private volatile String harPageRef;
 
     /**
      * keep headers
      */
-    private boolean captureHeaders;
+    private volatile boolean captureHeaders;
     
     /**
      * keep contents
      */
-    private boolean captureContent;
+    private volatile boolean captureContent;
     
     /**
      * keep binary contents (if captureContent is set to true, default policy is to capture binary contents too)
      */
-    private boolean captureBinaryContent = true;
+    private volatile boolean captureBinaryContent = true;
 
     /**
      * socket factory dedicated to port 80 (HTTP)
      */
-    private SimulatedSocketFactory socketFactory;
+    private final SimulatedSocketFactory socketFactory;
     
     /**
      * socket factory dedicated to port 443 (HTTPS)
      */
-    private TrustingSSLSocketFactory sslSocketFactory;
+    private final TrustingSSLSocketFactory sslSocketFactory;
 
 
-    private PoolingHttpClientConnectionManager httpClientConnMgr;
+    private final PoolingHttpClientConnectionManager httpClientConnMgr;
     
     /**
      * Builders for httpClient
      * Each time you change their configuration you should call updateHttpClient()
      */
-	private Builder requestConfigBuilder;
-    private HttpClientBuilder httpClientBuilder;
+	private final Builder requestConfigBuilder;
+    private final HttpClientBuilder httpClientBuilder;
     
     /**
      * The current httpClient which will execute HTTP requests
      */
-    private CloseableHttpClient httpClient;
+    private volatile CloseableHttpClient httpClient;
     
-    private BasicCookieStore cookieStore = new BasicCookieStore();
+    private final BasicCookieStore cookieStore = new BasicCookieStore();
     
     /**
      * List of rejected URL patterns
      */
-    private final Set<BlacklistEntry> blacklistEntries = Collections.newSetFromMap(new ConcurrentHashMap<BlacklistEntry, Boolean>());
+    private final Collection<BlacklistEntry> blacklistEntries = new CopyOnWriteArrayList<BlacklistEntry>();
     
     /**
      * List of accepted URL patterns
@@ -182,37 +179,37 @@ public class BrowserMobHttpClient {
     /**
      * List of URLs to rewrite
      */
-    private List<RewriteRule> rewriteRules = new CopyOnWriteArrayList<RewriteRule>();
+    private final List<RewriteRule> rewriteRules = new CopyOnWriteArrayList<RewriteRule>();
     
     /**
      * triggers to process when sending request
      */
-    private List<RequestInterceptor> requestInterceptors = new CopyOnWriteArrayList<RequestInterceptor>();
+    private final List<RequestInterceptor> requestInterceptors = new CopyOnWriteArrayList<RequestInterceptor>();
     
     /**
      * triggers to process when receiving response
      */
-    private List<ResponseInterceptor> responseInterceptors = new CopyOnWriteArrayList<ResponseInterceptor>();
+    private final List<ResponseInterceptor> responseInterceptors = new CopyOnWriteArrayList<ResponseInterceptor>();
     
     /**
      * additional headers sent with request
      */
-    private HashMap<String, String> additionalHeaders = new LinkedHashMap<String, String>();
+    private final Map<String, String> additionalHeaders = new ConcurrentHashMap<String, String>();
     
     /**
      * request timeout: set to -1 to disable timeout
      */
-    private int requestTimeout = -1;
+    private volatile int requestTimeout = -1;
     
     /**
      * is it possible to add a new request?
      */
-    private AtomicBoolean allowNewRequests = new AtomicBoolean(true);
+    private final AtomicBoolean allowNewRequests = new AtomicBoolean(true);
     
     /**
      * DNS lookup handler
      */
-    private BrowserMobHostNameResolver hostNameResolver;
+    private final BrowserMobHostNameResolver hostNameResolver;
     
     /**
      * does the proxy support gzip compression? (set to false if you go through a browser)
@@ -252,7 +249,7 @@ public class BrowserMobHttpClient {
     /**
      * remaining requests counter
      */
-    private AtomicInteger requestCounter;
+    private final AtomicInteger requestCounter;
     
     /**
      * Init HTTP client
@@ -584,7 +581,7 @@ public class BrowserMobHttpClient {
         if (!allowNewRequests.get()) {
             throw new RuntimeException("No more requests allowed");
         }
-
+        
         try {
             requestCounter.incrementAndGet();
 
@@ -670,12 +667,10 @@ public class BrowserMobHttpClient {
             }
         }
 
-        if (blacklistEntries != null) {
-            for (BlacklistEntry blacklistEntry : blacklistEntries) {
-                if (blacklistEntry.getPattern().matcher(url).matches()) {
-                    mockResponseCode = blacklistEntry.getResponseCode();
-                    break;
-                }
+        for (BlacklistEntry blacklistEntry : blacklistEntries) {
+            if (blacklistEntry.getPattern().matcher(url).matches()) {
+                mockResponseCode = blacklistEntry.getResponseCode();
+                break;
             }
         }
 
@@ -730,7 +725,7 @@ public class BrowserMobHttpClient {
 
         BasicHttpContext ctx = new BasicHttpContext();
 
-        ActiveRequest activeRequest = new ActiveRequest(method, ctx, entry.getStartedDateTime());
+        ActiveRequest activeRequest = new ActiveRequest(method, entry.getStartedDateTime());
         activeRequests.add(activeRequest);
 
         // for dealing with automatic authentication
@@ -1225,7 +1220,10 @@ public class BrowserMobHttpClient {
      */
     @Deprecated
     public List<Pattern> getWhitelistRequests() {
-        return whitelist.getPatterns();
+    	List<Pattern> whitelistPatterns = new ArrayList<Pattern>(whitelist.getPatterns().size());
+    	whitelistPatterns.addAll(whitelist.getPatterns());
+    	
+        return Collections.unmodifiableList(whitelistPatterns);
     }
     
     public Collection<Pattern> getWhitelistUrls() {
@@ -1350,38 +1348,43 @@ public class BrowserMobHttpClient {
 
     class ActiveRequest {
         private final HttpRequestBase request;
-        private final BasicHttpContext ctx;
         private final Date start;
+        private final AtomicBoolean aborting = new AtomicBoolean(false);
 
-        ActiveRequest(HttpRequestBase request, BasicHttpContext ctx, Date start) {
+        ActiveRequest(HttpRequestBase request, Date start) {
             this.request = request;
-            this.ctx = ctx;
             this.start = start;
         }
-
-        void checkTimeout() {
+        
+        /**
+         * Checks the timeout for this request, and aborts if necessary.
+         * @return true if the request was aborted for exceeding its timeout, otherwise false.
+         */
+        boolean checkTimeout() {
+        	if (aborting.get()) {
+        		return false;
+        	}
+        	
             if (requestTimeout != -1) {
                 if (request != null && start != null && new Date(System.currentTimeMillis() - requestTimeout).after(start)) {
-                    LOG.info("Aborting request to {} after it failed to complete in {} ms", request.getURI().toString(), requestTimeout);
+                	boolean okayToAbort = aborting.compareAndSet(false, true);
+                	if (okayToAbort) {
+                		LOG.info("Aborting request to {} after it failed to complete in {} ms", request.getURI().toString(), requestTimeout);
 
-                    abort();
+                    	abort();
+                    	
+                    	return true;
+                	}
                 }
             }
+            
+            return false;
         }
 
         public void abort() {
             request.abort();
-
-            // try to close the connection? is this necessary? unclear based on preliminary debugging of HttpClient, but
-            // it doesn't seem to hurt to try
-            HttpConnection conn = (HttpConnection) ctx.getAttribute("http.connection");
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (IOException e) {
-                    // this is fine, we're shutting it down anyway
-                }
-            }
+            
+            // no need to close the connection -- the call to request.abort() releases the connection itself 
         }
     }
 

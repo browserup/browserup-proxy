@@ -16,7 +16,7 @@ import org.java_bandwidthlimiter.StreamManager;
  * and get-in-out streams to provide throttling
  */
 public class SimulatedSocket extends Socket {
-    private StreamManager streamManager;
+    private final StreamManager streamManager;
 
     public SimulatedSocket(StreamManager streamManager) {
         this.streamManager = streamManager;
@@ -68,7 +68,7 @@ public class SimulatedSocket extends Socket {
 			try {
 				Thread.sleep(streamManager.getLatency()-connectReal);
 			} catch (InterruptedException e) {
-				Thread.interrupted();
+				Thread.currentThread().interrupt();
 			}
 			// the end after adding latency
 		    end = new Date();

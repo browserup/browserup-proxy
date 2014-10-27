@@ -1,6 +1,7 @@
 package net.lightbody.bmp.proxy;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -11,7 +12,7 @@ import java.util.regex.Pattern;
  * accomplished by updating the whitelist reference to a new whitelist.
  */
 public class Whitelist {
-    private final List<Pattern> patterns;
+    private final Collection<Pattern> patterns;
     private final int responseCode;
     private final boolean enabled;
 
@@ -47,7 +48,7 @@ public class Whitelist {
 		return enabled;
 	}
 
-    public List<Pattern> getPatterns() {
+    public Collection<Pattern> getPatterns() {
         return this.patterns;
     }
 
