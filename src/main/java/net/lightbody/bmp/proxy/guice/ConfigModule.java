@@ -26,6 +26,12 @@ public class ConfigModule implements Module {
                 parser.accepts("port", "The port to listen on")
                         .withOptionalArg().ofType(Integer.class).defaultsTo(8080);
         
+        ArgumentAcceptingOptionSpec<String> addressSpec =
+                parser.accepts("address", "The address to bind to")
+                      .withOptionalArg()
+                      .ofType(String.class)
+                      .defaultsTo("0.0.0.0");
+        
         ArgumentAcceptingOptionSpec<Integer> proxyPortRange =
                 parser.accepts("proxyPortRange", "The range of ports to use for proxies")
                       .withOptionalArg()
@@ -69,6 +75,7 @@ public class ConfigModule implements Module {
         }
 
         binder.bind(Key.get(Integer.class, new NamedImpl("port"))).toInstance(port);
+        binder.bind(Key.get(String.class, new NamedImpl("address"))).toInstance(addressSpec.value(options));
         binder.bind(Key.get(Integer.class, new NamedImpl("minPort"))).toInstance(minPort);
         binder.bind(Key.get(Integer.class, new NamedImpl("maxPort"))).toInstance(maxPort);   
 
