@@ -64,8 +64,10 @@ Once that is done, a new proxy will be available on the port returned. All you h
   - status - the HTTP status code to return for URLs that are blacklisted
  - DELETE /proxy/[port]/blacklist - Clears all URL patterns from the blacklist
  - PUT /proxy/[port]/limit - Limit the bandwidth through the proxy. Takes the following parameters:
-  - downstreamKbps - Sets the downstream kbps
-  - upstreamKbps - Sets the upstream kbps
+  - downstreamKbps - Sets the downstream bandwidth limit in kbps
+  - upstreamKbps - Sets the upstream bandwidth limit kbps
+  - downstreamMaxKB - Specifies how many kilobytes in total the client is allowed to download through the proxy.
+  - upstreamMaxKB - Specifies how many kilobytes in total the client is allowed to upload through the proxy.
   - latency - Add the given latency to each HTTP request
   - enable - (true/false) a boolean that enable bandwidth limiter. By default the limit is disabled, although setting any of the properties above will implicitly enable throttling
   - payloadPercentage - a number ]0, 100] specifying what percentage of data sent is payload. e.g. use this to take into account overhead due to tcp/ip.
