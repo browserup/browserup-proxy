@@ -120,6 +120,8 @@ Command-line Arguments
 
  - -port \<port\>
   - Port on which the API listens. Default value is 8080.
+ - -address <address>
+  - Address to which the API is bound. Default value is 0.0.0.0.
  - -proxyPortRange \<from\>-\<to\>
   - Range of ports reserved for proxies. Only applies if *port* parameter is not supplied in the POST request. Default values are \<port\>+1 to \<port\>+500+1.
  - -ttl \<seconds\>
@@ -219,6 +221,30 @@ NodeJS Support
 --------------
 
 NodeJS bindings for browswermob-proxy are available [here](https://github.com/zzo/browsermob-node).  Built-in support for [Selenium](http://seleniumhq.org) or use [CapserJS-on-PhantomJS](http://casperjs.org) or anything else to drive traffic for HAR generation.
+
+Logging
+-------
+
+When running in stand-alone mode, the proxy loads the default logging configuration from the conf/bmp-logging.properties file. To increase/decrease the logging level, change the logging entry for net.lightbody.bmp.
+
+If you are running the proxy with Selenium or another application, you can configure BrowserMob Proxy to use your preferred logger. You'll need to suppress the slf4j-jdk14 dependency that is included by default:
+
+    <dependency>
+        <groupId>net.lightbody.bmp</groupId>
+        <artifactId>browsermob-proxy</artifactId>
+        <version>LATEST_VERSION (ex: 2.0-beta-9)</version>
+        <scope>test</scope>
+        <exclusions>
+            <exclusion>
+                <groupId>org.seleniumhq.selenium</groupId>
+                <artifactId>selenium-api</artifactId>
+            </exclusion>
+            <exclusion>
+		<groupId>org.slf4j</groupId>
+		<artifactId>slf4j-jdk14</artifactId>
+	    </exclusion>
+        </exclusions>
+    </dependency>
 
 Creating the batch files from source
 ------------------------------------

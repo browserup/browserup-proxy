@@ -8,8 +8,6 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 
-import net.lightbody.bmp.proxy.util.Log;
-
 import org.apache.http.HttpHost;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
@@ -17,10 +15,12 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.java_bandwidthlimiter.StreamManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SimulatedSocketFactory implements ConnectionSocketFactory {
 	private static final int DEFAULT_SOCKET_TIMEOUT = 2000;
-    private static Log LOG = new Log();
+    private static Logger LOG = LoggerFactory.getLogger(SimulatedSocketFactory.class);
 
     private StreamManager streamManager;
 
@@ -79,7 +79,7 @@ public class SimulatedSocketFactory implements ConnectionSocketFactory {
                 LOG.warn("Using InetSocketAddress.getHostName() rather than InetSocketAddress.getHostString(). Consider upgrading to Java 7 for faster performance!");
             } catch (NoSuchMethodException e) {
                 String msg = "Something is wrong inside SimulatedSocketFactory and I don't know why!";
-                LOG.severe(msg, e);
+                LOG.error(msg, e);
                 throw new RuntimeException(msg, e);
             }
         }

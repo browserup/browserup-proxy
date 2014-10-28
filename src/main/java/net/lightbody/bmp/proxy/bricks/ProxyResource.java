@@ -12,6 +12,7 @@ import com.google.sitebricks.http.Delete;
 import com.google.sitebricks.http.Get;
 import com.google.sitebricks.http.Post;
 import com.google.sitebricks.http.Put;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -27,6 +28,9 @@ import javax.script.CompiledScript;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+
+
+
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.proxy.ProxyExistsException;
 import net.lightbody.bmp.proxy.ProxyManager;
@@ -36,13 +40,15 @@ import net.lightbody.bmp.proxy.http.BrowserMobHttpRequest;
 import net.lightbody.bmp.proxy.http.BrowserMobHttpResponse;
 import net.lightbody.bmp.proxy.http.RequestInterceptor;
 import net.lightbody.bmp.proxy.http.ResponseInterceptor;
-import net.lightbody.bmp.proxy.util.Log;
+
 import org.java_bandwidthlimiter.StreamManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @At("/proxy")
 @Service
 public class ProxyResource {
-    private static final Log LOG = new Log();
+    private static final Logger LOG = LoggerFactory.getLogger(ProxyResource.class);
 
     private ProxyManager proxyManager;
 
@@ -52,7 +58,7 @@ public class ProxyResource {
     }
 
     @Get
-    public Reply<?> getProxies(Request request) throws Exception {
+    public Reply<?> getProxies(Request request) {
         Collection<ProxyDescriptor> proxyList = new ArrayList<ProxyDescriptor> ();
         for (ProxyServer proxy : proxyManager.get()) {
             proxyList.add(new ProxyDescriptor(proxy.getPort()));
@@ -61,7 +67,7 @@ public class ProxyResource {
     }
             
     @Post
-    public Reply<?> newProxy(Request request) throws Exception {
+    public Reply<?> newProxy(Request request) {
         String systemProxyHost = System.getProperty("http.proxyHost");
         String systemProxyPort = System.getProperty("http.proxyPort");
         String httpProxy = request.param("httpProxy");
@@ -76,7 +82,7 @@ public class ProxyResource {
 
         String paramBindAddr = request.param("bindAddress");
         Integer paramPort = request.param("port") == null ? null : Integer.parseInt(request.param("port"));
-        LOG.fine("POST proxy instance on bindAddress `{}` & port `{}`", 
+        LOG.debug("POST proxy instance on bindAddress `{}` & port `{}`", 
                 paramBindAddr, paramPort);
         ProxyServer proxy;
         try{
@@ -278,7 +284,7 @@ public class ProxyResource {
                 try {
                     script.eval(bindings);
                 } catch (ScriptException e) {
-                    LOG.severe("Could not execute JS-based response interceptor", e);
+                    LOG.error("Could not execute JS-based response interceptor", e);
                 }
             }
         });
@@ -311,7 +317,7 @@ public class ProxyResource {
                 try {
                     script.eval(bindings);
                 } catch (ScriptException e) {
-                    LOG.severe("Could not execute JS-based response interceptor", e);
+                    LOG.error("Could not execute JS-based response interceptor", e);
                 }
             }
         });
@@ -409,7 +415,7 @@ public class ProxyResource {
 
     @Delete
     @At("/:port")
-    public Reply<?> delete(@Named("port") int port) throws Exception {
+    public Reply<?> delete(@Named("port") int port) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -457,7 +463,7 @@ public class ProxyResource {
     
     @Delete
     @At("/:port/dns/cache")
-    public Reply<?> clearDnsCache(@Named("port") int port) throws Exception {
+    public Reply<?> clearDnsCache(@Named("port") int port) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();

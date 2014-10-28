@@ -5,16 +5,18 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.PreDestroy;
 import net.lightbody.bmp.proxy.util.ExpirableMap;
-import net.lightbody.bmp.proxy.util.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class ProxyManager {
-    private static final Log LOG = new Log();
+    private static final Logger LOG = LoggerFactory.getLogger(ProxyManager.class);
 
     private int lastPort;
     private final int minPort; 
@@ -33,7 +35,7 @@ public class ProxyManager {
                     @Override
                     public void run(ProxyServer proxy) {
                         try {
-                            LOG.fine("Expiring ProxyServer `{}`...", proxy.getPort());
+                            LOG.debug("Expiring ProxyServer `{}`...", proxy.getPort());
                             proxy.stop();
                         } catch (Exception ex) {
                             LOG.warn("Error while stopping an expired proxy", ex);
@@ -43,16 +45,25 @@ public class ProxyManager {
                 new ConcurrentHashMap<Integer, ProxyServer>();    
     }
 
-    public ProxyServer create(Map<String, String> options, Integer port, String bindAddr) throws Exception {
-        LOG.fine("Instantiate ProxyServer...");
+    public ProxyServer create(Map<String, String> options, Integer port, String bindAddr) {
+        LOG.debug("Instantiate ProxyServer...");
         ProxyServer proxy = proxyServerProvider.get();
         
-        LOG.fine("Apply options `{}` to new ProxyServer...", options);
+        LOG.debug("Apply options `{}` to new ProxyServer...", options);
         proxy.setOptions(options);                        
         
         if (bindAddr != null) {            
-            LOG.fine("Bind ProxyServer to `{}`...", bindAddr);
-            proxy.setLocalHost(InetAddress.getByName(bindAddr));
+            LOG.debug("Bind ProxyServer to `{}`...", bindAddr);
+            InetAddress inetAddress;
+            try {
+            	inetAddress = InetAddress.getByName(bindAddr);
+            } catch (UnknownHostException e) {
+            	LOG.error("Unable to bind proxy to address: " + bindAddr + "; proxy will not be created.", e);
+            	
+            	throw new RuntimeException("Unable to bind proxy to address: ", e);
+            }
+            
+            proxy.setLocalHost(inetAddress);
         }
         
         if (port != null) {                        
@@ -60,22 +71,22 @@ public class ProxyManager {
         }                
         
         while(proxies.size() <= maxPort-minPort){
-            LOG.fine("Use next available port for new ProxyServer...");
+            LOG.debug("Use next available port for new ProxyServer...");
             port = nextPort();                        
             try{
                 return startProxy(proxy, port);                
             }catch(ProxyExistsException ex){
-                LOG.fine("Proxy already exists at port {}", port);
+                LOG.debug("Proxy already exists at port {}", port);
             }
         }
         throw new ProxyPortsExhaustedException();    
     }
 
-    public ProxyServer create(Map<String, String> options, Integer port) throws Exception {
+    public ProxyServer create(Map<String, String> options, Integer port) {
         return create(options, port, null);
     }
 
-    public ProxyServer create(Map<String, String> options) throws Exception {
+    public ProxyServer create(Map<String, String> options) {
         return create(options, null, null);
     }
 
@@ -83,11 +94,11 @@ public class ProxyManager {
         return proxies.get(port);
     }
     
-    private ProxyServer startProxy(ProxyServer proxy, int port) throws Exception{
+    private ProxyServer startProxy(ProxyServer proxy, int port) {
         proxy.setPort(port);
         ProxyServer old = proxies.putIfAbsent(port, proxy);
         if(old != null){
-            LOG.fine("Proxy already exists at port {}", port);
+            LOG.info("Proxy already exists at port {}", port);
             throw new ProxyExistsException(port);
         }
         try{
@@ -111,8 +122,8 @@ public class ProxyManager {
     public Collection<ProxyServer> get() {
         return proxies.values();
     }
-    
-    public void delete(int port) throws Exception {
+
+    public void delete(int port) {
         ProxyServer proxy = proxies.remove(port);
         proxy.stop();
     }
