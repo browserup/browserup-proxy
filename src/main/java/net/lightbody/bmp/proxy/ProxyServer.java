@@ -375,8 +375,25 @@ public class ProxyServer {
     	client.clearBlacklist();
     }
 
+    /**
+     * Whitelists the specified requests. 
+     * <p>
+     * <b>Note:</b> This method overwrites any existing whitelist.
+     * 
+     * @param patterns regular expression patterns matching URLs to whitelist
+     * @param responseCode response code to return for non-whitelisted URLs
+     */
     public void whitelistRequests(String[] patterns, int responseCode) {
         client.whitelistRequests(patterns, responseCode);
+    }
+    
+    /**
+     * Enables an empty whitelist, which will return the specified responseCode for all requests.
+     * 
+     * @param responseCode HTTP response code to return for all requests
+     */
+    public void enableEmptyWhitelist(int responseCode) {
+    	client.whitelistRequests(new String[0], responseCode);
     }
     
     public void clearWhitelist() {

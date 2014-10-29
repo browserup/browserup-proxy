@@ -174,7 +174,7 @@ public class BrowserMobHttpClient {
     /**
      * List of accepted URL patterns
      */
-    private volatile Whitelist whitelist = new Whitelist();
+    private volatile Whitelist whitelist = Whitelist.WHITELIST_DISABLED;
     
     /**
      * List of URLs to rewrite
@@ -1220,6 +1220,7 @@ public class BrowserMobHttpClient {
     
     /**
      * @deprecated use getWhitelistUrls()
+     * @return <i>unmodifiable</i> list of whitelisted Patterns
      */
     @Deprecated
     public List<Pattern> getWhitelistRequests() {
@@ -1229,6 +1230,11 @@ public class BrowserMobHttpClient {
         return Collections.unmodifiableList(whitelistPatterns);
     }
     
+    /**
+     * Retrieves Patterns of URLs that have been whitelisted.
+     * 
+     * @return <i>unmodifiable</i> whitelisted URL Patterns
+     */
     public Collection<Pattern> getWhitelistUrls() {
     	return whitelist.getPatterns();
     }
@@ -1237,12 +1243,27 @@ public class BrowserMobHttpClient {
     	return whitelist.getResponseCode();
     }
 
+    /**
+     * Whitelist the specified request patterns, returning the specified responseCode for non-whitelisted
+     * requests.
+     * 
+     * @param patterns regular expression strings matching URL patterns to whitelist. if empty or null, 
+     * 		  the whitelist will be enabled but will not match any URLs. 
+     * @param responseCode the HTTP response code to return for non-whitelisted requests
+     */
     public void whitelistRequests(String[] patterns, int responseCode) {
-    	whitelist = new Whitelist(patterns, responseCode);
+    	if (patterns == null || patterns.length == 0) {
+    		whitelist = new Whitelist(responseCode);
+    	} else {
+    		whitelist = new Whitelist(patterns, responseCode);
+    	}
     }
-
+    
+    /**
+     * Clears and disables the current whitelist. 
+     */
     public void clearWhitelist() {
-    	whitelist = new Whitelist();
+    	whitelist = Whitelist.WHITELIST_DISABLED;
     }
     
     public void addHeader(String name, String value) {

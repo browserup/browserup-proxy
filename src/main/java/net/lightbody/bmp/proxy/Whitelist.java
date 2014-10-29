@@ -16,17 +16,34 @@ public class Whitelist {
     private final int responseCode;
     private final boolean enabled;
 
+    /**
+     * A disabled Whitelist.
+     */
+    public static final Whitelist WHITELIST_DISABLED = new Whitelist();
+    
+    /**
+     * Creates an empty, disabled Whitelist.
+     */
+    public Whitelist() {
+    	this.patterns = Collections.emptyList();
+		this.responseCode = -1;
+    	this.enabled = false;
+    }
+    
 	/**
-	 * Creates an empty, disabled whitelist.
+	 * Creates an empty, enabled whitelist with the specified response code.
+	 * 
+	 * @param responseCode the response code that the (enabled) Whitelist will return for all URLs.
 	 */
-	public Whitelist() {
+	public Whitelist(int responseCode) {
 		this.patterns = Collections.emptyList();
-		responseCode = -1;
-		this.enabled = false;
+		this.responseCode = responseCode;
+		this.enabled = true;
 	}
 	
 	/**
-	 * Creates an whitelist for the specified patterns, returning the given responseCode when a URL does not match one of the patterns. 
+	 * Creates an whitelist for the specified patterns, returning the given responseCode when a URL does not match one of the patterns.
+	 *  
 	 * @param patterns
 	 * @param responseCode
 	 */
