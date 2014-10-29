@@ -120,6 +120,8 @@ Command-line Arguments
 
  - -port <port>
   - Port on which the API listens. Default value is 8080.
+ - -address <address>
+  - Address to which the API is bound. Default value is 0.0.0.0.
  - -proxyPortRange <from>-<to>
   - Range of ports reserved for proxies. Only applies if *port* parameter is not supplied in the POST request. Default values are <port>+1 to <port>+500+1.
 
