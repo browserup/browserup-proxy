@@ -11,7 +11,7 @@ public class BlacklistEntry
     public BlacklistEntry(String pattern, int responseCode, String method) {
         this.pattern = Pattern.compile(pattern);
         this.responseCode = responseCode;
-		this.method = Pattern.compile("".equals(method) ? ".*" : method);
+		this.method = Pattern.compile(("".equals(method) || method == null) ? ".*" : method);
     }
 
     public Pattern getPattern() {
