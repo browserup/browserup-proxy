@@ -39,6 +39,12 @@ public class ConfigModule implements Module {
                       .defaultsTo(8081, 8581)
                       .withValuesSeparatedBy('-');
 
+        ArgumentAcceptingOptionSpec<Integer> ttlSpec =
+                parser.accepts("ttl", "Time in seconds until an unused proxy is deleted")
+                      .withOptionalArg()
+                      .ofType(Integer.class)
+                      .defaultsTo(0);
+
         parser.acceptsAll(asList("help", "?"), "This help text");
 
         OptionSet options = parser.parse(args);
@@ -77,8 +83,9 @@ public class ConfigModule implements Module {
         binder.bind(Key.get(Integer.class, new NamedImpl("port"))).toInstance(port);
         binder.bind(Key.get(String.class, new NamedImpl("address"))).toInstance(addressSpec.value(options));
         binder.bind(Key.get(Integer.class, new NamedImpl("minPort"))).toInstance(minPort);
-        binder.bind(Key.get(Integer.class, new NamedImpl("maxPort"))).toInstance(maxPort);   
-
+        binder.bind(Key.get(Integer.class, new NamedImpl("maxPort"))).toInstance(maxPort);                 
+        binder.bind(Key.get(Integer.class, new NamedImpl("ttl"))).toInstance(ttlSpec.value(options));
+        
         /*
          * Init User Agent String Parser, update of the UAS datastore will run in background.
          */

@@ -4,20 +4,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.sitebricks.SitebricksModule;
-
-import net.lightbody.bmp.exception.JettyException;
-import net.lightbody.bmp.proxy.bricks.ProxyResource;
-import net.lightbody.bmp.proxy.guice.ConfigModule;
-import net.lightbody.bmp.proxy.guice.JettyModule;
-import net.lightbody.bmp.proxy.util.StandardFormatter;
-
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.util.log.Log;
-import org.slf4j.LoggerFactory;
-
-import javax.servlet.ServletContextEvent;
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -28,6 +14,17 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import javax.servlet.ServletContextEvent;
+import net.lightbody.bmp.exception.JettyException;
+import net.lightbody.bmp.proxy.bricks.ProxyResource;
+import net.lightbody.bmp.proxy.guice.ConfigModule;
+import net.lightbody.bmp.proxy.guice.JettyModule;
+import net.lightbody.bmp.proxy.util.StandardFormatter;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.util.log.Log;
+import org.guiceyfruit.jsr250.Jsr250Module;
+import org.slf4j.LoggerFactory;
 
 public class Main {
     private static final String LOGGING_PROPERTIES_FILENAME = "conf/bmp-logging.properties";
@@ -38,7 +35,7 @@ public class Main {
     public static void main(String[] args) {
         configureJdkLogging();
 
-        final Injector injector = Guice.createInjector(new ConfigModule(args), new JettyModule(), new SitebricksModule() {
+        final Injector injector = Guice.createInjector(new ConfigModule(args), new Jsr250Module(), new JettyModule(), new SitebricksModule() {
             @Override
             protected void configureSitebricks() {
                 scan(ProxyResource.class.getPackage());
