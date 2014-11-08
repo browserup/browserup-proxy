@@ -36,6 +36,10 @@ public interface BandwidthLimiter {
     public void setDownstreamKbps(long downstreamKbps);
 
     public void setUpstreamKbps(long upstreamKbps);
+    
+    public void setDownstreamMaxKB(long downstreamMaxKB);
+    
+    public void setUpstreamMaxKB(long upstreamMaxKB);
 
     public void setLatency(long latency);
 }

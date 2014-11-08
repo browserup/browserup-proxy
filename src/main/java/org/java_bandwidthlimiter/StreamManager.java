@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Random;
+import static org.java_bandwidthlimiter.BandwidthLimiter.OneSecond;
 
 /**
  * A class that manages the bandwidth of all the registered streams (both input and output streams).
@@ -61,6 +62,8 @@ public class StreamManager implements BandwidthLimiter {
         public long remainingBps;
         public long nextResetTimestamp;
         public long nextResetSubIntervals;
+        public long maxBytes;
+        public long remainingBytes;
 
         private long timeToNextReset() {
             return nextResetTimestamp - System.currentTimeMillis();
@@ -83,11 +86,11 @@ public class StreamManager implements BandwidthLimiter {
     //even calls to setDownstreamKbps and setUpstreamKbps will be forced to honor this upperbound.
     private long maxBytesPerSecond;
 
-    private StreamParams downStream = new StreamParams();
-    private StreamParams upStream = new StreamParams();
+    private final StreamParams downStream = new StreamParams();
+    private final StreamParams upStream = new StreamParams();
 
     private long latency = 0;
-    private Random randomGenerator = new Random();
+    private final Random randomGenerator = new Random();
 
     /**
      * Create an instance of StreamManager.
@@ -101,11 +104,13 @@ public class StreamManager implements BandwidthLimiter {
      *
      */
     public StreamManager(long maxBitsPerSecond) {
-        setMaxBitsPerSecondThreshold( maxBitsPerSecond );
-        setDownstreamKbps(maxBitsPerSecond / 1000);
-        setUpstreamKbps(maxBitsPerSecond / 1000);
-        setPayloadPercentage(95);
-        disable();
+        this.maxBytesPerSecond = maxBitsPerSecond/8;
+        setMaxBps(this.downStream, this.maxBytesPerSecond);        
+        setMaxBps(this.upStream, this.maxBytesPerSecond);   
+        this.actualPayloadPercentage = 0.95;
+        setMaxBytes(this.downStream, 0);
+        setMaxBytes(this.upStream, 0);
+        this.enabled = false;
     }
 
 
@@ -154,11 +159,31 @@ public class StreamManager implements BandwidthLimiter {
     public void setLatency(long latency) {
         this.latency = latency;
     }
+
+    /**
+     * Specifies how many kilobytes in total the client is allowed to download.
+     * When the limit is used up, MaximumTransferExceededException is thrown
+     * @param downstreamMaxKB
+     */
+    @Override
+    public void setDownstreamMaxKB(long downstreamMaxKB) {
+        setMaxBytes(this.downStream, downstreamMaxKB * 1000);
+    }
+    
+    /**
+     * Specifies how many kilobytes in total the client is allowed to upload.
+     * When the limit is used up, MaximumTransferExceededException is thrown
+     * @param upstreamMaxKB
+     */
+    @Override
+    public void setUpstreamMaxKB(long upstreamMaxKB) {
+        setMaxBytes(this.upStream, upstreamMaxKB * 1000);
+    }        
     
     public long getLatency() {
         return latency;
     }
-
+    
     /**
      * To take into account overhead due to underlying protocols (e.g. TCP/IP)
      * @param payloadPercentage a  ] 0 , 100] value. where 100 means that the required
@@ -192,7 +217,7 @@ public class StreamManager implements BandwidthLimiter {
      * Register an output stream.
      * A client would then use the returned OutputStream, which will throttle
      * the one passed as parameter.
-     * * @param in The OutputStream that will be throttled
+     * @param out The OutputStream that will be throttled
      * @return a new throttled OutputStream (wrapping the one given as parameter)
      *
      */
@@ -215,6 +240,22 @@ public class StreamManager implements BandwidthLimiter {
         setMaxBps(this.downStream, this.downStream.maxBps);
         setMaxBps(this.upStream, this.upStream.maxBps);
     }
+    
+    public long getMaxUpstreamKB(){
+        return this.upStream.maxBytes/1000;
+    }
+    
+    public long getRemainingUpstreamKB(){
+        return this.upStream.remainingBytes/1000;
+    }
+    
+    public long getMaxDownstreamKB(){
+        return this.downStream.maxBytes/1000;
+    }
+    
+    public long getRemainingDownstreamKB(){
+        return this.downStream.remainingBytes/1000;
+    }
 
     private void setMaxBps( StreamParams direction, long maxBps ) {
         synchronized (direction) {
@@ -224,6 +265,13 @@ public class StreamManager implements BandwidthLimiter {
             direction.adjustedMaxBps = (long) (direction.maxBps * actualPayloadPercentage);
             direction.nextResetSubIntervals = 2;
             direction.reset();
+        }
+    }
+    
+    private void setMaxBytes( StreamParams direction, long maxBytes ) {
+        synchronized (direction) {
+            direction.maxBytes = maxBytes;
+            direction.remainingBytes = maxBytes;
         }
     }
 
@@ -255,7 +303,7 @@ public class StreamManager implements BandwidthLimiter {
     private int getAllowedBytesUnFair(StreamParams direction, int bufferLength) {
         //this is an unfair allocation of bytes/second because it gives as many
         //bytes as possible to anyone who ask for them
-        int allowed = 0;
+        int allowed;
         synchronized(direction) {
             resetCounterIfNecessary(direction);
             //this stream desires to read up to bufferLength bytes
@@ -288,6 +336,11 @@ public class StreamManager implements BandwidthLimiter {
             if(allowed > 0) {
                 // Read a maximum of "allowed" bytes
                 int bytesRead = stream.doRead(b, off, allowed);
+                
+                // check if we exceeded the transfer limit
+                if(this.downStream.maxBytes > 0 && (this.downStream.remainingBytes -= bytesRead) < 0){
+                    throw new MaximumTransferExceededException(getMaxDownstreamKB(), false);
+                }
 
                 // If less than the "allowed" bytes were read, adjust how many we can still read for this period of time
                 adjustBytes(this.downStream, allowed - bytesRead);
@@ -318,7 +371,7 @@ public class StreamManager implements BandwidthLimiter {
             assert maxBytesPerSecond > 0;
 
             int bytesWritten = 0;
-            int allowed = 0;
+            int allowed;
             // we need a while loop since the write doesn't return a "written bytes" count,
             // rather it expects that all of them are written
             // hence we loop here until all of them have been written
@@ -326,7 +379,11 @@ public class StreamManager implements BandwidthLimiter {
                 allowed = getAllowedBytesWrite(stream, len);
                 if(allowed > 0) {
                     stream.doWrite(b, off, allowed);
-                    bytesWritten += allowed;
+                    bytesWritten += allowed;                    
+                    // check if we exceeded the transfer limit
+                    if(this.upStream.maxBytes > 0 && (this.upStream.remainingBytes -= allowed) < 0){
+                        throw new MaximumTransferExceededException(this.getMaxUpstreamKB(), true);
+                    }
                 } else {
                     long sleepTime = timeToNextReset(this.upStream);
                     if( sleepTime > 0 ) {
@@ -361,7 +418,7 @@ public class StreamManager implements BandwidthLimiter {
         long lastActivity;
         boolean roundUp;
         //just an helper buffer so we don't allocate it all the time when calling void write(int b) which writes ONE byte!
-        private byte[] oneByteBuff = new byte[1];
+        private final byte[] oneByteBuff = new byte[1];
 
         public ManagedOutputStream(OutputStream stream, StreamManager manager) {
             assert manager != null;
@@ -407,10 +464,12 @@ public class StreamManager implements BandwidthLimiter {
             stream.write(b, offset, length);
         }
 
+        @Override
         public void flush() throws IOException {
             stream.flush();
         }
 
+        @Override
         public void close() throws IOException {
             stream.close();
         }
@@ -422,7 +481,7 @@ public class StreamManager implements BandwidthLimiter {
         long lastActivity;
         boolean roundUp;
         //just an helper buffer so we don't allocate it all the time when calling int read() which reads ONE byte!
-        private byte[] oneByteBuff = new byte[1];
+        private final byte[] oneByteBuff = new byte[1];
 
         public ManagedInputStream(InputStream stream, StreamManager manager) {
             assert manager != null;
@@ -445,17 +504,20 @@ public class StreamManager implements BandwidthLimiter {
             return roundUp;
         }
 
+        @Override
         public int read() throws IOException {
             read(oneByteBuff, 0, 1);
             return oneByteBuff[0];
         }
 
+        @Override
         public int read(byte[] b) throws IOException {
             int length = b.length;
             int bytesRead = read(b, 0, length);
             return bytesRead;
         }
 
+        @Override
         public int read(byte[] b, int off, int len) throws IOException {
             int readBytes = manager.manageRead(this, b, off, len);
             if( readBytes > 0 ) {
@@ -472,26 +534,32 @@ public class StreamManager implements BandwidthLimiter {
             return stream.read(b, offset, length);
         }
 
+        @Override
         public long skip(long n) throws IOException {
             return stream.skip(n);
         }
 
+        @Override
         public int available() throws IOException {
             return stream.available();
         }
 
+        @Override
         public void close() throws IOException {
             stream.close();
         }
 
+        @Override
         public void mark(int readLimit) {
             stream.mark(readLimit);
         }
 
+        @Override
         public void reset() throws IOException {
             stream.reset();
         }
 
+        @Override
         public boolean markSupported() {
             return stream.markSupported();
         }

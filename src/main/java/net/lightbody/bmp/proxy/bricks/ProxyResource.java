@@ -12,7 +12,6 @@ import com.google.sitebricks.http.Delete;
 import com.google.sitebricks.http.Get;
 import com.google.sitebricks.http.Post;
 import com.google.sitebricks.http.Put;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -28,9 +27,6 @@ import javax.script.CompiledScript;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-
-
-
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.proxy.ProxyExistsException;
 import net.lightbody.bmp.proxy.ProxyManager;
@@ -40,7 +36,6 @@ import net.lightbody.bmp.proxy.http.BrowserMobHttpRequest;
 import net.lightbody.bmp.proxy.http.BrowserMobHttpResponse;
 import net.lightbody.bmp.proxy.http.RequestInterceptor;
 import net.lightbody.bmp.proxy.http.ResponseInterceptor;
-
 import org.java_bandwidthlimiter.StreamManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -349,6 +344,20 @@ public class ProxyResource {
                 streamManager.enable();
             } catch (NumberFormatException e) { }
         }
+        String upstreamMaxKB = request.param("upstreamMaxKB");
+        if (upstreamMaxKB != null) {
+            try {
+                streamManager.setUpstreamMaxKB(Integer.parseInt(upstreamMaxKB));
+                streamManager.enable();
+            } catch (NumberFormatException e) { }
+        }
+        String downstreamMaxKB = request.param("downstreamMaxKB");
+        if (downstreamMaxKB != null) {
+            try {
+                streamManager.setDownstreamMaxKB(Integer.parseInt(downstreamMaxKB));
+                streamManager.enable();
+            } catch (NumberFormatException e) { }
+        }        
         String latency = request.param("latency");
         if (latency != null) {
             try {
@@ -377,6 +386,16 @@ public class ProxyResource {
             }
         }
         return Reply.saying().ok();
+    }
+    
+    @Get
+    @At("/:port/limit")
+    public Reply<?> getLimits(@Named("port") int port, Request request) {
+        ProxyServer proxy = proxyManager.get(port);
+        if (proxy == null) {
+            return Reply.saying().notFound();
+        }                
+        return Reply.with(new BandwidthLimitDescriptor(proxy.getStreamManager())).as(Json.class);
     }
     
     @Put
@@ -559,5 +578,54 @@ public class ProxyResource {
         public void setProxyList(Collection<ProxyDescriptor> proxyList) {
             this.proxyList = proxyList;
         }
+    }
+           
+    public static class BandwidthLimitDescriptor {
+        private long maxUpstreamKB;
+        private long remainingUpstreamKB;
+        private long maxDownstreamKB;
+        private long remainingDownstreamKB;
+        
+        public BandwidthLimitDescriptor(){
+        }
+        
+        public BandwidthLimitDescriptor(StreamManager manager){
+            this.maxDownstreamKB = manager.getMaxDownstreamKB();
+            this.remainingDownstreamKB = manager.getRemainingDownstreamKB();
+            this.maxUpstreamKB = manager.getMaxUpstreamKB();
+            this.remainingUpstreamKB = manager.getRemainingUpstreamKB();
+        }
+
+        public long getMaxUpstreamKB() {
+            return maxUpstreamKB;
+        }
+
+        public void setMaxUpstreamKB(long maxUpstreamKB) {
+            this.maxUpstreamKB = maxUpstreamKB;
+        }
+
+        public long getRemainingUpstreamKB() {
+            return remainingUpstreamKB;
+        }
+
+        public void setRemainingUpstreamKB(long remainingUpstreamKB) {
+            this.remainingUpstreamKB = remainingUpstreamKB;
+        }
+
+        public long getMaxDownstreamKB() {
+            return maxDownstreamKB;
+        }
+
+        public void setMaxDownstreamKB(long maxDownstreamKB) {
+            this.maxDownstreamKB = maxDownstreamKB;
+        }
+
+        public long getRemainingDownstreamKB() {
+            return remainingDownstreamKB;
+        }
+
+        public void setRemainingDownstreamKB(long remainingDownstreamKB) {
+            this.remainingDownstreamKB = remainingDownstreamKB;
+        }        
     }
 }
