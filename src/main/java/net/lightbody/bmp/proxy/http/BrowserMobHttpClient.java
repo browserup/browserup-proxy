@@ -10,14 +10,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -32,7 +32,7 @@ import java.util.zip.Inflater;
 import net.lightbody.bmp.core.har.*;
 import net.lightbody.bmp.proxy.BlacklistEntry;
 import net.lightbody.bmp.proxy.Main;
-import net.lightbody.bmp.proxy.WhitelistEntry;
+import net.lightbody.bmp.proxy.Whitelist;
 import net.lightbody.bmp.proxy.util.*;
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
@@ -41,7 +41,6 @@ import net.sf.uadetector.service.UADetectorServiceFactory;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpClientConnection;
-import org.apache.http.HttpConnection;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
@@ -118,100 +117,99 @@ import org.xbill.DNS.DClass;
 public class BrowserMobHttpClient {
 	private static final Logger LOG = LoggerFactory.getLogger(BrowserMobHttpClient.class);
 	
-	public static UserAgentStringParser PARSER = UADetectorServiceFactory.getCachingAndUpdatingParser();
+	private static volatile UserAgentStringParser parser;
 	
     private static final int BUFFER = 4096;
 
-    private Har har;
-    private String harPageRef;
+    private volatile Har har;
+    private volatile String harPageRef;
 
     /**
      * keep headers
      */
-    private boolean captureHeaders;
+    private volatile boolean captureHeaders;
     
     /**
      * keep contents
      */
-    private boolean captureContent;
+    private volatile boolean captureContent;
     
     /**
      * keep binary contents (if captureContent is set to true, default policy is to capture binary contents too)
      */
-    private boolean captureBinaryContent = true;
+    private volatile boolean captureBinaryContent = true;
 
     /**
      * socket factory dedicated to port 80 (HTTP)
      */
-    private SimulatedSocketFactory socketFactory;
+    private final SimulatedSocketFactory socketFactory;
     
     /**
      * socket factory dedicated to port 443 (HTTPS)
      */
-    private TrustingSSLSocketFactory sslSocketFactory;
+    private final TrustingSSLSocketFactory sslSocketFactory;
 
 
-    private PoolingHttpClientConnectionManager httpClientConnMgr;
+    private final PoolingHttpClientConnectionManager httpClientConnMgr;
     
     /**
      * Builders for httpClient
      * Each time you change their configuration you should call updateHttpClient()
      */
-	private Builder requestConfigBuilder;
-    private HttpClientBuilder httpClientBuilder;
+	private final Builder requestConfigBuilder;
+    private final HttpClientBuilder httpClientBuilder;
     
     /**
      * The current httpClient which will execute HTTP requests
      */
-    private CloseableHttpClient httpClient;
+    private volatile CloseableHttpClient httpClient;
     
-    private BasicCookieStore cookieStore = new BasicCookieStore();
+    private final BasicCookieStore cookieStore = new BasicCookieStore();
     
     /**
      * List of rejected URL patterns
      */
-    private List<BlacklistEntry> blacklistEntries = new CopyOnWriteArrayList<BlacklistEntry>();
+    private final Collection<BlacklistEntry> blacklistEntries = new CopyOnWriteArrayList<BlacklistEntry>();
     
     /**
      * List of accepted URL patterns
      */
-
-    private WhitelistEntry whitelistEntry = null;
+    private volatile Whitelist whitelist = Whitelist.WHITELIST_DISABLED;
     
     /**
      * List of URLs to rewrite
      */
-    private List<RewriteRule> rewriteRules = new CopyOnWriteArrayList<RewriteRule>();
+    private final List<RewriteRule> rewriteRules = new CopyOnWriteArrayList<RewriteRule>();
     
     /**
      * triggers to process when sending request
      */
-    private List<RequestInterceptor> requestInterceptors = new CopyOnWriteArrayList<RequestInterceptor>();
+    private final List<RequestInterceptor> requestInterceptors = new CopyOnWriteArrayList<RequestInterceptor>();
     
     /**
      * triggers to process when receiving response
      */
-    private List<ResponseInterceptor> responseInterceptors = new CopyOnWriteArrayList<ResponseInterceptor>();
+    private final List<ResponseInterceptor> responseInterceptors = new CopyOnWriteArrayList<ResponseInterceptor>();
     
     /**
      * additional headers sent with request
      */
-    private HashMap<String, String> additionalHeaders = new LinkedHashMap<String, String>();
+    private final Map<String, String> additionalHeaders = new ConcurrentHashMap<String, String>();
     
     /**
      * request timeout: set to -1 to disable timeout
      */
-    private int requestTimeout = -1;
+    private volatile int requestTimeout = -1;
     
     /**
      * is it possible to add a new request?
      */
-    private AtomicBoolean allowNewRequests = new AtomicBoolean(true);
+    private final AtomicBoolean allowNewRequests = new AtomicBoolean(true);
     
     /**
      * DNS lookup handler
      */
-    private BrowserMobHostNameResolver hostNameResolver;
+    private final BrowserMobHostNameResolver hostNameResolver;
     
     /**
      * does the proxy support gzip compression? (set to false if you go through a browser)
@@ -221,9 +219,7 @@ public class BrowserMobHttpClient {
     /**
      * set of active requests
      */
-    // not using CopyOnWriteArray because we're WRITE heavy and it is for READ heavy operations
-    // instead doing it the old fashioned way with a synchronized block
-    private final Set<ActiveRequest> activeRequests = new HashSet<ActiveRequest>();
+    private final Set<ActiveRequest> activeRequests = Collections.newSetFromMap(new ConcurrentHashMap<ActiveRequest, Boolean>());
     
     /**
      * credentials used for authentication
@@ -253,7 +249,7 @@ public class BrowserMobHttpClient {
     /**
      * remaining requests counter
      */
-    private AtomicInteger requestCounter;
+    private final AtomicInteger requestCounter;
     
     /**
      * Init HTTP client
@@ -570,10 +566,8 @@ public class BrowserMobHttpClient {
     }
 
     public void checkTimeout() {
-        synchronized (activeRequests) {
-            for (ActiveRequest activeRequest : activeRequests) {
-                activeRequest.checkTimeout();
-            }
+        for (ActiveRequest activeRequest : activeRequests) {
+            activeRequest.checkTimeout();
         }
         
         // Close expired connections
@@ -587,7 +581,7 @@ public class BrowserMobHttpClient {
         if (!allowNewRequests.get()) {
             throw new RuntimeException("No more requests allowed");
         }
-
+        
         try {
             requestCounter.incrementAndGet();
 
@@ -626,7 +620,7 @@ public class BrowserMobHttpClient {
                 String userAgent = uaHeaders[0].getValue();
                 try {
                     // note: this doesn't work for 'Fandango/4.5.1 CFNetwork/548.1.4 Darwin/11.0.0'
-                    ReadableUserAgent uai = PARSER.parse(userAgent);
+                    ReadableUserAgent uai = getUserAgentStringParser().parse(userAgent);
                     String browser = uai.getName();
                     String version = uai.getVersionNumber().toVersionString();
                     har.getLog().setBrowser(new HarNameVersion(browser, version));
@@ -656,31 +650,27 @@ public class BrowserMobHttpClient {
 
         // handle whitelist and blacklist entries
         int mockResponseCode = -1;
-        synchronized (this) {
-            // guard against concurrent modification of whitelistEntry
-            if (whitelistEntry != null) {
-                boolean found = false;
-                for (Pattern pattern : whitelistEntry.getPatterns()) {
-                    if (pattern.matcher(url).matches()) {
-                        found = true;
-                        break;
-                    }
+        // alias the current whitelist, in case the whitelist is changed while processing this request
+        Whitelist currentWhitelist = whitelist;
+        if (currentWhitelist.isEnabled()) {
+            boolean found = false;
+            for (Pattern pattern : currentWhitelist.getPatterns()) {
+                if (pattern.matcher(url).matches()) {
+                    found = true;
+                    break;
                 }
-                
-                // url does not match whitelist, set the response code
-                if (!found) {
-                    mockResponseCode = whitelistEntry.getResponseCode();
-                }
+            }
+            
+            // url does not match whitelist, set the response code
+            if (!found) {
+                mockResponseCode = currentWhitelist.getResponseCode();
             }
         }
 
-        if (blacklistEntries != null) {
-            for (BlacklistEntry blacklistEntry : blacklistEntries) {
-                if (blacklistEntry.getPattern().matcher(url).matches()
-					&& blacklistEntry.getMethod().matcher(method.getMethod()).matches()) {
-                    mockResponseCode = blacklistEntry.getResponseCode();
-                    break;
-                }
+        for (BlacklistEntry blacklistEntry : blacklistEntries) {
+            if (blacklistEntry.matches(url, method.getMethod())) {
+                mockResponseCode = blacklistEntry.getResponseCode();
+                break;
             }
         }
 
@@ -735,10 +725,8 @@ public class BrowserMobHttpClient {
 
         BasicHttpContext ctx = new BasicHttpContext();
 
-        ActiveRequest activeRequest = new ActiveRequest(method, ctx, entry.getStartedDateTime());
-        synchronized (activeRequests) {
-            activeRequests.add(activeRequest);
-        }
+        ActiveRequest activeRequest = new ActiveRequest(method, entry.getStartedDateTime());
+        activeRequests.add(activeRequest);
 
         // for dealing with automatic authentication
         if (authType == AuthType.NTLM) {
@@ -854,10 +842,7 @@ public class BrowserMobHttpClient {
             }
         } finally {
             // the request is done, get it out of here
-        	//FIXME: use set backed by ConcurrentHashMap
-            synchronized (activeRequests) {
-                activeRequests.remove(activeRequest);
-            }
+            activeRequests.remove(activeRequest);
 
             if (is != null) {
                 try {
@@ -949,7 +934,7 @@ public class BrowserMobHttpClient {
                             List<NameValuePair> result = new ArrayList<NameValuePair>();
                             URLEncodedUtils.parse(result, new Scanner(content), null);
 
-                            List<HarPostDataParam> params = new ArrayList<HarPostDataParam>();
+                            List<HarPostDataParam> params = new ArrayList<HarPostDataParam>(result.size());
                             data.setParams(params);
 
                             for (NameValuePair pair : result) {
@@ -1130,18 +1115,20 @@ public class BrowserMobHttpClient {
     }
 
     public void abortActiveRequests() {
-        allowNewRequests.set(true);
+        allowNewRequests.set(false);
 
-        synchronized (activeRequests) {
-            for (ActiveRequest activeRequest : activeRequests) {
-                activeRequest.abort();
-            }
-            activeRequests.clear();
+        for (ActiveRequest activeRequest : activeRequests) {
+            activeRequest.abort();
         }
+        
+        activeRequests.clear();
     }
 
     public void setHar(Har har) {
         this.har = har;
+        
+        // eagerly initialize the User Agent String Parser, since it will be needed for the HAR
+        getUserAgentStringParser();
     }
 
     public void setHarPageRef(String harPageRef) {
@@ -1195,8 +1182,11 @@ public class BrowserMobHttpClient {
     	rewriteRules.clear();
     }
 
-    // this method is provided for backwards compatibility before we renamed it to
-    // blacklistRequests (note the plural)
+    /**
+     * this method is provided for backwards compatibility before we renamed it to blacklistRequests (note the plural)
+     * @deprecated use blacklistRequests(String pattern, int responseCode)
+     */
+    @Deprecated
     public void blacklistRequest(String pattern, int responseCode, String method) {
         blacklistRequests(pattern, responseCode, method);
     }
@@ -1205,26 +1195,75 @@ public class BrowserMobHttpClient {
         blacklistEntries.add(new BlacklistEntry(pattern, responseCode, method));
     }
 
+    /**
+     * @deprecated Use getBlacklistedUrls()
+     */
+    @Deprecated
     public List<BlacklistEntry> getBlacklistedRequests() {
-        return blacklistEntries;
+    	List<BlacklistEntry> blacklist = new ArrayList<BlacklistEntry>(blacklistEntries.size());
+    	blacklist.addAll(blacklistEntries);
+    	
+        return blacklist;
+    }
+    
+    public Collection<BlacklistEntry> getBlacklistedUrls() {
+    	return blacklistEntries;
     }
 
     public void clearBlacklist() {
         blacklistEntries.clear();
     }
 
-    public WhitelistEntry getWhitelistRequests() {
-        return whitelistEntry;
+    public boolean isWhitelistEnabled() {
+    	return whitelist.isEnabled();
+    }
+    
+    /**
+     * @deprecated use getWhitelistUrls()
+     * @return <i>unmodifiable</i> list of whitelisted Patterns
+     */
+    @Deprecated
+    public List<Pattern> getWhitelistRequests() {
+    	List<Pattern> whitelistPatterns = new ArrayList<Pattern>(whitelist.getPatterns().size());
+    	whitelistPatterns.addAll(whitelist.getPatterns());
+    	
+        return Collections.unmodifiableList(whitelistPatterns);
+    }
+    
+    /**
+     * Retrieves Patterns of URLs that have been whitelisted.
+     * 
+     * @return <i>unmodifiable</i> whitelisted URL Patterns
+     */
+    public Collection<Pattern> getWhitelistUrls() {
+    	return whitelist.getPatterns();
+    }
+    
+    public int getWhitelistResponseCode() {
+    	return whitelist.getResponseCode();
     }
 
-    public synchronized void whitelistRequests(String[] patterns, int responseCode) {
-        // synchronized to guard against concurrent modification
-        whitelistEntry = new WhitelistEntry(patterns, responseCode);
+    /**
+     * Whitelist the specified request patterns, returning the specified responseCode for non-whitelisted
+     * requests.
+     * 
+     * @param patterns regular expression strings matching URL patterns to whitelist. if empty or null, 
+     * 		  the whitelist will be enabled but will not match any URLs. 
+     * @param responseCode the HTTP response code to return for non-whitelisted requests
+     */
+    public void whitelistRequests(String[] patterns, int responseCode) {
+    	if (patterns == null || patterns.length == 0) {
+    		whitelist = new Whitelist(responseCode);
+    	} else {
+    		whitelist = new Whitelist(patterns, responseCode);
+    	}
     }
-
-    public synchronized void clearWhitelist() {
-        // synchronized to guard against concurrent modification
-        whitelistEntry = null;
+    
+    /**
+     * Clears and disables the current whitelist. 
+     */
+    public void clearWhitelist() {
+    	whitelist = Whitelist.WHITELIST_DISABLED;
     }
     
     public void addHeader(String name, String value) {
@@ -1332,45 +1371,50 @@ public class BrowserMobHttpClient {
     }
 
     class ActiveRequest {
-        HttpRequestBase request;
-        BasicHttpContext ctx;
-        Date start;
+        private final HttpRequestBase request;
+        private final Date start;
+        private final AtomicBoolean aborting = new AtomicBoolean(false);
 
-        ActiveRequest(HttpRequestBase request, BasicHttpContext ctx, Date start) {
+        ActiveRequest(HttpRequestBase request, Date start) {
             this.request = request;
-            this.ctx = ctx;
             this.start = start;
         }
-
-        void checkTimeout() {
+        
+        /**
+         * Checks the timeout for this request, and aborts if necessary.
+         * @return true if the request was aborted for exceeding its timeout, otherwise false.
+         */
+        boolean checkTimeout() {
+        	if (aborting.get()) {
+        		return false;
+        	}
+        	
             if (requestTimeout != -1) {
                 if (request != null && start != null && new Date(System.currentTimeMillis() - requestTimeout).after(start)) {
-                    LOG.info("Aborting request to {} after it failed to complete in {} ms", request.getURI().toString(), requestTimeout);
+                	boolean okayToAbort = aborting.compareAndSet(false, true);
+                	if (okayToAbort) {
+                		LOG.info("Aborting request to {} after it failed to complete in {} ms", request.getURI().toString(), requestTimeout);
 
-                    abort();
+                    	abort();
+                    	
+                    	return true;
+                	}
                 }
             }
+            
+            return false;
         }
 
         public void abort() {
             request.abort();
-
-            // try to close the connection? is this necessary? unclear based on preliminary debugging of HttpClient, but
-            // it doesn't seem to hurt to try
-            HttpConnection conn = (HttpConnection) ctx.getAttribute("http.connection");
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (IOException e) {
-                    // this is fine, we're shutting it down anyway
-                }
-            }
+            
+            // no need to close the connection -- the call to request.abort() releases the connection itself 
         }
     }
 
     private class RewriteRule {
-        private Pattern match;
-        private String replace;
+        private final Pattern match;
+        private final String replace;
 
         private RewriteRule(String match, String replace) {
             this.match = Pattern.compile(match);
@@ -1430,4 +1474,22 @@ public class BrowserMobHttpClient {
 
         return bytesCopied;
     }
+    
+    private static final Object PARSER_INIT_LOCK = new Object();
+    
+    /**
+     * Retrieve the User Agent String Parser. Create the parser if it has not yet been initialized.
+     * @return
+     */
+    public static UserAgentStringParser getUserAgentStringParser() {
+		if (parser == null) {
+			synchronized (PARSER_INIT_LOCK) {
+				if (parser == null) {
+					parser = UADetectorServiceFactory.getCachingAndUpdatingParser();
+				}
+			}
+		}
+		
+		return parser;
+	}
 }

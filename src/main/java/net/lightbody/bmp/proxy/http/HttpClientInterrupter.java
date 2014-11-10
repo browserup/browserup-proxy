@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 public class HttpClientInterrupter {
     private static final Logger LOG = LoggerFactory.getLogger(HttpClientInterrupter.class);
-    private static Set<BrowserMobHttpClient> clients = new CopyOnWriteArraySet<BrowserMobHttpClient>();
+    private static final Set<BrowserMobHttpClient> clients = new CopyOnWriteArraySet<BrowserMobHttpClient>();
 
     static {
         Thread thread = new Thread(new Runnable() {
@@ -26,7 +26,7 @@ public class HttpClientInterrupter {
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
-                        // this is OK
+                        Thread.currentThread().interrupt();
                     }
                 }
             }

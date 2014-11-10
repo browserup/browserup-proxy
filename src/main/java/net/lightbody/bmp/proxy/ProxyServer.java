@@ -4,11 +4,13 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.core.har.HarEntry;
@@ -55,7 +57,7 @@ public class ProxyServer {
     private StreamManager streamManager;
     private HarPage currentPage;
     private BrowserMobProxyHandler handler;
-    private int pageCount = 1;
+    private AtomicInteger pageCount = new AtomicInteger(1);
     private AtomicInteger requestCounter = new AtomicInteger(0);
 
     public ProxyServer() {
@@ -225,7 +227,7 @@ public class ProxyServer {
     }
 
     public Har newHar(String initialPageRef) {
-        pageCount = 1;
+        pageCount.set(1);
 
         Har oldHar = getHar();
 
@@ -238,14 +240,14 @@ public class ProxyServer {
 
     public void newPage(String pageRef) {
         if (pageRef == null) {
-            pageRef = "Page " + pageCount;
+            pageRef = "Page " + pageCount.get();
         }
 
         client.setHarPageRef(pageRef);
         currentPage = new HarPage(pageRef);
         client.getHar().getLog().addPage(currentPage);
 
-        pageCount++;
+        pageCount.incrementAndGet();
     }
 
     public void endPage() {
@@ -333,24 +335,69 @@ public class ProxyServer {
     	client.clearRewriteRules();
     }
 
+    public void blacklistRequests(String pattern, int responseCode) {
+    	client.blacklistRequests(pattern, responseCode, null);
+    }
+    
     public void blacklistRequests(String pattern, int responseCode, String method) {
         client.blacklistRequests(pattern, responseCode, method);
     }
 
+    /**
+     * @deprecated use getBlacklistedUrls()
+     */
+    @Deprecated
     public List<BlacklistEntry> getBlacklistedRequests() {
         return client.getBlacklistedRequests();
     }
-
-    public WhitelistEntry getWhitelistRequests() {
-        return client.getWhitelistRequests();
-    }
     
+    public Collection<BlacklistEntry> getBlacklistedUrls() {
+    	return client.getBlacklistedUrls();
+    }
+
+	public boolean isWhitelistEnabled() {
+		return client.isWhitelistEnabled();
+	}
+
+	/**
+	 * @deprecated use getWhitelistUrls()
+	 */
+	@Deprecated
+	public List<Pattern> getWhitelistRequests() {
+		return client.getWhitelistRequests();
+	}
+	
+	public Collection<Pattern> getWhitelistUrls() {
+		return client.getWhitelistUrls();
+	}
+
+	public int getWhitelistResponseCode() {
+		return client.getWhitelistResponseCode();
+	}
+
     public void clearBlacklist() {
     	client.clearBlacklist();
     }
 
+    /**
+     * Whitelists the specified requests. 
+     * <p>
+     * <b>Note:</b> This method overwrites any existing whitelist.
+     * 
+     * @param patterns regular expression patterns matching URLs to whitelist
+     * @param responseCode response code to return for non-whitelisted URLs
+     */
     public void whitelistRequests(String[] patterns, int responseCode) {
         client.whitelistRequests(patterns, responseCode);
+    }
+    
+    /**
+     * Enables an empty whitelist, which will return the specified responseCode for all requests.
+     * 
+     * @param responseCode HTTP response code to return for all requests
+     */
+    public void enableEmptyWhitelist(int responseCode) {
+    	client.whitelistRequests(new String[0], responseCode);
     }
     
     public void clearWhitelist() {

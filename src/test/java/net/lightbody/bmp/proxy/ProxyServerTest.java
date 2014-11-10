@@ -58,7 +58,7 @@ public abstract class ProxyServerTest {
 
             return new DefaultHttpClient(ccm, params);
         } catch (Exception e) {
-            return new DefaultHttpClient();
+            throw new RuntimeException("Unable to get HTTP client", e);
         }
     }
 

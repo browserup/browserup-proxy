@@ -9,8 +9,11 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import javax.annotation.PreDestroy;
+
 import net.lightbody.bmp.proxy.util.ExpirableMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +25,7 @@ public class ProxyManager {
     private final int minPort; 
     private final int maxPort;
     private final Provider<ProxyServer> proxyServerProvider;
-    private final ConcurrentHashMap<Integer, ProxyServer> proxies;
+    private final ConcurrentMap<Integer, ProxyServer> proxies;
 
     @Inject
     public ProxyManager(Provider<ProxyServer> proxyServerProvider, @Named("minPort") Integer minPort, @Named("maxPort") Integer maxPort, @Named("ttl") Integer ttl) {
