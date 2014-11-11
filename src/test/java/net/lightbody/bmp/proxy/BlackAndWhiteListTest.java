@@ -11,6 +11,7 @@ import java.io.IOException;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assume.assumeThat;
 
 /**
@@ -115,6 +116,35 @@ public class BlackAndWhiteListTest extends DummyServerTest {
         // check that no whitelist is in effect
         assertThat(httpStatusWhenGetting("http://127.0.0.1:8080/a.txt"), is(200));
         assertThat(httpStatusWhenGetting("http://127.0.0.1:8080/c.png"), is(200));
+    }
+    
+    @Test
+    public void testWhitelistCanBeReplaced() throws ClientProtocolException, IOException {
+    	proxy.whitelistRequests(new String[] { ".*\\.txt" }, 404);
+
+        // test that the whitelist is working
+        assertThat(httpStatusWhenGetting("http://127.0.0.1:8080/a.txt"), is(200));
+        assertThat(httpStatusWhenGetting("http://127.0.0.1:8080/c.png"), is(404));
+        
+        proxy.whitelistRequests(new String[] { ".*\\.png" }, 404);
+        
+        // check that the new whitelist is working and the old is gone
+        assertThat(httpStatusWhenGetting("http://127.0.0.1:8080/a.txt"), is(404));
+        assertThat(httpStatusWhenGetting("http://127.0.0.1:8080/c.png"), is(200));
+    }
+    
+    @Test
+    public void testEmptyWhitelist() throws ClientProtocolException, IOException {
+    	assertThat(httpStatusWhenGetting("http://127.0.0.1:8080/a.txt"), is(200));
+    	
+    	proxy.enableEmptyWhitelist(404);
+    	
+    	assertThat(httpStatusWhenGetting("http://127.0.0.1:8080/a.txt"), is(404));
+    }
+    
+    @Test
+    public void testWhitelistIsDisabledByDefault() {
+    	assertFalse("whitelist should be diabled unless explicitly set", proxy.isWhitelistEnabled());
     }
 
     /**
