@@ -250,6 +250,26 @@ If you are running the proxy with Selenium or another application, you can confi
         </exclusions>
     </dependency>
 
+Native DNS Resolution
+---------------------
+
+If you are having name resolution issues with the proxy, you can use native Java name resolution as a fallback to browsermob-proxy's default XBill resolution. To enable native DNS fallback, set the JVM property `bmp.allowNativeDnsFallback` to `true`.
+
+When running from the command line:
+
+    $ JAVA_OPTS="-Dbmp.allowNativeDnsFallback=true" sh browsermob-proxy
+
+or in Windows:
+
+    C:\browsermob-proxy\bin> set JAVA_OPTS="-Dbmp.allowNativeDnsFallback=true"
+    C:\browsermob-proxy\bin> browsermob-proxy.bat
+
+If you are running within a Selenium test, you can set the `bmp.allowNativeDnsFallback` JVM property when you launch your Selenium tests, or programmatically when creating the Proxy:
+
+    System.setProperty("bmp.allowNativeDnsFallback", "true");
+    ProxyServer proxyServer = new ProxyServer(0);
+    proxyServer.start();
+
 Creating the batch files from source
 ------------------------------------
 
