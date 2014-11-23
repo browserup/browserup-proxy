@@ -8,6 +8,9 @@ import java.io.OutputStream;
 import java.io.Writer;
 
 public class Har {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private HarLog log;
 
     public Har() {
@@ -26,17 +29,14 @@ public class Har {
     }
 
     public void writeTo(Writer writer) throws IOException {
-        ObjectMapper om = new ObjectMapper();
-        om.writeValue(writer, this);
+        OBJECT_MAPPER.writeValue(writer, this);
     }
 
     public void writeTo(OutputStream os) throws IOException {
-        ObjectMapper om = new ObjectMapper();
-        om.writeValue(os, this);
+        OBJECT_MAPPER.writeValue(os, this);
     }
 
     public void writeTo(File file) throws IOException {
-        ObjectMapper om = new ObjectMapper();
-        om.writeValue(file, this);
+        OBJECT_MAPPER.writeValue(file, this);
     }
 }
