@@ -6,12 +6,22 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 public class ExpirableMap<K,V> extends ConcurrentHashMap<K,V>{
     public final static int DEFAULT_CHECK_INTERVAL = 10*60;
     public final static int DEFAULT_TTL = 30*60;
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(
+            new ThreadFactory() {
+                @Override
+                public Thread newThread(Runnable r) {
+                    Thread t = new Thread(r);
+                    t.setDaemon(true);
+                    return t;
+                }
+            }
+    );
     private final long ttl;    
     private final Map<K, Long> expires;
     private final OnExpire<V> onExpire;
@@ -48,15 +58,6 @@ public class ExpirableMap<K,V> extends ConcurrentHashMap<K,V>{
         synchronized(this){
             expires.put(key, new Date().getTime()+ttl);
             return super.put(key, value);
-        }        
-    }
-
-    public void stop() {
-        scheduler.shutdown();       
-        try {
-            scheduler.awaitTermination(10, TimeUnit.SECONDS);
-        } catch (InterruptedException ex) {
-            scheduler.shutdownNow();
         }        
     }
             

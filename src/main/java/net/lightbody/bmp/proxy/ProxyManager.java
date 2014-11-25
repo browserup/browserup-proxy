@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import javax.annotation.PreDestroy;
 
 import net.lightbody.bmp.proxy.util.ExpirableMap;
 
@@ -131,10 +130,4 @@ public class ProxyManager {
         proxy.stop();
     }
     
-    @PreDestroy
-    public void stop(){
-        if(proxies instanceof ExpirableMap){                   
-            ((ExpirableMap)proxies).stop();
-        }
-    }
 }
