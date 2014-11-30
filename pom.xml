@@ -39,20 +39,6 @@
         <developerConnection>scm:git:git@github.com:lightbody/browsermob-proxy.git</developerConnection>
         <url>git@github.com:lightbody/browsermob-proxy.git</url>
     </scm>
-    
-    <repositories>
-        <repository>
-            <id>guiceyfruit.release</id>
-            <name>GuiceyFruit Release Repository</name>
-            <url>http://guiceyfruit.googlecode.com/svn/repo/releases/</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-        </repository>
-    </repositories>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -262,12 +248,6 @@
             <groupId>com.google.inject.extensions</groupId>
             <artifactId>guice-servlet</artifactId>
             <version>3.0</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.guiceyfruit</groupId>
-            <artifactId>guiceyfruit-core</artifactId>
-            <version>2.0</version>                       
         </dependency>
 
         <dependency>

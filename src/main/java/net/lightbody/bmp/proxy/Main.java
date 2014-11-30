@@ -23,7 +23,6 @@ import net.lightbody.bmp.proxy.util.StandardFormatter;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.log.Log;
-import org.guiceyfruit.jsr250.Jsr250Module;
 import org.slf4j.LoggerFactory;
 
 public class Main {
@@ -35,7 +34,7 @@ public class Main {
     public static void main(String[] args) {
         configureJdkLogging();
 
-        final Injector injector = Guice.createInjector(new ConfigModule(args), new Jsr250Module(), new JettyModule(), new SitebricksModule() {
+        final Injector injector = Guice.createInjector(new ConfigModule(args), new JettyModule(), new SitebricksModule() {
             @Override
             protected void configureSitebricks() {
                 scan(ProxyResource.class.getPackage());

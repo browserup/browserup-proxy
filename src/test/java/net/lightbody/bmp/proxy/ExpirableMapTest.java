@@ -3,7 +3,6 @@ package net.lightbody.bmp.proxy;
 import java.util.HashSet;
 import java.util.Set;
 import net.lightbody.bmp.proxy.util.ExpirableMap;
-import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -23,11 +22,6 @@ public class ExpirableMapTest {
                 ExpirableMapTest.this.strings.add(s);
             }
         });
-    }
-
-    @After
-    public void tearDown() throws Exception {  
-        m.stop();
     }
     
     @Test
