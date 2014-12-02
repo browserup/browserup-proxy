@@ -5,11 +5,16 @@ import java.util.List;
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.core.har.HarEntry;
 import net.lightbody.bmp.core.har.HarLog;
+import net.lightbody.bmp.core.har.HarNameVersion;
 
 import org.apache.http.client.methods.HttpGet;
-import static org.hamcrest.CoreMatchers.*;
 import org.junit.Assert;
 import org.junit.Test;
+import org.openqa.selenium.Proxy;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.DesiredCapabilities;
 
 public class HarResultsTest extends DummyServerTest {
     @Test
@@ -50,5 +55,40 @@ public class HarResultsTest extends DummyServerTest {
         Assert.assertTrue("Minimum header size not seen", entry.getResponse().getHeadersSize() > 200);
         Assert.assertEquals(13, entry.getResponse().getBodySize());
     }
-
+    
+	@Test
+	public void testHarContainsUserAgent() {
+		ProxyServer server = new ProxyServer(0);
+		server.start();
+		
+		WebDriver driver = null;
+		try {
+			server.setCaptureHeaders(true);
+			server.newHar("testHarContainsUserAgent");
+			
+			Proxy proxy = server.seleniumProxy();
+			DesiredCapabilities capabilities = new DesiredCapabilities();
+			
+			capabilities.setCapability(CapabilityType.PROXY, proxy);
+			
+			driver = new FirefoxDriver(capabilities);
+			
+			driver.get("https://www.google.com");
+			
+			Har har = server.getHar();
+			Assert.assertNotNull("Har is null", har);
+			HarLog log = har.getLog();
+			Assert.assertNotNull("Log is null", log);
+			HarNameVersion harNameVersion = log.getBrowser();
+			Assert.assertNotNull("HarNameVersion is null", harNameVersion);
+			
+			Assert.assertEquals("Expected browser to be Firefox", "Firefox", harNameVersion.getName());
+			Assert.assertNotNull("browser version is null", harNameVersion.getVersion());
+		} finally {
+			server.stop();
+			if (driver != null) {
+				driver.quit();
+			}
+		}
+	}
 }
