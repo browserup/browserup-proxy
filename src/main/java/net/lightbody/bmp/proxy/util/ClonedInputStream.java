@@ -13,24 +13,30 @@ public class ClonedInputStream extends InputStream {
     }
 
     public int read() throws IOException {
-        int resp = is.read();
-        os.write(resp);
+        int byteRead = is.read();
+        if (byteRead > -1) {
+        	os.write(byteRead);
+        }
 
-        return resp;
+        return byteRead;
     }
 
     public int read(byte[] b) throws IOException {
-        int resp = is.read(b);
-        os.write(b);
+        int respLen = is.read(b);
+        if (respLen > 0) {
+        	os.write(b, 0, respLen);
+        }
 
-        return resp;
+        return respLen;
     }
 
     public int read(byte[] b, int off, int len) throws IOException {
-        int resp = is.read(b, off, len);
-        os.write(b, off, len);
+        int respLen = is.read(b, off, len);
+        if (respLen > 0) {
+        	os.write(b, off, respLen);
+        }
 
-        return resp;
+        return respLen;
     }
 
     public long skip(long n) throws IOException {
