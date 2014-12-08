@@ -928,7 +928,7 @@ public class BrowserMobHttpClient {
 
                 if (urlEncoded || URLEncodedUtils.isEncoded(entity)) {
                     try {
-    					String content = new String(req.getCopy().toByteArray(), "UTF-8");
+    					String content = req.getCopy().toString("UTF-8");
 
                         if (content != null && content.length() > 0) {
                             List<NameValuePair> result = new ArrayList<NameValuePair>();
@@ -949,7 +949,13 @@ public class BrowserMobHttpClient {
                     } 
                 } else {
                     // not URL encoded, so let's grab the body of the POST and capture that
-                    data.setText(new String(req.getCopy().toByteArray()));
+					try {
+						String postBody = req.getCopy().toString("UTF-8");
+						data.setText(postBody);
+					} catch (UnsupportedEncodingException e) {
+						// realistically this should never happen, since UTF-8 is always a supported encoding
+                    	LOG.info("Unexpected problem when parsing post body", e);
+					}
                 }
             }
         }
