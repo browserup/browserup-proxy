@@ -9,7 +9,6 @@ import java.util.List;
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import net.sf.uadetector.service.UADetectorServiceFactory;
 
 public class ConfigModule implements Module {
     private String[] args;
@@ -89,6 +88,7 @@ public class ConfigModule implements Module {
         /*
          * Init User Agent String Parser, update of the UAS datastore will run in background.
          */
-        UADetectorServiceFactory.getCachingAndUpdatingParser();
+        // temporarily disabled because user-agent-string.info no longer exists
+        //BrowserMobHttpClient.getUserAgentStringParser();
     }
 }
