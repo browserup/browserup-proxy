@@ -392,7 +392,7 @@ public class MailingListIssuesTest extends DummyServerTest {
     
             // show that we can capture the HTML of the root page
             String text = har.getLog().getEntries().get(0).getResponse().getContent().getText();
-            Assert.assertTrue(text.contains("<title>\r\n\tWhat's My User Agent?\r\n</title>"));
+            Assert.assertTrue(text.contains("My User Agent?"));
         } finally {
             server.stop();
             if (driver != null) {
