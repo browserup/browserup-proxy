@@ -227,7 +227,7 @@ public class ProxyServer {
     }
 
     public Har newHar(String initialPageRef) {
-        pageCount.set(1);
+        pageCount.set(0); // this will be automatically incremented by newPage() below
 
         Har oldHar = getHar();
 
