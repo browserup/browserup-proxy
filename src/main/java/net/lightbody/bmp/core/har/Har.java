@@ -11,7 +11,7 @@ public class Har {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private HarLog log;
+    private volatile HarLog log;
 
     public Har() {
     }

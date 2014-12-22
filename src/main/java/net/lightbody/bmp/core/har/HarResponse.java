@@ -7,16 +7,16 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class HarResponse {
-    private int status;
-    private String statusText;
-    private String httpVersion;
-    private List<HarCookie> cookies = new CopyOnWriteArrayList<HarCookie>();
-    private List<HarNameValuePair> headers = new CopyOnWriteArrayList<HarNameValuePair>();
-    private HarContent content = new HarContent();
-    private String redirectURL = "";
-    private long headersSize;
-    private long bodySize;
-    private String comment = "";
+    private volatile int status;
+    private volatile String statusText;
+    private volatile String httpVersion;
+    private final List<HarCookie> cookies = new CopyOnWriteArrayList<HarCookie>();
+    private final List<HarNameValuePair> headers = new CopyOnWriteArrayList<HarNameValuePair>();
+    private final HarContent content = new HarContent();
+    private volatile String redirectURL = "";
+    private volatile long headersSize;
+    private volatile long bodySize;
+    private volatile String comment = "";
 
     public HarResponse() {
     }
@@ -55,24 +55,12 @@ public class HarResponse {
         return cookies;
     }
 
-    public void setCookies(List<HarCookie> cookies) {
-        this.cookies = cookies;
-    }
-
     public List<HarNameValuePair> getHeaders() {
         return headers;
     }
 
-    public void setHeaders(List<HarNameValuePair> headers) {
-        this.headers = headers;
-    }
-
     public HarContent getContent() {
         return content;
-    }
-
-    public void setContent(HarContent content) {
-        this.content = content;
     }
 
     public String getRedirectURL() {

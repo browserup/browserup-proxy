@@ -8,11 +8,11 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class HarPage {
-    private String id;
-    private Date startedDateTime;
-    private String title = "";
-    private HarPageTimings pageTimings = new HarPageTimings();
-    private String comment = "";
+    private volatile String id;
+    private volatile Date startedDateTime;
+    private volatile String title = "";
+    private final HarPageTimings pageTimings = new HarPageTimings();
+    private volatile String comment = "";
 
     public HarPage() {
     }
@@ -49,10 +49,6 @@ public class HarPage {
 
     public HarPageTimings getPageTimings() {
         return pageTimings;
-    }
-
-    public void setPageTimings(HarPageTimings pageTimings) {
-        this.pageTimings = pageTimings;
     }
 
     public String getComment() {

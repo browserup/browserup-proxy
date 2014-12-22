@@ -1,14 +1,14 @@
 package net.lightbody.bmp.core.har;
 
-import org.codehaus.jackson.annotate.JsonWriteNullProperties;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-@JsonWriteNullProperties(value=false)
+@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class HarPostDataParam {
-    private String name;
-    private String value;
-    private String fileName;
-    private String contentType;
-    private String comment = "";
+    private volatile String name;
+    private volatile String value;
+    private volatile String fileName;
+    private volatile String contentType;
+    private volatile String comment = "";
 
     public HarPostDataParam() {
     }

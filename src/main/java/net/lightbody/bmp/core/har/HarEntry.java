@@ -10,15 +10,15 @@ import java.util.Date;
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 @JsonAutoDetect
 public class HarEntry {
-    private String pageref;
-    private Date startedDateTime;
-    private HarRequest request;
-    private HarResponse response;
-    private HarCache cache = new HarCache();
-    private HarTimings timings = new HarTimings();
-    private String serverIPAddress;
-    private String connection;
-    private String comment = "";
+    private volatile String pageref;
+    private volatile Date startedDateTime;
+    private volatile HarRequest request;
+    private volatile HarResponse response;
+    private volatile HarCache cache = new HarCache();
+    private volatile HarTimings timings = new HarTimings();
+    private volatile String serverIPAddress;
+    private volatile String connection;
+    private volatile String comment = "";
 
     public HarEntry() {
     }
