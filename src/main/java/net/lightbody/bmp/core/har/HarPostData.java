@@ -1,6 +1,5 @@
 package net.lightbody.bmp.core.har;
 
-import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.util.List;

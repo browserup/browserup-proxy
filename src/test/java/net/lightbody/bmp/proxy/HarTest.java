@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.zip.GZIPInputStream;
 
 public class HarTest extends DummyServerTest {
@@ -359,12 +360,19 @@ public class HarTest extends DummyServerTest {
 	@Test
 	public void testSendTimingPopulated() throws IOException {
 		proxy.setCaptureContent(true);
-		proxy.newHar("Test");
+		proxy.newHar("testSendTimingPopulated");
 
-		HttpPost post = new HttpPost("http://127.0.0.1:8080/echo/");
-		StringBuilder lengthyPost = new StringBuilder(1500000);
-		for (int i = 0; i < 1500000; i++) {
-			lengthyPost.append('q');
+		// using this POST dumping ground so that we get a "reasonable" send time. using the server at localhost
+		// may not actually take more than 1ms. that would cause the send time to be 0ms, which would be indistinguishable
+		// for testing purposes from a failed-to--populate-send-time error condition.
+		// thanks to Henry Cipolla for creating this POST testing website!
+		HttpPost post = new HttpPost("http://posttestserver.com/");
+
+		// fill the POST data with some random ascii text
+		Random random = new Random();
+		StringBuilder lengthyPost = new StringBuilder(30000);
+		for (int i = 0; i < 30000; i++) {
+			lengthyPost.append((char)(random.nextInt(94) + 32));
 		}
 
 		HttpEntity entity = new StringEntity(lengthyPost.toString());
