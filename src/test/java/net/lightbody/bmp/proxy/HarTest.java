@@ -93,7 +93,7 @@ public class HarTest extends DummyServerTest {
 			
 			driver = new FirefoxDriver(capabilities);
 			
-			driver.get("https://www.google.com");
+			driver.get("http://www.msn.com");
 			
 			Har har = server.getHar();
 			Assert.assertNotNull("Har is null", har);
@@ -256,14 +256,24 @@ public class HarTest extends DummyServerTest {
 		Assert.assertNotNull("No entry found", entry);
 		HarRequest req = entry.getRequest();
 		Assert.assertNotNull("No request found", req);
-		HarNameValuePair queryStringParam = req.getQueryString().get(1);
-		Assert.assertNotNull("No request query string param found", queryStringParam);
-		Assert.assertEquals("foo", queryStringParam.getName());
-		Assert.assertEquals("bar", queryStringParam.getValue());
-		queryStringParam = req.getQueryString().get(0);
-		Assert.assertNotNull("No request query string param found", queryStringParam);
-		Assert.assertEquals("a", queryStringParam.getName());
-		Assert.assertEquals("1&2", queryStringParam.getValue());
+		// the HAR spec is not clear on what order the parameters should show up in. intuitively, since getQueryString()
+		// returns a List, the order should match the query string itself, but this is not technically required.
+		boolean sawFoo = false;
+		boolean sawA = false;
+		for (HarNameValuePair queryStringParam : req.getQueryString()) {
+			if (queryStringParam.getName().equals("foo")) {
+				Assert.assertEquals("expected 'foo' query param's value to be 'bar'", "bar", queryStringParam.getValue());
+				sawFoo = true;
+			} else if (queryStringParam.getName().equals("a")) {
+				Assert.assertEquals("expected 'a' query param's value to be '1&2'", "1&2", queryStringParam.getValue());
+				sawA = true;
+			} else {
+				Assert.fail("Unexpected query param: " + queryStringParam.getName() + ", value: " + queryStringParam.getValue());
+			}
+		}
+
+		Assert.assertTrue("did not find query param 'foo'", sawFoo);
+		Assert.assertTrue("did not find query param 'a'", sawA);
 	}
 
 	@Test
@@ -317,7 +327,7 @@ public class HarTest extends DummyServerTest {
 
 			driver = new FirefoxDriver(capabilities);
 
-			driver.get("https://www.google.com");
+			driver.get("http://www.msn.com");
 
 			Har har = server.getHar();
 			Assert.assertNotNull("Har is null", har);
