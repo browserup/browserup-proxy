@@ -12,11 +12,10 @@ import java.util.Date;
 public class HarEntry {
     private String pageref;
     private Date startedDateTime;
-    private long time;
     private HarRequest request;
     private HarResponse response;
     private HarCache cache = new HarCache();
-    private HarTimings timings;
+    private HarTimings timings = new HarTimings();
     private String serverIPAddress;
     private String connection;
     private String comment = "";
@@ -46,12 +45,51 @@ public class HarEntry {
         this.startedDateTime = startedDateTime;
     }
 
-    public long getTime() {
-        return time;
-    }
+    /**
+     * Rather than storing the time directly, calculate the time from the HarTimings as required in the HAR spec.
+     * From <a href="https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/HAR/Overview.html">https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/HAR/Overview.html</a>,
+     * section <code>4.2.16 timings</code>:
+     <pre>
+     Following must be true in case there are no -1 values (entry is an object in log.entries) :
 
-    public void setTime(long time) {
-        this.time = time;
+     entry.time == entry.timings.blocked + entry.timings.dns +
+     entry.timings.connect + entry.timings.send + entry.timings.wait +
+     entry.timings.receive;
+     </pre>
+     * @return
+     */
+    public long getTime() {
+        HarTimings timings = getTimings();
+        if (timings != null) {
+            int time = 0;
+            if (timings.getBlocked() != null && timings.getBlocked() > 0) {
+                time += timings.getBlocked();
+            }
+
+            if (timings.getDns() != null && timings.getDns() > 0) {
+                time += timings.getDns();
+            }
+
+            if (timings.getConnect() != null && timings.getConnect() > 0) {
+                time += timings.getConnect();
+            }
+
+            if (timings.getSend() > 0) {
+                time += timings.getSend();
+            }
+
+            if (timings.getWait() > 0) {
+                time += timings.getWait();
+            }
+
+            if (timings.getReceive() > 0) {
+                time += timings.getReceive();
+            }
+
+            return time;
+        }
+
+        return -1;
     }
 
     public HarRequest getRequest() {

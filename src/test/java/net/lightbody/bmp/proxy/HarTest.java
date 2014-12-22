@@ -448,7 +448,7 @@ public class HarTest extends DummyServerTest {
 		Assert.assertFalse("Entries are empty", entries.isEmpty());
 
 		HarEntry entry = log.getEntries().get(0);
-		Assert.assertNotEquals("entry time should be greater than 0", entry.getTime(), 0L);
+		Assert.assertNotEquals("entry time should be greater than 0 but was " + entry.getTime(), entry.getTime(), 0L);
 		Assert.assertNotNull("entry startedDateTime is null", entry.getStartedDateTime());
 
 		Assert.assertEquals("entry pageref is incorrect", "testEntryTimePopulated", entry.getPageref());

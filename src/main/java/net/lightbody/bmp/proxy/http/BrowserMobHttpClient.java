@@ -555,7 +555,6 @@ public class BrowserMobHttpClient {
     private BadURIException reportBadURI(String url, String method, URISyntaxException cause) {
         if (this.har != null && harPageRef != null) {
             HarEntry entry = new HarEntry(harPageRef);
-            entry.setTime(0);
             entry.setRequest(new HarRequest(method, url, "HTTP/1.1"));
             entry.setResponse(new HarResponse(-998, "Bad URI", "HTTP/1.1"));
             entry.setTimings(new HarTimings());
@@ -869,7 +868,6 @@ public class BrowserMobHttpClient {
         entry.setStartedDateTime(RequestInfo.get().getStart());
         entry.setTimings(RequestInfo.get().getTimings());
         entry.setServerIPAddress(RequestInfo.get().getResolvedAddress());
-        entry.setTime(RequestInfo.get().getTotalTime());
 
         // todo: where you store this in HAR?
         // obj.setErrorMessage(errorMessage);
