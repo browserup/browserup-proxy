@@ -53,7 +53,7 @@ public class ProxyResource {
     }
 
     @Get
-    public Reply<?> getProxies(Request request) {
+    public Reply<?> getProxies() {
         Collection<ProxyDescriptor> proxyList = new ArrayList<ProxyDescriptor> ();
         for (ProxyServer proxy : proxyManager.get()) {
             proxyList.add(new ProxyDescriptor(proxy.getPort()));
@@ -62,7 +62,7 @@ public class ProxyResource {
     }
             
     @Post
-    public Reply<?> newProxy(Request request) {
+    public Reply<?> newProxy(Request<String> request) {
         String systemProxyHost = System.getProperty("http.proxyHost");
         String systemProxyPort = System.getProperty("http.proxyPort");
         String httpProxy = request.param("httpProxy");
@@ -109,7 +109,7 @@ public class ProxyResource {
 
     @Put
     @At("/:port/har")
-    public Reply<?> newHar(@Named("port") int port, Request request) {
+    public Reply<?> newHar(@Named("port") int port, Request<String> request) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -134,7 +134,7 @@ public class ProxyResource {
 
     @Put
     @At("/:port/har/pageRef")
-    public Reply<?> setPage(@Named("port") int port, Request request) {
+    public Reply<?> setPage(@Named("port") int port, Request<String> request) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -148,7 +148,7 @@ public class ProxyResource {
 
     @Get
     @At("/:port/blacklist")
-    public Reply<?> getBlacklist(@Named("port") int port, Request request) {
+    public Reply<?> getBlacklist(@Named("port") int port, Request<String> request) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -159,7 +159,7 @@ public class ProxyResource {
 
     @Put
     @At("/:port/blacklist")
-    public Reply<?> blacklist(@Named("port") int port, Request request) {
+    public Reply<?> blacklist(@Named("port") int port, Request<String> request) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -175,7 +175,7 @@ public class ProxyResource {
     
     @Delete
     @At("/:port/blacklist")
-    public Reply<?> clearBlacklist(@Named("port") int port, Request request) {
+    public Reply<?> clearBlacklist(@Named("port") int port, Request<String> request) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -187,7 +187,7 @@ public class ProxyResource {
 
     @Get
     @At("/:port/whitelist")
-    public Reply<?> getWhitelist(@Named("port") int port, Request request) {
+    public Reply<?> getWhitelist(@Named("port") int port, Request<String> request) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -198,7 +198,7 @@ public class ProxyResource {
 
     @Put
     @At("/:port/whitelist")
-    public Reply<?> whitelist(@Named("port") int port, Request request) {
+    public Reply<?> whitelist(@Named("port") int port, Request<String> request) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -213,7 +213,7 @@ public class ProxyResource {
     
     @Delete
     @At("/:port/whitelist")
-    public Reply<?> clearWhitelist(@Named("port") int port, Request request) {
+    public Reply<?> clearWhitelist(@Named("port") int port, Request<String> request) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -225,7 +225,7 @@ public class ProxyResource {
 
     @Post
     @At("/:port/auth/basic/:domain")
-    public Reply<?> autoBasicAuth(@Named("port") int port, @Named("domain") String domain, Request request) {
+    public Reply<?> autoBasicAuth(@Named("port") int port, @Named("domain") String domain, Request<String> request) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -239,7 +239,7 @@ public class ProxyResource {
 
     @Post
     @At("/:port/headers")
-    public Reply<?> updateHeaders(@Named("port") int port, Request request) {
+    public Reply<?> updateHeaders(@Named("port") int port, Request<String> request) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -256,7 +256,7 @@ public class ProxyResource {
 
     @Post
     @At("/:port/interceptor/response")
-    public Reply<?> addResponseInterceptor(@Named("port") int port, Request request) throws IOException, ScriptException {
+    public Reply<?> addResponseInterceptor(@Named("port") int port, Request<String> request) throws IOException, ScriptException {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -292,7 +292,7 @@ public class ProxyResource {
 
     @Post
     @At("/:port/interceptor/request")
-    public Reply<?> addRequestInterceptor(@Named("port") int port, Request request) throws IOException, ScriptException {
+    public Reply<?> addRequestInterceptor(@Named("port") int port, Request<String> request) throws IOException, ScriptException {
         ProxyServer proxy = proxyManager.get(port);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -323,7 +323,7 @@ public class ProxyResource {
 
     @Put
     @At("/:port/limit")
-    public Reply<?> limit(@Named("port") int port, Request request) {
+    public Reply<?> limit(@Named("port") int port, Request<String> request) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -390,7 +390,7 @@ public class ProxyResource {
     
     @Get
     @At("/:port/limit")
-    public Reply<?> getLimits(@Named("port") int port, Request request) {
+    public Reply<?> getLimits(@Named("port") int port, Request<String> request) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -400,7 +400,7 @@ public class ProxyResource {
     
     @Put
     @At("/:port/timeout")
-    public Reply<?> timeout(@Named("port") int port, Request request) {
+    public Reply<?> timeout(@Named("port") int port, Request<String> request) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -447,7 +447,7 @@ public class ProxyResource {
 
     @Post
     @At("/:port/hosts")
-    public Reply<?> remapHosts(@Named("port") int port, Request request) {
+    public Reply<?> remapHosts(@Named("port") int port, Request<String> request) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -469,7 +469,7 @@ public class ProxyResource {
 
     @Put
     @At("/:port/wait")
-    public Reply<?> wait(@Named("port") int port, Request request) {
+    public Reply<?> wait(@Named("port") int port, Request<String> request) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -495,7 +495,7 @@ public class ProxyResource {
 
     @Put
     @At("/:port/rewrite")
-    public Reply<?> rewriteUrl(@Named("port") int port, Request request) {
+    public Reply<?> rewriteUrl(@Named("port") int port, Request<String> request) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -509,7 +509,7 @@ public class ProxyResource {
     
     @Delete
     @At("/:port/rewrite")
-    public Reply<?> clearRewriteRules(@Named("port") int port, Request request) {
+    public Reply<?> clearRewriteRules(@Named("port") int port, Request<String> request) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -521,7 +521,7 @@ public class ProxyResource {
     
     @Put
     @At("/:port/retry")
-    public Reply<?> retryCount(@Named("port") int port, Request request) {
+    public Reply<?> retryCount(@Named("port") int port, Request<String> request) {
         ProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();

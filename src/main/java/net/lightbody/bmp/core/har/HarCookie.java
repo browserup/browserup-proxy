@@ -2,10 +2,8 @@ package net.lightbody.bmp.core.har;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.lightbody.bmp.core.json.ISO8601WithTDZDateFormatter;
-
-import org.codehaus.jackson.annotate.JsonWriteNullProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class HarCookie {

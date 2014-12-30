@@ -1,7 +1,7 @@
 package net.lightbody.bmp.core.har;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.lightbody.bmp.core.json.ISO8601DateFormatter;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.util.Date;
 
