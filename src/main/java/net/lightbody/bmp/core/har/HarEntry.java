@@ -25,7 +25,6 @@ public class HarEntry {
 
     public HarEntry(String pageref) {
         this.pageref = pageref;
-        this.startedDateTime = new Date();
     }
 
     public String getPageref() {

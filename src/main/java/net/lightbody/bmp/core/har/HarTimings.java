@@ -13,15 +13,6 @@ public class HarTimings {
     public HarTimings() {
     }
 
-    public HarTimings(long blocked, long dns, long connect, long send, long wait, long receive) {
-        this.blocked = blocked;
-        this.dns = dns;
-        this.connect = connect;
-        this.send = send;
-        this.wait = wait;
-        this.receive = receive;
-    }
-
     public Long getBlocked() {
         return blocked;
     }

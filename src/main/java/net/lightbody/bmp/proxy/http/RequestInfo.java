@@ -231,7 +231,15 @@ public class RequestInfo {
             connect = this.connect;
         }
 
-        return new HarTimings(blocked, dns, connect, send, wait, receive);
+        HarTimings harTimings = new HarTimings();
+        harTimings.setBlocked(blocked);
+        harTimings.setDns(dns);
+        harTimings.setConnect(connect);
+        harTimings.setSend(send);
+        harTimings.setWait(wait);
+        harTimings.setReceive(receive);
+
+        return harTimings;
     }
 
     public HarEntry getEntry() {
