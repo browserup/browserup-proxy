@@ -1,8 +1,8 @@
 package net.lightbody.bmp.core.har;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class HarContent {
     private volatile long size;
     private volatile Long compression;
