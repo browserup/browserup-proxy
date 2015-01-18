@@ -1,15 +1,15 @@
 package net.lightbody.bmp.core.har;
 
-import org.codehaus.jackson.annotate.JsonWriteNullProperties;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.util.List;
 
-@JsonWriteNullProperties(value=false)
+@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class HarPostData {
-    private String mimeType;
-    private List<HarPostDataParam> params;
-    private String text;
-    private String comment = "";
+    private volatile String mimeType;
+    private volatile List<HarPostDataParam> params;
+    private volatile String text;
+    private volatile String comment = "";
 
     public String getMimeType() {
         return mimeType;

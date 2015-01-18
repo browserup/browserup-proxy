@@ -7,16 +7,16 @@ import net.lightbody.bmp.core.json.ISO8601WithTDZDateFormatter;
 import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-@JsonWriteNullProperties(value=false)
+@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class HarCookie {
-    private String name;
-    private String value;
-    private String path;
-    private String domain;
-    private Date expires;
-    private Boolean httpOnly;
-    private Boolean secure;
-    private String comment = "";
+    private volatile String name;
+    private volatile String value;
+    private volatile String path;
+    private volatile String domain;
+    private volatile Date expires;
+    private volatile Boolean httpOnly;
+    private volatile Boolean secure;
+    private volatile String comment = "";
 
     public String getName() {
         return name;

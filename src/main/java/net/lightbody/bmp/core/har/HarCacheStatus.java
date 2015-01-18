@@ -1,18 +1,17 @@
 package net.lightbody.bmp.core.har;
 
 import net.lightbody.bmp.core.json.ISO8601DateFormatter;
-import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.util.Date;
 
-@JsonWriteNullProperties(value=false)
+@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class HarCacheStatus {
-    private Date expires;
-    private Date lastAccess;
-    private String eTag;
-    private int hitCount;
-    private String comment = "";
+    private volatile Date expires;
+    private volatile Date lastAccess;
+    private volatile String eTag;
+    private volatile int hitCount;
+    private volatile String comment = "";
 
     @JsonSerialize(using = ISO8601DateFormatter.class)
     public Date getExpires() {

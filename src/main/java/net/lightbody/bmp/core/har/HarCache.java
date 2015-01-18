@@ -4,8 +4,8 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class HarCache {
-    private HarCacheStatus beforeRequest;
-    private HarCacheStatus afterRequest;
+    private volatile HarCacheStatus beforeRequest;
+    private volatile HarCacheStatus afterRequest;
 
     public HarCacheStatus getBeforeRequest() {
         return beforeRequest;

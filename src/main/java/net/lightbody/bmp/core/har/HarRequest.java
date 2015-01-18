@@ -7,16 +7,16 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class HarRequest {
-    private String method;
-    private String url;
-    private String httpVersion;
-    private List<HarCookie> cookies = new CopyOnWriteArrayList<HarCookie>();
-    private List<HarNameValuePair> headers = new CopyOnWriteArrayList<HarNameValuePair>();
-    private List<HarNameValuePair> queryString = new CopyOnWriteArrayList<HarNameValuePair>();
-    private HarPostData postData;
-    private long headersSize; // Odd grammar in spec
-    private long bodySize;
-    private String comment = "";
+    private volatile String method;
+    private volatile String url;
+    private volatile String httpVersion;
+    private final List<HarCookie> cookies = new CopyOnWriteArrayList<HarCookie>();
+    private final List<HarNameValuePair> headers = new CopyOnWriteArrayList<HarNameValuePair>();
+    private final List<HarNameValuePair> queryString = new CopyOnWriteArrayList<HarNameValuePair>();
+    private volatile HarPostData postData;
+    private volatile long headersSize; // Odd grammar in spec
+    private volatile long bodySize;
+    private volatile String comment = "";
 
     public HarRequest() {
     }
@@ -55,24 +55,12 @@ public class HarRequest {
         return cookies;
     }
 
-    public void setCookies(List<HarCookie> cookies) {
-        this.cookies = cookies;
-    }
-
     public List<HarNameValuePair> getHeaders() {
         return headers;
     }
 
-    public void setHeaders(List<HarNameValuePair> headers) {
-        this.headers = headers;
-    }
-
     public List<HarNameValuePair> getQueryString() {
         return queryString;
-    }
-
-    public void setQueryString(List<HarNameValuePair> queryString) {
-        this.queryString = queryString;
     }
 
     public HarPostData getPostData() {

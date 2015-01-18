@@ -1,11 +1,8 @@
 package net.lightbody.bmp.core.har;
 
 public final class HarNameValuePair {
-    private String name;
-    private String value;
-
-    public HarNameValuePair() {
-    }
+    private final String name;
+    private final String value;
 
     public HarNameValuePair(String name, String value) {
         this.name = name;
@@ -16,30 +13,31 @@ public final class HarNameValuePair {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getValue() {
         return value;
     }
 
-    public void setValue(String value) {
-        this.value = value;
-    }
-
-    // TODO: Perhaps these should be done the right way
-    public boolean equals(Object o) {
-        HarNameValuePair obj = (HarNameValuePair)o;
-        return obj.getName().equals(this.getName()) && obj.getValue().equals(this.getValue());
-
-    }
-
-    public int hashCode() {
-        return toString().hashCode();
-    }
-
     public String toString() {
         return name + "=" + value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        HarNameValuePair that = (HarNameValuePair) o;
+
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        if (value != null ? !value.equals(that.value) : that.value != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (value != null ? value.hashCode() : 0);
+        return result;
     }
 }

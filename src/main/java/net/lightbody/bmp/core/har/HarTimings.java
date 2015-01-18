@@ -1,25 +1,16 @@
 package net.lightbody.bmp.core.har;
 
 public class HarTimings {
-    private long blocked;
-    private long dns;
-    private long connect;
-    private long send;
-    private long wait;
-    private long receive;
-    private long ssl;
-    private String comment = "";
+    private volatile long blocked;
+    private volatile long dns;
+    private volatile long connect;
+    private volatile long send;
+    private volatile long wait;
+    private volatile long receive;
+    private volatile long ssl;
+    private volatile String comment = "";
 
     public HarTimings() {
-    }
-
-    public HarTimings(long blocked, long dns, long connect, long send, long wait, long receive) {
-        this.blocked = blocked;
-        this.dns = dns;
-        this.connect = connect;
-        this.send = send;
-        this.wait = wait;
-        this.receive = receive;
     }
 
     public Long getBlocked() {

@@ -1,12 +1,12 @@
 package net.lightbody.bmp.core.har;
 
-import org.codehaus.jackson.annotate.JsonWriteNullProperties;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-@JsonWriteNullProperties(value=false)
+@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class HarPageTimings {
-    private Long onContentLoad;
-    private Long onLoad;
-    private String comment = "";
+    private volatile Long onContentLoad;
+    private volatile Long onLoad;
+    private volatile String comment = "";
 
     public HarPageTimings() {
     }

@@ -555,10 +555,9 @@ public class BrowserMobHttpClient {
     private BadURIException reportBadURI(String url, String method, URISyntaxException cause) {
         if (this.har != null && harPageRef != null) {
             HarEntry entry = new HarEntry(harPageRef);
-            entry.setTime(0);
+            entry.setStartedDateTime(new Date());
             entry.setRequest(new HarRequest(method, url, "HTTP/1.1"));
             entry.setResponse(new HarResponse(-998, "Bad URI", "HTTP/1.1"));
-            entry.setTimings(new HarTimings());
             har.getLog().addEntry(entry);
         }
 
@@ -699,6 +698,7 @@ public class BrowserMobHttpClient {
         // link the object up now, before we make the request, so that if we get cut off (ie: favicon.ico request and browser shuts down)
         // we still have the attempt associated, even if we never got a response
         HarEntry entry = new HarEntry(harPageRef);
+        entry.setStartedDateTime(new Date());
 
         // clear out any connection-related information so that it's not stale from previous use of this thread.
         RequestInfo.clear(url, entry);
@@ -869,7 +869,6 @@ public class BrowserMobHttpClient {
         entry.setStartedDateTime(RequestInfo.get().getStart());
         entry.setTimings(RequestInfo.get().getTimings());
         entry.setServerIPAddress(RequestInfo.get().getResolvedAddress());
-        entry.setTime(RequestInfo.get().getTotalTime());
 
         // todo: where you store this in HAR?
         // obj.setErrorMessage(errorMessage);

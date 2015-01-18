@@ -4,12 +4,12 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class HarContent {
-    private long size;
-    private Long compression;
-    private String mimeType = "";
-    private String text;
-    private String encoding;
-    private String comment = "";
+    private volatile long size;
+    private volatile Long compression;
+    private volatile String mimeType = "";
+    private volatile String text;
+    private volatile String encoding;
+    private volatile String comment = "";
 
     public long getSize() {
         return size;
