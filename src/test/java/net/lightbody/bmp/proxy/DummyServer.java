@@ -27,6 +27,7 @@ public class DummyServer {
         addServlet("/jsonrpc/", JsonServlet.class);
         addServlet("/cookie/", SetCookieServlet.class);
         addServlet("/echo/", EchoServlet.class);
+        addServlet("/echopayload", EchoPayloadServlet.class);
 
         HttpContext context = new HttpContext();
         context.setContextPath("/");

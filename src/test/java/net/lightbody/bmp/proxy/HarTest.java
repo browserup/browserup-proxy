@@ -361,9 +361,9 @@ public class HarTest extends DummyServerTest {
 	}
 
 	@Test
-	public void testSendTimingPopulated() throws IOException {
+	public void testChunkedRequestSizeAndSendTimingPopulated() throws IOException {
 		proxy.setCaptureContent(true);
-		proxy.newHar("testSendTimingPopulated");
+		proxy.newHar("testChunkedRequestSizeAndSendTimingPopulated");
 
 		// using this POST dumping ground so that we get a "reasonable" send time. using the server at localhost
 		// may not actually take more than 1ms. that would cause the send time to be 0ms, which would be indistinguishable
@@ -372,13 +372,9 @@ public class HarTest extends DummyServerTest {
 		HttpPost post = new HttpPost("http://posttestserver.com/");
 
 		// fill the POST data with some random ascii text
-		Random random = new Random();
-		StringBuilder lengthyPost = new StringBuilder(30000);
-		for (int i = 0; i < 30000; i++) {
-			lengthyPost.append((char)(random.nextInt(94) + 32));
-		}
+		String lengthyPost = createRandomString(30000);
 
-		HttpEntity entity = new StringEntity(lengthyPost.toString());
+		HttpEntity entity = new StringEntity(lengthyPost);
 		post.setEntity(entity);
 		post.addHeader("Content-Type", "text/unknown; charset=UTF-8");
 
@@ -402,8 +398,9 @@ public class HarTest extends DummyServerTest {
 		HarPostData postdata = request.getPostData();
 		Assert.assertNotNull("PostData is null", postdata);
 
-		Assert.assertNotNull("No har timings", timings);
+		Assert.assertEquals("Expected body size to match POST length", lengthyPost.length(), request.getBodySize());
 
+		Assert.assertNotNull("No har timings", timings);
 		Assert.assertNotEquals("send timing should be greater than 0", 0L, timings.getSend());
 	}
 
@@ -532,5 +529,66 @@ public class HarTest extends DummyServerTest {
 
 		//TODO: this does not currently work when resolving 127.0.0.1
 		Assert.assertEquals("entry ip address is not correct", "127.0.0.1", entry.getServerIPAddress());
+	}
+
+	@Test
+	public void testNonChunkedRequestPayloadSizesAreSet() throws Exception {
+		proxy.setCaptureContent(true);
+		proxy.newHar("test");
+
+		HttpPost post = new HttpPost("http://127.0.0.1:8080/jsonrpc/");
+		String jsonRpcString = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"test\",\"params\":{}}";
+		HttpEntity entity = new StringEntity(jsonRpcString);
+		post.setEntity(entity);
+		post.addHeader("Accept", "application/json-rpc");
+		post.addHeader("Content-Type", "application/json; charset=UTF-8");
+
+		String body = IOUtils.readFully(client.execute(post).getEntity().getContent());
+
+		Har har = proxy.getHar();
+		HarLog log = har.getLog();
+		List<HarEntry> entries = log.getEntries();
+		HarEntry entry = entries.get(0);
+
+        /*
+        Request headers should be something like this:
+
+        Host: 127.0.0.1:8080
+        User-Agent: bmp.lightbody.net/2.0-beta-10-SNAPSHOT
+         */
+		Assert.assertTrue("Minimum header size not seen", entry.getRequest().getHeadersSize() > 70);
+		Assert.assertEquals("Body size does not match POST data size", jsonRpcString.length(), entry.getRequest().getBodySize());
+	}
+
+	@Test
+	public void testChunkedResponseBodySizeSet() throws Exception {
+		proxy.setCaptureContent(true);
+		proxy.newHar("test");
+
+		HttpPost post = new HttpPost("http://127.0.0.1:8080/echopayload/");
+		String lengthyPost = createRandomString(100000);
+
+		HttpEntity entity = new StringEntity(lengthyPost);
+		post.setEntity(entity);
+		post.addHeader("Content-Type", "text/unknown; charset=UTF-8");
+
+		String body = IOUtils.readFully(client.execute(post).getEntity().getContent());
+
+		Har har = proxy.getHar();
+		HarLog log = har.getLog();
+		List<HarEntry> entries = log.getEntries();
+		HarEntry entry = entries.get(0);
+
+		Assert.assertEquals("Expected response size to equal the size of the echoed POST request", lengthyPost.length(), entry.getResponse().getBodySize());
+	}
+
+	private String createRandomString(int length) {
+		Random random = new Random();
+		StringBuilder lengthyPost = new StringBuilder(length);
+		for (int i = 0; i < length; i++) {
+			lengthyPost.append((char)(random.nextInt(94) + 32));
+		}
+
+		return lengthyPost.toString();
 	}
 }
