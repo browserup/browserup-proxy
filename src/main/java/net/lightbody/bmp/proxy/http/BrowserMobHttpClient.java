@@ -1491,7 +1491,9 @@ public class BrowserMobHttpClient {
 		if (parser == null) {
 			synchronized (PARSER_INIT_LOCK) {
 				if (parser == null) {
-					parser = UADetectorServiceFactory.getCachingAndUpdatingParser();
+                    // using resourceModuleParser for now because user-agent-string.info no longer exists. the updating
+                    // parser will get incorrect data and wipe out its entire user agent repository.
+					parser = UADetectorServiceFactory.getResourceModuleParser();
 				}
 			}
 		}
