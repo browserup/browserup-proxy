@@ -1,10 +1,10 @@
 package net.lightbody.bmp.core.har;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.List;
 
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class HarPostData {
     private volatile String mimeType;
     private volatile List<HarPostDataParam> params;

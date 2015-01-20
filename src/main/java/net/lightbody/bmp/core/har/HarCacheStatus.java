@@ -1,11 +1,12 @@
 package net.lightbody.bmp.core.har;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.lightbody.bmp.core.json.ISO8601DateFormatter;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.util.Date;
 
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class HarCacheStatus {
     private volatile Date expires;
     private volatile Date lastAccess;
