@@ -21,6 +21,7 @@ import net.lightbody.bmp.proxy.jetty.util.LifeCycleEvent;
 import net.lightbody.bmp.proxy.jetty.util.LifeCycleListener;
 import net.lightbody.bmp.proxy.jetty.util.LogSupport;
 import net.lightbody.bmp.proxy.jetty.util.jmx.LifeCycleMBean;
+import net.lightbody.bmp.proxy.jetty.util.jmx.ModelMBeanImpl;
 import org.apache.commons.logging.Log;
 
 import javax.management.MBeanException;

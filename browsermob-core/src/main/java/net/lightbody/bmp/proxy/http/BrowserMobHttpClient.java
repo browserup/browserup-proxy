@@ -32,6 +32,7 @@ import java.util.zip.Inflater;
 import net.lightbody.bmp.core.har.*;
 import net.lightbody.bmp.proxy.BlacklistEntry;
 import net.lightbody.bmp.proxy.Whitelist;
+import net.lightbody.bmp.proxy.jetty.util.UrlEncoded;
 import net.lightbody.bmp.proxy.util.*;
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
@@ -101,14 +102,12 @@ import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpProcessorBuilder;
 import org.apache.http.protocol.HttpRequestExecutor;
-import org.eclipse.jetty.util.MultiMap;
-import org.eclipse.jetty.util.UrlEncoded;
 import org.java_bandwidthlimiter.StreamManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xbill.DNS.Cache;
 import org.xbill.DNS.DClass;
-
+import net.lightbody.bmp.proxy.jetty.util.MultiMap;
 
 /**
  * WARN : Require zlib > 1.1.4 (deflate support)
@@ -713,11 +712,11 @@ public class BrowserMobHttpClient {
 
     	String query = method.getURI().getRawQuery();
     	if (query != null) {
-	        MultiMap<String> params = new MultiMap<String>();
+	        MultiMap params = new MultiMap();
 	        UrlEncoded.decodeTo(query, params, "UTF-8");
-	        for (String k : params.keySet()) {
+	        for (Object k : params.keySet()) {
 	        	for (Object v : params.getValues(k)) {
-	        		entry.getRequest().getQueryString().add(new HarNameValuePair(k, (String) v));
+	        		entry.getRequest().getQueryString().add(new HarNameValuePair((String) k, (String) v));
 	        	}
 	        }
         }
