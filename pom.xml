@@ -3,10 +3,14 @@
     <groupId>net.lightbody.bmp</groupId>
     <artifactId>browsermob-proxy</artifactId>
     <version>2.0-beta-10-SNAPSHOT</version>
+    <modules>
+        <module>browsermob-core</module>
+        <module>browsermob-rest</module>
+    </modules>
     <name>BrowserMob Proxy</name>
     <description>A programmatic HTTP/S designed for performance and functional testing</description>
     <url>http://bmp.lightbody.net</url>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
     
     <parent>
         <groupId>org.sonatype.oss</groupId>
