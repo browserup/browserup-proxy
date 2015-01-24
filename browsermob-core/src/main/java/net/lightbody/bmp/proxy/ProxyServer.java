@@ -120,14 +120,20 @@ public class ProxyServer {
     }
 
     public void cleanup() {
-        handler.cleanup();
+        if (handler != null) {
+            handler.cleanup();
+        }
     }
 
     public void stop() {
         cleanup();
-        client.shutdown();
+        if (client != null) {
+            client.shutdown();
+        }
         try {
-			server.stop();
+            if (server != null) {
+                server.stop();
+            }
 		} catch (InterruptedException e) {
 			// the try/catch block in server.stop() is manufacturing a phantom InterruptedException, so this should not occur 
 			throw new JettyException("Exception occurred when stopping the server", e);
