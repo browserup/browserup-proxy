@@ -1,27 +1,38 @@
 package net.lightbody.bmp.proxy;
 
+import java.net.InetAddress;
 import net.lightbody.bmp.core.har.Har;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import net.lightbody.bmp.proxy.http.BrowserMobHttpClient;
 
 public interface BrowserMobProxyServer {
     // configuration / pre-start() methods
-    int getPort();
-    void setPort(int port);
-
-    // proxy server control methods
-    void start();
+    int getPort();    
+    InetAddress getClientBindAddress();
+    InetAddress getServerBindAddress();
+    
+    // proxy server control methods    
+    // start proxy on port, bind to 0.0.0.0
+    void start(int port);    
+    //bind both client and server to bindAddress
+    void start(int port, InetAddress bindAddress);    
+    
+    void start(int port, InetAddress clientBindAddress, InetAddress serverBindAddress);
 
     /**
      * Stops accepting new client connections and initiates a graceful shutdown of the proxy server, waiting for network traffic to stop.
-     * TODO: define a time limit to wait for network traffic to stop
+     * TODO: define a time limit to wait for network traffic to stop     
+     * do we need this if we already have waitForNetworkTrafficToStop() ?
+     * 
      */
     void stop();
-
+    
     //new method
     /**
      * Like {@link #stop()}, shuts down the proxy server and no longer accepts incoming connections, but does not wait for any existing
@@ -30,29 +41,28 @@ public interface BrowserMobProxyServer {
     void abort();
 
     // removed throws NameResolutionException, which is Jetty impl-specific
-    org.openqa.selenium.Proxy seleniumProxy(); //throws NameResolutionException;
-
+    // I don't think we should introduce a dependency on Selenium just to provide a convenience method.
+    //org.openqa.selenium.Proxy seleniumProxy(); //throws NameResolutionException;   
+    
     // Jetty impl-specific
     //void cleanup();
 
-    // renamed because it wasn't descriptive of what it does: returns the address of the interface on which the proxy is listening for client connections
-    //InetAddress getLocalHost();
-    InetSocketAddress getClientConnectionBindAddress();
-
-    // renamed. what this actually does is sets the address of the interface to bind to.
-    //void setLocalHost(InetAddress localHost);
-    void setClientConnectionBindAddress(InetSocketAddress bindAddress);
-
-    // new method: analogous to above for communications to the server. this is the address of the NIC on this machine that will initiate connections to the server.
-    InetSocketAddress getServerConnectionBindAddress();
-    void setServerConnectionBindAddress(InetSocketAddress bindAddress);
-
+    // bind address methods replaced with updated BrowserMobProxyServer#start()
+    
     //TODO: move this to a utility class
     //InetAddress getConnectableLocalHost() throws UnknownHostException;
 
     // HAR capture features
+    enum HarCaptureSetting{
+        HEADERS, CONTENT, BINARY_CONTENT, COOKIES
+    }
+    
     Har getHar();
-    Har newHar(String initialPageRef);
+    // use a default page name
+    Har newHar();    
+    Har newHar(String initialPageRef);    
+    Har newHar(EnumSet<HarCaptureSetting> harCaptureSettings);    
+    Har newHar(String initialPageRef, EnumSet<HarCaptureSetting> harCaptureSettings);        
     void newPage(String pageRef);
     void endPage();
     //new method
@@ -60,13 +70,8 @@ public interface BrowserMobProxyServer {
      * Stops capturing traffic in the HAR.
      * @return the existing HAR
      */
-    Har endHar();
-    void setCaptureHeaders(boolean captureHeaders);
-    void setCaptureContent(boolean captureContent);
-    void setCaptureBinaryContent(boolean captureBinaryContent);
-    //new method
-    void setCaptureCookies(boolean captureCookies);
-
+    Har endHar();                
+    
     // interceptors are necessarily specific to the implementation. there's not a generic way to implement this functionality.
     // essentially, this is a breaking change when moving to LP.
 //    @Deprecated
@@ -84,8 +89,12 @@ public interface BrowserMobProxyServer {
 //    void setDownstreamKbps(long downstreamKbps);
 //    @Deprecated
 //    void setUpstreamKbps(long upstreamKbps);
-    void setReadLimitKbps(long readLimitKbps);
-    void setWriteLimitKbps(long writeLimitKbps);
+    // make the units bytes
+    void setReadBandwidthLimit(long bps);
+    void setWriteBandwidthLimit(long bps);
+    
+    void setReadDataLimit(long bytes);
+    void setWriteDataLimit(long bytes);
 
     // replace deprecated setLatency with a method that takes an explicit TimeUnit
     //void setLatency(long latency)
@@ -99,16 +108,20 @@ public interface BrowserMobProxyServer {
 //    void setConnectionTimeout(int connectionTimeout);
     void setConnectionTimeout(int connectionTimeout, TimeUnit timeUnit);
 
-    void autoBasicAuthorization(String domain, String username, String password);
-
-    void rewriteUrl(String match, String replace);
+    // basic by default
+    void autoAuthorization(String domain, String username, String password); 
+    
+    void autoAuthorization(String domain, String username, String password, AuthType authType);    
+    
+    void rewriteUrl(String pattern, String replace);
     void clearRewriteRules();
     //new method
-    //TODO: thinking about making this signature return a Map<Pattern, String> instead of a Collection of RewriteRules that encapsulates Map<Pattern, String>
+    //TODO: thinking about making this signature return a Map<Pattern, String> instead of a Collection of RewriteRules that encapsulates Map<Pattern, String>    
+    //or return Map where key is Pattern#toString(), to make it consistent with signature of rewriteUrl
     /**
      * @return all RewriteRules currently in effect.
      */
-    Collection<RewriteRule> getRewriteRules();
+    Map<String, String> getRewriteRules();
 
     void blacklistRequests(String pattern, int responseCode);
     void blacklistRequests(String pattern, int responseCode, String method);
@@ -120,13 +133,12 @@ public interface BrowserMobProxyServer {
 //    @Deprecated
 //    List<Pattern> getWhitelistRequests();
 
-    void whitelistRequests(String[] patterns, int responseCode);
-    void enableEmptyWhitelist(int responseCode);
+    void whitelistRequests(int responseCode);
+    void whitelistRequests(String pattern, int responseCode);
     void clearWhitelist();
-    Collection<Pattern> getWhitelistUrls();
-    int getWhitelistResponseCode();
-    boolean isWhitelistEnabled();
-
+    Collection<WhitelistEntry> getWhitelistUrls();    
+    // TODO: make method names and signatures more consistent between blacklist / whitelist / rewrite rules ?
+    
     void setRetryCount(int count);
 
     void addHeader(String name, String value);
@@ -155,12 +167,12 @@ public interface BrowserMobProxyServer {
      * @param timeUnit TimeUnit for the quietPeriod and timeout
      * @return true if network traffic is stopped, otherwise false
      */
-    boolean waitForNetworkTrafficToStop(long quietPeriod, long timeout, TimeUnit timeUnit);
+    boolean waitForQuiescence(long quietPeriod, long timeout, TimeUnit timeUnit);
 
     //new methods: support for upstream chained proxy.
     void setChainedProxyAddress(InetSocketAddress chainedProxyAddress);
     InetSocketAddress getChainedProxyAddress();
 
     // Jetty impl-specific. chained proxy support in setChainedProxy
-//    void setOptions(Map<String, String> options);
+//    void setOptions(Map<String, String> options);        
 }
