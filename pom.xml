@@ -7,7 +7,7 @@
         <module>browsermob-core</module>
         <module>browsermob-rest</module>
     </modules>
-    <name>BrowserMob Proxy</name>
+    <name>BrowserMob Proxy Parent Project</name>
     <description>A programmatic HTTP/S designed for performance and functional testing</description>
     <url>http://bmp.lightbody.net</url>
     <packaging>pom</packaging>
@@ -50,59 +50,6 @@
         <selenium.version>2.43.0</selenium.version>
         <jackson.version>2.4.4</jackson.version>
     </properties>
-
-    <profiles>
-        <profile>
-            <id>release</id>
-
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>appassembler-maven-plugin</artifactId>
-                        <version>1.1.1</version>
-                        <configuration>
-                            <repositoryLayout>flat</repositoryLayout>
-                            <repositoryName>lib</repositoryName>
-                            <programs>
-                                <program>
-                                    <mainClass>net.lightbody.bmp.proxy.Main</mainClass>
-                                    <name>browsermob-proxy</name>
-                                </program>
-                            </programs>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>make-assembly</id>
-                                <phase>install</phase>
-                                <goals>
-                                    <goal>assemble</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.4</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>make-assembly</id>
-                                <phase>install</phase>
-                                <goals>
-                                    <goal>single</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
     <build>
         <resources>
@@ -326,6 +273,18 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+
+            <modules>
+                <module>browsermob-core</module>
+                <module>browsermob-rest</module>
+                <module>browsermob-dist</module>
+            </modules>
+        </profile>
+    </profiles>
 
     <reporting>
         <plugins>
