@@ -107,6 +107,9 @@
                         <goals>
                             <goal>jar</goal>
                         </goals>
+                        <configuration>
+                            <additionalparam>${javadoc.opts}</additionalparam>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -283,6 +286,17 @@
                 <module>browsermob-rest</module>
                 <module>browsermob-dist</module>
             </modules>
+        </profile>
+        <!-- Work-around for incomplete javadoc on Java 8, courtesy of http://stackoverflow.com/questions/15886209/maven-is-not-working-in-java-8-when-javadoc-tags-are-incomplete.
+             Once legacy code is removed and javadoc is cleaned up, this can be removed. -->
+        <profile>
+            <id>doclint-java8-disable</id>
+            <activation>
+                <jdk>[1.8,)</jdk>
+            </activation>
+            <properties>
+                <javadoc.opts>-Xdoclint:none</javadoc.opts>
+            </properties>
         </profile>
     </profiles>
 
