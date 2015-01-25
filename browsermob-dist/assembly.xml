@@ -51,5 +51,9 @@
             </includes>
             <outputDirectory>lib</outputDirectory>
         </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/../browsermob-core/src/main/resources/sslSupport</directory>
+            <outputDirectory>./ssl-support</outputDirectory>
+        </fileSet>
     </fileSets>
 </assembly>
