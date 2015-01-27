@@ -15,7 +15,6 @@
     <name>BrowserMob Proxy REST Module</name>
     
     <properties>
-        <slf4j.version>1.7.10</slf4j.version>
     </properties>
 
     <dependencies>
