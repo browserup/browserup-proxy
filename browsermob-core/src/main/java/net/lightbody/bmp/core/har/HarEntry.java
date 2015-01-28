@@ -55,7 +55,7 @@ public class HarEntry {
      entry.timings.connect + entry.timings.send + entry.timings.wait +
      entry.timings.receive;
      </pre>
-     * @return
+     * @return time for this HAR entry
      */
     public long getTime() {
         HarTimings timings = getTimings();
