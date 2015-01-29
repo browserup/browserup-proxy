@@ -1,6 +1,5 @@
 package net.lightbody.bmp.proxy.test.util;
 
-import net.lightbody.bmp.proxy.ProxyServerTest;
 import org.junit.After;
 import org.junit.Before;
 

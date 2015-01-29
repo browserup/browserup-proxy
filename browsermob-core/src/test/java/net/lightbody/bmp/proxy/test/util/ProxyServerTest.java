@@ -1,5 +1,6 @@
-package net.lightbody.bmp.proxy;
+package net.lightbody.bmp.proxy.test.util;
 
+import net.lightbody.bmp.proxy.ProxyServer;
 import net.lightbody.bmp.proxy.test.util.TestSSLSocketFactory;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpVersion;

@@ -2,6 +2,7 @@ package net.lightbody.bmp.proxy;
 
 import java.io.IOException;
 
+import net.lightbody.bmp.proxy.test.util.ProxyServerTest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;

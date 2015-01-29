@@ -1,5 +1,6 @@
 package net.lightbody.bmp.proxy;
 
+import net.lightbody.bmp.proxy.test.util.ProxyServerTest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.junit.Assert;
