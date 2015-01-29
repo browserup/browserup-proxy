@@ -6,14 +6,14 @@ import static org.junit.Assume.assumeThat;
 
 import java.io.IOException;
 
-import net.lightbody.bmp.proxy.test.util.UnitTestServerTest;
+import net.lightbody.bmp.proxy.test.util.LocalServerTest;
 import net.lightbody.bmp.proxy.util.IOUtils;
 
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.junit.Test;
 
-public class RewriteRuleTest extends UnitTestServerTest {
+public class RewriteRuleTest extends LocalServerTest {
 	
 	@Test
 	public void testThatRewriteRulesCanBeCleared() throws IllegalStateException, ClientProtocolException, IOException {

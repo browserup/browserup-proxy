@@ -3,7 +3,7 @@ package net.lightbody.bmp.proxy;
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.core.har.HarCookie;
 import net.lightbody.bmp.core.har.HarEntry;
-import net.lightbody.bmp.proxy.test.util.UnitTestServerTest;
+import net.lightbody.bmp.proxy.test.util.LocalServerTest;
 import net.lightbody.bmp.proxy.util.IOUtils;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.cookie.BasicClientCookie;
@@ -13,7 +13,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-public class CookieTest extends UnitTestServerTest {
+public class CookieTest extends LocalServerTest {
     @Test
     public void testNoDoubleCookies() throws IOException {
         proxy.setCaptureContent(true);

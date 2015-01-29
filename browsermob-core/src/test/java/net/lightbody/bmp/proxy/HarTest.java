@@ -12,7 +12,7 @@ import net.lightbody.bmp.core.har.HarPostData;
 import net.lightbody.bmp.core.har.HarRequest;
 import net.lightbody.bmp.core.har.HarResponse;
 import net.lightbody.bmp.core.har.HarTimings;
-import net.lightbody.bmp.proxy.test.util.UnitTestServerTest;
+import net.lightbody.bmp.proxy.test.util.LocalServerTest;
 import net.lightbody.bmp.proxy.util.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.zip.GZIPInputStream;
 
-public class HarTest extends UnitTestServerTest {
+public class HarTest extends LocalServerTest {
     @Test
     public void testRequestAndResponseSizesAreSet() throws Exception {
 

@@ -1,12 +1,11 @@
 package net.lightbody.bmp.proxy.test.util;
 
 import net.lightbody.bmp.proxy.ProxyServerTest;
-import net.lightbody.bmp.proxy.test.util.UnitTestServer;
 import org.junit.After;
 import org.junit.Before;
 
-public abstract class UnitTestServerTest extends ProxyServerTest {
-    protected UnitTestServer server = new UnitTestServer();
+public abstract class LocalServerTest extends ProxyServerTest {
+    protected LocalServer server = new LocalServer();
 
     @Before
     public void startServer() throws Exception {

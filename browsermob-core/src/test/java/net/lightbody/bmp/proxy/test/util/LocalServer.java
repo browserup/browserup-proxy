@@ -14,12 +14,12 @@ import org.eclipse.jetty.util.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class UnitTestServer {
+public class LocalServer {
     private int port;
     private Server server;
     private ResourceHandler handler;
 
-    private static Logger log = LoggerFactory.getLogger(UnitTestServer.class);
+    private static Logger log = LoggerFactory.getLogger(LocalServer.class);
 
     public void start() {
         server = new Server(0);

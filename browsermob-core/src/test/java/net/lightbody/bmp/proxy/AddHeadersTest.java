@@ -1,6 +1,6 @@
 package net.lightbody.bmp.proxy;
 
-import net.lightbody.bmp.proxy.test.util.UnitTestServerTest;
+import net.lightbody.bmp.proxy.test.util.LocalServerTest;
 import net.lightbody.bmp.proxy.util.IOUtils;
 import org.apache.http.client.methods.HttpGet;
 import org.junit.Test;
@@ -9,7 +9,7 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertTrue;
 
-public class AddHeadersTest extends UnitTestServerTest {
+public class AddHeadersTest extends LocalServerTest {
 
     @Test
     public void testAddHeadersToRequest() throws IOException {

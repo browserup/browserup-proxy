@@ -10,7 +10,7 @@ import net.lightbody.bmp.proxy.http.BrowserMobHttpRequest;
 import net.lightbody.bmp.proxy.http.BrowserMobHttpResponse;
 import net.lightbody.bmp.proxy.http.RequestInterceptor;
 import net.lightbody.bmp.proxy.http.ResponseInterceptor;
-import net.lightbody.bmp.proxy.test.util.UnitTestServerTest;
+import net.lightbody.bmp.proxy.test.util.LocalServerTest;
 import net.lightbody.bmp.proxy.util.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpGet;
@@ -32,7 +32,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class MailingListIssuesTest extends UnitTestServerTest {
+public class MailingListIssuesTest extends LocalServerTest {
     @Test
     public void testThatInterceptorIsCalled() throws IOException, InterruptedException {
         final boolean[] interceptorHit = {false};
