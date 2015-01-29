@@ -1,5 +1,6 @@
 package net.lightbody.bmp.proxy;
 
+import net.lightbody.bmp.proxy.test.util.UnitTestServerTest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
@@ -20,7 +21,7 @@ import static org.junit.Assume.assumeThat;
  * @author Andy Clark (andy.clark@realvnc.com)
  *
  */
-public class BlackAndWhiteListTest extends DummyServerTest {
+public class BlackAndWhiteListTest extends UnitTestServerTest {
 
 	/*
 	 * Some tests were hanging when trying to GET un-whitelisted URLs.

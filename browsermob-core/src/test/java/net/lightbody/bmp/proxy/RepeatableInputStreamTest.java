@@ -1,5 +1,6 @@
 package net.lightbody.bmp.proxy;
 
+import net.lightbody.bmp.proxy.test.util.UnitTestServerTest;
 import org.junit.Assert;
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.proxy.http.BrowserMobHttpRequest;
@@ -15,7 +16,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
-public class RepeatableInputStreamTest extends DummyServerTest{
+public class RepeatableInputStreamTest extends UnitTestServerTest {
 
     @Test
     public void test()

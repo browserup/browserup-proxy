@@ -1,10 +1,11 @@
-package net.lightbody.bmp.proxy;
+package net.lightbody.bmp.proxy.test.util;
 
+import net.lightbody.bmp.proxy.ProxyServerTest;
 import net.lightbody.bmp.proxy.test.util.UnitTestServer;
 import org.junit.After;
 import org.junit.Before;
 
-public abstract class DummyServerTest extends ProxyServerTest {
+public abstract class UnitTestServerTest extends ProxyServerTest {
     protected UnitTestServer server = new UnitTestServer();
 
     @Before

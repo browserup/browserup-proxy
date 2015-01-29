@@ -1,4 +1,4 @@
-package net.lightbody.bmp.proxy.util;
+package net.lightbody.bmp.proxy.test.util;
 
 import org.apache.http.conn.ssl.SSLSocketFactory;
 

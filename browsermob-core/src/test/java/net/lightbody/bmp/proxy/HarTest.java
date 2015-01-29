@@ -12,6 +12,7 @@ import net.lightbody.bmp.core.har.HarPostData;
 import net.lightbody.bmp.core.har.HarRequest;
 import net.lightbody.bmp.core.har.HarResponse;
 import net.lightbody.bmp.core.har.HarTimings;
+import net.lightbody.bmp.proxy.test.util.UnitTestServerTest;
 import net.lightbody.bmp.proxy.util.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -29,7 +30,6 @@ import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.zip.GZIPInputStream;
 
-public class HarTest extends DummyServerTest {
+public class HarTest extends UnitTestServerTest {
     @Test
     public void testRequestAndResponseSizesAreSet() throws Exception {
 
