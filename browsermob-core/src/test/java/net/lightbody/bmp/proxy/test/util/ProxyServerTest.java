@@ -28,11 +28,6 @@ import java.security.KeyStore;
  * Call getNewHttpClient() to get an HttpClient that can be used to make requests via the local proxy.
  */
 public abstract class ProxyServerTest {
-    static {
-        //FIXME: configure logging another way
-//        Main.configureJdkLogging();
-    }
-
     protected int proxyServerPort;
     protected ProxyServer proxy;
     protected DefaultHttpClient client;
