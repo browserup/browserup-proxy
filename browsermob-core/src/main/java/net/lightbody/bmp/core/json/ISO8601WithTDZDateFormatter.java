@@ -14,7 +14,7 @@ import java.util.Date;
  * 
  * @author Damien Jubeau <damien.jubeau@dareboost.com>
  * Allows Date Format to be compliant with Har 1.2 Spec : ISO 8601 with Time Zone Designator
- * @see https://github.com/lightbody/browsermob-proxy/issues/44
+ * @see <a href="https://github.com/lightbody/browsermob-proxy/issues/44">https://github.com/lightbody/browsermob-proxy/issues/44</a>
  *
  */
 public class ISO8601WithTDZDateFormatter extends JsonSerializer<Date> {
