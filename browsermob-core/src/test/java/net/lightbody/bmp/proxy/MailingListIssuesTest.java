@@ -166,7 +166,7 @@ public class MailingListIssuesTest extends LocalServerTest {
         // see: https://github.com/lightbody/browsermob-proxy/issues/27
         WebDriver driver = null;
         // start the proxy
-        ProxyServer server = new ProxyServer(4444);
+        ProxyServer server = new ProxyServer(0);
         server.start();
         try {
             server.setCaptureHeaders(true);
@@ -207,7 +207,7 @@ public class MailingListIssuesTest extends LocalServerTest {
     public void googleCaSslNotWorkingInFirefox() throws Exception{
         WebDriver driver = null;
         // start the proxy
-        ProxyServer server = new ProxyServer(4444);
+        ProxyServer server = new ProxyServer(0);
         server.start();
         try {
             server.setCaptureHeaders(true);
