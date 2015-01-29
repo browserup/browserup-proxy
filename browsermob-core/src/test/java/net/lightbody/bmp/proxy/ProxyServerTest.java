@@ -26,18 +26,23 @@ public abstract class ProxyServerTest {
 //        Main.configureJdkLogging();
     }
 
-    protected ProxyServer proxy = new ProxyServer(8081);
-    protected DefaultHttpClient client = getNewHttpClient();
+    protected int proxyServerPort;
+    protected ProxyServer proxy;
+    protected DefaultHttpClient client;
 
     @Before
     public void startServer() throws Exception {
+        proxy = new ProxyServer(0);
         proxy.start();
+        proxyServerPort = proxy.getPort();
+
+        client = getNewHttpClient();
     }
 
-    public static DefaultHttpClient getNewHttpClient() {
-    	return getNewHttpClient(8081);
+    public DefaultHttpClient getNewHttpClient() {
+        return getNewHttpClient(proxyServerPort);
     }
-    
+
     public static DefaultHttpClient getNewHttpClient(int proxyPort) {
         try {
             KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
