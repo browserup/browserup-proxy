@@ -47,7 +47,7 @@ public class HarTest extends DummyServerTest {
         proxy.setCaptureContent(true);
         proxy.newHar("test");
 
-        HttpGet get = new HttpGet("http://127.0.0.1:8080/a.txt");
+        HttpGet get = new HttpGet(getHostnameAndPort() + "/a.txt");
         client.execute(get);
 
         Har har = proxy.getHar();
@@ -117,7 +117,7 @@ public class HarTest extends DummyServerTest {
 		proxy.setCaptureContent(true);
 		proxy.newHar("Test");
 
-		String body = IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/a.txt")).getEntity().getContent());
+		String body = IOUtils.readFully(client.execute(new HttpGet(getHostnameAndPort() + "/a.txt")).getEntity().getContent());
 		System.out.println("Done with request");
 
 		Assert.assertTrue(body.contains("this is a.txt"));
@@ -147,7 +147,7 @@ public class HarTest extends DummyServerTest {
 		proxy.setCaptureContent(true);
 		proxy.newHar("Test");
 
-		HttpPost post = new HttpPost("http://127.0.0.1:8080/jsonrpc");
+		HttpPost post = new HttpPost(getHostnameAndPort() + "/jsonrpc");
 		HttpEntity entity = new StringEntity("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"test\",\"params\":{}}");
 		post.setEntity(entity);
 		post.addHeader("Accept", "application/json-rpc");
@@ -179,7 +179,7 @@ public class HarTest extends DummyServerTest {
 		proxy.setCaptureContent(true);
 		proxy.newHar("Test");
 
-		HttpPost post = new HttpPost("http://127.0.0.1:8080/jsonrpc");
+		HttpPost post = new HttpPost(getHostnameAndPort() + "/jsonrpc");
 		post.setEntity(new UrlEncodedFormEntity(Collections.singletonList(new BasicNameValuePair("foo", "bar"))));
 
 		IOUtils.readFully(client.execute(post).getEntity().getContent());
@@ -209,7 +209,7 @@ public class HarTest extends DummyServerTest {
 		proxy.setCaptureContent(true);
 		proxy.newHar("Test");
 
-		InputStream is1 = client.execute(new HttpGet("http://127.0.0.1:8080/c.png")).getEntity().getContent();
+		InputStream is1 = client.execute(new HttpGet(getHostnameAndPort() + "/c.png")).getEntity().getContent();
 		ByteArrayOutputStream o1 = new ByteArrayOutputStream();
 		IOUtils.copy(is1, o1);
 		ByteArrayOutputStream o2 = new ByteArrayOutputStream();
@@ -243,7 +243,7 @@ public class HarTest extends DummyServerTest {
 		proxy.setCaptureContent(true);
 		proxy.newHar("Test");
 
-		HttpGet get = new HttpGet("http://127.0.0.1:8080/a.txt?foo=bar&a=1%262");
+		HttpGet get = new HttpGet(getHostnameAndPort() + "/a.txt?foo=bar&a=1%262");
 		client.execute(get);
 
 		Har har = proxy.getHar();
@@ -282,9 +282,9 @@ public class HarTest extends DummyServerTest {
 		proxy.newHar("Test");
 
 		// gzip all requests
-		dummy.enableGzip();
+		server.enableGzip();
 
-		HttpGet get = new HttpGet("http://127.0.0.1:8080/a.txt");
+		HttpGet get = new HttpGet(getHostnameAndPort() + "/a.txt");
 		get.addHeader("Accept-Encoding", "gzip");
 		String body = IOUtils.readFully(new GZIPInputStream(client.execute(get).getEntity().getContent()));
 		System.out.println("Done with request");
@@ -405,7 +405,7 @@ public class HarTest extends DummyServerTest {
 	public void testHarPagesPopulated() throws IOException {
 		proxy.newHar("testpage1");
 
-		HttpGet get = new HttpGet("http://127.0.0.1:8080/a.txt");
+		HttpGet get = new HttpGet(getHostnameAndPort() + "/a.txt");
 		IOUtils.readFully(client.execute(get).getEntity().getContent());
 
 		proxy.endPage();
@@ -505,7 +505,7 @@ public class HarTest extends DummyServerTest {
 	public void testIpAddressPopulatedForIpAddressUrl() throws IOException {
 		proxy.newHar("testIpAddressPopulatedForIpAddressUrl");
 
-		HttpGet get = new HttpGet("http://127.0.0.1:8080/a.txt");
+		HttpGet get = new HttpGet(getHostnameAndPort() + "/a.txt");
 		IOUtils.readFully(client.execute(get).getEntity().getContent());
 
 		proxy.endPage();
@@ -533,7 +533,7 @@ public class HarTest extends DummyServerTest {
 		proxy.setCaptureContent(true);
 		proxy.newHar("test");
 
-		HttpPost post = new HttpPost("http://127.0.0.1:8080/jsonrpc");
+		HttpPost post = new HttpPost(getHostnameAndPort() + "/jsonrpc");
 		String jsonRpcString = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"test\",\"params\":{}}";
 		HttpEntity entity = new StringEntity(jsonRpcString);
 		post.setEntity(entity);
@@ -562,7 +562,7 @@ public class HarTest extends DummyServerTest {
 		proxy.setCaptureContent(true);
 		proxy.newHar("test");
 
-		HttpPost post = new HttpPost("http://127.0.0.1:8080/echopayload");
+		HttpPost post = new HttpPost(getHostnameAndPort() + "/echopayload");
 		String lengthyPost = createRandomString(100000);
 
 		HttpEntity entity = new StringEntity(lengthyPost);

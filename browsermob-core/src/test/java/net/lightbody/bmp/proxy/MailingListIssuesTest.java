@@ -42,7 +42,7 @@ public class MailingListIssuesTest extends DummyServerTest {
             }
         });
 
-        String body = IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/a.txt")).getEntity().getContent());
+        String body = IOUtils.readFully(client.execute(new HttpGet(getHostnameAndPort() + "/a.txt")).getEntity().getContent());
 
         Assert.assertTrue(body.contains("this is a.txt"));
         Assert.assertTrue(interceptorHit[0]);
@@ -58,7 +58,7 @@ public class MailingListIssuesTest extends DummyServerTest {
             }
         });
 
-        String body = IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/a.txt")).getEntity().getContent());
+        String body = IOUtils.readFully(client.execute(new HttpGet(getHostnameAndPort() + "/a.txt")).getEntity().getContent());
 
         Assert.assertTrue(body.contains("this is a.txt"));
         Assert.assertEquals("Remote host incorrect", "127.0.0.1", remoteHost[0]);
@@ -74,7 +74,7 @@ public class MailingListIssuesTest extends DummyServerTest {
             }
         });
 
-        String body = IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/a.txt")).getEntity().getContent());
+        String body = IOUtils.readFully(client.execute(new HttpGet(getHostnameAndPort() + "/a.txt")).getEntity().getContent());
 
         Assert.assertTrue(body.contains("this is a.txt"));
     }
@@ -85,14 +85,14 @@ public class MailingListIssuesTest extends DummyServerTest {
             @Override
             public void process(BrowserMobHttpRequest request, Har har) {
                 try {
-                    request.getMethod().setURI(new URI("http://127.0.0.1:8080/b.txt"));
+                    request.getMethod().setURI(new URI(getHostnameAndPort() + "/b.txt"));
                 } catch (URISyntaxException e) {
                     e.printStackTrace();
                 }
             }
         });
 
-        String body = IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/a.txt")).getEntity().getContent());
+        String body = IOUtils.readFully(client.execute(new HttpGet(getHostnameAndPort() + "/a.txt")).getEntity().getContent());
 
         Assert.assertTrue(body.contains("this is b.txt"));
     }
@@ -109,7 +109,7 @@ public class MailingListIssuesTest extends DummyServerTest {
             }
         });
 
-        String body = IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/a.txt")).getEntity().getContent());
+        String body = IOUtils.readFully(client.execute(new HttpGet(getHostnameAndPort() + "/a.txt")).getEntity().getContent());
 
         ThreadUtils.waitFor(new ThreadUtils.WaitCondition() {
             @Override
@@ -137,7 +137,7 @@ public class MailingListIssuesTest extends DummyServerTest {
             }
         });
 
-        HttpPost post = new HttpPost("http://127.0.0.1:8080/echo");
+        HttpPost post = new HttpPost(getHostnameAndPort() + "/echo");
         HttpEntity entity = new StringEntity("testParam=testValue");
         post.setEntity(entity);
         post.addHeader("Content-Type", "application/x-www-form-urlencoded");

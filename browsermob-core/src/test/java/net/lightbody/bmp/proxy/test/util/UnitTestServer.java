@@ -21,12 +21,8 @@ public class UnitTestServer {
 
     private static Logger log = LoggerFactory.getLogger(UnitTestServer.class);
 
-    public UnitTestServer(int port) {
-        this.port = port;
-    }
-
-    public void start() throws Exception {
-        server = new Server(port);
+    public void start() {
+        server = new Server(0);
 
         HandlerList handlers = new HandlerList();
 
@@ -53,7 +49,17 @@ public class UnitTestServer {
 
         server.setHandler(gzipHandler);
 
-        server.start();
+        try {
+            server.start();
+        } catch (Exception e) {
+            throw new RuntimeException("Could not start Jetty server", e);
+        }
+
+        this.port = server.getConnectors()[0].getLocalPort();
+    }
+
+    public int getPort() {
+        return this.port;
     }
 
     public void enableGzip() {
