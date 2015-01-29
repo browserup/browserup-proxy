@@ -8,3 +8,4 @@ target
 /.idea
 atlassian-ide-plugin.xml
 .DS_Store
+dependency-reduced-pom.xml
