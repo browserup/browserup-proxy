@@ -1,9 +1,9 @@
 package net.lightbody.bmp.proxy.test.util;
 
-import net.lightbody.bmp.proxy.EchoPayloadServlet;
-import net.lightbody.bmp.proxy.EchoServlet;
-import net.lightbody.bmp.proxy.JsonServlet;
-import net.lightbody.bmp.proxy.SetCookieServlet;
+import net.lightbody.bmp.proxy.test.servlet.EchoPayloadServlet;
+import net.lightbody.bmp.proxy.test.servlet.EchoServlet;
+import net.lightbody.bmp.proxy.test.servlet.JsonServlet;
+import net.lightbody.bmp.proxy.test.servlet.SetCookieServlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.GzipHandler;
