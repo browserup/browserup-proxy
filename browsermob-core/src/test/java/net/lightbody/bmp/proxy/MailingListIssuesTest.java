@@ -233,8 +233,19 @@ public class MailingListIssuesTest extends LocalServerTest {
             Assert.assertTrue(!har.getLog().getEntries().isEmpty());
     
             // show that we can capture the HTML of the root page
-            String text = har.getLog().getEntries().get(0).getResponse().getContent().getText();
-            Assert.assertTrue(text.contains("<title>Google</title>"));
+            // NOTE: firefox seems to occasionally make its first request to some mozilla address, so we can't rely on getEntries().get(0) to get the actual Google page
+            boolean foundGooglePage = false;
+            for (HarEntry entry : har.getLog().getEntries()) {
+                if (entry.getResponse() != null && entry.getResponse().getContent() != null && entry.getResponse().getContent().getText() != null) {
+                    String text = entry.getResponse().getContent().getText();
+                    if (text.contains("<title>Google</title>")) {
+                        foundGooglePage = true;
+                        break;
+                    }
+                }
+            }
+
+            Assert.assertTrue("Did not find any HAR entry containing the text <title>Google</title>", foundGooglePage);
         } finally {
             server.stop();
             if (driver != null) {
