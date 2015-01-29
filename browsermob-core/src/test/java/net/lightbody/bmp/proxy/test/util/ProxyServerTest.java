@@ -21,6 +21,12 @@ import org.junit.Before;
 
 import java.security.KeyStore;
 
+/**
+ * Extend this class to gain access to a local proxy server. If you need both a local proxy server and a local Jetty server, extend
+ * {@link net.lightbody.bmp.proxy.test.util.LocalServerTest} instead.
+ * <p/>
+ * Call getNewHttpClient() to get an HttpClient that can be used to make requests via the local proxy.
+ */
 public abstract class ProxyServerTest {
     static {
         //FIXME: configure logging another way
@@ -40,8 +46,17 @@ public abstract class ProxyServerTest {
         client = getNewHttpClient();
     }
 
+    @After
+    public void stopServer() throws Exception {
+        proxy.stop();
+    }
+
     public DefaultHttpClient getNewHttpClient() {
         return getNewHttpClient(proxyServerPort);
+    }
+
+    public int getPort() {
+        return proxy.getPort();
     }
 
     public static DefaultHttpClient getNewHttpClient(int proxyPort) {
@@ -69,8 +84,4 @@ public abstract class ProxyServerTest {
         }
     }
 
-    @After
-    public void stopServer() throws Exception {
-        proxy.stop();
-    }
 }

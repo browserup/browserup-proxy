@@ -282,7 +282,7 @@ public class HarTest extends LocalServerTest {
 		proxy.newHar("Test");
 
 		// gzip all requests
-		server.enableGzip();
+		server.forceGzip();
 
 		HttpGet get = new HttpGet(getHostnameAndPort() + "/a.txt");
 		get.addHeader("Accept-Encoding", "gzip");
