@@ -137,7 +137,7 @@ public class MailingListIssuesTest extends DummyServerTest {
             }
         });
 
-        HttpPost post = new HttpPost("http://127.0.0.1:8080/echo/");
+        HttpPost post = new HttpPost("http://127.0.0.1:8080/echo");
         HttpEntity entity = new StringEntity("testParam=testValue");
         post.setEntity(entity);
         post.addHeader("Content-Type", "application/x-www-form-urlencoded");

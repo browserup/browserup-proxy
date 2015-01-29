@@ -24,7 +24,7 @@ public class RepeatableInputStreamTest extends DummyServerTest{
 
         proxy.addRequestInterceptor(testRequestInterceptor);
 
-        HttpPost post = new HttpPost("http://127.0.0.1:8080/jsonrpc/");
+        HttpPost post = new HttpPost("http://127.0.0.1:8080/jsonrpc");
         HttpEntity entity = new StringEntity("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"test\",\"params\":{}}");
         post.setEntity(entity);
         post.addHeader("Accept", "application/json-rpc");

@@ -67,14 +67,12 @@ public class HarTest extends DummyServerTest {
         /*
         Response headers should be something like this:
 
-        Date: Sun, 31 Aug 2014 16:08:44 GMT
-        Server: Jetty/5.1.x (Mac OS X/10.9.4 x86_64 java/1.7.0_09
         Content-Type: text/plain
+        Last-Modified: Wed, 28 Jan 2015 23:55:41 GMT
         Content-Length: 13
-        Last-Modified: Sun, 17 Nov 2013 05:37:58 GMT
-        Accept-Ranges: bytes
+        Server: Jetty(7.6.16.v20140903)
          */
-        Assert.assertTrue("Minimum header size not seen", entry.getResponse().getHeadersSize() > 200);
+        Assert.assertTrue("Minimum header size not seen", entry.getResponse().getHeadersSize() > 80);
         Assert.assertEquals(13, entry.getResponse().getBodySize());
     }
     
@@ -149,7 +147,7 @@ public class HarTest extends DummyServerTest {
 		proxy.setCaptureContent(true);
 		proxy.newHar("Test");
 
-		HttpPost post = new HttpPost("http://127.0.0.1:8080/jsonrpc/");
+		HttpPost post = new HttpPost("http://127.0.0.1:8080/jsonrpc");
 		HttpEntity entity = new StringEntity("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"test\",\"params\":{}}");
 		post.setEntity(entity);
 		post.addHeader("Accept", "application/json-rpc");
@@ -181,7 +179,7 @@ public class HarTest extends DummyServerTest {
 		proxy.setCaptureContent(true);
 		proxy.newHar("Test");
 
-		HttpPost post = new HttpPost("http://127.0.0.1:8080/jsonrpc/");
+		HttpPost post = new HttpPost("http://127.0.0.1:8080/jsonrpc");
 		post.setEntity(new UrlEncodedFormEntity(Collections.singletonList(new BasicNameValuePair("foo", "bar"))));
 
 		IOUtils.readFully(client.execute(post).getEntity().getContent());
@@ -215,7 +213,7 @@ public class HarTest extends DummyServerTest {
 		ByteArrayOutputStream o1 = new ByteArrayOutputStream();
 		IOUtils.copy(is1, o1);
 		ByteArrayOutputStream o2 = new ByteArrayOutputStream();
-		IOUtils.copy(new FileInputStream("src/test/dummy-server/c.png"), o2);
+        IOUtils.copy(HarTest.class.getResourceAsStream("/dummy-server/c.png"), o2);
 
 		Assert.assertTrue("Image does not match file system", Arrays.equals(o1.toByteArray(), o2.toByteArray()));
 
@@ -284,8 +282,7 @@ public class HarTest extends DummyServerTest {
 		proxy.newHar("Test");
 
 		// gzip all requests
-		dummy.getHandler().setMinGzipLength(1);
-
+		dummy.enableGzip();
 
 		HttpGet get = new HttpGet("http://127.0.0.1:8080/a.txt");
 		get.addHeader("Accept-Encoding", "gzip");
@@ -536,7 +533,7 @@ public class HarTest extends DummyServerTest {
 		proxy.setCaptureContent(true);
 		proxy.newHar("test");
 
-		HttpPost post = new HttpPost("http://127.0.0.1:8080/jsonrpc/");
+		HttpPost post = new HttpPost("http://127.0.0.1:8080/jsonrpc");
 		String jsonRpcString = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"test\",\"params\":{}}";
 		HttpEntity entity = new StringEntity(jsonRpcString);
 		post.setEntity(entity);
@@ -565,7 +562,7 @@ public class HarTest extends DummyServerTest {
 		proxy.setCaptureContent(true);
 		proxy.newHar("test");
 
-		HttpPost post = new HttpPost("http://127.0.0.1:8080/echopayload/");
+		HttpPost post = new HttpPost("http://127.0.0.1:8080/echopayload");
 		String lengthyPost = createRandomString(100000);
 
 		HttpEntity entity = new StringEntity(lengthyPost);

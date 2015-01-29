@@ -19,9 +19,9 @@ public class CookieTest extends DummyServerTest {
         proxy.newHar("Test");
 
         // set the cookie on the server side
-        IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/cookie/")).getEntity().getContent());
+        IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/cookie")).getEntity().getContent());
 
-        String body = IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/echo/")).getEntity().getContent());
+        String body = IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/echo")).getEntity().getContent());
         int first = body.indexOf("foo=bar");
         int last = body.lastIndexOf("foo=bar");
         Assert.assertTrue("foo=bar cookie not found", first != -1);
@@ -35,7 +35,7 @@ public class CookieTest extends DummyServerTest {
         proxy.newHar("Test");
 
         // set the cookie on the server side
-        IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/cookie/")).getEntity().getContent());
+        IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/cookie")).getEntity().getContent());
 
         Har har = proxy.getHar();
         HarEntry entry = har.getLog().getEntries().get(0);
@@ -55,7 +55,7 @@ public class CookieTest extends DummyServerTest {
         client.getCookieStore().addCookie(cookie);
 
         // set the cookie on the server side
-        String body = IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/echo/")).getEntity().getContent());
+        String body = IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/echo")).getEntity().getContent());
         System.out.println(body);
 
         Har har = proxy.getHar();
