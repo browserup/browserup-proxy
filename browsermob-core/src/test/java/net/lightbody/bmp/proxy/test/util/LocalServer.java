@@ -38,7 +38,7 @@ public class LocalServer {
         ContextHandler contextHandler = new ContextHandler();
         contextHandler.setContextPath("/");
         ResourceHandler resourceHandler = new ResourceHandler();
-        resourceHandler.setBaseResource(Resource.newClassPathResource("/dummy-server"));
+        resourceHandler.setBaseResource(Resource.newClassPathResource("/local-server"));
         contextHandler.setHandler(resourceHandler);
 
         handlers.addHandler(contextHandler);

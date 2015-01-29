@@ -213,7 +213,7 @@ public class HarTest extends LocalServerTest {
 		ByteArrayOutputStream o1 = new ByteArrayOutputStream();
 		IOUtils.copy(is1, o1);
 		ByteArrayOutputStream o2 = new ByteArrayOutputStream();
-        IOUtils.copy(HarTest.class.getResourceAsStream("/dummy-server/c.png"), o2);
+        IOUtils.copy(HarTest.class.getResourceAsStream("/local-server/c.png"), o2);
 
 		Assert.assertTrue("Image does not match file system", Arrays.equals(o1.toByteArray(), o2.toByteArray()));
 
