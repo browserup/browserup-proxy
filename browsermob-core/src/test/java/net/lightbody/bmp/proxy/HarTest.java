@@ -20,14 +20,10 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.openqa.selenium.Proxy;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.remote.CapabilityType;
-import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -75,41 +71,25 @@ public class HarTest extends LocalServerTest {
         Assert.assertTrue("Minimum header size not seen", entry.getResponse().getHeadersSize() > 80);
         Assert.assertEquals(13, entry.getResponse().getBodySize());
     }
-    
+
 	@Test
-	public void testHarContainsUserAgent() {
-		ProxyServer server = new ProxyServer(0);
-		server.start();
-		
-		WebDriver driver = null;
-		try {
-			server.setCaptureHeaders(true);
-			server.newHar("testHarContainsUserAgent");
-			
-			Proxy proxy = server.seleniumProxy();
-			DesiredCapabilities capabilities = new DesiredCapabilities();
-			
-			capabilities.setCapability(CapabilityType.PROXY, proxy);
-			
-			driver = new FirefoxDriver(capabilities);
-			
-			driver.get("http://www.msn.com");
-			
-			Har har = server.getHar();
-			Assert.assertNotNull("Har is null", har);
-			HarLog log = har.getLog();
-			Assert.assertNotNull("Log is null", log);
-			HarNameVersion harNameVersion = log.getBrowser();
-			Assert.assertNotNull("HarNameVersion is null", harNameVersion);
-			
-			Assert.assertEquals("Expected browser to be Firefox", "Firefox", harNameVersion.getName());
-			Assert.assertNotNull("browser version is null", harNameVersion.getVersion());
-		} finally {
-			server.stop();
-			if (driver != null) {
-				driver.quit();
-			}
-		}
+	public void testHarContainsUserAgent() throws IOException {
+		proxy.setCaptureHeaders(true);
+		proxy.newHar("testHarContainsUserAgent");
+
+		HttpGet httpGet = new HttpGet(getLocalServerHostnameAndPort() + "/echo");
+		httpGet.setHeader("User-Agent", "Mozilla/5.0 (X11; Linux i586; rv:31.0) Gecko/20100101 Firefox/31.0");
+		EntityUtils.consumeQuietly(client.execute(httpGet).getEntity());
+
+		Har har = proxy.getHar();
+		Assert.assertNotNull("Har is null", har);
+		HarLog log = har.getLog();
+		Assert.assertNotNull("Log is null", log);
+		HarNameVersion harNameVersion = log.getBrowser();
+		Assert.assertNotNull("HarNameVersion is null", harNameVersion);
+
+		Assert.assertEquals("Expected browser to be Firefox", "Firefox", harNameVersion.getName());
+		Assert.assertEquals("Expected browser version to be 31.0", "31.0", harNameVersion.getVersion());
 	}
 
 	@Test
@@ -310,51 +290,34 @@ public class HarTest extends LocalServerTest {
 	}
 
 	@Test
-	public void testHarTimingsPopulated() {
-		ProxyServer server = new ProxyServer(0);
-		server.start();
+	public void testHarTimingsPopulated() throws IOException {
+		proxy.setCaptureHeaders(true);
+		proxy.newHar("testHarTimingsPopulated");
 
-		WebDriver driver = null;
-		try {
-			server.setCaptureHeaders(true);
-			server.newHar("testHarContainsUserAgent");
+		HttpGet httpGet = new HttpGet("http://www.msn.com");
+		EntityUtils.consumeQuietly(client.execute(httpGet).getEntity());
 
-			Proxy proxy = server.seleniumProxy();
-			DesiredCapabilities capabilities = new DesiredCapabilities();
+		Har har = proxy.getHar();
+		Assert.assertNotNull("Har is null", har);
+		HarLog log = har.getLog();
+		Assert.assertNotNull("Log is null", log);
 
-			capabilities.setCapability(CapabilityType.PROXY, proxy);
+		Assert.assertNotNull("No log entries", log.getEntries());
+		Assert.assertFalse("No log entries", log.getEntries().isEmpty());
 
-			driver = new FirefoxDriver(capabilities);
+		HarEntry firstEntry = log.getEntries().get(0);
+		HarTimings timings = firstEntry.getTimings();
 
-			driver.get("http://www.msn.com");
+		Assert.assertNotNull("No har timings", timings);
+		Assert.assertNotNull("blocked timing is null", timings.getBlocked());
+		Assert.assertNotNull("dns timing is null", timings.getDns());
+		Assert.assertNotNull("connect timing is null", timings.getConnect());
+		Assert.assertNotEquals("connect timing should be greater than 0", 0L, timings.getConnect().longValue());
 
-			Har har = server.getHar();
-			Assert.assertNotNull("Har is null", har);
-			HarLog log = har.getLog();
-			Assert.assertNotNull("Log is null", log);
+		// we can't guarantee that wait timing will be greater than 0
+		//Assert.assertNotEquals("wait timing should be greater than 0", 0L, timings.getWait());
 
-			Assert.assertNotNull("No log entries", log.getEntries());
-			Assert.assertFalse("No log entries", log.getEntries().isEmpty());
-
-			HarEntry firstEntry = log.getEntries().get(0);
-			HarTimings timings = firstEntry.getTimings();
-
-			Assert.assertNotNull("No har timings", timings);
-			Assert.assertNotNull("blocked timing is null", timings.getBlocked());
-			Assert.assertNotNull("dns timing is null", timings.getDns());
-			Assert.assertNotNull("connect timing is null", timings.getConnect());
-			Assert.assertNotEquals("connect timing should be greater than 0", 0L, timings.getConnect().longValue());
-
-			// we can't guarantee that wait timing will be greater than 0
-			//Assert.assertNotEquals("wait timing should be greater than 0", 0L, timings.getWait());
-
-			Assert.assertNotEquals("receive timing should be greater than 0", 0L, timings.getReceive());
-		} finally {
-			server.stop();
-			if (driver != null) {
-				driver.quit();
-			}
-		}
+		Assert.assertNotEquals("receive timing should be greater than 0", 0L, timings.getReceive());
 	}
 
 	@Test
