@@ -93,7 +93,7 @@ public class BlackAndWhiteListTest extends LocalServerTest {
         // not on the whitelist, so should get NON_WHITE_CODE, but blacklist
         // should kick in and prevent that.
         assertThat(
-                "Unexpeced status code for non-whitelisted, blacklisted URL",
+                "Unexpected status code for non-whitelisted, blacklisted URL",
                 httpStatusWhenGetting(getLocalServerHostnameAndPort() + "/a.txt.gz"),
                 is(BLACK_CODE_2));
 
@@ -145,7 +145,7 @@ public class BlackAndWhiteListTest extends LocalServerTest {
     
     @Test
     public void testWhitelistIsDisabledByDefault() {
-    	assertFalse("whitelist should be diabled unless explicitly set", proxy.isWhitelistEnabled());
+    	assertFalse("whitelist should be disabled unless explicitly set", proxy.isWhitelistEnabled());
     }
 
     /**
