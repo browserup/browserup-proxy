@@ -44,7 +44,7 @@ public abstract class ProxyServerTest {
     protected CookieStore cookieStore;
 
     @Before
-    public void startServer() throws Exception {
+    public void startProxyServer() throws Exception {
         proxy = new ProxyServer(0);
         proxy.start();
         proxyServerPort = proxy.getPort();
@@ -54,7 +54,7 @@ public abstract class ProxyServerTest {
     }
 
     @After
-    public void stopServer() throws Exception {
+    public void stopProxyServer() throws Exception {
         try {
             client.close();
         } finally {

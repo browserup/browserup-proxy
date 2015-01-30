@@ -12,14 +12,12 @@ public abstract class LocalServerTest extends ProxyServerTest {
     protected LocalServer server = new LocalServer();
 
     @Before
-    public void startServer() throws Exception {
+    public void startLocalJettyServer() throws Exception {
         server.start();
-        super.startServer();
     }
 
     @After
-    public void stopServer() throws Exception {
-        super.stopServer();
+    public void stopLocalJettyServer() throws Exception {
         server.stop();
     }
 
