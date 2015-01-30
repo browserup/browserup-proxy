@@ -13,7 +13,7 @@ public class AddHeadersTest extends LocalServerTest {
 
     @Test
     public void testAddHeadersToRequest() throws IOException {
-        HttpGet httpGet = new HttpGet(getHostnameAndPort() + "/echo");
+        HttpGet httpGet = new HttpGet(getLocalServerHostnameAndPort() + "/echo");
         proxy.addHeader("testheader1", "testvalue1");
         proxy.addHeader("testheader2", "testvalue2");
         String body = IOUtils.readFully(client.execute(httpGet).getEntity().getContent());
@@ -24,7 +24,7 @@ public class AddHeadersTest extends LocalServerTest {
 
     @Test
     public void testCanChangePreviouslyAddedHeaders() throws IOException {
-        HttpGet httpGet = new HttpGet(getHostnameAndPort() + "/echo");
+        HttpGet httpGet = new HttpGet(getLocalServerHostnameAndPort() + "/echo");
         proxy.addHeader("testheader1", "testvalue1");
         proxy.addHeader("testheader2", "testvalue2");
         IOUtils.readFully(client.execute(httpGet).getEntity().getContent());
