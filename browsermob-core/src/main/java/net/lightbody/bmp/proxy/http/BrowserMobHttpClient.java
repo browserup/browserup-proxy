@@ -72,6 +72,7 @@ import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.HttpTrace;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.config.Registry;
@@ -503,6 +504,15 @@ public class BrowserMobHttpClient {
             return new BrowserMobHttpRequest(new HttpHead(uri), this, -1, captureContent, proxyRequest);
         } catch (URISyntaxException e) {
             throw reportBadURI(url, "HEAD", e);
+        }
+    }
+
+    public BrowserMobHttpRequest newTrace(String url, net.lightbody.bmp.proxy.jetty.http.HttpRequest proxyRequest) {
+        try {
+            URI uri = makeUri(url);
+            return new BrowserMobHttpRequest(new HttpTrace(uri), this, -1, captureContent, proxyRequest);
+        } catch (URISyntaxException e) {
+            throw reportBadURI(url, "TRACE", e);
         }
     }
 
