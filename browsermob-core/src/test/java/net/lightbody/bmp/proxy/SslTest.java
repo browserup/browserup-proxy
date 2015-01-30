@@ -1,10 +1,10 @@
 package net.lightbody.bmp.proxy;
 
 import net.lightbody.bmp.proxy.test.util.ProxyServerTest;
-import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.util.EntityUtils;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -26,7 +26,6 @@ public class SslTest extends ProxyServerTest {
     }
 
     @Test
-    @Ignore // this worked at one time but now fails (likely due to HttpClient upgrade)
     public void testNewRelic() throws Exception {
         // see https://github.com/webmetrics/browsermob-proxy/issues/105
         proxy.remapHost("foo.newrelic.com", "rpm.newrelic.com");
@@ -38,7 +37,8 @@ public class SslTest extends ProxyServerTest {
 
     private void get(String url) throws IOException {
         HttpGet get = new HttpGet(url);
-        HttpResponse response = client.execute(get);
+        CloseableHttpResponse response = client.execute(get);
+        EntityUtils.consumeQuietly(response.getEntity());
         Assert.assertEquals("Expected 200 when fetching " + url, 200, response.getStatusLine().getStatusCode());
     }
 }

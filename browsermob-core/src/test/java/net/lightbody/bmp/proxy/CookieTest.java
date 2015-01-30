@@ -53,7 +53,7 @@ public class CookieTest extends LocalServerTest {
         BasicClientCookie cookie = new BasicClientCookie("foo", "bar");
         cookie.setDomain("127.0.0.1");
         cookie.setPath("/");
-        client.getCookieStore().addCookie(cookie);
+        cookieStore.addCookie(cookie);
 
         // set the cookie on the server side
         String body = IOUtils.readFully(client.execute(new HttpGet(getHostnameAndPort() + "/echo")).getEntity().getContent());
