@@ -17,7 +17,7 @@ import org.openqa.selenium.remote.DesiredCapabilities;
  */
 public class BrowserTest extends ProxyServerTest {
     @Test
-    public void googleCaSslNotWorkingInFirefox() throws Exception {
+    public void testCaptureHarHttpsPageWithFirefox() throws Exception {
         WebDriver driver = null;
         try {
             proxy.setCaptureHeaders(true);
@@ -56,44 +56,6 @@ public class BrowserTest extends ProxyServerTest {
             }
 
             Assert.assertTrue("Did not find any HAR entry containing the text <title>Google</title>", foundGooglePage);
-        } finally {
-            if (driver != null) {
-                driver.quit();
-            }
-        }
-    }
-
-    @Test
-    public void issue27() throws Exception {
-        // see: https://github.com/lightbody/browsermob-proxy/issues/27
-        WebDriver driver = null;
-        try {
-            proxy.setCaptureHeaders(true);
-            proxy.setCaptureContent(true);
-
-            // get the selenium proxy object
-            Proxy seleniumProxy = proxy.seleniumProxy();
-            DesiredCapabilities capabilities = new DesiredCapabilities();
-
-            capabilities.setCapability(CapabilityType.PROXY, seleniumProxy);
-
-            // start the browser up
-            driver = new FirefoxDriver(capabilities);
-
-            proxy.newHar("assertselenium.com");
-
-            driver.get("http://whatsmyuseragent.com");
-            //driver.get("https://google.com");
-
-            // get the HAR data
-            Har har = proxy.getHar();
-
-            // make sure something came back in the har
-            Assert.assertTrue(!har.getLog().getEntries().isEmpty());
-
-            // show that we can capture the HTML of the root page
-            String text = har.getLog().getEntries().get(0).getResponse().getContent().getText();
-            Assert.assertTrue(text.contains("My User Agent?"));
         } finally {
             if (driver != null) {
                 driver.quit();
