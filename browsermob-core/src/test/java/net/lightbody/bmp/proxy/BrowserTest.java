@@ -4,6 +4,7 @@ import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.core.har.HarEntry;
 import net.lightbody.bmp.proxy.test.util.ProxyServerTest;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.openqa.selenium.Proxy;
 import org.openqa.selenium.WebDriver;
@@ -12,10 +13,17 @@ import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
+import static org.junit.Assume.assumeFalse;
+
 /**
  * Tests which require a web browser should be placed in this class so they can be properly configured/ignored for CI builds.
  */
 public class BrowserTest extends ProxyServerTest {
+    @Before
+    public void skipForTravisCi() {
+        assumeFalse("true".equals(System.getenv("TRAVIS")));
+    }
+
     @Test
     public void testCaptureHarHttpsPageWithFirefox() throws Exception {
         WebDriver driver = null;
