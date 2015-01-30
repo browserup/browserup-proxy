@@ -55,8 +55,11 @@ public abstract class ProxyServerTest {
 
     @After
     public void stopServer() throws Exception {
-        client.close();
-        proxy.stop();
+        try {
+            client.close();
+        } finally {
+            proxy.stop();
+        }
     }
 
     /**
@@ -99,7 +102,7 @@ public abstract class ProxyServerTest {
                     .setSSLSocketFactory(sslsf)
                     .setDefaultCookieStore(cookieStore)
                     .setProxy(new HttpHost("127.0.0.1", proxyPort))
-                    // disable uncompressing content, since some tests want uncompressed content for testing purposes
+                    // disable decompressing content, since some tests want uncompressed content for testing purposes
                     .disableContentCompression()
                     .build();
 
