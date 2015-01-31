@@ -3,6 +3,10 @@ BrowserMob Proxy
 
 BrowserMob Proxy is a simple utility that makes it easy to capture performance data from browsers, typically written using automation toolkits such as Selenium and Watir.
 
+The current stable version of BrowserMob Proxy is 2.0 -- see the [2.0.x README](https://github.com/lightbody/browsermob-proxy/tree/2.0) for usage information. Version 2.1 is currently in
+development, and already contains a number of improvements over 2.0. See the [build instructions](https://github.com/lightbody/browsermob-proxy#creating-the-batch-files-from-source)
+for instructions on creating a 2.1 beta release.
+
 Features
 --------
 
@@ -134,12 +138,16 @@ Command-line Arguments
 Embedded Mode
 -------------
 
+**New in 2.1:** New Embedded Mode module
+
+BrowserMob Proxy 2.1 separates the Embedded Mode and REST API into two modules. If you only need Embedded Mode functionality, add the `browsermob-core` artifact (or `browsermob-core.jar` file) as a dependency. The REST API artifact is `browsermob-rest`.
+
 If you're using Java and Selenium, the easiest way to get started is to embed the project directly in your test. First, you'll need to make sure that all the dependencies are imported in to the project. You can find them in the *lib* directory. Or, if you're using Maven, you can add this to your pom:
 
     <dependency>
         <groupId>net.lightbody.bmp</groupId>
-        <artifactId>browsermob-proxy</artifactId>
-        <version>LATEST_VERSION (ex: 2.0-beta-9)</version>
+        <artifactId>browsermob-core</artifactId>
+        <version>2.1.0-beta-1-SNAPSHOT</version>
         <scope>test</scope>
     </dependency>
 
@@ -154,8 +162,8 @@ If your project already defines a Selenium dependency then you may want to exclu
 
     <dependency>
         <groupId>net.lightbody.bmp</groupId>
-        <artifactId>browsermob-proxy</artifactId>
-        <version>LATEST_VERSION (ex: 2.0-beta-9)</version>
+        <artifactId>browsermob-core</artifactId>
+        <version>2.1.0-beta-1-SNAPSHOT</version>
         <scope>test</scope>
         <exclusions>
             <exclusion>
@@ -231,24 +239,7 @@ Logging
 
 When running in stand-alone mode, the proxy loads the default logging configuration from the conf/bmp-logging.properties file. To increase/decrease the logging level, change the logging entry for net.lightbody.bmp.
 
-If you are running the proxy with Selenium or another application, you can configure BrowserMob Proxy to use your preferred logger. You'll need to suppress the slf4j-jdk14 dependency that is included by default:
-
-    <dependency>
-        <groupId>net.lightbody.bmp</groupId>
-        <artifactId>browsermob-proxy</artifactId>
-        <version>LATEST_VERSION (ex: 2.0-beta-9)</version>
-        <scope>test</scope>
-        <exclusions>
-            <exclusion>
-                <groupId>org.seleniumhq.selenium</groupId>
-                <artifactId>selenium-api</artifactId>
-            </exclusion>
-            <exclusion>
-		<groupId>org.slf4j</groupId>
-		<artifactId>slf4j-jdk14</artifactId>
-	    </exclusion>
-        </exclusions>
-    </dependency>
+**New in 2.1:** Neither Embedded Mode nor the REST API include an slf4j static binding, so you no longer need to exclude the slf4j-jdk14 dependency when including `browsermob-core` or `browsermob-rest`.
 
 Native DNS Resolution
 ---------------------
