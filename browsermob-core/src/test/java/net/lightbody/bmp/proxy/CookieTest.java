@@ -3,6 +3,7 @@ package net.lightbody.bmp.proxy;
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.core.har.HarCookie;
 import net.lightbody.bmp.core.har.HarEntry;
+import net.lightbody.bmp.proxy.test.util.LocalServerTest;
 import net.lightbody.bmp.proxy.util.IOUtils;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.cookie.BasicClientCookie;
@@ -12,16 +13,16 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-public class CookieTest extends DummyServerTest {
+public class CookieTest extends LocalServerTest {
     @Test
     public void testNoDoubleCookies() throws IOException {
         proxy.setCaptureContent(true);
         proxy.newHar("Test");
 
         // set the cookie on the server side
-        IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/cookie/")).getEntity().getContent());
+        IOUtils.readFully(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/cookie")).getEntity().getContent());
 
-        String body = IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/echo/")).getEntity().getContent());
+        String body = IOUtils.readFully(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/echo")).getEntity().getContent());
         int first = body.indexOf("foo=bar");
         int last = body.lastIndexOf("foo=bar");
         Assert.assertTrue("foo=bar cookie not found", first != -1);
@@ -35,7 +36,7 @@ public class CookieTest extends DummyServerTest {
         proxy.newHar("Test");
 
         // set the cookie on the server side
-        IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/cookie/")).getEntity().getContent());
+        IOUtils.readFully(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/cookie")).getEntity().getContent());
 
         Har har = proxy.getHar();
         HarEntry entry = har.getLog().getEntries().get(0);
@@ -52,11 +53,10 @@ public class CookieTest extends DummyServerTest {
         BasicClientCookie cookie = new BasicClientCookie("foo", "bar");
         cookie.setDomain("127.0.0.1");
         cookie.setPath("/");
-        client.getCookieStore().addCookie(cookie);
+        cookieStore.addCookie(cookie);
 
         // set the cookie on the server side
-        String body = IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/echo/")).getEntity().getContent());
-        System.out.println(body);
+        String body = IOUtils.readFully(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/echo")).getEntity().getContent());
 
         Har har = proxy.getHar();
         HarEntry entry = har.getLog().getEntries().get(0);

@@ -1,7 +1,9 @@
-package net.lightbody.bmp.proxy;
+package net.lightbody.bmp.proxy.test.util;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import net.lightbody.bmp.proxy.ProxyManager;
+import net.lightbody.bmp.proxy.ProxyServer;
 import net.lightbody.bmp.proxy.guice.ConfigModule;
 import org.junit.After;
 import org.junit.Before;

@@ -1,4 +1,4 @@
-package net.lightbody.bmp.proxy;
+package net.lightbody.bmp.proxy.test.servlet;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;

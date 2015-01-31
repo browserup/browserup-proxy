@@ -1,5 +1,6 @@
 package net.lightbody.bmp.proxy;
 
+import net.lightbody.bmp.proxy.test.util.LocalServerTest;
 import org.junit.Assert;
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.proxy.http.BrowserMobHttpRequest;
@@ -15,7 +16,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
-public class RepeatableInputStreamTest extends DummyServerTest{
+public class RepeatableInputStreamTest extends LocalServerTest {
 
     @Test
     public void test()
@@ -24,7 +25,7 @@ public class RepeatableInputStreamTest extends DummyServerTest{
 
         proxy.addRequestInterceptor(testRequestInterceptor);
 
-        HttpPost post = new HttpPost("http://127.0.0.1:8080/jsonrpc/");
+        HttpPost post = new HttpPost(getLocalServerHostnameAndPort() + "/jsonrpc");
         HttpEntity entity = new StringEntity("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"test\",\"params\":{}}");
         post.setEntity(entity);
         post.addHeader("Accept", "application/json-rpc");

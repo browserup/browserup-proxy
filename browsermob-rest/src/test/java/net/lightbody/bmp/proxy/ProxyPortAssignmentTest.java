@@ -3,9 +3,11 @@ package net.lightbody.bmp.proxy;
 import java.util.HashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+
+import net.lightbody.bmp.proxy.test.util.ProxyManagerTest;
 import org.junit.Test;
 
-public class ProxyPortAssignmentTest extends ProxyManagerTest{    
+public class ProxyPortAssignmentTest extends ProxyManagerTest {
         
     @Override
     public String[] getArgs() {        

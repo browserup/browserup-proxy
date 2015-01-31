@@ -12,6 +12,7 @@ import net.lightbody.bmp.core.har.HarPostData;
 import net.lightbody.bmp.core.har.HarRequest;
 import net.lightbody.bmp.core.har.HarResponse;
 import net.lightbody.bmp.core.har.HarTimings;
+import net.lightbody.bmp.proxy.test.util.LocalServerTest;
 import net.lightbody.bmp.proxy.util.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -19,17 +20,12 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.openqa.selenium.Proxy;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.remote.CapabilityType;
-import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -38,7 +34,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.zip.GZIPInputStream;
 
-public class HarTest extends DummyServerTest {
+public class HarTest extends LocalServerTest {
     @Test
     public void testRequestAndResponseSizesAreSet() throws Exception {
 
@@ -47,7 +43,7 @@ public class HarTest extends DummyServerTest {
         proxy.setCaptureContent(true);
         proxy.newHar("test");
 
-        HttpGet get = new HttpGet("http://127.0.0.1:8080/a.txt");
+        HttpGet get = new HttpGet(getLocalServerHostnameAndPort() + "/a.txt");
         client.execute(get);
 
         Har har = proxy.getHar();
@@ -67,51 +63,33 @@ public class HarTest extends DummyServerTest {
         /*
         Response headers should be something like this:
 
-        Date: Sun, 31 Aug 2014 16:08:44 GMT
-        Server: Jetty/5.1.x (Mac OS X/10.9.4 x86_64 java/1.7.0_09
         Content-Type: text/plain
+        Last-Modified: Wed, 28 Jan 2015 23:55:41 GMT
         Content-Length: 13
-        Last-Modified: Sun, 17 Nov 2013 05:37:58 GMT
-        Accept-Ranges: bytes
+        Server: Jetty(7.6.16.v20140903)
          */
-        Assert.assertTrue("Minimum header size not seen", entry.getResponse().getHeadersSize() > 200);
+        Assert.assertTrue("Minimum header size not seen", entry.getResponse().getHeadersSize() > 80);
         Assert.assertEquals(13, entry.getResponse().getBodySize());
     }
-    
+
 	@Test
-	public void testHarContainsUserAgent() {
-		ProxyServer server = new ProxyServer(0);
-		server.start();
-		
-		WebDriver driver = null;
-		try {
-			server.setCaptureHeaders(true);
-			server.newHar("testHarContainsUserAgent");
-			
-			Proxy proxy = server.seleniumProxy();
-			DesiredCapabilities capabilities = new DesiredCapabilities();
-			
-			capabilities.setCapability(CapabilityType.PROXY, proxy);
-			
-			driver = new FirefoxDriver(capabilities);
-			
-			driver.get("http://www.msn.com");
-			
-			Har har = server.getHar();
-			Assert.assertNotNull("Har is null", har);
-			HarLog log = har.getLog();
-			Assert.assertNotNull("Log is null", log);
-			HarNameVersion harNameVersion = log.getBrowser();
-			Assert.assertNotNull("HarNameVersion is null", harNameVersion);
-			
-			Assert.assertEquals("Expected browser to be Firefox", "Firefox", harNameVersion.getName());
-			Assert.assertNotNull("browser version is null", harNameVersion.getVersion());
-		} finally {
-			server.stop();
-			if (driver != null) {
-				driver.quit();
-			}
-		}
+	public void testHarContainsUserAgent() throws IOException {
+		proxy.setCaptureHeaders(true);
+		proxy.newHar("testHarContainsUserAgent");
+
+		HttpGet httpGet = new HttpGet(getLocalServerHostnameAndPort() + "/echo");
+		httpGet.setHeader("User-Agent", "Mozilla/5.0 (X11; Linux i586; rv:31.0) Gecko/20100101 Firefox/31.0");
+		EntityUtils.consumeQuietly(client.execute(httpGet).getEntity());
+
+		Har har = proxy.getHar();
+		Assert.assertNotNull("Har is null", har);
+		HarLog log = har.getLog();
+		Assert.assertNotNull("Log is null", log);
+		HarNameVersion harNameVersion = log.getBrowser();
+		Assert.assertNotNull("HarNameVersion is null", harNameVersion);
+
+		Assert.assertEquals("Expected browser to be Firefox", "Firefox", harNameVersion.getName());
+		Assert.assertEquals("Expected browser version to be 31.0", "31.0", harNameVersion.getVersion());
 	}
 
 	@Test
@@ -119,8 +97,7 @@ public class HarTest extends DummyServerTest {
 		proxy.setCaptureContent(true);
 		proxy.newHar("Test");
 
-		String body = IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/a.txt")).getEntity().getContent());
-		System.out.println("Done with request");
+		String body = IOUtils.readFully(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/a.txt")).getEntity().getContent());
 
 		Assert.assertTrue(body.contains("this is a.txt"));
 
@@ -149,7 +126,7 @@ public class HarTest extends DummyServerTest {
 		proxy.setCaptureContent(true);
 		proxy.newHar("Test");
 
-		HttpPost post = new HttpPost("http://127.0.0.1:8080/jsonrpc/");
+		HttpPost post = new HttpPost(getLocalServerHostnameAndPort() + "/jsonrpc");
 		HttpEntity entity = new StringEntity("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"test\",\"params\":{}}");
 		post.setEntity(entity);
 		post.addHeader("Accept", "application/json-rpc");
@@ -181,7 +158,7 @@ public class HarTest extends DummyServerTest {
 		proxy.setCaptureContent(true);
 		proxy.newHar("Test");
 
-		HttpPost post = new HttpPost("http://127.0.0.1:8080/jsonrpc/");
+		HttpPost post = new HttpPost(getLocalServerHostnameAndPort() + "/jsonrpc");
 		post.setEntity(new UrlEncodedFormEntity(Collections.singletonList(new BasicNameValuePair("foo", "bar"))));
 
 		IOUtils.readFully(client.execute(post).getEntity().getContent());
@@ -211,11 +188,11 @@ public class HarTest extends DummyServerTest {
 		proxy.setCaptureContent(true);
 		proxy.newHar("Test");
 
-		InputStream is1 = client.execute(new HttpGet("http://127.0.0.1:8080/c.png")).getEntity().getContent();
+		InputStream is1 = client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/c.png")).getEntity().getContent();
 		ByteArrayOutputStream o1 = new ByteArrayOutputStream();
 		IOUtils.copy(is1, o1);
 		ByteArrayOutputStream o2 = new ByteArrayOutputStream();
-		IOUtils.copy(new FileInputStream("src/test/dummy-server/c.png"), o2);
+        IOUtils.copy(HarTest.class.getResourceAsStream("/local-server/c.png"), o2);
 
 		Assert.assertTrue("Image does not match file system", Arrays.equals(o1.toByteArray(), o2.toByteArray()));
 
@@ -245,7 +222,7 @@ public class HarTest extends DummyServerTest {
 		proxy.setCaptureContent(true);
 		proxy.newHar("Test");
 
-		HttpGet get = new HttpGet("http://127.0.0.1:8080/a.txt?foo=bar&a=1%262");
+		HttpGet get = new HttpGet(getLocalServerHostnameAndPort() + "/a.txt?foo=bar&a=1%262");
 		client.execute(get);
 
 		Har har = proxy.getHar();
@@ -284,13 +261,11 @@ public class HarTest extends DummyServerTest {
 		proxy.newHar("Test");
 
 		// gzip all requests
-		dummy.getHandler().setMinGzipLength(1);
+		server.forceGzip();
 
-
-		HttpGet get = new HttpGet("http://127.0.0.1:8080/a.txt");
+		HttpGet get = new HttpGet(getLocalServerHostnameAndPort() + "/a.txt");
 		get.addHeader("Accept-Encoding", "gzip");
 		String body = IOUtils.readFully(new GZIPInputStream(client.execute(get).getEntity().getContent()));
-		System.out.println("Done with request");
 
 		Assert.assertTrue(body.contains("this is a.txt"));
 
@@ -313,51 +288,34 @@ public class HarTest extends DummyServerTest {
 	}
 
 	@Test
-	public void testHarTimingsPopulated() {
-		ProxyServer server = new ProxyServer(0);
-		server.start();
+	public void testHarTimingsPopulated() throws IOException {
+		proxy.setCaptureHeaders(true);
+		proxy.newHar("testHarTimingsPopulated");
 
-		WebDriver driver = null;
-		try {
-			server.setCaptureHeaders(true);
-			server.newHar("testHarContainsUserAgent");
+		HttpGet httpGet = new HttpGet("http://www.msn.com");
+		EntityUtils.consumeQuietly(client.execute(httpGet).getEntity());
 
-			Proxy proxy = server.seleniumProxy();
-			DesiredCapabilities capabilities = new DesiredCapabilities();
+		Har har = proxy.getHar();
+		Assert.assertNotNull("Har is null", har);
+		HarLog log = har.getLog();
+		Assert.assertNotNull("Log is null", log);
 
-			capabilities.setCapability(CapabilityType.PROXY, proxy);
+		Assert.assertNotNull("No log entries", log.getEntries());
+		Assert.assertFalse("No log entries", log.getEntries().isEmpty());
 
-			driver = new FirefoxDriver(capabilities);
+		HarEntry firstEntry = log.getEntries().get(0);
+		HarTimings timings = firstEntry.getTimings();
 
-			driver.get("http://www.msn.com");
+		Assert.assertNotNull("No har timings", timings);
+		Assert.assertNotNull("blocked timing is null", timings.getBlocked());
+		Assert.assertNotNull("dns timing is null", timings.getDns());
+		Assert.assertNotNull("connect timing is null", timings.getConnect());
+		Assert.assertNotEquals("connect timing should be greater than 0", 0L, timings.getConnect().longValue());
 
-			Har har = server.getHar();
-			Assert.assertNotNull("Har is null", har);
-			HarLog log = har.getLog();
-			Assert.assertNotNull("Log is null", log);
+		// we can't guarantee that wait timing will be greater than 0
+		//Assert.assertNotEquals("wait timing should be greater than 0", 0L, timings.getWait());
 
-			Assert.assertNotNull("No log entries", log.getEntries());
-			Assert.assertFalse("No log entries", log.getEntries().isEmpty());
-
-			HarEntry firstEntry = log.getEntries().get(0);
-			HarTimings timings = firstEntry.getTimings();
-
-			Assert.assertNotNull("No har timings", timings);
-			Assert.assertNotNull("blocked timing is null", timings.getBlocked());
-			Assert.assertNotNull("dns timing is null", timings.getDns());
-			Assert.assertNotNull("connect timing is null", timings.getConnect());
-			Assert.assertNotEquals("connect timing should be greater than 0", 0L, timings.getConnect().longValue());
-
-			// we can't guarantee that wait timing will be greater than 0
-			//Assert.assertNotEquals("wait timing should be greater than 0", 0L, timings.getWait());
-
-			Assert.assertNotEquals("receive timing should be greater than 0", 0L, timings.getReceive());
-		} finally {
-			server.stop();
-			if (driver != null) {
-				driver.quit();
-			}
-		}
+		Assert.assertNotEquals("receive timing should be greater than 0", 0L, timings.getReceive());
 	}
 
 	@Test
@@ -401,14 +359,17 @@ public class HarTest extends DummyServerTest {
 		Assert.assertEquals("Expected body size to match POST length", lengthyPost.length(), request.getBodySize());
 
 		Assert.assertNotNull("No har timings", timings);
-		Assert.assertNotEquals("send timing should be greater than 0", 0L, timings.getSend());
+
+        // skipping the send timing check for now; on a very fast connection this sometimes does complete in less than 1ms
+        // TODO: replace external call with a self-contained call to the local server that is explicitly throttled at the server side
+        //Assert.assertNotEquals("send timing should be greater than 0", 0L, timings.getSend());
 	}
 
 	@Test
 	public void testHarPagesPopulated() throws IOException {
 		proxy.newHar("testpage1");
 
-		HttpGet get = new HttpGet("http://127.0.0.1:8080/a.txt");
+		HttpGet get = new HttpGet(getLocalServerHostnameAndPort() + "/a.txt");
 		IOUtils.readFully(client.execute(get).getEntity().getContent());
 
 		proxy.endPage();
@@ -508,7 +469,7 @@ public class HarTest extends DummyServerTest {
 	public void testIpAddressPopulatedForIpAddressUrl() throws IOException {
 		proxy.newHar("testIpAddressPopulatedForIpAddressUrl");
 
-		HttpGet get = new HttpGet("http://127.0.0.1:8080/a.txt");
+		HttpGet get = new HttpGet(getLocalServerHostnameAndPort() + "/a.txt");
 		IOUtils.readFully(client.execute(get).getEntity().getContent());
 
 		proxy.endPage();
@@ -536,7 +497,7 @@ public class HarTest extends DummyServerTest {
 		proxy.setCaptureContent(true);
 		proxy.newHar("test");
 
-		HttpPost post = new HttpPost("http://127.0.0.1:8080/jsonrpc/");
+		HttpPost post = new HttpPost(getLocalServerHostnameAndPort() + "/jsonrpc");
 		String jsonRpcString = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"test\",\"params\":{}}";
 		HttpEntity entity = new StringEntity(jsonRpcString);
 		post.setEntity(entity);
@@ -565,7 +526,7 @@ public class HarTest extends DummyServerTest {
 		proxy.setCaptureContent(true);
 		proxy.newHar("test");
 
-		HttpPost post = new HttpPost("http://127.0.0.1:8080/echopayload/");
+		HttpPost post = new HttpPost(getLocalServerHostnameAndPort() + "/echopayload");
 		String lengthyPost = createRandomString(100000);
 
 		HttpEntity entity = new StringEntity(lengthyPost);

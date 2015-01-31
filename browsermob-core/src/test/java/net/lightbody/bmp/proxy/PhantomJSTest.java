@@ -22,7 +22,7 @@ public class PhantomJSTest {
     @Before
     public void startProxy() throws Exception {
         // start the proxy
-        server = new ProxyServer(4444);
+        server = new ProxyServer(0);
         server.start();
         server.setCaptureHeaders(true);
         server.setCaptureContent(true);
