@@ -57,7 +57,6 @@ public class CookieTest extends LocalServerTest {
 
         // set the cookie on the server side
         String body = IOUtils.readFully(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/echo")).getEntity().getContent());
-        System.out.println(body);
 
         Har har = proxy.getHar();
         HarEntry entry = har.getLog().getEntries().get(0);

@@ -98,7 +98,6 @@ public class HarTest extends LocalServerTest {
 		proxy.newHar("Test");
 
 		String body = IOUtils.readFully(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/a.txt")).getEntity().getContent());
-		System.out.println("Done with request");
 
 		Assert.assertTrue(body.contains("this is a.txt"));
 
@@ -267,7 +266,6 @@ public class HarTest extends LocalServerTest {
 		HttpGet get = new HttpGet(getLocalServerHostnameAndPort() + "/a.txt");
 		get.addHeader("Accept-Encoding", "gzip");
 		String body = IOUtils.readFully(new GZIPInputStream(client.execute(get).getEntity().getContent()));
-		System.out.println("Done with request");
 
 		Assert.assertTrue(body.contains("this is a.txt"));
 

@@ -16,6 +16,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -116,12 +117,12 @@ public class MailingListIssuesTest extends LocalServerTest {
         Assert.assertEquals(interceptedBody[0], body);
     }
 
+    // @Ignoring this test because accessing the HttpRequest from the interceptor causes the connection to hang
     @Test
     @Ignore
-    public void testThatInterceptorsCanReadPostParamaters() throws IOException, InterruptedException {
-
+    public void testThatInterceptorsCanReadPostParamaters() throws IOException {
         proxy.setCaptureContent(true);
-        proxy.newHar("test");
+        proxy.newHar("testThatInterceptorsCanReadPostParamaters");
 
         final String[] capturedPostData = new String[2];
 
@@ -137,7 +138,7 @@ public class MailingListIssuesTest extends LocalServerTest {
         post.setEntity(entity);
         post.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
-        client.execute(post);
+        EntityUtils.consumeQuietly(client.execute(post).getEntity());
 
         Har har = proxy.getHar();
         HarLog log = har.getLog();
@@ -147,12 +148,9 @@ public class MailingListIssuesTest extends LocalServerTest {
         HarPostData postdata = request.getPostData();
         capturedPostData[1] = postdata.getParams().get(0).getValue();
 
-        System.out.println(capturedPostData[0]);
-        System.out.println(capturedPostData[1]);
-
-        boolean postDataCapturedAndLoggedCorrectly = capturedPostData[0].equals(capturedPostData[1]);
-
-        Assert.assertEquals(true,postDataCapturedAndLoggedCorrectly);
+        Assert.assertNotNull("Interceptor POST data was null", capturedPostData[0]);
+        Assert.assertNotNull("HAR POST data was null", capturedPostData[1]);
+        Assert.assertEquals("POST param from interceptor does not match POST param captured in HAR", capturedPostData[1], capturedPostData[0]);
     }
 
 }
