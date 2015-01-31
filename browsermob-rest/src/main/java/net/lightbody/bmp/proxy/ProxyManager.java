@@ -1,20 +1,22 @@
 package net.lightbody.bmp.proxy;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import net.lightbody.bmp.proxy.util.ExpirableMap;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class ProxyManager {
@@ -27,24 +29,35 @@ public class ProxyManager {
     private final ConcurrentMap<Integer, ProxyServer> proxies;
 
     @Inject
-    public ProxyManager(Provider<ProxyServer> proxyServerProvider, @Named("minPort") Integer minPort, @Named("maxPort") Integer maxPort, @Named("ttl") Integer ttl) {
+    public ProxyManager(Provider<ProxyServer> proxyServerProvider, @Named("minPort") Integer minPort, @Named("maxPort") Integer maxPort, final @Named("ttl") Integer ttl) {
         this.proxyServerProvider = proxyServerProvider;
         this.minPort = minPort;
         this.maxPort = maxPort;
-        this.lastPort = maxPort; 
-        this.proxies = ttl > 0 ?                
-                new ExpirableMap<Integer, ProxyServer>(ttl, new ExpirableMap.OnExpire<ProxyServer>(){
-                    @Override
-                    public void run(ProxyServer proxy) {
-                        try {
-                            LOG.debug("Expiring ProxyServer `{}`...", proxy.getPort());
+        this.lastPort = maxPort;
+        if (ttl > 0) {
+            // proxies should be evicted after the specified ttl, so set up an evicting cache and a listener to stop the proxies when they're evicted
+            RemovalListener<Integer, ProxyServer> removalListener = new RemovalListener<Integer, ProxyServer> () {
+                public void onRemoval(RemovalNotification<Integer, ProxyServer> removal) {
+                    try {
+                        ProxyServer proxy = removal.getValue();
+                        if (proxy != null) {
+                            LOG.debug("Expiring ProxyServer on port {} after {} seconds without activity", proxy.getPort(), ttl);
                             proxy.stop();
-                        } catch (Exception ex) {
-                            LOG.warn("Error while stopping an expired proxy", ex);
                         }
+                    } catch (Exception ex) {
+                        LOG.warn("Error while stopping an expired proxy on port " + removal.getKey(), ex);
                     }
-                }) : 
-                new ConcurrentHashMap<Integer, ProxyServer>();    
+                }
+            };
+
+            this.proxies = CacheBuilder.newBuilder()
+                    .expireAfterAccess(ttl, TimeUnit.SECONDS)
+                    .removalListener(removalListener)
+                    .build()
+                    .asMap();
+        } else {
+            this.proxies = new ConcurrentHashMap<Integer, ProxyServer>();
+        }
     }
 
     public ProxyServer create(Map<String, String> options, Integer port, String bindAddr) {
