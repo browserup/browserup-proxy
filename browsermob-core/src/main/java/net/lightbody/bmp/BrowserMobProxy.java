@@ -1,167 +1,391 @@
-package net.lightbody.bmp.proxy;
+package net.lightbody.bmp;
+
+import net.lightbody.bmp.core.har.Har;
+import net.lightbody.bmp.proxy.BlacklistEntry;
+import net.lightbody.bmp.proxy.CaptureType;
+import net.lightbody.bmp.proxy.auth.AuthType;
+import net.lightbody.bmp.proxy.dns.HostResolver;
 
 import java.net.InetAddress;
-import net.lightbody.bmp.core.har.Har;
-
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
-import net.lightbody.bmp.proxy.http.BrowserMobHttpClient;
 
-public interface BrowserMobProxyServer {
-    // configuration / pre-start() methods
-    int getPort();    
-    InetAddress getClientBindAddress();
-    InetAddress getServerBindAddress();
-    
-    // proxy server control methods    
-    // start proxy on port, bind to 0.0.0.0
-    void start(int port);    
-    //bind both client and server to bindAddress
-    void start(int port, InetAddress bindAddress);    
-    
+public interface BrowserMobProxy {
+    /**
+     * Starts the proxy on port 0 (a JVM-selected open port). The proxy will bind the listener to the wildcard address (0:0:0:0 - all network interfaces).
+     *
+     * @throws java.lang.IllegalStateException if the proxy has already been started
+     */
+    void start();
+
+    /**
+     * Starts the proxy on the specified port. The proxy will bind the listener to the wildcard address (0:0:0:0 - all network interfaces).
+     *
+     * @param port port to listen on
+     * @throws java.lang.IllegalStateException if the proxy has already been started
+     */
+    void start(int port);
+
+    /**
+     * Starts the proxy on the specified port. The proxy will listen for connections on the network interface specified by the bindAddress, and will
+     * also initiate connections to upstream servers on the same network interface.
+     *
+     * @param port port to listen on
+     * @param bindAddress address of the network interface on which the proxy will listen for connections and also attempt to connect to upstream servers.
+     * @throws java.lang.IllegalStateException if the proxy has already been started
+     */
+    void start(int port, InetAddress bindAddress);
+
+    /**
+     * Starts the proxy on the specified port. The proxy will listen for connections on the network interface specified by the clientBindAddress, and will
+     * initiate connections to upstream servers from the network interface specified by the serverBindAddress.
+     *
+     * @param port port to listen on
+     * @param clientBindAddress address of the network interface on which the proxy will listen for connections
+     * @param serverBindAddress address of the network interface on which the proxy will connect to upstream servers
+     * @throws java.lang.IllegalStateException if the proxy has already been started
+     */
     void start(int port, InetAddress clientBindAddress, InetAddress serverBindAddress);
 
     /**
+     * Returns true if the proxy is started and listening for connections, otherwise false.
+     */
+    boolean isStarted();
+
+    /**
      * Stops accepting new client connections and initiates a graceful shutdown of the proxy server, waiting for network traffic to stop.
+     * If the proxy was previously stopped or aborted, this method has no effect.
      * TODO: define a time limit to wait for network traffic to stop     
-     * do we need this if we already have waitForNetworkTrafficToStop() ?
-     * 
+     *
+     * @throws java.lang.IllegalStateException if the proxy has not been started.
      */
     void stop();
     
-    //new method
     /**
      * Like {@link #stop()}, shuts down the proxy server and no longer accepts incoming connections, but does not wait for any existing
      * network traffic to cease. Any existing connections to clients or to servers may be force-killed immediately.
+     * If the proxy was previously stopped or aborted, this method has no effect.
+     *
+     * @throws java.lang.IllegalStateException if the proxy has not been started
      */
     void abort();
 
-    // removed throws NameResolutionException, which is Jetty impl-specific
-    // I don't think we should introduce a dependency on Selenium just to provide a convenience method.
-    //org.openqa.selenium.Proxy seleniumProxy(); //throws NameResolutionException;   
-    
-    // Jetty impl-specific
-    //void cleanup();
+    /**
+     * Returns the address of the network interface on which the proxy is listening for client connections.
+     *
+     * @throws java.lang.IllegalStateException if the proxy has not been started
+     */
+    InetAddress getClientBindAddress();
 
-    // bind address methods replaced with updated BrowserMobProxyServer#start()
-    
-    //TODO: move this to a utility class
-    //InetAddress getConnectableLocalHost() throws UnknownHostException;
+    /**
+     * Returns the actual port on which the proxy is listening for client connections.
+     *
+     * @throws java.lang.IllegalStateException if the proxy has not been started
+     */
+    int getPort();
 
-    // HAR capture features
-    enum HarCaptureSetting{
-        HEADERS, CONTENT, BINARY_CONTENT, COOKIES
-    }
-    
+    /**
+     * Returns the address address of the network interface the proxy will use to initiate upstream connections
+     *
+     * @throws java.lang.IllegalStateException if the proxy has not been started
+     */
+    InetAddress getServerBindAddress();
+
+    /**
+     * Retrieves the current HAR.
+     *
+     * @return current HAR, or null if HAR capture is not enabled
+     */
     Har getHar();
-    // use a default page name
-    Har newHar();    
-    Har newHar(String initialPageRef);    
-    Har newHar(EnumSet<HarCaptureSetting> harCaptureSettings);    
-    Har newHar(String initialPageRef, EnumSet<HarCaptureSetting> harCaptureSettings);        
-    void newPage(String pageRef);
-    void endPage();
-    //new method
+
+    /**
+     * Starts a new HAR file with the default page name (see {@link #newPage()}. Enables HAR capture if it was not previously enabled.
+     *
+     * @return existing HAR file, or null if none exists or HAR capture was disabled
+     */
+    Har newHar();
+
+    /**
+     * Starts a new HAR file with the specified page name. Enables HAR capure if it was not previously enabled.
+     *
+     * @param initialPageRef page name of the new HAR file
+     * @return existing HAR file, or null if none exists or HAR capture was disabled
+     */
+    Har newHar(String initialPageRef);
+
+    /**
+     * Sets the data types that will be captured in the HAR file for future requests. A null or empty set will not disable HAR capture, but will
+     * disable collection of additional {@link net.lightbody.bmp.proxy.CaptureType} data types.
+     * {@link net.lightbody.bmp.proxy.CaptureType} provides several convenience methods to retrieve commonly-used capture settings.
+     * <p/>
+     * <b>Note:</b> HAR capture must still be explicitly enabled via {@link #newHar()} or {@link #newHar(String)} to begin capturing
+     * any request and response contents.
+     *
+     * @param harCaptureSettings HAR data types to capture
+     */
+    void setHarCaptureSettings(Set<CaptureType> harCaptureSettings);
+
+    /**
+     * @return A copy of HAR capture types currently in effect. The EnumSet cannot be used to modify the HAR capture types currently in effect.
+     */
+    EnumSet<CaptureType> getHarCaptureSettings();
+
+    /**
+     * Starts a new HAR page using the default page naming convention. The default page naming convention is "Page #", where "#" resets to 1
+     * every time {@link #newHar()} or {@link #newHar(String)} is called, and increments on every subsequent call to {@link #newPage()} or
+     * {@link #newHar(String)}.
+     *
+     * @return the HAR as it existed immediately after ending the current page
+     * @throws java.lang.IllegalStateException if HAR capture has not been enabled via {@link #newHar()} or {@link #newHar(String)}
+     */
+    Har newPage();
+
+    /**
+     * Starts a new HAR page using the specified pageRef as the page name.
+     *
+     * @param pageRef name of the new page
+     * @return the HAR as it existed immediately after ending the current page
+     * @throws java.lang.IllegalStateException if HAR capture has not been enabled via {@link #newHar()} or {@link #newHar(String)}
+     */
+    Har newPage(String pageRef);
+
     /**
      * Stops capturing traffic in the HAR.
+     *
      * @return the existing HAR
      */
-    Har endHar();                
-    
-    // interceptors are necessarily specific to the implementation. there's not a generic way to implement this functionality.
-    // essentially, this is a breaking change when moving to LP.
-//    @Deprecated
-//    void addRequestInterceptor(HttpRequestInterceptor i);
-//    void addRequestInterceptor(RequestInterceptor interceptor);
-//    @Deprecated
-//    void addResponseInterceptor(HttpResponseInterceptor i);
-//    void addResponseInterceptor(ResponseInterceptor interceptor);
+    Har endHar();
 
-    // StreamManager is Jetty impl-specific. replace with methods below.
-//    StreamManager getStreamManager();
+    /**
+     * Sets the maximum bandwidth to consume when reading server responses.
+     *
+     * @param bytesPerSecond maximum bandwidth, in bytes per second
+     */
+    void setReadBandwidthLimit(long bytesPerSecond);
 
-    // renamed these methods to be more explicit
-//    @Deprecated
-//    void setDownstreamKbps(long downstreamKbps);
-//    @Deprecated
-//    void setUpstreamKbps(long upstreamKbps);
-    // make the units bytes
-    void setReadBandwidthLimit(long bps);
-    void setWriteBandwidthLimit(long bps);
-    
+    /**
+     * Sets the maximum bandwidth to consume when sending requests to servers.
+     *
+     * @param bytesPerSecond maximum bandwidth, in bytes per second
+     */
+    void setWriteBandwidthLimit(long bytesPerSecond);
+
+    //TODO: add information on how data limits behave
     void setReadDataLimit(long bytes);
     void setWriteDataLimit(long bytes);
 
-    // replace deprecated setLatency with a method that takes an explicit TimeUnit
-    //void setLatency(long latency)
+    //TODO: add details: proxy<->sever network latency? proxy<->client? per-packet latency, or for the entire request?
     void setLatency(long latency, TimeUnit timeUnit);
 
     // network settings
-//    void setRequestTimeout(int requestTimeout);
     void setRequestTimeout(int requestTimeout, TimeUnit timeUnit);
-//    void setSocketOperationTimeout(int readTimeout);
     void setSocketOperationTimeout(int readTimeout, TimeUnit timeUnit);
-//    void setConnectionTimeout(int connectionTimeout);
     void setConnectionTimeout(int connectionTimeout, TimeUnit timeUnit);
 
     // basic by default
     void autoAuthorization(String domain, String username, String password); 
-    
-    void autoAuthorization(String domain, String username, String password, AuthType authType);    
-    
-    void rewriteUrl(String pattern, String replace);
-    void clearRewriteRules();
-    //new method
-    //TODO: thinking about making this signature return a Map<Pattern, String> instead of a Collection of RewriteRules that encapsulates Map<Pattern, String>    
-    //or return Map where key is Pattern#toString(), to make it consistent with signature of rewriteUrl
+    void autoAuthorization(String domain, String username, String password, AuthType authType);
+    void stopAutoAuthorization();
+
     /**
-     * @return all RewriteRules currently in effect.
+     * Adds a rewrite rule for the specified URL-matching regular expression. The specified urlPattern will be replaced with the specified
+     * replacement expression. The urlPattern is treated as a Java regular expression and must be properly escaped (see {@link java.util.regex.Pattern}).
+     * The replacementExpression may consist of capture groups specified in the urlPattern, denoted
+     * by a $ (see {@link java.util.regex.Matcher#appendReplacement(StringBuffer, String)}.
+     * <p/>
+     * <b>Note:</b> The rewriting applies to the entire URL, including scheme (http:// or https://), hostname/address, port, and query string. Note that this means
+     * a urlPattern of {@code "http://www\.website\.com/page"} will NOT match {@code http://www.website.com:80/page}.
+     * <p/>
+     * For example, the following rewrite rule:
+     *
+     * <pre>   {@code proxy.rewriteUrl("http://www\.(yahoo|bing)\.com\?(\w+)=(\w+)", "http://www.google.com?originalDomain=$1&$2=$3");}</pre>
+     *
+     * will match an HTTP request (but <i>not</i> HTTPS!) to www.yahoo.com or www.bing.com with exactly 1 query parameter,
+     * and replace it with a call to www.google.com with an 'originalDomain' query parameter, as well as the original query parameter.
+     * <p/>
+     * When applied to the URL:
+     * <pre>   {@code http://www.yahoo.com?theFirstParam=someValue}</pre>
+     * will result in the proxy making a request to:
+     * <pre>   {@code http://www.google.com?originalDomain=yahoo&theFirstParam=someValue}</pre>
+     * When applied to the URL:
+     * <pre>   {@code http://www.bing.com?anotherParam=anotherValue}</pre>
+     * will result in the proxy making a request to:
+     * <pre>   {@code http://www.google.com?originalDomain=bing&anotherParam=anotherValue}</pre>
+     *
+     * @param urlPattern URL-matching regular expression
+     * @param replacementExpression an expression, which may optionally contain capture groups, which will replace any URL which matches urlPattern
+     */
+    void rewriteUrl(String urlPattern, String replacementExpression);
+
+    /**
+     * Replaces existing rewrite rules with the specified patterns and replacement expressions.
+     * See {@link #rewriteUrl(String, String)} for details on the format of the rewrite rules.
+     *
+     * @param rewriteRules {@code Map<urlPattern, replacementExpression>}
+     */
+    void rewriteUrls(Map<String, String> rewriteRules);
+
+    /**
+     * Returns all rewrite rules currently in effect.
+     *
+     * @return {@code Map<URL-matching regex, replacement expression>}
      */
     Map<String, String> getRewriteRules();
 
-    void blacklistRequests(String pattern, int responseCode);
-    void blacklistRequests(String pattern, int responseCode, String method);
-    Collection<BlacklistEntry> getBlacklistedUrls();
-    void clearBlacklist();
-
-//    @Deprecated
-//    List<BlacklistEntry> getBlacklistedRequests();
-//    @Deprecated
-//    List<Pattern> getWhitelistRequests();
-
-    void whitelistRequests(int responseCode);
-    void whitelistRequests(String pattern, int responseCode);
-    void clearWhitelist();
-    Collection<WhitelistEntry> getWhitelistUrls();    
-    // TODO: make method names and signatures more consistent between blacklist / whitelist / rewrite rules ?
-    
-    void setRetryCount(int count);
-
-    void addHeader(String name, String value);
-    //new method
+    /**
+     * Removes an existing rewrite rule whose urlPattern matches the specified pattern.
+     *
+     * @param urlPattern rewrite rule pattern to remove
+     */
+    void removeRewriteRule(String urlPattern);
 
     /**
-     * Removes a header previously added with the {@link #addHeader(String name, String value)} method.
+     * Clears all existing rewrite rules.
+     */
+    void clearRewriteRules();
+
+    /**
+     * Adds a URL-matching regular expression to the blacklist. Requests that match a blacklisted URL will return the specified HTTP
+     * statusCode for all HTTP methods.
+     *
+     * @param urlPattern URL-matching regular expression to blacklist
+     * @param statusCode HTTP status code to return
+     */
+    void blacklistRequests(String urlPattern, int statusCode);
+
+    /**
+     * Adds a URL-matching regular expression to the blacklist. Requests that match a blacklisted URL will return the specified HTTP
+     * statusCode only when the request's HTTP method (GET, POST, PUT, etc.) matches the specified httpMethodPattern regular expression.
+     *
+     * @param urlPattern URL-matching regular expression to blacklist
+     * @param statusCode HTTP status code to return
+     * @param httpMethodPattern regular expression matching a request's HTTP method
+     */
+    void blacklistRequests(String urlPattern, int statusCode, String httpMethodPattern);
+
+    /**
+     * Returns all blacklist entries currently in effect.
+     *
+     * @return blacklist entries, or an empty collection if none exist
+     */
+    Collection<BlacklistEntry> getBlacklist();
+
+    /**
+     * Clears any existing blacklist.
+     */
+    void clearBlacklist();
+
+    /**
+     * Whitelists URLs matching the specified regular expression patterns. Replaces any existing whitelist.
+     *
+     * @param urlPatterns URL-matching regular expressions to whitelist; null or an empty collection will enable an empty whitelist
+     * @param statusCode HTTP status code to return to clients when a URL matches a pattern
+     */
+    void whitelistRequests(Collection<String> urlPatterns, int statusCode);
+
+    /**
+     * Adds a URL-matching regular expression to an existing whitelist.
+     *
+     * @param urlPattern URL-matching regular expressions to whitelist
+     * @throws java.lang.IllegalStateException if the whitelist is not enabled
+     */
+    void addWhitelistPattern(String urlPattern);
+
+    /**
+     * Enables the whitelist, but with no matching URLs. All requests will generated the specified HTTP statusCode.
+     *
+     * @param statusCode HTTP status code to return to clients on all requests
+     */
+    void enableEmptyWhitelist(int statusCode);
+
+    /**
+     * Clears any existing whitelist and disables whitelisting.
+     */
+    void disableWhitelist();
+
+    /**
+     * Returns the URL-matching regular expressions currently in effect. If the whitelist is disabled, this method always returns an empty collection.
+     * If the whitelist is enabled but empty, this method return an empty collection.
+     *
+     * @return whitelist currently in effect, or an empty collection if the whitelist is disabled or empty
+     */
+    Collection<String> getWhitelistUrls();
+
+    /**
+     * Returns the status code returned for all URLs that do not match the whitelist. If the whitelist is not currently enabled, returns null.
+     *
+     * @return HTTP status code returned for non-whitelisted URLs, or null if the whitelist is disabled.
+     */
+    Integer getWhitelistStatusCode();
+
+    /**
+     * Returns true if the whitelist is enabled, otherwise false.
+     */
+    boolean isWhitelistEnabled();
+
+    //TODO: need more information on what this retries. does it retry only connection timeouts/failures? how about DNS lookup failures, or 5xx response codes from the server?
+    void setRetryCount(int count);
+
+    /**
+     * Adds the specified HTTP headers to every request. Replaces any existing additional headers with the specified headers.
+     *
+     * @param headers {@code Map<header name, header value>} to append to every request.
+     */
+    void addHeaders(Map<String, String> headers);
+
+    /**
+     * Adds a new HTTP header to every request.
+     * TODO: do these headers replace an existing header on the request, if one exists? for example, can this be used to override User-Agent headers?
+     *
+     * @param name name of the header to add
+     * @param value new header's value
+     */
+    void addHeader(String name, String value);
+
+    /**
+     * Removes a header previously added with {@link #addHeader(String name, String value)}.
+     *
      * @param name previously-added header's name
      */
     void removeHeader(String name);
 
-    // DNS manipulation
-    void clearDNSCache();
-//    void setDNSCacheTimeout(int timeout);
-    void setDNSCacheTimeout(int timeout, TimeUnit timeUnit);
-    void remapHost(String source, String target);
-    //new method
-    Map<String, String> getHostRemappings();
+    /**
+     * Removes all headers previously added with {@link #addHeader(String name, String value)}.
+     */
+    void removeAllHeaders();
 
-    // modified this method's return value
+    /**
+     * Returns all headers previously added with {@link #addHeader(String name, String value)}.
+     *
+     * @return {@code Map<header name, header value>}
+     */
+    Map<String, String> getAllHeaders();
+
+    //TODO: note: moved host name remappings and DNS manipulation to AdvancedHostResolver
+    /**
+     * Sets the list of resolvers that will be used to look up host names. The resolvers will be consulted in the order the appear in the
+     * list, until a resolver returns a resolved address.
+     *
+     * @param resolvers ordered list of host name resolvers
+     */
+    void setHostNameResolvers(List<? extends HostResolver> resolvers);
+
+    /**
+     * Returns the host name resolvers currently in effect.
+     *
+     * @return ordered list of host name resolvers
+     */
+    List<? extends HostResolver> getHostNameResolvers();
+
     /**
      * Waits for existing network traffic to stop, and for the specified quietPeriod to elapse. Returns true if there is no network traffic
      * for the quiet period within the specified timeout, otherwise returns false.
+     *
      * @param quietPeriod amount of time after which network traffic will be considered "stopped"
      * @param timeout maximum amount of time to wait for network traffic to stop
      * @param timeUnit TimeUnit for the quietPeriod and timeout
@@ -169,10 +393,22 @@ public interface BrowserMobProxyServer {
      */
     boolean waitForQuiescence(long quietPeriod, long timeout, TimeUnit timeUnit);
 
-    //new methods: support for upstream chained proxy.
-    void setChainedProxyAddress(InetSocketAddress chainedProxyAddress);
-    InetSocketAddress getChainedProxyAddress();
+    /**
+     * Sets an upstream proxy that this proxy will use to connect to external hosts.
+     *
+     * @param chainedProxyAddress address and port of the upstream proxy
+     */
+    void setChainedProxy(InetSocketAddress chainedProxyAddress);
 
-    // Jetty impl-specific. chained proxy support in setChainedProxy
-//    void setOptions(Map<String, String> options);        
+    /**
+     * Returns the address and port of the upstream proxy.
+     *
+     * @return address and port of the upstream proxy, or null of there is none.
+     */
+    InetSocketAddress getChainedProxy();
+
+    /**
+     * Removes the upstream proxy. If no proxy is set, this method has no effect.
+     */
+    void removeChainedProxy();
 }

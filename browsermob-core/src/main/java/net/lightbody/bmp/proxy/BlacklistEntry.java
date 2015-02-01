@@ -2,35 +2,39 @@ package net.lightbody.bmp.proxy;
 
 import java.util.regex.Pattern;
 
+/**
+ * An entry in the Blacklist, consisting of a regular expression to match the URL, an HTTP status code, and a regular expression
+ * to match the HTTP method.
+ */
 public class BlacklistEntry {
-	private final Pattern pattern;
-	private final int responseCode;
-	private final Pattern method;
+    private final Pattern urlPattern;
+	private final int statusCode;
+	private final Pattern httpMethodPatern;
 
 	/**
 	 * Creates a new BlacklistEntry with no HTTP method matching (i.e. all methods will match).
 	 * 
-	 * @param pattern URL pattern to blacklist
-	 * @param responseCode response code to return for blacklisted URL
+	 * @param urlPattern URL pattern to blacklist
+	 * @param statusCode HTTP status code to return for blacklisted URL
 	 */
-	public BlacklistEntry(String pattern, int responseCode) {
-		this(pattern, responseCode, null);
+	public BlacklistEntry(String urlPattern, int statusCode) {
+		this(urlPattern, statusCode, null);
 	}
 	
 	/**
 	 * Creates a new BlacklistEntry which will match both a URL and an HTTP method
 	 * 
-	 * @param pattern URL pattern to blacklist
-	 * @param responseCode response code to return for blacklisted URL
-	 * @param method HTTP method to match (e.g. GET, PUT, PATCH, etc.)
+	 * @param urlPattern URL pattern to blacklist
+	 * @param statusCode status code to return for blacklisted URL
+	 * @param httpMethodPattern HTTP method to match (e.g. GET, PUT, PATCH, etc.)
 	 */
-	public BlacklistEntry(String pattern, int responseCode, String method) {
-		this.pattern = Pattern.compile(pattern);
-		this.responseCode = responseCode;
-		if (method == null || method.isEmpty()) {
-			this.method = null;
+	public BlacklistEntry(String urlPattern, int statusCode, String httpMethodPattern) {
+		this.urlPattern = Pattern.compile(urlPattern);
+		this.statusCode = statusCode;
+		if (httpMethodPattern == null || httpMethodPattern.isEmpty()) {
+			this.httpMethodPatern = null;
 		} else {
-			this.method = Pattern.compile(method);
+			this.httpMethodPatern = Pattern.compile(httpMethodPattern);
 		}
 	}
 	
@@ -43,23 +47,46 @@ public class BlacklistEntry {
 	 * @return true if the URL matches this BlacklistEntry
 	 */
 	public boolean matches(String url, String httpMethod) {
-		if (method != null) {
-			return pattern.matcher(url).matches() && method.matcher(httpMethod).matches();
+		if (httpMethodPatern != null) {
+			return urlPattern.matcher(url).matches() && httpMethodPatern.matcher(httpMethod).matches();
 		} else {
-			return pattern.matcher(url).matches();
+			return urlPattern.matcher(url).matches();
 		}
 	}
 
+    public Pattern getUrlPattern() {
+        return urlPattern;
+    }
+
+    public int getStatusCode() {
+        return statusCode;
+    }
+
+    public Pattern getHttpMethodPatern() {
+        return httpMethodPatern;
+    }
+
+    @Deprecated
+    /**
+     * @deprecated use {@link #getUrlPattern()}
+     */
 	public Pattern getPattern() {
-		return this.pattern;
+		return getUrlPattern();
 	}
 
+    @Deprecated
+    /**
+     * @deprecated use {@link #getStatusCode()}
+     */
 	public int getResponseCode() {
-		return responseCode;
+		return getStatusCode();
 	}
 
+    @Deprecated
+    /**
+     * @deprecated use {@link #getHttpMethodPatern()}
+     */
 	public Pattern getMethod() {
-		return method;
+		return getHttpMethodPatern();
 	}
-
 }
