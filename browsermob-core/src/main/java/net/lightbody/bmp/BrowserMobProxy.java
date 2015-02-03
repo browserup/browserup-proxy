@@ -255,7 +255,8 @@ public interface BrowserMobProxy {
 
     /**
      * Adds a URL-matching regular expression to the blacklist. Requests that match a blacklisted URL will return the specified HTTP
-     * statusCode for all HTTP methods.
+     * statusCode for all HTTP methods. If there are existing patterns on the blacklist, the urlPattern will be evaluated last,
+     * after the URL is checked against all other blacklist entries.
      *
      * @param urlPattern URL-matching regular expression to blacklist
      * @param statusCode HTTP status code to return
@@ -265,6 +266,8 @@ public interface BrowserMobProxy {
     /**
      * Adds a URL-matching regular expression to the blacklist. Requests that match a blacklisted URL will return the specified HTTP
      * statusCode only when the request's HTTP method (GET, POST, PUT, etc.) matches the specified httpMethodPattern regular expression.
+     * If there are existing patterns on the blacklist, the urlPattern will be evaluated last, after the URL is checked against all
+     * other blacklist entries
      *
      * @param urlPattern URL-matching regular expression to blacklist
      * @param statusCode HTTP status code to return
@@ -273,7 +276,16 @@ public interface BrowserMobProxy {
     void blacklistRequests(String urlPattern, int statusCode, String httpMethodPattern);
 
     /**
-     * Returns all blacklist entries currently in effect.
+     * Replaces any existing blacklist with the specified blacklist. URLs will be evaluated against the blacklist in the order
+     * specified by the Collection's iterator.
+     *
+     * @param blacklist new blacklist entries
+     */
+    void setBlacklist(Collection<BlacklistEntry> blacklist);
+
+    /**
+     * Returns all blacklist entries currently in effect. Iterating over the returned Collection is guaranteed to return
+     * blacklist entries in the order in which URLs are actually evaluated against the blacklist.
      *
      * @return blacklist entries, or an empty collection if none exist
      */
@@ -321,11 +333,11 @@ public interface BrowserMobProxy {
     Collection<String> getWhitelistUrls();
 
     /**
-     * Returns the status code returned for all URLs that do not match the whitelist. If the whitelist is not currently enabled, returns null.
+     * Returns the status code returned for all URLs that do not match the whitelist. If the whitelist is not currently enabled, returns -1.
      *
-     * @return HTTP status code returned for non-whitelisted URLs, or null if the whitelist is disabled.
+     * @return HTTP status code returned for non-whitelisted URLs, or -1 if the whitelist is disabled.
      */
-    Integer getWhitelistStatusCode();
+    int getWhitelistStatusCode();
 
     /**
      * Returns true if the whitelist is enabled, otherwise false.
