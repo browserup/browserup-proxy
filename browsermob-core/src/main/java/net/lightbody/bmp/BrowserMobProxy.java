@@ -193,7 +193,8 @@ public interface BrowserMobProxy {
     void stopAutoAuthorization();
 
     /**
-     * Adds a rewrite rule for the specified URL-matching regular expression. The specified urlPattern will be replaced with the specified
+     * Adds a rewrite rule for the specified URL-matching regular expression. If there are any existing rewrite rules, the new rewrite
+     * rule will be applied last, after all other rewrite rules are applied. The specified urlPattern will be replaced with the specified
      * replacement expression. The urlPattern is treated as a Java regular expression and must be properly escaped (see {@link java.util.regex.Pattern}).
      * The replacementExpression may consist of capture groups specified in the urlPattern, denoted
      * by a $ (see {@link java.util.regex.Matcher#appendReplacement(StringBuffer, String)}.
@@ -223,7 +224,9 @@ public interface BrowserMobProxy {
     void rewriteUrl(String urlPattern, String replacementExpression);
 
     /**
-     * Replaces existing rewrite rules with the specified patterns and replacement expressions.
+     * Replaces existing rewrite rules with the specified patterns and replacement expressions. The rules will be applied in the order
+     * specified by the Map's iterator.
+     * <p/>
      * See {@link #rewriteUrl(String, String)} for details on the format of the rewrite rules.
      *
      * @param rewriteRules {@code Map<urlPattern, replacementExpression>}
@@ -231,7 +234,8 @@ public interface BrowserMobProxy {
     void rewriteUrls(Map<String, String> rewriteRules);
 
     /**
-     * Returns all rewrite rules currently in effect.
+     * Returns all rewrite rules currently in effect. Iterating over the returned Map is guaranteed to return rewrite rules
+     * in the order in which the rules are actually applied.
      *
      * @return {@code Map<URL-matching regex, replacement expression>}
      */

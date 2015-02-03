@@ -9,7 +9,8 @@ import java.util.concurrent.TimeUnit;
  */
 public interface AdvancedHostResolver extends HostResolver {
     /**
-     * <b>Adds</b> the host remappings in the specified Map of {@code <original hostname, remapped hostname>} to the existing list of remappings (if any).
+     * Replaces the host remappings in the existing list of remappings (if any) with the specified remappings. The remappings will be
+     * applied in the order specified by the Map's iterator.
      * <p/>
      * <b>Note:</b> The original hostnames must exactly match the requested hostname. It is not a domain or regular expression match.
      *
@@ -18,7 +19,8 @@ public interface AdvancedHostResolver extends HostResolver {
     void remapHosts(Map<String, String> hostRemappings);
 
     /**
-     * Remaps an individual host.
+     * Remaps an individual host. If there are any existing remappings, the new remapping will be applied last, after all existing
+     * remappings are applied.
      *
      * @param originalHost Original host to remap. Must exactly match the requested hostname (not a domain or regular expression match).
      * @param remappedHost hostname that will replace originalHost
@@ -38,7 +40,8 @@ public interface AdvancedHostResolver extends HostResolver {
     void clearHostRemappings();
 
     /**
-     * Returns all host remappings in effect.
+     * Returns all host remappings in effect. Iterating over the returned Map is guaranteed to return remappings in the order in which the
+     * remappings are actually applied.
      *
      * @return Map of {@code <original hostname, remapped hostname>}
      */
