@@ -37,9 +37,9 @@ public class ErrorResponseTest extends ProxyServerTest {
 
             String responseBody = IOUtils.readFully(response.getEntity().getContent());
 
-            String hostNotFoundTitle = MessagesUtil.getMessage("response.conn_failure.title");
+            String connectionFailureTitle = MessagesUtil.getMessage("response.conn_failure.title");
 
-            assertTrue("Expected \"response.conn_failure.title\" message in body of error response", responseBody.contains(hostNotFoundTitle));
+            assertTrue("Expected \"response.conn_failure.title\" message in body of error response", responseBody.contains(connectionFailureTitle));
             assertTrue("Expected URL in body of error response", responseBody.contains(url));
         }
     }
@@ -55,9 +55,9 @@ public class ErrorResponseTest extends ProxyServerTest {
 
             String responseBody = IOUtils.readFully(response.getEntity().getContent());
 
-            String hostNotFoundTitle = MessagesUtil.getMessage("response.net_timeout.title");
+            String networkTimeoutTitle = MessagesUtil.getMessage("response.net_timeout.title");
 
-            assertTrue("Expected \"response.net_timeout.title\" message in body of error response", responseBody.contains(hostNotFoundTitle));
+            assertTrue("Expected \"response.net_timeout.title\" message in body of error response", responseBody.contains(networkTimeoutTitle));
             assertTrue("Expected URL in body of error response", responseBody.contains(url));
         }
     }

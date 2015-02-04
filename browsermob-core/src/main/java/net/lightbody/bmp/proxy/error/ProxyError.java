@@ -1,4 +1,4 @@
-package net.lightbody.bmp.proxy;
+package net.lightbody.bmp.proxy.error;
 
 import com.google.common.html.HtmlEscapers;
 import net.lightbody.bmp.l10n.MessagesUtil;
@@ -39,12 +39,12 @@ public enum ProxyError {
             "response.common_error.long"),
     ;
 
-    private final String title;
+    private final String errorTitle;
     private final String shortDesc;
     private final String longDesc;
 
     ProxyError(String titleMessageKey, String shortDescMessageKey, String longDescMessageKey) {
-        this.title = MessagesUtil.getMessage(titleMessageKey);
+        this.errorTitle = MessagesUtil.getMessage(titleMessageKey);
         this.shortDesc = MessagesUtil.getMessage(shortDescMessageKey);
         this.longDesc = MessagesUtil.getMessage(longDescMessageKey);
     }
@@ -58,7 +58,10 @@ public enum ProxyError {
     public String getHtml(String url) {
         String formattedShortDesc = String.format(shortDesc, HtmlEscapers.htmlEscaper().escape(url));
 
-        return MessagesUtil.getMessage("response.error_page.html", title, formattedShortDesc, longDesc);
-    }
+        String pageTitle = MessagesUtil.getMessage("response.common_error.pagetitle");
 
+        String errorHtml = ErrorUtil.getErrorHtml();
+
+        return String.format(errorHtml, pageTitle, errorTitle, formattedShortDesc, longDesc);
+    }
 }
