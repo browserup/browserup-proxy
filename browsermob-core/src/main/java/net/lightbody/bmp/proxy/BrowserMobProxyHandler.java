@@ -304,21 +304,21 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
     }
 
     private static void reportError(Exception e, URL url, HttpResponse response) {
-        FirefoxErrorContent error = FirefoxErrorContent.GENERIC;
+        ProxyError error = ProxyError.GENERIC;
         if (e instanceof UnknownHostException) {
-            error = FirefoxErrorContent.DNS_NOT_FOUND;
+            error = ProxyError.DNS_NOT_FOUND;
         } else if (e instanceof ConnectException) {
-            error = FirefoxErrorContent.CONN_FAILURE;
+            error = ProxyError.CONN_FAILURE;
         } else if (e instanceof ConnectTimeoutException) {
-            error = FirefoxErrorContent.NET_TIMEOUT;
+            error = ProxyError.NET_TIMEOUT;
         } else if (e instanceof NoHttpResponseException) {
-            error = FirefoxErrorContent.NET_RESET;
+            error = ProxyError.NET_RESET;
         } else if (e instanceof EOFException) {
-            error = FirefoxErrorContent.NET_INTERRUPT;
+            error = ProxyError.NET_INTERRUPT;
         } else if (e instanceof IllegalArgumentException && e.getMessage().startsWith("Host name may not be null")){
-            error = FirefoxErrorContent.DNS_NOT_FOUND;
+            error = ProxyError.DNS_NOT_FOUND;
         } else if (e instanceof BadURIException){
-            error = FirefoxErrorContent.MALFORMED_URI;
+            error = ProxyError.MALFORMED_URI;
         }
 
         String text = error.getHtml(url.toString());

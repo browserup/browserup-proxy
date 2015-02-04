@@ -8,7 +8,7 @@ import net.lightbody.bmp.l10n.MessagesUtil;
  * long description for each error type, and provides a {@link #getHtml(String)} method to return formatted HTML code to return to the
  * client.
  */
-public enum FirefoxErrorContent {
+public enum ProxyError {
     CONN_FAILURE(
             "response.conn_failure.title",
             "response.conn_failure.short",
@@ -43,7 +43,7 @@ public enum FirefoxErrorContent {
     private final String shortDesc;
     private final String longDesc;
 
-    FirefoxErrorContent(String titleMessageKey, String shortDescMessageKey, String longDescMessageKey) {
+    ProxyError(String titleMessageKey, String shortDescMessageKey, String longDescMessageKey) {
         this.title = MessagesUtil.getMessage(titleMessageKey);
         this.shortDesc = MessagesUtil.getMessage(shortDescMessageKey);
         this.longDesc = MessagesUtil.getMessage(longDescMessageKey);
