@@ -1,5 +1,6 @@
 package net.lightbody.bmp.proxy;
 
+import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
@@ -16,6 +17,9 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
@@ -27,6 +31,13 @@ public class ProxyManager {
     private final int maxPort;
     private final Provider<ProxyServer> proxyServerProvider;
     private final ConcurrentMap<Integer, ProxyServer> proxies;
+
+    /**
+     * Interval at which expired proxy checks will actively clean up expired proxies. Proxies may still be cleaned up when accessing the
+     * proxies map.
+     */
+    private static final int EXPIRED_PROXY_CLEANUP_INTERVAL_SECONDS = 60;
+    private final ScheduledExecutorService expiredProxyCleanupExecutor;
 
     @Inject
     public ProxyManager(Provider<ProxyServer> proxyServerProvider, @Named("minPort") Integer minPort, @Named("maxPort") Integer maxPort, final @Named("ttl") Integer ttl) {
@@ -50,13 +61,39 @@ public class ProxyManager {
                 }
             };
 
-            this.proxies = CacheBuilder.newBuilder()
+            final Cache<Integer, ProxyServer> proxyCache = CacheBuilder.newBuilder()
                     .expireAfterAccess(ttl, TimeUnit.SECONDS)
                     .removalListener(removalListener)
-                    .build()
-                    .asMap();
+                    .build();
+
+            this.proxies = proxyCache.asMap();
+
+            // create a single thread executor that will create a daemon thread to clean up expired proxies
+            this.expiredProxyCleanupExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+                @Override
+                public Thread newThread(Runnable r) {
+                    Thread thread = Executors.defaultThreadFactory().newThread(r);
+                    thread.setDaemon(true);
+                    return thread;
+                }
+            });
+
+            // schedule the asynchronous proxy cleanup task
+            this.expiredProxyCleanupExecutor.scheduleAtFixedRate(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        proxyCache.cleanUp();
+                    } catch (RuntimeException e) {
+                        LOG.warn("Error occurred while attempting to clean up expired proxies", e);
+                    }
+                }
+            }, EXPIRED_PROXY_CLEANUP_INTERVAL_SECONDS, EXPIRED_PROXY_CLEANUP_INTERVAL_SECONDS, TimeUnit.SECONDS);
         } else {
             this.proxies = new ConcurrentHashMap<Integer, ProxyServer>();
+
+            // not expiring proxies, so no need to periodically clean them up
+            this.expiredProxyCleanupExecutor = null;
         }
     }
 
