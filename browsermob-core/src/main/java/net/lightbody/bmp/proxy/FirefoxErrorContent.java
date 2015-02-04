@@ -1,47 +1,64 @@
 package net.lightbody.bmp.proxy;
 
+import com.google.common.html.HtmlEscapers;
+import net.lightbody.bmp.l10n.MessagesUtil;
+
+/**
+ * Proxy errors that can be returned to the client. This enum is a convenience class that collects the title, short description, and
+ * long description for each error type, and provides a {@link #getHtml(String)} method to return formatted HTML code to return to the
+ * client.
+ */
 public enum FirefoxErrorContent {
-    CONN_FAILURE("Unable to connect", "Firefox can't establish a connection to the server at %s", FirefoxErrorConstants.SHARED_LONG_DESC),
-    DNS_NOT_FOUND("Server not found", "Firefox can't find the server at %s.", "<ul>\n"+
-            "  <li>Check the address for typing errors such as\n"+
-            "    <strong>ww</strong>.example.com instead of\n"+
-            "    <strong>www</strong>.example.com</li>\n"+
-            "  <li>If you are unable to load any pages, check your computer's network\n"+
-            "    connection.</li>\n"+
-            "  <li>If your computer or network is protected by a firewall or proxy, make sure\n"+
-            "    that Firefox is permitted to access the Web.</li>\n"+
-            "</ul>"),
-    GENERIC("Oops.", "Something went wrong.", "<p>Firefox can't load this page for some reason.</p>"),
-    MALFORMED_URI("The address isn't valid", "The URL is not valid and cannot be loaded.", "<ul>\n" +
-            "  <li>Web addresses are usually written like\n" +
-            "    <strong>http://www.example.com/</strong></li>\n" +
-            "  <li>Make sure that you're using forward slashes (i.e.\n" +
-            "    <strong>/</strong>).</li>\n" +
-            "</ul>"),
-    NET_INTERRUPT("The connection was interrupted", "The connection to %s was interrupted while the page was loading.", FirefoxErrorConstants.SHARED_LONG_DESC),
-    NET_RESET("The connection was reset", "The connection to the server was reset while the page was loading.", FirefoxErrorConstants.SHARED_LONG_DESC),
-    NET_TIMEOUT("The connection has timed out", "The server at %s is taking too long to respond.", FirefoxErrorConstants.SHARED_LONG_DESC),
+    CONN_FAILURE(
+            "response.conn_failure.title",
+            "response.conn_failure.short",
+            "response.common_error.long"),
+    DNS_NOT_FOUND(
+            "response.dns_not_found.title",
+            "response.dns_not_found.short",
+            "response.dns_not_found.long"),
+    GENERIC(
+            "response.generic.title",
+            "response.generic.short",
+            "response.generic.long"),
+    MALFORMED_URI(
+            "response.malformed_uri.title",
+            "response.malformed_uri.short",
+            "response.malformed_uri.long"),
+    NET_INTERRUPT(
+            "response.net_interrupt.title",
+            "response.net_interrupt.short",
+            "response.common_error.long"),
+    NET_RESET(
+            "response.net_reset.title",
+            "response.net_reset.short",
+            "response.common_error.long"),
+    NET_TIMEOUT(
+            "response.net_timeout.title",
+            "response.net_timeout.short",
+            "response.common_error.long"),
     ;
 
-    private String title;
-    private String shortDesc;
-    private String longDesc;
+    private final String title;
+    private final String shortDesc;
+    private final String longDesc;
 
-    FirefoxErrorContent(String title, String shortDesc, String longDesc) {
-        this.title = title;
-        this.shortDesc = shortDesc;
-        this.longDesc = longDesc;
+    FirefoxErrorContent(String titleMessageKey, String shortDescMessageKey, String longDescMessageKey) {
+        this.title = MessagesUtil.getMessage(titleMessageKey);
+        this.shortDesc = MessagesUtil.getMessage(shortDescMessageKey);
+        this.longDesc = MessagesUtil.getMessage(longDescMessageKey);
     }
 
-    public String getTitle() {
-        return title;
+    /**
+     * Returns an HTML message for this error that can be sent to the client.
+     *
+     * @param url URL request that caused the error
+     * @return HTML for this error
+     */
+    public String getHtml(String url) {
+        String formattedShortDesc = String.format(shortDesc, HtmlEscapers.htmlEscaper().escape(url));
+
+        return MessagesUtil.getMessage("response.error_page.html", title, formattedShortDesc, longDesc);
     }
 
-    public String getShortDesc() {
-        return shortDesc;
-    }
-
-    public String getLongDesc() {
-        return longDesc;
-    }
 }
