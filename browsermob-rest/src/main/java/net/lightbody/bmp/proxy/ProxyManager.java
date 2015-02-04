@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import net.lightbody.bmp.exception.ProxyExistsException;
+import net.lightbody.bmp.exception.ProxyPortsExhaustedException;
 import net.lightbody.bmp.proxy.util.ExpirableMap;
 
 import org.slf4j.Logger;
@@ -81,7 +83,7 @@ public class ProxyManager {
                 LOG.debug("Proxy already exists at port {}", port);
             }
         }
-        throw new ProxyPortsExhaustedException();    
+        throw new ProxyPortsExhaustedException();
     }
 
     public ProxyServer create(Map<String, String> options, Integer port) {
