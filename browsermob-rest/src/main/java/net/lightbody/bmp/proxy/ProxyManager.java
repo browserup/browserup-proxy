@@ -11,6 +11,7 @@ import com.google.inject.name.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.ref.WeakReference;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
@@ -30,6 +31,11 @@ public class ProxyManager {
     private final int minPort; 
     private final int maxPort;
     private final Provider<ProxyServer> proxyServerProvider;
+    // retain a reference to the Cache to allow the ProxyCleanupTask to .cleanUp(), since asMap() is just a view into the cache.
+    // it would seem to make sense to pass the newly-built Cache directly to the ProxyCleanupTask and have it retain a WeakReference to it, and
+    // only maintain a reference to the .asMap() result in this class. puzzlingly, however, the Cache can actually get garbage collected
+    // before the .asMap() view of it does.
+    private final Cache<Integer, ProxyServer> proxyCache;
     private final ConcurrentMap<Integer, ProxyServer> proxies;
 
     /**
@@ -37,7 +43,49 @@ public class ProxyManager {
      * proxies map.
      */
     private static final int EXPIRED_PROXY_CLEANUP_INTERVAL_SECONDS = 60;
-    private final ScheduledExecutorService expiredProxyCleanupExecutor;
+
+    // Initialize-on-demand a single thread executor that will create a daemon thread to clean up expired proxies. Since the resulting executor
+    // is a singleton, there will at most one thread to service all ProxyManager instances.
+    private static class ScheduledExecutorHolder {
+        private static final ScheduledExecutorService expiredProxyCleanupExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread thread = Executors.defaultThreadFactory().newThread(r);
+                thread.setName("expired-proxy-cleanup-thread");
+                thread.setDaemon(true);
+                return thread;
+            }
+        });
+    }
+
+    // static inner class to prevent leaking ProxyManager instances to the cleanup task
+    private static class ProxyCleanupTask implements Runnable {
+        // using a WeakReference that will indicate to us when the Cache (and thus its ProxyManager) has been garbage
+        // collected, allowing this cleanup task to kill itself
+        private final WeakReference<Cache<Integer, ProxyServer>> proxyCache;
+
+        public ProxyCleanupTask(Cache<Integer, ProxyServer> cache) {
+            this.proxyCache = new WeakReference<Cache<Integer, ProxyServer>>(cache);
+        }
+
+        @Override
+        public void run() {
+            Cache<Integer, ProxyServer> cache = proxyCache.get();
+            if (cache != null) {
+                try {
+                    cache.cleanUp();
+                } catch (RuntimeException e) {
+                    LOG.warn("Error occurred while attempting to clean up expired proxies", e);
+                }
+            } else {
+                // the cache instance was garbage collected, so it no longer needs to be cleaned up. throw an exception
+                // to prevent the scheduled executor from re-scheduling this cleanup
+                LOG.info("Proxy Cache was garbage collected. No longer cleaning up expired proxies for unused ProxyManager.");
+
+                throw new RuntimeException("Exiting ProxyCleanupTask");
+            }
+        }
+    }
 
     @Inject
     public ProxyManager(Provider<ProxyServer> proxyServerProvider, @Named("minPort") Integer minPort, @Named("maxPort") Integer maxPort, final @Named("ttl") Integer ttl) {
@@ -52,7 +100,7 @@ public class ProxyManager {
                     try {
                         ProxyServer proxy = removal.getValue();
                         if (proxy != null) {
-                            LOG.debug("Expiring ProxyServer on port {} after {} seconds without activity", proxy.getPort(), ttl);
+                            LOG.info("Expiring ProxyServer on port {} after {} seconds without activity", proxy.getPort(), ttl);
                             proxy.stop();
                         }
                     } catch (Exception ex) {
@@ -61,39 +109,20 @@ public class ProxyManager {
                 }
             };
 
-            final Cache<Integer, ProxyServer> proxyCache = CacheBuilder.newBuilder()
+            this.proxyCache = CacheBuilder.newBuilder()
                     .expireAfterAccess(ttl, TimeUnit.SECONDS)
                     .removalListener(removalListener)
                     .build();
 
             this.proxies = proxyCache.asMap();
 
-            // create a single thread executor that will create a daemon thread to clean up expired proxies
-            this.expiredProxyCleanupExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
-                @Override
-                public Thread newThread(Runnable r) {
-                    Thread thread = Executors.defaultThreadFactory().newThread(r);
-                    thread.setDaemon(true);
-                    return thread;
-                }
-            });
-
             // schedule the asynchronous proxy cleanup task
-            this.expiredProxyCleanupExecutor.scheduleAtFixedRate(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        proxyCache.cleanUp();
-                    } catch (RuntimeException e) {
-                        LOG.warn("Error occurred while attempting to clean up expired proxies", e);
-                    }
-                }
-            }, EXPIRED_PROXY_CLEANUP_INTERVAL_SECONDS, EXPIRED_PROXY_CLEANUP_INTERVAL_SECONDS, TimeUnit.SECONDS);
+            ScheduledExecutorHolder.expiredProxyCleanupExecutor.scheduleWithFixedDelay(new ProxyCleanupTask(proxyCache),
+                    EXPIRED_PROXY_CLEANUP_INTERVAL_SECONDS, EXPIRED_PROXY_CLEANUP_INTERVAL_SECONDS, TimeUnit.SECONDS);
         } else {
             this.proxies = new ConcurrentHashMap<Integer, ProxyServer>();
-
-            // not expiring proxies, so no need to periodically clean them up
-            this.expiredProxyCleanupExecutor = null;
+            // nothing to timeout, so no Cache
+            this.proxyCache = null;
         }
     }
 
