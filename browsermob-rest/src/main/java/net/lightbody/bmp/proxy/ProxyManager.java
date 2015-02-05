@@ -8,6 +8,8 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import net.lightbody.bmp.exception.ProxyExistsException;
+import net.lightbody.bmp.exception.ProxyPortsExhaustedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -160,7 +162,7 @@ public class ProxyManager {
                 LOG.debug("Proxy already exists at port {}", port);
             }
         }
-        throw new ProxyPortsExhaustedException();    
+        throw new ProxyPortsExhaustedException();
     }
 
     public ProxyServer create(Map<String, String> options, Integer port) {
