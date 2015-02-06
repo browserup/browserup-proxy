@@ -412,7 +412,7 @@ public interface BrowserMobProxy {
     /**
      * Sets an upstream proxy that this proxy will use to connect to external hosts.
      *
-     * @param chainedProxyAddress address and port of the upstream proxy
+     * @param chainedProxyAddress address and port of the upstream proxy, or null to remove an upstream proxy
      */
     void setChainedProxy(InetSocketAddress chainedProxyAddress);
 
@@ -422,9 +422,4 @@ public interface BrowserMobProxy {
      * @return address and port of the upstream proxy, or null of there is none.
      */
     InetSocketAddress getChainedProxy();
-
-    /**
-     * Removes the upstream proxy. If no proxy is set, this method has no effect.
-     */
-    void removeChainedProxy();
 }
