@@ -12,7 +12,6 @@ import java.util.List;
 import net.lightbody.bmp.proxy.jetty.http.HttpRequest;
 import net.lightbody.bmp.proxy.util.ClonedInputStream;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
@@ -26,6 +25,8 @@ import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.xml.bind.DatatypeConverter;
 
 public class BrowserMobHttpRequest {
     private static final Logger LOG = LoggerFactory.getLogger(BrowserMobHttpRequest.class);
@@ -88,7 +89,7 @@ public class BrowserMobHttpRequest {
     }
 
     public void setRequestBodyAsBase64EncodedBytes(String bodyBase64Encoded) {
-        byteArrayEntity = new ByteArrayEntity(Base64.decodeBase64(bodyBase64Encoded));
+        byteArrayEntity = new ByteArrayEntity(DatatypeConverter.parseBase64Binary(bodyBase64Encoded));
     }
 
     public void setRequestInputStream(InputStream is, long length) {
