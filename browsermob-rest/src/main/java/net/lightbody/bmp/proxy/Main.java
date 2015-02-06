@@ -14,12 +14,12 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 import javax.servlet.ServletContextEvent;
 import net.lightbody.bmp.exception.JettyException;
 import net.lightbody.bmp.proxy.bricks.ProxyResource;
 import net.lightbody.bmp.proxy.guice.ConfigModule;
 import net.lightbody.bmp.proxy.guice.JettyModule;
-import net.lightbody.bmp.proxy.util.StandardFormatter;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.log.Log;
@@ -138,7 +138,7 @@ public class Main {
         }
 
         ConsoleHandler handler = new ConsoleHandler();
-        handler.setFormatter(new StandardFormatter());
+        handler.setFormatter(new SimpleFormatter());
         
         handler.setLevel(Level.FINE);
         logger.addHandler(handler);

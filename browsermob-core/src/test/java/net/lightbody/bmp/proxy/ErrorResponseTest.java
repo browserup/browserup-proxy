@@ -19,7 +19,7 @@ public class ErrorResponseTest extends ProxyServerTest {
         try (CloseableHttpResponse response = getResponseFromHost(url)) {
             assertEquals("Expected 502 error due to unknown host", 502, response.getStatusLine().getStatusCode());
 
-            String responseBody = IOUtils.readFully(response.getEntity().getContent());
+            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
 
             String hostNotFoundTitle = MessagesUtil.getMessage("response.dns_not_found.title");
 
@@ -35,7 +35,7 @@ public class ErrorResponseTest extends ProxyServerTest {
         try (CloseableHttpResponse response = getResponseFromHost(url)) {
             assertEquals("Expected 502 error due to connection failure", 502, response.getStatusLine().getStatusCode());
 
-            String responseBody = IOUtils.readFully(response.getEntity().getContent());
+            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
 
             String connectionFailureTitle = MessagesUtil.getMessage("response.conn_failure.title");
 
@@ -53,7 +53,7 @@ public class ErrorResponseTest extends ProxyServerTest {
         try (CloseableHttpResponse response = getResponseFromHost(url)) {
             assertEquals("Expected 502 error due to connection timeout", 502, response.getStatusLine().getStatusCode());
 
-            String responseBody = IOUtils.readFully(response.getEntity().getContent());
+            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
 
             String networkTimeoutTitle = MessagesUtil.getMessage("response.net_timeout.title");
 

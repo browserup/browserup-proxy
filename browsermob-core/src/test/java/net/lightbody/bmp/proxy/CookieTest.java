@@ -20,9 +20,9 @@ public class CookieTest extends LocalServerTest {
         proxy.newHar("Test");
 
         // set the cookie on the server side
-        IOUtils.readFully(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/cookie")).getEntity().getContent());
+        IOUtils.toStringAndClose(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/cookie")).getEntity().getContent());
 
-        String body = IOUtils.readFully(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/echo")).getEntity().getContent());
+        String body = IOUtils.toStringAndClose(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/echo")).getEntity().getContent());
         int first = body.indexOf("foo=bar");
         int last = body.lastIndexOf("foo=bar");
         Assert.assertTrue("foo=bar cookie not found", first != -1);
@@ -36,7 +36,7 @@ public class CookieTest extends LocalServerTest {
         proxy.newHar("Test");
 
         // set the cookie on the server side
-        IOUtils.readFully(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/cookie")).getEntity().getContent());
+        IOUtils.toStringAndClose(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/cookie")).getEntity().getContent());
 
         Har har = proxy.getHar();
         HarEntry entry = har.getLog().getEntries().get(0);
@@ -56,7 +56,7 @@ public class CookieTest extends LocalServerTest {
         cookieStore.addCookie(cookie);
 
         // set the cookie on the server side
-        String body = IOUtils.readFully(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/echo")).getEntity().getContent());
+        String body = IOUtils.toStringAndClose(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/echo")).getEntity().getContent());
 
         Har har = proxy.getHar();
         HarEntry entry = har.getLog().getEntries().get(0);

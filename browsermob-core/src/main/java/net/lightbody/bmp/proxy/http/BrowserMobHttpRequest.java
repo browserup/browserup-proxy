@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.lightbody.bmp.proxy.jetty.http.HttpRequest;
-import net.lightbody.bmp.proxy.util.Base64;
 import net.lightbody.bmp.proxy.util.ClonedInputStream;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
@@ -88,7 +88,7 @@ public class BrowserMobHttpRequest {
     }
 
     public void setRequestBodyAsBase64EncodedBytes(String bodyBase64Encoded) {
-        byteArrayEntity = new ByteArrayEntity(Base64.base64ToByteArray(bodyBase64Encoded));
+        byteArrayEntity = new ByteArrayEntity(Base64.decodeBase64(bodyBase64Encoded));
     }
 
     public void setRequestInputStream(InputStream is, long length) {

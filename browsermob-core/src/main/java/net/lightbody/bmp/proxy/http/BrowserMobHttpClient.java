@@ -38,6 +38,7 @@ import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpClientConnection;
@@ -1003,7 +1004,7 @@ public class BrowserMobHttpClient {
                             	temp = new InflaterInputStream(new ByteArrayInputStream(copy.toByteArray()), new Inflater(true));
                             }
                             copy = new ByteArrayOutputStream();
-                            IOUtils.copy(temp, copy);
+                            IOUtils.copyAndClose(temp, copy);
                         } catch (IOException e) {
                             throw new RuntimeException("Error when decompressing input stream", e);
                         }
@@ -1105,7 +1106,7 @@ public class BrowserMobHttpClient {
 	}
 
 	private void setBinaryContentOfEntry(HarEntry entry, ByteArrayOutputStream copy) {
-		entry.getResponse().getContent().setText(Base64.byteArrayToBase64(copy.toByteArray()));
+        entry.getResponse().getContent().setText(Base64.encodeBase64String(copy.toByteArray()));
 		entry.getResponse().getContent().setEncoding("base64");
 	}
 
