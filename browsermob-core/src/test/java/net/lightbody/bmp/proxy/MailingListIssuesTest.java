@@ -107,12 +107,12 @@ public class MailingListIssuesTest extends LocalServerTest {
 
         String body = IOUtils.toStringAndClose(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/a.txt")).getEntity().getContent());
 
-        ThreadUtils.waitFor(new ThreadUtils.WaitCondition() {
+        ThreadUtils.pollForCondition(new ThreadUtils.WaitCondition() {
             @Override
-            public boolean checkCondition(long elapsedTimeInMs) {
+            public boolean checkCondition() {
                 return interceptedBody[0] != null;
             }
-        }, TimeUnit.SECONDS, 10);
+        }, 10, TimeUnit.SECONDS);
 
         Assert.assertEquals(interceptedBody[0], body);
     }
