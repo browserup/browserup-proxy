@@ -606,12 +606,7 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
               final File root = tempDir.toFile();
 
               // delete the temp directory when the VM aborts
-              Runtime.getRuntime().addShutdownHook(new Thread() {
-                  @Override
-                  public void run() {
-                      FileUtils.deleteQuietly(root);
-                  }
-              });
+              FileUtils.forceDeleteOnExit(root);
 
               // copy the cybervillains cert files to the temp directory from the classpath
               Path cybervillainsCer = tempDir.resolve("cybervillainsCA.cer");
@@ -810,13 +805,7 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
           public void stop() throws InterruptedException {
               super.stop();
 
-              if (nukeDirOrFile != null) {
-                  if (nukeDirOrFile.isDirectory()) {
-                      LauncherUtils.recursivelyDeleteDir(nukeDirOrFile);
-                  } else {
-                      nukeDirOrFile.delete();
-                  }
-              }
+              FileUtils.deleteQuietly(nukeDirOrFile);
           }
       }
 }
