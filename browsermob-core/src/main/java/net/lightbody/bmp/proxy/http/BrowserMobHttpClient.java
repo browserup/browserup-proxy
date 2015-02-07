@@ -110,6 +110,8 @@ import org.xbill.DNS.Cache;
 import org.xbill.DNS.DClass;
 import net.lightbody.bmp.proxy.jetty.util.MultiMap;
 
+import javax.xml.bind.DatatypeConverter;
+
 /**
  * WARN : Require zlib > 1.1.4 (deflate support)
  */
@@ -1003,7 +1005,7 @@ public class BrowserMobHttpClient {
                             	temp = new InflaterInputStream(new ByteArrayInputStream(copy.toByteArray()), new Inflater(true));
                             }
                             copy = new ByteArrayOutputStream();
-                            IOUtils.copy(temp, copy);
+                            IOUtils.copyAndClose(temp, copy);
                         } catch (IOException e) {
                             throw new RuntimeException("Error when decompressing input stream", e);
                         }
@@ -1105,7 +1107,7 @@ public class BrowserMobHttpClient {
 	}
 
 	private void setBinaryContentOfEntry(HarEntry entry, ByteArrayOutputStream copy) {
-		entry.getResponse().getContent().setText(Base64.byteArrayToBase64(copy.toByteArray()));
+        entry.getResponse().getContent().setText(DatatypeConverter.printBase64Binary(copy.toByteArray()));
 		entry.getResponse().getContent().setEncoding("base64");
 	}
 

@@ -21,7 +21,7 @@ public class HttpMethodTest extends LocalServerTest {
 	@Test
 	public void testPatch() throws IOException {
 		HttpResponse response = client.execute(new HttpPatch(getLocalServerHostnameAndPort() + "/echo"));
-		String body = IOUtils.readFully(response.getEntity().getContent());
+		String body = IOUtils.toStringAndClose(response.getEntity().getContent());
 
 		assertEquals("HTTP PATCH request failed", 200, response.getStatusLine().getStatusCode());
 		assertTrue("Server reported HTTP method was not PATCH. Body was: " + body, body.contains("Method: PATCH"));
@@ -30,7 +30,7 @@ public class HttpMethodTest extends LocalServerTest {
 	@Test
 	public void testOptions() throws IOException {
 		HttpResponse response = client.execute(new HttpOptions(getLocalServerHostnameAndPort() + "/echo"));
-		String body = IOUtils.readFully(response.getEntity().getContent());
+		String body = IOUtils.toStringAndClose(response.getEntity().getContent());
 
 		assertEquals("HTTP OPTIONS request failed", 200, response.getStatusLine().getStatusCode());
 		assertTrue("Server reported HTTP method was not OPTIONS. Body was: " + body, body.contains("Method: OPTIONS"));
@@ -47,7 +47,7 @@ public class HttpMethodTest extends LocalServerTest {
 	@Test
 	public void testDelete() throws IOException {
 		HttpResponse response = client.execute(new HttpDelete(getLocalServerHostnameAndPort() + "/echo"));
-		String body = IOUtils.readFully(response.getEntity().getContent());
+		String body = IOUtils.toStringAndClose(response.getEntity().getContent());
 
 		assertEquals("HTTP DELETE request failed", 200, response.getStatusLine().getStatusCode());
 		assertTrue("Server reported HTTP method was not DELETE. Body was: " + body, body.contains("Method: DELETE"));
@@ -56,7 +56,7 @@ public class HttpMethodTest extends LocalServerTest {
 	@Test
 	public void testPut() throws IOException {
 		HttpResponse response = client.execute(new HttpPut(getLocalServerHostnameAndPort() + "/echo"));
-		String body = IOUtils.readFully(response.getEntity().getContent());
+		String body = IOUtils.toStringAndClose(response.getEntity().getContent());
 
 		assertEquals("HTTP PUT request failed", 200, response.getStatusLine().getStatusCode());
 		assertTrue("Server reported HTTP method was not PUT. Body was: " + body, body.contains("Method: PUT"));
@@ -65,7 +65,7 @@ public class HttpMethodTest extends LocalServerTest {
 	@Test
 	public void testTrace() throws IOException {
 		HttpResponse response = client.execute(new HttpTrace(getLocalServerHostnameAndPort() + "/echo"));
-		String body = IOUtils.readFully(response.getEntity().getContent());
+		String body = IOUtils.toStringAndClose(response.getEntity().getContent());
 
 		assertEquals("HTTP TRACE request failed", 200, response.getStatusLine().getStatusCode());
 		assertTrue("Server reported HTTP method was not TRACE. Body was: " + body, body.contains("Method: TRACE"));
