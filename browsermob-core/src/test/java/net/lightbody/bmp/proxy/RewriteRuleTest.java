@@ -19,11 +19,11 @@ public class RewriteRuleTest extends LocalServerTest {
 	public void testThatRewriteRulesCanBeCleared() throws IllegalStateException, ClientProtocolException, IOException {
 		proxy.rewriteUrl("(.*)a\\.txt", "$1b.txt");
 		// assume that rewrite rules are working
-		String body = IOUtils.readFully(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/a.txt")).getEntity().getContent());
+		String body = IOUtils.toStringAndClose(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/a.txt")).getEntity().getContent());
 		assumeThat(body, equalTo("this is b.txt"));
 		// check that clearing them works
 		proxy.clearRewriteRules();
-		body = IOUtils.readFully(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/a.txt")).getEntity().getContent());
+		body = IOUtils.toStringAndClose(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/a.txt")).getEntity().getContent());
 		assertThat(body, equalTo("this is a.txt"));
 	}
 

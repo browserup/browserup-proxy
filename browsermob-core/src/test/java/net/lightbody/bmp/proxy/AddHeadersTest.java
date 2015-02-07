@@ -16,7 +16,7 @@ public class AddHeadersTest extends LocalServerTest {
         HttpGet httpGet = new HttpGet(getLocalServerHostnameAndPort() + "/echo");
         proxy.addHeader("testheader1", "testvalue1");
         proxy.addHeader("testheader2", "testvalue2");
-        String body = IOUtils.readFully(client.execute(httpGet).getEntity().getContent());
+        String body = IOUtils.toStringAndClose(client.execute(httpGet).getEntity().getContent());
 
         assertTrue(body.contains("testheader1: testvalue1"));
         assertTrue(body.contains("testheader2: testvalue2"));
@@ -27,12 +27,12 @@ public class AddHeadersTest extends LocalServerTest {
         HttpGet httpGet = new HttpGet(getLocalServerHostnameAndPort() + "/echo");
         proxy.addHeader("testheader1", "testvalue1");
         proxy.addHeader("testheader2", "testvalue2");
-        IOUtils.readFully(client.execute(httpGet).getEntity().getContent());
+        IOUtils.toStringAndClose(client.execute(httpGet).getEntity().getContent());
 
         proxy.addHeader("testheader1", "newvalue1");
         proxy.addHeader("testheader2", "newvalue2");
 
-        String body = IOUtils.readFully(client.execute(httpGet).getEntity().getContent());
+        String body = IOUtils.toStringAndClose(client.execute(httpGet).getEntity().getContent());
 
         assertTrue(body.contains("testheader1: newvalue1"));
         assertTrue(body.contains("testheader2: newvalue2"));

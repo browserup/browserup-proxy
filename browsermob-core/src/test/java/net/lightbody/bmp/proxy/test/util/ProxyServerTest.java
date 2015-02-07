@@ -1,8 +1,11 @@
 package net.lightbody.bmp.proxy.test.util;
 
 import net.lightbody.bmp.proxy.ProxyServer;
+import net.lightbody.bmp.proxy.util.IOUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.client.CookieStore;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.conn.ssl.TrustStrategy;
@@ -45,7 +48,7 @@ public abstract class ProxyServerTest {
 
     @Before
     public void startProxyServer() throws Exception {
-        proxy = new ProxyServer(0);
+        this.proxy = createProxyServer();
         proxy.start();
         proxyServerPort = proxy.getPort();
 
@@ -53,12 +56,63 @@ public abstract class ProxyServerTest {
         client = getNewHttpClient(proxyServerPort, cookieStore);
     }
 
+    /**
+     * Hook to allow tests to initialize the proxy server with a custom configuration, but still leverage the rest of the
+     * functionality in ProxyServerTest. The default implementation creates a new proxy server on port 0 (JVM-assigned port).
+     */
+    protected ProxyServer createProxyServer() {
+        return new ProxyServer(0);
+    }
+
     @After
     public void stopProxyServer() throws Exception {
         try {
-            client.close();
+            if (client != null) {
+                client.close();
+            }
         } finally {
-            proxy.stop();
+            if (proxy != null) {
+                proxy.stop();
+            }
+        }
+    }
+
+    /**
+     * Convenience method to perform an HTTP GET to the specified URL and return the response body. Closes the response before returning
+     * the body.
+     *
+     * @param url URL to HTTP GET
+     * @return response body from the server
+     */
+    public String getResponseBodyFromHost(String url) {
+        HttpGet httpGet = new HttpGet(url);
+
+        try {
+            CloseableHttpResponse response = getResponseFromHost(url);
+
+            String body = IOUtils.toStringAndClose(response.getEntity().getContent());
+
+            response.close();
+
+            return body;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Convenience method to perform an HTTP GET to the specified URL and return the response object. The response is not closed, and so
+     * MUST be closed by the calling code.
+     *
+     * @param url URL to HTTP GET
+     * @return CloseableHttpResponse from the server
+     */
+    public CloseableHttpResponse getResponseFromHost(String url) {
+        HttpGet httpGet = new HttpGet(url);
+        try {
+            return client.execute(httpGet);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -111,5 +165,4 @@ public abstract class ProxyServerTest {
             throw new RuntimeException("Unable to create new HTTP client", e);
         }
     }
-
 }
