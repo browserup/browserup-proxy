@@ -16,6 +16,7 @@ import net.lightbody.bmp.proxy.jetty.util.StringMap;
 import net.lightbody.bmp.proxy.jetty.util.URI;
 import net.lightbody.bmp.proxy.util.TrustEverythingSSLTrustManager;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -447,7 +448,7 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
           long bytesCopied = -1;
           request.setHandled(true);
           if (proxy_in != null) {
-              bytesCopied = ModifiedIO.copy(proxy_in, response.getOutputStream());
+              bytesCopied = IOUtils.copyLarge(proxy_in, response.getOutputStream());
           }
 
           return bytesCopied;
