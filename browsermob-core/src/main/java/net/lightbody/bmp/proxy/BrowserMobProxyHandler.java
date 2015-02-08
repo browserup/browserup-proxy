@@ -305,12 +305,15 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
     }
 
     private static void reportError(Exception e, URL url, HttpResponse response) {
+        boolean timeout = false;
+
         ProxyError error = ProxyError.GENERIC;
         if (e instanceof UnknownHostException) {
             error = ProxyError.DNS_NOT_FOUND;
         } else if (e instanceof ConnectException) {
             error = ProxyError.CONN_FAILURE;
         } else if (e instanceof ConnectTimeoutException) {
+            timeout = true;
             error = ProxyError.NET_TIMEOUT;
         } else if (e instanceof NoHttpResponseException) {
             error = ProxyError.NET_RESET;
@@ -325,7 +328,22 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
         String text = error.getHtml(url.toString());
 
         try {
-            response.setStatus(HttpResponse.__502_Bad_Gateway);
+            /* For timeout exceptions, return a 504. Otherwise, return 502.
+                http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+                The HTTP spec describes 502 as:
+                    The server, while acting as a gateway or proxy, received an invalid response from the upstream server it accessed in
+                    attempting to fulfill the request.
+                While 504 is:
+                    The server, while acting as a gateway or proxy, did not receive a timely response from the upstream server specified by
+                    the URI (e.g. HTTP, FTP, LDAP) or some other auxiliary server (e.g. DNS) it needed to access in attempting to complete
+                    the request.
+             */
+            if (timeout) {
+                response.setStatus(HttpResponse.__504_Gateway_Timeout);
+            } else {
+                response.setStatus(HttpResponse.__502_Bad_Gateway);
+            }
+
             response.setContentLength(text.length());
             response.getOutputStream().write(text.getBytes());
         } catch (IOException e1) {
