@@ -1129,7 +1129,6 @@ public class BrowserMobHttpClient {
         blacklistEntries.clear();
         credsProvider.clear();
         httpClientConnMgr.shutdown();
-        HttpClientInterrupter.release(this);
     }
 
     public void abortActiveRequests() {
@@ -1442,6 +1441,10 @@ public class BrowserMobHttpClient {
 
     private enum AuthType {
         NONE, BASIC, NTLM
+    }
+
+    public boolean isShutdown() {
+        return shutdown;
     }
 
     public void clearDNSCache() {
