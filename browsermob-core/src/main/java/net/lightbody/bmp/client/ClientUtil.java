@@ -63,7 +63,10 @@ public class ClientUtil {
      * @return a "reasonable guess" at an address that can be used by other machines on the network to reach this host
      */
     public static InetAddress getConnectableAddress() {
-        //TODO: implement
-        throw new UnsupportedOperationException("Implement this method");
+        try {
+            return InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            throw new RuntimeException("Could not resolve localhost", e);
+        }
     }
 }
