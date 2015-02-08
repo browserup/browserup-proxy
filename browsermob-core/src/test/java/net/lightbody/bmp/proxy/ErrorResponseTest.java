@@ -45,7 +45,7 @@ public class ErrorResponseTest extends ProxyServerTest {
     }
 
     @Test
-    public void testHostUnreachable() throws IOException {
+    public void testConnectionTimeout() throws IOException {
         proxy.setConnectionTimeout(1);
 
         String url = "http://1.2.3.4";
