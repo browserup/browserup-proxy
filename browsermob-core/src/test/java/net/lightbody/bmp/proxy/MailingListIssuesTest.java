@@ -38,7 +38,7 @@ public class MailingListIssuesTest extends LocalServerTest {
             }
         });
 
-        String body = IOUtils.readFully(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/a.txt")).getEntity().getContent());
+        String body = IOUtils.toStringAndClose(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/a.txt")).getEntity().getContent());
 
         Assert.assertTrue(body.contains("this is a.txt"));
         Assert.assertTrue(interceptorHit[0]);
@@ -54,7 +54,7 @@ public class MailingListIssuesTest extends LocalServerTest {
             }
         });
 
-        String body = IOUtils.readFully(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/a.txt")).getEntity().getContent());
+        String body = IOUtils.toStringAndClose(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/a.txt")).getEntity().getContent());
 
         Assert.assertTrue(body.contains("this is a.txt"));
         Assert.assertEquals("Remote host incorrect", "127.0.0.1", remoteHost[0]);
@@ -70,7 +70,7 @@ public class MailingListIssuesTest extends LocalServerTest {
             }
         });
 
-        String body = IOUtils.readFully(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/a.txt")).getEntity().getContent());
+        String body = IOUtils.toStringAndClose(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/a.txt")).getEntity().getContent());
 
         Assert.assertTrue(body.contains("this is a.txt"));
     }
@@ -88,7 +88,7 @@ public class MailingListIssuesTest extends LocalServerTest {
             }
         });
 
-        String body = IOUtils.readFully(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/a.txt")).getEntity().getContent());
+        String body = IOUtils.toStringAndClose(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/a.txt")).getEntity().getContent());
 
         Assert.assertTrue(body.contains("this is b.txt"));
     }
@@ -105,14 +105,14 @@ public class MailingListIssuesTest extends LocalServerTest {
             }
         });
 
-        String body = IOUtils.readFully(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/a.txt")).getEntity().getContent());
+        String body = IOUtils.toStringAndClose(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/a.txt")).getEntity().getContent());
 
-        ThreadUtils.waitFor(new ThreadUtils.WaitCondition() {
+        ThreadUtils.pollForCondition(new ThreadUtils.WaitCondition() {
             @Override
-            public boolean checkCondition(long elapsedTimeInMs) {
+            public boolean checkCondition() {
                 return interceptedBody[0] != null;
             }
-        }, TimeUnit.SECONDS, 10);
+        }, 10, TimeUnit.SECONDS);
 
         Assert.assertEquals(interceptedBody[0], body);
     }

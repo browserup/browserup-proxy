@@ -218,12 +218,12 @@ public class ProxyServer {
         // Wait up to 5 seconds for all active requests to cease before returning the HAR.
         // This helps with race conditions but won't cause deadlocks should a request hang
         // or error out in an unexpected way (which of course would be a bug!)
-        boolean success = ThreadUtils.waitFor(new ThreadUtils.WaitCondition() {
+        boolean success = ThreadUtils.pollForCondition(new ThreadUtils.WaitCondition() {
             @Override
-            public boolean checkCondition(long elapsedTimeInMs) {
+            public boolean checkCondition() {
                 return requestCounter.get() == 0;
             }
-        }, TimeUnit.SECONDS, 5);
+        }, 5, TimeUnit.SECONDS);
 
         if (!success) {
             LOG.warn("Waited 5 seconds for requests to cease before returning HAR; giving up!");
@@ -435,9 +435,9 @@ public class ProxyServer {
     }
 
     public void waitForNetworkTrafficToStop(final long quietPeriodInMs, long timeoutInMs) {
-        boolean result = ThreadUtils.waitFor(new ThreadUtils.WaitCondition() {
+        boolean result = ThreadUtils.pollForCondition(new ThreadUtils.WaitCondition() {
             @Override
-            public boolean checkCondition(long elapsedTimeInMs) {
+            public boolean checkCondition() {
                 Date lastCompleted = null;
                 Har har = client.getHar();
                 if (har == null || har.getLog() == null) {
@@ -457,10 +457,10 @@ public class ProxyServer {
                         lastCompleted = end;
                     }
                 }
-                
+
                 return lastCompleted != null && System.currentTimeMillis() - lastCompleted.getTime() >= quietPeriodInMs;
             }
-        }, TimeUnit.MILLISECONDS, timeoutInMs);
+        }, timeoutInMs, TimeUnit.MILLISECONDS);
 
         if (!result) {
             throw new RuntimeException("Timed out after " + timeoutInMs + " ms while waiting for network traffic to stop");

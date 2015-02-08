@@ -97,7 +97,7 @@ public class HarTest extends LocalServerTest {
 		proxy.setCaptureContent(true);
 		proxy.newHar("Test");
 
-		String body = IOUtils.readFully(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/a.txt")).getEntity().getContent());
+		String body = IOUtils.toStringAndClose(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/a.txt")).getEntity().getContent());
 
 		Assert.assertTrue(body.contains("this is a.txt"));
 
@@ -132,7 +132,7 @@ public class HarTest extends LocalServerTest {
 		post.addHeader("Accept", "application/json-rpc");
 		post.addHeader("Content-Type", "application/json; charset=UTF-8");
 
-		String body = IOUtils.readFully(client.execute(post).getEntity().getContent());
+		String body = IOUtils.toStringAndClose(client.execute(post).getEntity().getContent());
 
 		Assert.assertTrue(body.contains("{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{}}"));
 
@@ -161,7 +161,7 @@ public class HarTest extends LocalServerTest {
 		HttpPost post = new HttpPost(getLocalServerHostnameAndPort() + "/jsonrpc");
 		post.setEntity(new UrlEncodedFormEntity(Collections.singletonList(new BasicNameValuePair("foo", "bar"))));
 
-		IOUtils.readFully(client.execute(post).getEntity().getContent());
+		IOUtils.toStringAndClose(client.execute(post).getEntity().getContent());
 
 		Har har = proxy.getHar();
 		Assert.assertNotNull("Har is null", har);
@@ -190,9 +190,9 @@ public class HarTest extends LocalServerTest {
 
 		InputStream is1 = client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/c.png")).getEntity().getContent();
 		ByteArrayOutputStream o1 = new ByteArrayOutputStream();
-		IOUtils.copy(is1, o1);
+        IOUtils.copyAndClose(is1, o1);
 		ByteArrayOutputStream o2 = new ByteArrayOutputStream();
-        IOUtils.copy(HarTest.class.getResourceAsStream("/local-server/c.png"), o2);
+        IOUtils.copyAndClose(HarTest.class.getResourceAsStream("/local-server/c.png"), o2);
 
 		Assert.assertTrue("Image does not match file system", Arrays.equals(o1.toByteArray(), o2.toByteArray()));
 
@@ -265,7 +265,7 @@ public class HarTest extends LocalServerTest {
 
 		HttpGet get = new HttpGet(getLocalServerHostnameAndPort() + "/a.txt");
 		get.addHeader("Accept-Encoding", "gzip");
-		String body = IOUtils.readFully(new GZIPInputStream(client.execute(get).getEntity().getContent()));
+		String body = IOUtils.toStringAndClose(new GZIPInputStream(client.execute(get).getEntity().getContent()));
 
 		Assert.assertTrue(body.contains("this is a.txt"));
 
@@ -336,7 +336,7 @@ public class HarTest extends LocalServerTest {
 		post.setEntity(entity);
 		post.addHeader("Content-Type", "text/unknown; charset=UTF-8");
 
-		String body = IOUtils.readFully(client.execute(post).getEntity().getContent());
+		String body = IOUtils.toStringAndClose(client.execute(post).getEntity().getContent());
 
 		Har har = proxy.getHar();
 		Assert.assertNotNull("Har is null", har);
@@ -370,14 +370,14 @@ public class HarTest extends LocalServerTest {
 		proxy.newHar("testpage1");
 
 		HttpGet get = new HttpGet(getLocalServerHostnameAndPort() + "/a.txt");
-		IOUtils.readFully(client.execute(get).getEntity().getContent());
+		IOUtils.toStringAndClose(client.execute(get).getEntity().getContent());
 
 		proxy.endPage();
 
 		proxy.newPage("testpage2");
 
-		IOUtils.readFully(client.execute(get).getEntity().getContent());
-		IOUtils.readFully(client.execute(get).getEntity().getContent());
+		IOUtils.toStringAndClose(client.execute(get).getEntity().getContent());
+		IOUtils.toStringAndClose(client.execute(get).getEntity().getContent());
 
 		proxy.endPage();
 
@@ -414,7 +414,7 @@ public class HarTest extends LocalServerTest {
 
 		// not using localhost so we get >0ms timing
 		HttpGet get = new HttpGet("http://www.msn.com");
-		IOUtils.readFully(client.execute(get).getEntity().getContent());
+		IOUtils.toStringAndClose(client.execute(get).getEntity().getContent());
 
 		proxy.endPage();
 
@@ -442,7 +442,7 @@ public class HarTest extends LocalServerTest {
 		proxy.newHar("testIpAddressPopulated");
 
 		HttpGet get = new HttpGet("http://localhost:8080/a.txt");
-		IOUtils.readFully(client.execute(get).getEntity().getContent());
+		IOUtils.toStringAndClose(client.execute(get).getEntity().getContent());
 
 		proxy.endPage();
 
@@ -470,7 +470,7 @@ public class HarTest extends LocalServerTest {
 		proxy.newHar("testIpAddressPopulatedForIpAddressUrl");
 
 		HttpGet get = new HttpGet(getLocalServerHostnameAndPort() + "/a.txt");
-		IOUtils.readFully(client.execute(get).getEntity().getContent());
+		IOUtils.toStringAndClose(client.execute(get).getEntity().getContent());
 
 		proxy.endPage();
 
@@ -504,7 +504,7 @@ public class HarTest extends LocalServerTest {
 		post.addHeader("Accept", "application/json-rpc");
 		post.addHeader("Content-Type", "application/json; charset=UTF-8");
 
-		String body = IOUtils.readFully(client.execute(post).getEntity().getContent());
+		String body = IOUtils.toStringAndClose(client.execute(post).getEntity().getContent());
 
 		Har har = proxy.getHar();
 		HarLog log = har.getLog();
@@ -533,7 +533,7 @@ public class HarTest extends LocalServerTest {
 		post.setEntity(entity);
 		post.addHeader("Content-Type", "text/unknown; charset=UTF-8");
 
-		String body = IOUtils.readFully(client.execute(post).getEntity().getContent());
+		String body = IOUtils.toStringAndClose(client.execute(post).getEntity().getContent());
 
 		Har har = proxy.getHar();
 		HarLog log = har.getLog();

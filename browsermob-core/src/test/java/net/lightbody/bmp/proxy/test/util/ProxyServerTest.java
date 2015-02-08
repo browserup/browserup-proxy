@@ -90,7 +90,7 @@ public abstract class ProxyServerTest {
         try {
             CloseableHttpResponse response = getResponseFromHost(url);
 
-            String body = IOUtils.readFully(response.getEntity().getContent());
+            String body = IOUtils.toStringAndClose(response.getEntity().getContent());
 
             response.close();
 
