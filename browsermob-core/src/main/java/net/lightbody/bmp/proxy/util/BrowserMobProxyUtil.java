@@ -16,7 +16,8 @@ public class BrowserMobProxyUtil {
 
     /**
      * Retrieve the User Agent String Parser. Create the parser if it has not yet been initialized.
-     * @return
+     * 
+     * @return singleton UserAgentStringParser object
      */
     public static UserAgentStringParser getUserAgentStringParser() {
         if (parser == null) {
