@@ -45,13 +45,13 @@ public class ErrorResponseTest extends ProxyServerTest {
     }
 
     @Test
-    public void testHostUnreachable() throws IOException {
+    public void testConnectionTimeout() throws IOException {
         proxy.setConnectionTimeout(1);
 
         String url = "http://1.2.3.4";
 
         try (CloseableHttpResponse response = getResponseFromHost(url)) {
-            assertEquals("Expected 502 error due to connection timeout", 502, response.getStatusLine().getStatusCode());
+            assertEquals("Expected 504 error due to connection timeout", 504, response.getStatusLine().getStatusCode());
 
             String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
 

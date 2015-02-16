@@ -121,8 +121,6 @@ public class BrowserMobHttpClient {
 
 	private static final Logger LOG = LoggerFactory.getLogger(BrowserMobHttpClient.class);
 	
-	private static volatile UserAgentStringParser parser;
-	
     private static final int BUFFER = 4096;
 
     private volatile Har har;
@@ -632,7 +630,7 @@ public class BrowserMobHttpClient {
                 String userAgent = uaHeaders[0].getValue();
                 try {
                     // note: this doesn't work for 'Fandango/4.5.1 CFNetwork/548.1.4 Darwin/11.0.0'
-                    ReadableUserAgent uai = getUserAgentStringParser().parse(userAgent);
+                    ReadableUserAgent uai = BrowserMobProxyUtil.getUserAgentStringParser().parse(userAgent);
                     String browser = uai.getName();
                     String version = uai.getVersionNumber().toVersionString();
                     har.getLog().setBrowser(new HarNameVersion(browser, version));
@@ -1145,7 +1143,7 @@ public class BrowserMobHttpClient {
         this.har = har;
         
         // eagerly initialize the User Agent String Parser, since it will be needed for the HAR
-        getUserAgentStringParser();
+        BrowserMobProxyUtil.getUserAgentStringParser();
     }
 
     public void setHarPageRef(String harPageRef) {
@@ -1495,24 +1493,5 @@ public class BrowserMobHttpClient {
 
         return bytesCopied;
     }
-    
-    private static final Object PARSER_INIT_LOCK = new Object();
-    
-    /**
-     * Retrieve the User Agent String Parser. Create the parser if it has not yet been initialized.
-     * @return
-     */
-    public static UserAgentStringParser getUserAgentStringParser() {
-		if (parser == null) {
-			synchronized (PARSER_INIT_LOCK) {
-				if (parser == null) {
-                    // using resourceModuleParser for now because user-agent-string.info no longer exists. the updating
-                    // parser will get incorrect data and wipe out its entire user agent repository.
-					parser = UADetectorServiceFactory.getResourceModuleParser();
-				}
-			}
-		}
-		
-		return parser;
-	}
+
 }
