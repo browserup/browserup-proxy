@@ -1,21 +1,20 @@
 package net.lightbody.bmp.proxy.dns;
 
-import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
+import java.net.InetAddress;
+import java.util.Collection;
 
 /**
  * Defines the basic functionality that {@link net.lightbody.bmp.BrowserMobProxy} implementations require when resolving hostnames.
- *
- * TODO: consider replacing this with {@link org.littleshoot.proxy.HostResolver}, which is identical.
  */
 public interface HostResolver {
     /**
-     * Resolves a hostname and port to an InetSocketAddress.
+     * Resolves a hostname to one or more IP addresses. The iterator over the returned Collection is recommended to reflect the ordering
+     * returned by the underlying name lookup service. For example, if a DNS server returns three IP addresses, 1.1.1.1, 2.2.2.2, and
+     * 3.3.3.3, corresponding to www.somehost.com, the returned Collection iterator is recommended to iterate in
+     * the order [1.1.1.1, 2.2.2.2, 3.3.3.3].
      *
      * @param host host to resolve
-     * @param port port to resolve
-     * @return resolved InetSocketAddress
-     * @throws java.net.UnknownHostException if the host could not be resolved to an address
+     * @return resolved InetAddresses, or an empty list if no addresses were found
      */
-    public InetSocketAddress resolve(String host, int port) throws UnknownHostException;
+    public Collection<InetAddress> resolve(String host);
 }
