@@ -37,8 +37,11 @@ import java.net.Socket;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownHostException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -606,8 +609,8 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
               Path tempDir = Files.createTempDirectory("seleniumSslSupport" + escapedHost);
               final File root = tempDir.toFile();
 
-              // delete the temp directory when the VM aborts
-              FileUtils.forceDeleteOnExit(root);
+              // delete the temp directory when the VM stops or aborts
+              Runtime.getRuntime().addShutdownHook(new Thread(new DeleteDirectoryTask(tempDir)));
 
               // copy the cybervillains cert files to the temp directory from the classpath
               Path cybervillainsCer = tempDir.resolve("cybervillainsCA.cer");
@@ -809,4 +812,46 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
               FileUtils.deleteQuietly(nukeDirOrFile);
           }
       }
+
+    /**
+     * A Runnable that deletes the specified directory. Useful as a shutdown hook.
+     */
+    private static class DeleteDirectoryTask implements Runnable {
+        private final Path directory;
+
+        public DeleteDirectoryTask(Path directory) {
+            this.directory = directory;
+        }
+
+        @Override
+        public void run() {
+            try {
+                Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                        try {
+                            Files.delete(file);
+                        } catch (IOException e) {
+                            log.warn("Unable to delete file or directory", e);
+                        }
+
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    @Override
+                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                        try {
+                            Files.delete(dir);
+                        } catch (IOException e) {
+                            log.warn("Unable to delete file or directory", e);
+                        }
+                        
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+            } catch (IOException e) {
+                log.warn("Unable to delete file or directory", e);
+            }
+        }
+    }
 }
