@@ -1,11 +1,13 @@
 package net.lightbody.bmp.proxy.dns;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
  * This interface defines the "core" DNS-manipulation functionality that BrowserMob Proxy supports, in addition to the basic name resolution
- * capability defined in {@link net.lightbody.bmp.proxy.dns.HostResolver}.
+ * capability defined in {@link net.lightbody.bmp.proxy.dns.HostResolver}. AdvancedHostResolvers should apply any remappings before attempting
+ * to resolve the hostname in the {@link HostResolver#resolve(String)} method.
  */
 public interface AdvancedHostResolver extends HostResolver {
     /**
@@ -48,15 +50,40 @@ public interface AdvancedHostResolver extends HostResolver {
     Map<String, String> getHostRemappings();
 
     /**
-     * Clears the existing DNS cache.
+     * Returns the original address or addresses that are remapped to the specified remappedHost. Iterating over the returned Collection is
+     * guaranteed to return original mappings in the order in which the remappings are applied.
+     *
+     * @param remappedHost remapped hostname
+     * @return original hostnames that are remapped to the specified remappedHost, or an empty Collection if no remapping is defined to the remappedHost
+     */
+    Collection<String> getOriginalHostnames(String remappedHost);
+
+    /**
+     * Clears both the positive (successful DNS lookups) and negative (failed DNS lookups) cache.
      */
     void clearDNSCache();
 
     /**
-     * Sets the timeout when making DNS lookups.
+     * Sets the positive (successful DNS lookup) timeout when making DNS lookups.
+     * <p/>
+     * <b>Note:</b> The timeUnit parameter does not guarantee the specified precision; implementations may need to reduce precision, depending on the underlying
+     * DNS implementation. For example, the Oracle JVM's DNS cache only supports timeouts in whole seconds, so specifying a timeout of 1200ms will result
+     * in a timeout of 1 second.
      *
      * @param timeout maximum lookup time
      * @param timeUnit units of the timeout value
      */
-    void setDNSCacheTimeout(int timeout, TimeUnit timeUnit);
+    void setPositiveDNSCacheTimeout(int timeout, TimeUnit timeUnit);
+
+    /**
+     * Sets the negative (failed DNS lookup) timeout when making DNS lookups.
+     * <p/>
+     * <b>Note:</b> The timeUnit parameter does not guarantee the specified precision; implementations may need to reduce precision, depending on the underlying
+     * DNS implementation. For example, the Oracle JVM's DNS cache only supports timeouts in whole seconds, so specifying a timeout of 1200ms will result
+     * in a timeout of 1 second.
+     *
+     * @param timeout maximum lookup time
+     * @param timeUnit units of the timeout value
+     */
+    void setNegativeDNSCacheTimeout(int timeout, TimeUnit timeUnit);
 }
