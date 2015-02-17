@@ -384,19 +384,20 @@ public interface BrowserMobProxy {
 
     //TODO: note: moved host name remappings and DNS manipulation to AdvancedHostResolver
     /**
-     * Sets the list of resolvers that will be used to look up host names. The resolvers will be consulted in the order the appear in the
-     * list, until a resolver returns a resolved address.
+     * Sets the resolvers that will be used to look up host names. The resolvers will be consulted in the order returned by the Collection's
+     * iterator, until a resolver returns a resolved address.
      *
-     * @param resolvers ordered list of host name resolvers
+     * @param resolvers ordered collection of host name resolvers
      */
-    void setHostNameResolvers(List<? extends HostResolver> resolvers);
+    void setHostNameResolvers(Collection<? extends HostResolver> resolvers);
 
     /**
-     * Returns the host name resolvers currently in effect.
+     * Returns the host name resolvers currently in effect. Iterating over the returned Collection is guaranteed to return resolvers in the order
+     * they are queried.
      *
-     * @return ordered list of host name resolvers
+     * @return ordered collection of host name resolvers
      */
-    List<? extends HostResolver> getHostNameResolvers();
+    Collection<? extends HostResolver> getHostNameResolvers();
 
     /**
      * Waits for existing network traffic to stop, and for the specified quietPeriod to elapse. Returns true if there is no network traffic
