@@ -30,7 +30,7 @@ public class ErrorResponseTest extends ProxyServerTest {
 
     @Test
     public void testConnectionRefused() throws IOException {
-        String url = "http://0.0.0.0";
+        String url = "http://127.0.3.4:62663";
 
         try (CloseableHttpResponse response = getResponseFromHost(url)) {
             assertEquals("Expected 502 error due to connection failure", 502, response.getStatusLine().getStatusCode());
@@ -48,7 +48,7 @@ public class ErrorResponseTest extends ProxyServerTest {
     public void testConnectionTimeout() throws IOException {
         proxy.setConnectionTimeout(1);
 
-        String url = "http://1.2.3.4";
+        String url = "http://1.2.3.4:62663";
 
         try (CloseableHttpResponse response = getResponseFromHost(url)) {
             assertEquals("Expected 504 error due to connection timeout", 504, response.getStatusLine().getStatusCode());
