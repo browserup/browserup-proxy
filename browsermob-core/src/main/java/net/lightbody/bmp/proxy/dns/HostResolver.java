@@ -14,7 +14,7 @@ public interface HostResolver {
      * the order [1.1.1.1, 2.2.2.2, 3.3.3.3].
      *
      * @param host host to resolve
-     * @return resolved InetAddresses, or an empty list if no addresses were found
+     * @return resolved InetAddresses, or an empty collection if no addresses were found
      */
     public Collection<InetAddress> resolve(String host);
 }

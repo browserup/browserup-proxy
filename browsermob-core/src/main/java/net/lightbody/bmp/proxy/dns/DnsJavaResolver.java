@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  * An {@link net.lightbody.bmp.proxy.dns.AdvancedHostResolver} that uses dnsjava to perform DNS lookups. This implementation provides full
  * cache manipulation capabilities.
  */
-public class DnsJavaResolver extends HostNameRemapper implements AdvancedHostResolver {
+public class DnsJavaResolver extends AbstractHostNameRemapper implements AdvancedHostResolver {
     private static final Logger log = LoggerFactory.getLogger(DnsJavaResolver.class);
 
     /**

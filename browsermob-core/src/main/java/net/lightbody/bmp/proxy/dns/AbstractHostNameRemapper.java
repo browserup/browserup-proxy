@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * Base class that provides host name remapping capabilities for AdvancedHostResolvers. Subclasses must implement {@link #resolveRemapped(String)}
  * instead of {@link net.lightbody.bmp.proxy.dns.HostResolver#resolve(String)}, which takes the remapped host as the input parameter.
  */
-public abstract class HostNameRemapper implements AdvancedHostResolver {
+public abstract class AbstractHostNameRemapper implements AdvancedHostResolver {
     /**
      * Host name remappings, maintained as a reference to an ImmutableMap. The ImmutableMap type is specified explicitly because ImmutableMap
      * guarantees the iteration order of the map's entries. Specifying ImmutableMap also makes clear that the underlying map will never change,

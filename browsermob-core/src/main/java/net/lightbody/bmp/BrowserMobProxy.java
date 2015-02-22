@@ -409,22 +409,23 @@ public interface BrowserMobProxy {
      */
     Map<String, String> getAllHeaders();
 
-    //TODO: note: moved host name remappings and DNS manipulation to AdvancedHostResolver
     /**
-     * Sets the resolvers that will be used to look up host names. The resolvers will be consulted in the order returned by the Collection's
-     * iterator, until a resolver returns a resolved address.
+     * Sets the resolver that will be used to look up host names. To chain multiple resolvers, wrap a list
+     * of resolvers in a {@link net.lightbody.bmp.proxy.dns.ChainedHostResolver}.
+     * <p/>
+     * <b>Note:</b> Host name remapping and DNS cache manipulation functionality is available via the {@link net.lightbody.bmp.proxy.dns.AdvancedHostResolver}
+     * interface, which implements {@link net.lightbody.bmp.proxy.dns.HostResolver}.
      *
-     * @param resolvers ordered collection of host name resolvers
+     * @param resolver ordered collection of host name resolvers
      */
-    void setHostNameResolvers(Collection<? extends HostResolver> resolvers);
+    void setHostNameResolvers(HostResolver resolver);
 
     /**
-     * Returns the host name resolvers currently in effect. Iterating over the returned Collection is guaranteed to return resolvers in the order
-     * they are queried.
+     * Returns the current host name resolver.
      *
-     * @return ordered collection of host name resolvers
+     * @return the current host name resolver
      */
-    Collection<? extends HostResolver> getHostNameResolvers();
+    HostResolver getHostNameResolver();
 
     /**
      * Waits for existing network traffic to stop, and for the specified quietPeriod to elapse. Returns true if there is no network traffic

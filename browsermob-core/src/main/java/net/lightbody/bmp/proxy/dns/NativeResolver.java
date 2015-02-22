@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
  * manipulation. If you absolutely need to manipulate the native JVM DNS cache, see
  * {@link net.lightbody.bmp.proxy.dns.NativeCacheManipulatingResolver} for details.
  */
-public class NativeResolver extends HostNameRemapper implements AdvancedHostResolver {
+public class NativeResolver extends AbstractHostNameRemapper implements AdvancedHostResolver {
     private static final Logger log = LoggerFactory.getLogger(NativeResolver.class);
 
     @Override

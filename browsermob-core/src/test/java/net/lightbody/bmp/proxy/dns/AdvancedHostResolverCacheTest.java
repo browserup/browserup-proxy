@@ -1,5 +1,6 @@
 package net.lightbody.bmp.proxy.dns;
 
+import com.google.common.collect.ImmutableList;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,14 +24,19 @@ public class AdvancedHostResolverCacheTest {
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][]{
                 // skip DNS cache operations for NativeResolver
-                {DnsJavaResolver.class}, {NativeCacheManipulatingResolver.class}
+                {DnsJavaResolver.class}, {NativeCacheManipulatingResolver.class}, {ChainedHostResolver.class}
         });
     }
 
-    public AdvancedHostResolver resolver;
+    public final AdvancedHostResolver resolver;
 
     public AdvancedHostResolverCacheTest(Class<AdvancedHostResolver> resolverClass) throws IllegalAccessException, InstantiationException {
-        this.resolver = resolverClass.newInstance();
+        // this is a hacky way to allow us to test the ChainedHostResolver, even though it doesn't have a no-arg constructor
+        if (resolverClass.equals(ChainedHostResolver.class)) {
+            this.resolver = new ChainedHostResolver(ImmutableList.of(new NativeCacheManipulatingResolver(), new DnsJavaResolver()));
+        } else {
+            this.resolver = resolverClass.newInstance();
+        }
     }
 
     @Before
