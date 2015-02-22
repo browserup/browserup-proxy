@@ -418,7 +418,7 @@ public interface BrowserMobProxy {
      *
      * @param resolver ordered collection of host name resolvers
      */
-    void setHostNameResolvers(HostResolver resolver);
+    void setHostNameResolver(HostResolver resolver);
 
     /**
      * Returns the current host name resolver.
