@@ -7,7 +7,6 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.Date;
 
 import javax.net.ssl.HandshakeCompletedEvent;
 import javax.net.ssl.HandshakeCompletedListener;
@@ -87,14 +86,15 @@ public class TrustingSSLSocketFactory extends SSLConnectionSocketFactory {
      * @see http://hc.apache.org/httpcomponents-client-ga/httpclient/xref/org/apache/http/conn/ssl/SSLConnectionSocketFactory.html
      */
     protected void prepareSocket (SSLSocket socket) throws IOException {
+        // save this thread's RequestInfo, since it is stored in a ThreadLocal and the handshake completed event fires in a separate thread
+        final RequestInfo currentThreadRequestInfo = RequestInfo.get();
+
 	    socket.addHandshakeCompletedListener(new HandshakeCompletedListener() {
-	    	private final Date handshakeStart = new Date();
+	    	private final long handshakeStart = System.nanoTime();
 	    	
 	    	@Override
 	    	public void handshakeCompleted(HandshakeCompletedEvent handshakeCompletedEvent) {
-	    		if(handshakeStart != null) {
-    	       		RequestInfo.get().ssl(handshakeStart, new Date());
-	    		}
+                currentThreadRequestInfo.ssl(handshakeStart, System.nanoTime());
 	    	}
 	    });
     }

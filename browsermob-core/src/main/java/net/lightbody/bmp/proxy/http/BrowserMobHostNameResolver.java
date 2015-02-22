@@ -4,7 +4,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -73,11 +72,11 @@ public class BrowserMobHostNameResolver implements DnsResolver {
 			throw new UnknownHostException(hostname);
 		}
 
-		Date start = new Date();
+		long start = System.nanoTime();
 		
 		Record[] records = findByDNS(hostname);
         
-        Date end = new Date();
+        long end = System.nanoTime();
 
         List<InetAddress> addrList;
         

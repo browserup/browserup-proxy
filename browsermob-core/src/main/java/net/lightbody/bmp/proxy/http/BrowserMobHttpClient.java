@@ -282,11 +282,11 @@ public class BrowserMobHttpClient {
                 return new ConnectionRequest() {
                     @Override
                     public HttpClientConnection get(long timeout, TimeUnit tunit) throws InterruptedException, ExecutionException, ConnectionPoolTimeoutException {
-                        Date start = new Date();
+                        long start = System.nanoTime();
                         try {
                             return wrapped.get(timeout, tunit);
                         } finally {
-                            RequestInfo.get().blocked(start, new Date());
+                            RequestInfo.get().blocked(start, System.nanoTime());
                         }
                     }
 
@@ -315,22 +315,19 @@ public class BrowserMobHttpClient {
         	.setRequestExecutor(new HttpRequestExecutor() {
         		@Override
                 protected HttpResponse doSendRequest(HttpRequest request, HttpClientConnection conn, HttpContext context) throws IOException, HttpException {
-
-
-                    // set date before sending
-                    Date start = new Date();
+                    long start = System.nanoTime();
                     
                     // send request
                     HttpResponse response = super.doSendRequest(request, conn, context);
                     
                     // set "sending" for resource
-                    RequestInfo.get().send(start, new Date());
+                    RequestInfo.get().send(start, System.nanoTime());
                     return response;
                 }
 
                 @Override
                 protected HttpResponse doReceiveResponse(HttpRequest request, HttpClientConnection conn, HttpContext context) throws HttpException, IOException {
-                    Date start = new Date();    
+                    long start = System.nanoTime();
                     HttpResponse response = super.doReceiveResponse(request, conn, context);
                     
                     // +4 => header/data separation
@@ -344,20 +341,20 @@ public class BrowserMobHttpClient {
                     if (entry != null) {
 						entry.getResponse().setHeadersSize(responseHeadersSize);
 					}
-                    if(streamManager.getLatency() > 0 && RequestInfo.get().getLatency() != null){
+                    if (streamManager.getLatency() > 0) {
                         // retrieve real latency discovered in connect SimulatedSocket
-                    	long realLatency = RequestInfo.get().getLatency();
+                        long realLatency = RequestInfo.get().getLatency(TimeUnit.MILLISECONDS);
                         // add latency
-                    	if(realLatency < streamManager.getLatency()){
+                        if (realLatency < streamManager.getLatency()) {
                             try {
-								Thread.sleep(streamManager.getLatency()-realLatency);
-							} catch (InterruptedException e) {
-								Thread.currentThread().interrupt();
-							}
-                        }  
-                    }  
+                                Thread.sleep(streamManager.getLatency() - realLatency);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                            }
+                        }
+                    }
                     // set waiting time
-                    RequestInfo.get().wait(start,new Date());
+                    RequestInfo.get().wait(start, System.nanoTime());
                     
                     return response;
                 }
@@ -713,6 +710,7 @@ public class BrowserMobHttpClient {
 
         // clear out any connection-related information so that it's not stale from previous use of this thread.
         RequestInfo.clear(url, entry);
+        RequestInfo.get().start();
 
         entry.setRequest(new HarRequest(method.getMethod(), url, method.getProtocolVersion().toString()));
         entry.setResponse(new HarResponse(-999, "NO RESPONSE", method.getProtocolVersion().toString()));
@@ -877,7 +875,7 @@ public class BrowserMobHttpClient {
         RequestInfo.get().finish();
 
         // set the start time and other timings
-        entry.setStartedDateTime(RequestInfo.get().getStart());
+        entry.setStartedDateTime(RequestInfo.get().getStartDate());
         entry.setTimings(RequestInfo.get().getTimings());
         entry.setServerIPAddress(RequestInfo.get().getResolvedAddress());
 

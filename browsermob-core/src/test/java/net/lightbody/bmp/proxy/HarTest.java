@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
 public class HarTest extends LocalServerTest {
@@ -289,33 +290,31 @@ public class HarTest extends LocalServerTest {
 
 	@Test
 	public void testHarTimingsPopulated() throws IOException {
-		proxy.setCaptureHeaders(true);
-		proxy.newHar("testHarTimingsPopulated");
+        proxy.setCaptureHeaders(true);
+        proxy.newHar("testHarTimingsPopulated");
 
-		HttpGet httpGet = new HttpGet("http://www.msn.com");
-		EntityUtils.consumeQuietly(client.execute(httpGet).getEntity());
+        HttpGet httpGet = new HttpGet("https://www.msn.com");
+        EntityUtils.consumeQuietly(client.execute(httpGet).getEntity());
 
-		Har har = proxy.getHar();
-		Assert.assertNotNull("Har is null", har);
-		HarLog log = har.getLog();
-		Assert.assertNotNull("Log is null", log);
+        Har har = proxy.getHar();
+        Assert.assertNotNull("Har is null", har);
+        HarLog log = har.getLog();
+        Assert.assertNotNull("Log is null", log);
 
-		Assert.assertNotNull("No log entries", log.getEntries());
-		Assert.assertFalse("No log entries", log.getEntries().isEmpty());
+        Assert.assertNotNull("No log entries", log.getEntries());
+        Assert.assertFalse("No log entries", log.getEntries().isEmpty());
 
-		HarEntry firstEntry = log.getEntries().get(0);
-		HarTimings timings = firstEntry.getTimings();
+        HarEntry firstEntry = log.getEntries().get(0);
+        HarTimings timings = firstEntry.getTimings();
 
-		Assert.assertNotNull("No har timings", timings);
-		Assert.assertNotNull("blocked timing is null", timings.getBlocked());
-		Assert.assertNotNull("dns timing is null", timings.getDns());
-		Assert.assertNotNull("connect timing is null", timings.getConnect());
-		Assert.assertNotEquals("connect timing should be greater than 0", 0L, timings.getConnect().longValue());
-
-		// we can't guarantee that wait timing will be greater than 0
-		//Assert.assertNotEquals("wait timing should be greater than 0", 0L, timings.getWait());
-
-		Assert.assertNotEquals("receive timing should be greater than 0", 0L, timings.getReceive());
+        Assert.assertNotNull("No har timings", timings);
+        Assert.assertTrue("blocked timing should be greater than 0", timings.getBlocked(TimeUnit.NANOSECONDS) > 0);
+        Assert.assertTrue("dns timing should be greater than 0", timings.getDns(TimeUnit.NANOSECONDS) > 0);
+        Assert.assertTrue("connect timing should be greater than 0", timings.getConnect(TimeUnit.NANOSECONDS) > 0);
+        Assert.assertTrue("send timing should be greater than 0", timings.getSend(TimeUnit.NANOSECONDS) > 0);
+        Assert.assertTrue("wait timing should be greater than 0", timings.getWait(TimeUnit.NANOSECONDS) > 0);
+        Assert.assertTrue("receive timing should be greater than 0", timings.getReceive(TimeUnit.NANOSECONDS) > 0);
+        Assert.assertTrue("ssl timing should be greater than 0", timings.getSsl(TimeUnit.NANOSECONDS) > 0);
 	}
 
 	@Test
@@ -360,9 +359,7 @@ public class HarTest extends LocalServerTest {
 
 		Assert.assertNotNull("No har timings", timings);
 
-        // skipping the send timing check for now; on a very fast connection this sometimes does complete in less than 1ms
-        // TODO: replace external call with a self-contained call to the local server that is explicitly throttled at the server side
-        //Assert.assertNotEquals("send timing should be greater than 0", 0L, timings.getSend());
+        Assert.assertTrue("send timing should be greater than 0", timings.getSend(TimeUnit.NANOSECONDS) > 0);
 	}
 
 	@Test
