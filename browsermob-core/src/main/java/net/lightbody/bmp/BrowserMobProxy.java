@@ -10,7 +10,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -119,21 +118,36 @@ public interface BrowserMobProxy {
     Har newHar(String initialPageRef);
 
     /**
-     * Sets the data types that will be captured in the HAR file for future requests. A null or empty set will not disable HAR capture, but will
-     * disable collection of additional {@link net.lightbody.bmp.proxy.CaptureType} data types.
-     * {@link net.lightbody.bmp.proxy.CaptureType} provides several convenience methods to retrieve commonly-used capture settings.
+     * Sets the data types that will be captured in the HAR file for future requests. Replaces any existing capture types with the specified
+     * capture types. A null or empty set will not disable HAR capture, but will disable collection of
+     * additional {@link net.lightbody.bmp.proxy.CaptureType} data types. {@link net.lightbody.bmp.proxy.CaptureType} provides several
+     * convenience methods to retrieve commonly-used capture settings.
      * <p/>
      * <b>Note:</b> HAR capture must still be explicitly enabled via {@link #newHar()} or {@link #newHar(String)} to begin capturing
      * any request and response contents.
      *
-     * @param harCaptureSettings HAR data types to capture
+     * @param captureTypes HAR data types to capture
      */
-    void setHarCaptureSettings(Set<CaptureType> harCaptureSettings);
+    void setHarCaptureTypes(Set<CaptureType> captureTypes);
 
     /**
      * @return A copy of HAR capture types currently in effect. The EnumSet cannot be used to modify the HAR capture types currently in effect.
      */
-    EnumSet<CaptureType> getHarCaptureSettings();
+    EnumSet<CaptureType> getHarCaptureTypes();
+
+    /**
+     * Enables the specified HAR capture types. Does not replace or disable any other capture types that may already be enabled.
+     *
+     * @param captureTypes capture types to enable
+     */
+    void enableHarCaptureTypes(Set<CaptureType> captureTypes);
+
+    /**
+     * Disables the specified HAR capture types. Does not replace or disable any other capture types that may already be enabled.
+     *
+     * @param captureTypes capture types to disable
+     */
+    void disableHarCaptureTypes(Set<CaptureType> captureTypes);
 
     /**
      * Starts a new HAR page using the default page naming convention. The default page naming convention is "Page #", where "#" resets to 1
@@ -187,10 +201,23 @@ public interface BrowserMobProxy {
     void setSocketOperationTimeout(int readTimeout, TimeUnit timeUnit);
     void setConnectionTimeout(int connectionTimeout, TimeUnit timeUnit);
 
-    // basic by default
-    void autoAuthorization(String domain, String username, String password); 
+    /**
+     * Enables automatic authorization for the specified domain and auth type. Every request sent to the specified domain will contain the
+     * specified authorization information.
+     *
+     * @param domain domain automatically send authorization information to
+     * @param username authorization username
+     * @param password authorization password
+     * @param authType authorization type
+     */
     void autoAuthorization(String domain, String username, String password, AuthType authType);
-    void stopAutoAuthorization();
+
+    /**
+     * Stops automatic authorization for the specified domain.
+     *
+     * @param domain domain to stop automatically sending authorization information to
+     */
+    void stopAutoAuthorization(String domain);
 
     /**
      * Adds a rewrite rule for the specified URL-matching regular expression. If there are any existing rewrite rules, the new rewrite
