@@ -70,52 +70,32 @@ public class HarTimings {
         }
     }
 
+    /*
+        According to the HAR spec:
+            The send, wait and receive timings are not optional and must have non-negative values.
+     */
     public long getSend(TimeUnit timeUnit) {
-        if (sendNanos == -1) {
-            return -1;
-        } else {
-            return timeUnit.convert(sendNanos, TimeUnit.NANOSECONDS);
-        }
+        return timeUnit.convert(sendNanos, TimeUnit.NANOSECONDS);
     }
 
     public void setSend(long send, TimeUnit timeUnit) {
-        if (send == -1) {
-            this.sendNanos = -1;
-        } else {
-            this.sendNanos = TimeUnit.NANOSECONDS.convert(send, timeUnit);
-        }
+        this.sendNanos = TimeUnit.NANOSECONDS.convert(send, timeUnit);
     }
 
     public long getWait(TimeUnit timeUnit) {
-        if (waitNanos == -1) {
-            return -1;
-        } else {
-            return timeUnit.convert(waitNanos, TimeUnit.NANOSECONDS);
-        }
+        return timeUnit.convert(waitNanos, TimeUnit.NANOSECONDS);
     }
 
     public void setWait(long wait, TimeUnit timeUnit) {
-        if (wait == -1) {
-            this.waitNanos = -1;
-        } else {
-            this.waitNanos = TimeUnit.NANOSECONDS.convert(wait, timeUnit);
-        }
+        this.waitNanos = TimeUnit.NANOSECONDS.convert(wait, timeUnit);
     }
 
     public long getReceive(TimeUnit timeUnit) {
-        if (receiveNanos == -1) {
-            return -1;
-        } else {
-            return timeUnit.convert(receiveNanos, TimeUnit.NANOSECONDS);
-        }
+        return timeUnit.convert(receiveNanos, TimeUnit.NANOSECONDS);
     }
 
     public void setReceive(long receive, TimeUnit timeUnit) {
-        if (receive == -1) {
-            this.receiveNanos = -1;
-        } else {
-            this.receiveNanos = TimeUnit.NANOSECONDS.convert(receive, timeUnit);
-        }
+        this.receiveNanos = TimeUnit.NANOSECONDS.convert(receive, timeUnit);
     }
 
     public long getSsl(TimeUnit timeUnit) {
