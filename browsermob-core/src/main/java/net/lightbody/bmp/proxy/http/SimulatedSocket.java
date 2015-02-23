@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.util.Date;
 
 import org.java_bandwidthlimiter.StreamManager;
 
@@ -24,18 +23,18 @@ public class SimulatedSocket extends Socket {
 
     @Override
     public void connect(SocketAddress endpoint) throws IOException {
-        Date start = new Date();
+        long start = System.nanoTime();
         super.connect(endpoint);
-   		Date end = new Date();
+   		long end = System.nanoTime();
    		// we simulate latency if necessary
    		simulateLatency(start, end, streamManager);
     }
     
     @Override
     public void connect(SocketAddress endpoint, int timeout) throws IOException {
-        Date start = new Date();
+        long start = System.nanoTime();
         super.connect(endpoint, timeout);
-        Date end = new Date();
+        long end = System.nanoTime();
         // we simulate latency if necessary
         simulateLatency(start, end, streamManager);
     }
@@ -58,10 +57,10 @@ public class SimulatedSocket extends Socket {
         return streamManager.registerStream(super.getOutputStream());
     }
     
-    private void simulateLatency (Date start, Date end, StreamManager streamManager) {
+    private void simulateLatency(long start, long end, StreamManager streamManager) {
 		// the end before adding latency
-        Date realEnd = end;
-		long connectReal = end.getTime() - start.getTime();
+        long realEnd = end;
+		long connectReal = end - start;
 		 
 		// add latency
 		if(connectReal < streamManager.getLatency()){
@@ -71,7 +70,7 @@ public class SimulatedSocket extends Socket {
 				Thread.currentThread().interrupt();
 			}
 			// the end after adding latency
-		    end = new Date();
+		    end = System.nanoTime();
 		}
 		// set real latency time
 		RequestInfo.get().latency(start, realEnd);
