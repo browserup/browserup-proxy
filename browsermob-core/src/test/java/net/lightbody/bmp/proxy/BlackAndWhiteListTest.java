@@ -13,7 +13,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assume.assumeThat;
 
 /**
  * Tests to exercise blacklist and whitelist functionality
@@ -109,9 +108,9 @@ public class BlackAndWhiteListTest extends LocalServerTest {
     @Test
     public void testWhitelistCanBeCleared() throws ClientProtocolException, IOException {
         proxy.whitelistRequests(new String[] { ".*\\.txt" }, 500);
-        // assume that proxy is working before
-        assumeThat(httpStatusWhenGetting(getLocalServerHostnameAndPort() + "/a.txt"), is(200));
-        assumeThat(httpStatusWhenGetting(getLocalServerHostnameAndPort() + "/c.png"), is(500));
+        // make sure that proxy is working before
+        assertThat(httpStatusWhenGetting(getLocalServerHostnameAndPort() + "/a.txt"), is(200));
+        assertThat(httpStatusWhenGetting(getLocalServerHostnameAndPort() + "/c.png"), is(500));
         // clear the whitelist
         proxy.clearWhitelist();
         // check that no whitelist is in effect
@@ -154,9 +153,9 @@ public class BlackAndWhiteListTest extends LocalServerTest {
     @Test
     public void testBlacklistCanBeCleared() throws ClientProtocolException, IOException {
         proxy.blacklistRequests(".*\\.txt", 404);
-        // assume that proxy is working before
-        assumeThat(httpStatusWhenGetting(getLocalServerHostnameAndPort() + "/a.txt"), is(404));
-        assumeThat(httpStatusWhenGetting(getLocalServerHostnameAndPort() + "/c.png"), is(200));
+        // make sure proxy is working before
+        assertThat(httpStatusWhenGetting(getLocalServerHostnameAndPort() + "/a.txt"), is(404));
+        assertThat(httpStatusWhenGetting(getLocalServerHostnameAndPort() + "/c.png"), is(200));
         // clear the blacklist
         proxy.clearBlacklist();
         // check that no blacklist is in effect
