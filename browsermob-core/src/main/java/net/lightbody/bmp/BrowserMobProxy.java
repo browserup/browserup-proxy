@@ -193,13 +193,45 @@ public interface BrowserMobProxy {
     void setReadDataLimit(long bytes);
     void setWriteDataLimit(long bytes);
 
-    //TODO: add details: proxy<->sever network latency? proxy<->client? per-packet latency, or for the entire request?
+    /**
+     * The minimum amount of time that will elapse between the time the proxy begins receiving a response from the server and the time the
+     * proxy begins sending the response to the client.
+     *
+     * @param latency minimum latency, or 0 for no minimum
+     * @param timeUnit TimeUnit for the latency
+     */
     void setLatency(long latency, TimeUnit timeUnit);
 
-    // network settings
+    /**
+     * Maximum amount of time to wait to establish a connection to a remote server. If the connection has not been established within the
+     * specified time, the proxy will respond with an HTTP 502 Bad Gateway. The default value is 60 seconds.
+     *
+     * @param connectionTimeout maximum time to wait to establish a connection to a server, or 0 to wait indefinitely
+     * @param timeUnit TimeUnit for the connectionTimeout
+     */
+    void setConnectTimeout(int connectionTimeout, TimeUnit timeUnit);
+
+    /**
+     * Maximum amount of time to allow a connection to remain idle. A connection becomes idle when it has not received data from a server
+     * within the the specified timeout. If the proxy has not yet begun to forward the response to the client, the proxy
+     * will respond with an HTTP 504 Gateway Timeout. If the proxy has already started forwarding the response to the client, the
+     * connection to the client <i>may</i> be closed abruptly. The default value is 60 seconds.
+     *
+     * @param idleConnectionTimeout maximum time to allow a connection to remain idle, or 0 to wait indefinitely.
+     * @param timeUnit TimeUnit for the idleConnectionTimeout
+     */
+    void setIdleConnectionTimeout(int idleConnectionTimeout, TimeUnit timeUnit);
+
+    /**
+     * Maximum amount of time to wait for an HTTP response from the remote server after the request has been sent in its entirety. The HTTP
+     * request must complete within the specified time. If the proxy has not yet begun to forward the response to the client, the proxy
+     * will respond with an HTTP 504 Gateway Timeout. If the proxy has already started forwarding the response to the client, the
+     * connection to the client <i>may</i> be closed abruptly. The default value is 0 (wait indefinitely).
+     *
+     * @param requestTimeout maximum time to wait for an HTTP response, or 0 to wait indefinitely
+     * @param timeUnit TimeUnit for the requestTimeout
+     */
     void setRequestTimeout(int requestTimeout, TimeUnit timeUnit);
-    void setSocketOperationTimeout(int readTimeout, TimeUnit timeUnit);
-    void setConnectionTimeout(int connectionTimeout, TimeUnit timeUnit);
 
     /**
      * Enables automatic authorization for the specified domain and auth type. Every request sent to the specified domain will contain the
