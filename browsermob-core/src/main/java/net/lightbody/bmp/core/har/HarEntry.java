@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.lightbody.bmp.core.json.ISO8601WithTDZDateFormatter;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonAutoDetect
@@ -45,6 +46,7 @@ public class HarEntry {
     }
 
     /**
+     * Retrieves the time for this HarEntry in milliseconds. To retrieve the time in another time unit, use {@link #getTime(java.util.concurrent.TimeUnit)}.
      * Rather than storing the time directly, calculate the time from the HarTimings as required in the HAR spec.
      * From <a href="https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/HAR/Overview.html">https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/HAR/Overview.html</a>,
      * section <code>4.2.16 timings</code>:
@@ -55,40 +57,50 @@ public class HarEntry {
      entry.timings.connect + entry.timings.send + entry.timings.wait +
      entry.timings.receive;
      </pre>
-     * @return time for this HAR entry
+     * @return time for this HAR entry, in milliseconds
      */
     public long getTime() {
+        return getTime(TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Retrieve the time for this HarEntry in the specified timeUnit. See {@link #getTime()} for details.
+     *
+     * @param timeUnit units of time to return
+     * @return time for this har entry
+     */
+    public long getTime(TimeUnit timeUnit) {
         HarTimings timings = getTimings();
-        if (timings != null) {
-            int time = 0;
-            if (timings.getBlocked() != null && timings.getBlocked() > 0) {
-                time += timings.getBlocked();
-            }
-
-            if (timings.getDns() != null && timings.getDns() > 0) {
-                time += timings.getDns();
-            }
-
-            if (timings.getConnect() != null && timings.getConnect() > 0) {
-                time += timings.getConnect();
-            }
-
-            if (timings.getSend() > 0) {
-                time += timings.getSend();
-            }
-
-            if (timings.getWait() > 0) {
-                time += timings.getWait();
-            }
-
-            if (timings.getReceive() > 0) {
-                time += timings.getReceive();
-            }
-
-            return time;
+        if (timings == null) {
+            return -1;
         }
 
-        return -1;
+        long timeNanos = 0;
+        if (timings.getBlocked(TimeUnit.NANOSECONDS) > 0) {
+            timeNanos += timings.getBlocked(TimeUnit.NANOSECONDS);
+        }
+
+        if (timings.getDns(TimeUnit.NANOSECONDS) > 0) {
+            timeNanos += timings.getDns(TimeUnit.NANOSECONDS);
+        }
+
+        if (timings.getConnect(TimeUnit.NANOSECONDS) > 0) {
+            timeNanos += timings.getConnect(TimeUnit.NANOSECONDS);
+        }
+
+        if (timings.getSend(TimeUnit.NANOSECONDS) > 0) {
+            timeNanos += timings.getSend(TimeUnit.NANOSECONDS);
+        }
+
+        if (timings.getWait(TimeUnit.NANOSECONDS) > 0) {
+            timeNanos += timings.getWait(TimeUnit.NANOSECONDS);
+        }
+
+        if (timings.getReceive(TimeUnit.NANOSECONDS) > 0) {
+            timeNanos += timings.getReceive(TimeUnit.NANOSECONDS);
+        }
+
+        return timeUnit.convert(timeNanos, TimeUnit.NANOSECONDS);
     }
 
     public HarRequest getRequest() {

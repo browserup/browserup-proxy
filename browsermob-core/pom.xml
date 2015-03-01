@@ -16,7 +16,6 @@
 
     <properties>
         <jackson.version>2.4.4</jackson.version>
-        <selenium.version>2.43.0</selenium.version>
 
         <unit-test-jetty.version>7.6.16.v20140903</unit-test-jetty.version>
     </properties>
@@ -108,13 +107,11 @@
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-api</artifactId>
-            <version>${selenium.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-firefox-driver</artifactId>
-            <version>${selenium.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -139,7 +136,7 @@
         <dependency>
             <groupId>dnsjava</groupId>
             <artifactId>dnsjava</artifactId>
-            <version>2.1.6</version>
+            <version>2.1.7</version>
         </dependency>
 
         <dependency>
@@ -165,7 +162,6 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>2.0.4-beta</version>
             <scope>test</scope>
         </dependency>
 
