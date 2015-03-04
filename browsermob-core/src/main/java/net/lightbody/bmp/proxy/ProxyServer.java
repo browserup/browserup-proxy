@@ -233,24 +233,36 @@ public class ProxyServer {
     }
 
     public Har newHar(String initialPageRef) {
+        return newHar(initialPageRef, null);
+    }
+
+    public Har newHar(String initialPageRef, String initialPageTitle) {
         pageCount.set(0); // this will be automatically incremented by newPage() below
 
         Har oldHar = getHar();
 
         Har har = new Har(new HarLog(CREATOR));
         client.setHar(har);
-        newPage(initialPageRef);
+        newPage(initialPageRef, initialPageTitle);
 
         return oldHar;
     }
 
     public void newPage(String pageRef) {
+        newPage(pageRef, null);
+    }
+
+    public void newPage(String pageRef, String pageTitle) {
         if (pageRef == null) {
             pageRef = "Page " + pageCount.get();
         }
 
+        if (pageTitle == null) {
+            pageTitle = pageRef;
+        }
+
         client.setHarPageRef(pageRef);
-        currentPage = new HarPage(pageRef);
+        currentPage = new HarPage(pageRef, pageTitle);
         client.getHar().getLog().addPage(currentPage);
 
         pageCount.incrementAndGet();
