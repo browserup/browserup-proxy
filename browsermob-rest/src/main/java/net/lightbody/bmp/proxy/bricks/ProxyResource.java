@@ -116,7 +116,8 @@ public class ProxyResource {
         }
 
         String initialPageRef = request.param("initialPageRef");
-        Har oldHar = proxy.newHar(initialPageRef);
+        String initialPageTitle = request.param("initialPageTitle");
+        Har oldHar = proxy.newHar(initialPageRef, initialPageTitle);
 
         String captureHeaders = request.param("captureHeaders");
         String captureContent = request.param("captureContent");
@@ -141,7 +142,8 @@ public class ProxyResource {
         }
 
         String pageRef = request.param("pageRef");
-        proxy.newPage(pageRef);
+        String pageTitle = request.param("pageTitle");
+        proxy.newPage(pageRef, pageTitle);
 
         return Reply.saying().ok();
     }
