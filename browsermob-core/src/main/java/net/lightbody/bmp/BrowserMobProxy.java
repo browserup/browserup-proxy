@@ -160,13 +160,23 @@ public interface BrowserMobProxy {
     Har newPage();
 
     /**
-     * Starts a new HAR page using the specified pageRef as the page name.
+     * Starts a new HAR page using the specified pageRef as the page name and the page title.
      *
      * @param pageRef name of the new page
      * @return the HAR as it existed immediately after ending the current page
      * @throws java.lang.IllegalStateException if HAR capture has not been enabled via {@link #newHar()} or {@link #newHar(String)}
      */
     Har newPage(String pageRef);
+
+    /**
+     * Starts a new HAR page using the specified pageRef as the page name and the pageTitle as the page title.
+     *
+     * @param pageRef name of the new page
+     * @param pageTitle title of the new page
+     * @return the HAR as it existed immediately after ending the current page
+     * @throws java.lang.IllegalStateException if HAR capture has not been enabled via {@link #newHar()} or {@link #newHar(String)}
+     */
+    Har newPage(String pageRef, String pageTitle);
 
     /**
      * Stops capturing traffic in the HAR.
