@@ -110,12 +110,21 @@ public interface BrowserMobProxy {
     Har newHar();
 
     /**
-     * Starts a new HAR file with the specified page name. Enables HAR capure if it was not previously enabled.
+     * Starts a new HAR file with the specified initialPageRef as the page name and page title. Enables HAR capture if it was not previously enabled.
      *
-     * @param initialPageRef page name of the new HAR file
+     * @param initialPageRef initial page name of the new HAR file
      * @return existing HAR file, or null if none exists or HAR capture was disabled
      */
     Har newHar(String initialPageRef);
+
+    /**
+     * Starts a new HAR file with the specified page name and page title. Enables HAR capture if it was not previously enabled.
+     *
+     * @param initialPageRef initial page name of the new HAR file
+     * @param initialPageTitle initial page title of the new HAR file
+     * @return existing HAR file, or null if none exists or HAR capture was disabled
+     */
+    Har newHar(String initialPageRef, String initialPageTitle);
 
     /**
      * Sets the data types that will be captured in the HAR file for future requests. Replaces any existing capture types with the specified
