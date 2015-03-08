@@ -50,11 +50,13 @@ Once that is done, a new proxy will be available on the port returned. All you h
  - GET /proxy - get a list of ports attached to `ProxyServer` instances managed by `ProxyManager`
  - PUT /proxy/[port]/har - creates a new HAR attached to the proxy and returns the HAR content if there was a previous HAR. Supports the following parameters:
   - initialPageRef - the string name of the first page ref that should be used in the HAR. Defaults to "Page 1".
+  - initialPageTitle - the title of first HAR page. Defaults to initialPageRef.
   - captureHeaders - Boolean, capture headers
   - captureContent - Boolean, capture content bodies
   - captureBinaryContent - Boolean, capture binary content
  - PUT /proxy/[port]/har/pageRef - starts a new page on the existing HAR. Supports the following parameters:
   - pageRef - the string name of the first page ref that should be used in the HAR. Defaults to "Page N" where N is the next page number.
+  - pageTitle - the title of new har page. Defaults to pageRef.
  - DELETE /proxy/[port] - shuts down the proxy and closes the port
  - GET /proxy/[port]/har - returns the JSON/HAR content representing all the HTTP traffic passed through the proxy
  - GET /proxy/[port]/whitelist - Displays whitelisted items

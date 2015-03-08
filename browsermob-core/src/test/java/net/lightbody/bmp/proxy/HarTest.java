@@ -391,6 +391,7 @@ public class HarTest extends LocalServerTest {
 
 		HarPage page1 = log.getPages().get(0);
 		Assert.assertEquals("incorrect har page id", "testpage1", page1.getId());
+		Assert.assertEquals("incorrect har page title", page1.getId(), page1.getTitle());
 		Assert.assertNotNull("har page timings are null", page1.getPageTimings());
 
 		HarPageTimings timings1 = page1.getPageTimings();
@@ -399,11 +400,43 @@ public class HarTest extends LocalServerTest {
 
 		HarPage page2 = log.getPages().get(1);
 		Assert.assertEquals("incorrect har page id", "testpage2", page2.getId());
+		Assert.assertEquals("incorrect har page id", page2.getId(), page2.getTitle());
 		Assert.assertNotNull("har page timings are null", page2.getPageTimings());
 		HarPageTimings timings2 = page2.getPageTimings();
 		Assert.assertNotNull("har page onLoad timing is null", timings2.getOnLoad());
 		Assert.assertNotEquals("har page onLoad timing should be greater than 0", timings2.getOnLoad().longValue(), 0L);
 	}
+
+    @Test
+    public void testHarPageTitlePopulated() throws Exception {
+        proxy.newHar("testpage1", "Test Page 1");
+
+        HttpGet get = new HttpGet(getLocalServerHostnameAndPort() + "/a.txt");
+        IOUtils.toStringAndClose(client.execute(get).getEntity().getContent());
+
+        proxy.endPage();
+
+        proxy.newPage("testpage2", "Test Page 2");
+
+        IOUtils.toStringAndClose(client.execute(get).getEntity().getContent());
+        IOUtils.toStringAndClose(client.execute(get).getEntity().getContent());
+
+        proxy.endPage();
+
+        Har har = proxy.getHar();
+        Assert.assertNotNull("Har is null", har);
+        HarLog log = har.getLog();
+        Assert.assertNotNull("Log is null", log);
+
+        Assert.assertNotNull("har pages are null", log.getPages());
+        Assert.assertEquals("expected 2 har pages", 2, log.getPages().size());
+
+        HarPage page1 = log.getPages().get(0);
+        Assert.assertEquals("incorrect har page title", "Test Page 1", page1.getTitle());
+
+        HarPage page2 = log.getPages().get(1);
+        Assert.assertEquals("incorrect har page title", "Test Page 2", page2.getTitle());
+    }
 
     @Test
     public void testEntryFieldsPopulatedForHttp() throws IOException {

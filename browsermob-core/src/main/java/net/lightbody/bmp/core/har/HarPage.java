@@ -18,7 +18,12 @@ public class HarPage {
     }
 
     public HarPage(String id) {
+        this(id, "");
+    }
+
+    public HarPage(String id, String title) {
         this.id = id;
+        this.title = title;
         startedDateTime = new Date();
     }
 
