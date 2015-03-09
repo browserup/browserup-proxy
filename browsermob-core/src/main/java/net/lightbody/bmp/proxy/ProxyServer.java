@@ -393,10 +393,6 @@ public class ProxyServer implements LegacyProxyServer {
 		return client.getWhitelistRequests();
 	}
 	
-	public Collection<Pattern> getWhitelistPatterns() {
-		return client.getWhitelistUrls();
-	}
-
     public Collection<String> getWhitelistUrls() {
         List<String> whitelistUrls = new ArrayList<String>(client.getWhitelistUrls().size());
         for (Pattern pattern : client.getWhitelistUrls()) {
