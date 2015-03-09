@@ -107,8 +107,6 @@ public interface LegacyProxyServer {
     @Deprecated
     List<Pattern> getWhitelistRequests();
 
-    Collection<Pattern> getWhitelistPatterns();
-
     Collection<String> getWhitelistUrls();
 
     int getWhitelistResponseCode();
