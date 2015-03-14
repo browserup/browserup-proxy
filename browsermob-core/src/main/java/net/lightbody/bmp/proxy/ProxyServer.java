@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -37,7 +38,7 @@ import org.openqa.selenium.Proxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ProxyServer {
+public class ProxyServer implements LegacyProxyServer {
     private static final HarNameVersion CREATOR = new HarNameVersion("BrowserMob Proxy", "2.0");
     private static final Logger LOG = LoggerFactory.getLogger(ProxyServer.class);
 
@@ -138,6 +139,11 @@ public class ProxyServer {
 			// the try/catch block in server.stop() is manufacturing a phantom InterruptedException, so this should not occur 
 			throw new JettyException("Exception occurred when stopping the server", e);
 		}
+    }
+
+    @Override
+    public void abort() {
+        stop();
     }
 
     public int getPort() {
@@ -248,11 +254,11 @@ public class ProxyServer {
         return oldHar;
     }
 
-    public void newPage(String pageRef) {
-        newPage(pageRef, null);
+    public Har newPage(String pageRef) {
+        return newPage(pageRef, null);
     }
 
-    public void newPage(String pageRef, String pageTitle) {
+    public Har newPage(String pageRef, String pageTitle) {
         if (pageRef == null) {
             pageRef = "Page " + pageCount.get();
         }
@@ -266,6 +272,8 @@ public class ProxyServer {
         client.getHar().getLog().addPage(currentPage);
 
         pageCount.incrementAndGet();
+
+        return client.getHar();
     }
 
     public void endPage() {
@@ -385,9 +393,14 @@ public class ProxyServer {
 		return client.getWhitelistRequests();
 	}
 	
-	public Collection<Pattern> getWhitelistUrls() {
-		return client.getWhitelistUrls();
-	}
+    public Collection<String> getWhitelistUrls() {
+        List<String> whitelistUrls = new ArrayList<String>(client.getWhitelistUrls().size());
+        for (Pattern pattern : client.getWhitelistUrls()) {
+            whitelistUrls.add(pattern.pattern());
+        }
+
+        return whitelistUrls;
+    }
 
 	public int getWhitelistResponseCode() {
 		return client.getWhitelistResponseCode();
