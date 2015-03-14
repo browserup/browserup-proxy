@@ -1,18 +1,8 @@
 package net.lightbody.bmp.proxy;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
-
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import net.lightbody.bmp.BrowserMobProxy;
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.core.har.HarEntry;
 import net.lightbody.bmp.core.har.HarLog;
@@ -21,6 +11,12 @@ import net.lightbody.bmp.core.har.HarPage;
 import net.lightbody.bmp.core.util.ThreadUtils;
 import net.lightbody.bmp.exception.JettyException;
 import net.lightbody.bmp.exception.NameResolutionException;
+import net.lightbody.bmp.proxy.auth.AuthType;
+import net.lightbody.bmp.proxy.dns.ChainedHostResolver;
+import net.lightbody.bmp.proxy.dns.DnsJavaResolver;
+import net.lightbody.bmp.proxy.dns.HostResolver;
+import net.lightbody.bmp.proxy.dns.NativeResolver;
+import net.lightbody.bmp.proxy.http.BrowserMobHostNameResolver;
 import net.lightbody.bmp.proxy.http.BrowserMobHttpClient;
 import net.lightbody.bmp.proxy.http.RequestInterceptor;
 import net.lightbody.bmp.proxy.http.ResponseInterceptor;
@@ -29,7 +25,6 @@ import net.lightbody.bmp.proxy.jetty.http.HttpListener;
 import net.lightbody.bmp.proxy.jetty.http.SocketListener;
 import net.lightbody.bmp.proxy.jetty.jetty.Server;
 import net.lightbody.bmp.proxy.jetty.util.InetAddrPort;
-
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponseInterceptor;
 import org.java_bandwidthlimiter.BandwidthLimiter;
@@ -38,8 +33,46 @@ import org.openqa.selenium.Proxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ProxyServer implements LegacyProxyServer {
-    private static final HarNameVersion CREATOR = new HarNameVersion("BrowserMob Proxy", "2.0");
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
+
+/**
+ * The legacy, Jetty 5-based implementation of BrowserMobProxy. This class implements the {@link net.lightbody.bmp.proxy.LegacyProxyServer}
+ * interface that defines the BMP 2.0 contact, as well as the 2.1+ {@link net.lightbody.bmp.BrowserMobProxy} interface. <b>Important:</b> if
+ * you are implementing new code, use the {@link net.lightbody.bmp.BrowserMobProxy} interface. The
+ * {@link net.lightbody.bmp.proxy.LegacyProxyServer} interface is deprecated and will be removed in a future release.
+ * <h1>Unsupported operations</h1>
+ * The following {@link net.lightbody.bmp.BrowserMobProxy} operations are not supported and will be ignored:
+ * <ul>
+ *     <li>{@link net.lightbody.bmp.BrowserMobProxy#getServerBindAddress()} and {@link #start(int, java.net.InetAddress, java.net.InetAddress)} - server bind addresses are not supported</li>
+ *     <li>{@link net.lightbody.bmp.BrowserMobProxy#stopAutoAuthorization(String)}</li>
+ *     <li>{@link net.lightbody.bmp.BrowserMobProxy#setHostNameResolver(net.lightbody.bmp.proxy.dns.HostResolver)}</li> (see below)
+ * </ul>
+ *<h1>Host name resolvers</h1>
+ * The {@link #setHostNameResolver(net.lightbody.bmp.proxy.dns.HostResolver)} and {@link #getHostNameResolver()}
+ * methods from {@link net.lightbody.bmp.BrowserMobProxy} are not supported; this legacy implementation always uses dnsjava. However, passing
+ * an instance of {@link net.lightbody.bmp.proxy.dns.NativeResolver} to {@link #setHostNameResolver(net.lightbody.bmp.proxy.dns.HostResolver)}
+ * will enable native DNS fallback by setting the bmp.allowNativeDnsFallback system property to true.
+ *
+ * @deprecated Use the {@link net.lightbody.bmp.BrowserMobProxy} interface to preserve compatibility with future BrowserMob Proxy versions.
+ */
+@Deprecated
+public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
+    private static final HarNameVersion CREATOR = new HarNameVersion("BrowserMob Proxy", "2.1.0-beta-1-legacy");
     private static final Logger LOG = LoggerFactory.getLogger(ProxyServer.class);
 
     /*
@@ -60,6 +93,10 @@ public class ProxyServer implements LegacyProxyServer {
     private BrowserMobProxyHandler handler;
     private AtomicInteger pageCount = new AtomicInteger(1);
     private AtomicInteger requestCounter = new AtomicInteger(0);
+
+    private boolean started;
+
+    private InetSocketAddress chainedProxyAddress;
 
     public ProxyServer() {
     }
@@ -100,6 +137,30 @@ public class ProxyServer implements LegacyProxyServer {
 		}
 
         setPort(listener.getPort());
+
+        started = true;
+    }
+
+    @Override
+    public void start(int port) {
+        this.port = port;
+        start();
+    }
+
+    @Override
+    public void start(int port, InetAddress bindAddress) {
+        setLocalHost(bindAddress);
+        start(port);
+    }
+
+    @Override
+    public void start(int port, InetAddress clientBindAddress, InetAddress serverBindAddress) {
+        LOG.warn("The legacy ProxyServer implementation does not support a server bind address");
+    }
+
+    @Override
+    public boolean isStarted() {
+        return started;
     }
 
     public org.openqa.selenium.Proxy seleniumProxy() throws NameResolutionException {
@@ -146,8 +207,19 @@ public class ProxyServer implements LegacyProxyServer {
         stop();
     }
 
+    @Override
+    public InetAddress getClientBindAddress() {
+        return getLocalHost();
+    }
+
     public int getPort() {
         return port;
+    }
+
+    @Override
+    public InetAddress getServerBindAddress() {
+        LOG.warn("LegacyProxyServer does not support a server bind address");
+        return null;
     }
 
     public void setPort(int port) {
@@ -238,6 +310,11 @@ public class ProxyServer implements LegacyProxyServer {
         return client.getHar();
     }
 
+    @Override
+    public Har newHar() {
+        return newHar(null);
+    }
+
     public Har newHar(String initialPageRef) {
         return newHar(initialPageRef, null);
     }
@@ -252,6 +329,68 @@ public class ProxyServer implements LegacyProxyServer {
         newPage(initialPageRef, initialPageTitle);
 
         return oldHar;
+    }
+
+    @Override
+    public void setHarCaptureTypes(Set<CaptureType> captureTypes) {
+        setCaptureBinaryContent(captureTypes.contains(CaptureType.REQUEST_BINARY_CONTENT) || captureTypes.contains(CaptureType.RESPONSE_BINARY_CONTENT));
+        setCaptureContent(captureTypes.contains(CaptureType.REQUEST_CONTENT) || captureTypes.contains(CaptureType.RESPONSE_CONTENT));
+        setCaptureHeaders(captureTypes.contains(CaptureType.REQUEST_HEADERS) || captureTypes.contains(CaptureType.RESPONSE_HEADERS));
+    }
+
+    @Override
+    public EnumSet<CaptureType> getHarCaptureTypes() {
+        // cookie capture types are always enabled in the legacy ProxyServer
+        EnumSet<CaptureType> captureTypes = CaptureType.getCookieCaptureTypes();
+
+        if (client.isCaptureBinaryContent()) {
+            captureTypes.addAll(CaptureType.getBinaryContentCaptureTypes());
+        }
+
+        if (client.isCaptureContent()) {
+            captureTypes.addAll(CaptureType.getNonBinaryContentCaptureTypes());
+        }
+
+        if (client.isCaptureHeaders()) {
+            captureTypes.addAll(CaptureType.getHeaderCaptureTypes());
+        }
+
+        return captureTypes;
+    }
+
+    @Override
+    public void enableHarCaptureTypes(Set<CaptureType> captureTypes) {
+        if (captureTypes.contains(CaptureType.REQUEST_BINARY_CONTENT) || captureTypes.contains(CaptureType.RESPONSE_BINARY_CONTENT)) {
+            setCaptureBinaryContent(true);
+        }
+
+        if (captureTypes.contains(CaptureType.REQUEST_CONTENT) || captureTypes.contains(CaptureType.RESPONSE_CONTENT)) {
+            setCaptureContent(true);
+        }
+
+        if (captureTypes.contains(CaptureType.REQUEST_HEADERS) || captureTypes.contains(CaptureType.RESPONSE_HEADERS)) {
+            setCaptureHeaders(true);
+        }
+    }
+
+    @Override
+    public void disableHarCaptureTypes(Set<CaptureType> captureTypes) {
+        if (captureTypes.contains(CaptureType.REQUEST_BINARY_CONTENT) || captureTypes.contains(CaptureType.RESPONSE_BINARY_CONTENT)) {
+            setCaptureBinaryContent(false);
+        }
+
+        if (captureTypes.contains(CaptureType.REQUEST_CONTENT) || captureTypes.contains(CaptureType.RESPONSE_CONTENT)) {
+            setCaptureContent(false);
+        }
+
+        if (captureTypes.contains(CaptureType.REQUEST_HEADERS) || captureTypes.contains(CaptureType.RESPONSE_HEADERS)) {
+            setCaptureHeaders(false);
+        }
+    }
+
+    @Override
+    public Har newPage() {
+        return newPage(null);
     }
 
     public Har newPage(String pageRef) {
@@ -276,6 +415,67 @@ public class ProxyServer implements LegacyProxyServer {
         return client.getHar();
     }
 
+    @Override
+    public Har endHar() {
+        endPage();
+
+        return getHar();
+    }
+
+    @Override
+    public void setReadBandwidthLimit(long bytesPerSecond) {
+        getStreamManager().setDownstreamKbps(bytesPerSecond / 1024);
+    }
+
+    @Override
+    public void setWriteBandwidthLimit(long bytesPerSecond) {
+        getStreamManager().setUpstreamKbps(bytesPerSecond / 1024);
+    }
+
+    @Override
+    public void setReadDataLimit(long bytes) {
+        getStreamManager().setDownstreamMaxKB(bytes / 1024);
+    }
+
+    @Override
+    public void setWriteDataLimit(long bytes) {
+        getStreamManager().setUpstreamMaxKB(bytes / 1024);
+    }
+
+    @Override
+    public void setLatency(long latency, TimeUnit timeUnit) {
+        getStreamManager().setLatency(TimeUnit.MILLISECONDS.convert(latency, timeUnit));
+    }
+
+    @Override
+    public void setConnectTimeout(int connectionTimeout, TimeUnit timeUnit) {
+        setConnectionTimeout((int)TimeUnit.MILLISECONDS.convert(connectionTimeout, timeUnit));
+    }
+
+    @Override
+    public void setIdleConnectionTimeout(int idleConnectionTimeout, TimeUnit timeUnit) {
+        setSocketOperationTimeout((int)TimeUnit.MILLISECONDS.convert(idleConnectionTimeout, timeUnit));
+    }
+
+    @Override
+    public void setRequestTimeout(int requestTimeout, TimeUnit timeUnit) {
+        setRequestTimeout((int)TimeUnit.MILLISECONDS.convert(requestTimeout, timeUnit));
+    }
+
+    @Override
+    public void autoAuthorization(String domain, String username, String password, AuthType authType) {
+        if (authType == AuthType.BASIC) {
+            autoBasicAuthorization(domain, username, password);
+        } else {
+            throw new UnsupportedOperationException("Legacy ProxyServer implementation does not support non-BASIC authorization");
+        }
+    }
+
+    @Override
+    public void stopAutoAuthorization(String domain) {
+        LOG.warn("Legacy ProxyServer implementation does not support stopping auto authorization");
+    }
+
     public void endPage() {
         if (currentPage == null) {
             return;
@@ -288,6 +488,13 @@ public class ProxyServer implements LegacyProxyServer {
 
     public void setRetryCount(int count) {
         client.setRetryCount(count);
+    }
+
+    @Override
+    public void addHeaders(Map<String, String> headers) {
+        for (Map.Entry<String, String> entry : headers.entrySet()) {
+            addHeader(entry.getKey(), entry.getValue());
+        }
     }
 
     public void remapHost(String source, String target) {
@@ -356,7 +563,30 @@ public class ProxyServer implements LegacyProxyServer {
     public void rewriteUrl(String match, String replace) {
         client.rewriteUrl(match, replace);
     }
-    
+
+    @Override
+    public void rewriteUrls(Map<String, String> rewriteRules) {
+        for (Map.Entry<String, String> entry : rewriteRules.entrySet()) {
+            rewriteUrl(entry.getKey(), entry.getValue());
+        }
+    }
+
+    @Override
+    public Map<String, String> getRewriteRules() {
+        ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+
+        for (RewriteRule rewriteRule : client.getRewriteRules()) {
+            builder.put(rewriteRule.getMatch().pattern(), rewriteRule.getReplace());
+        }
+
+        return builder.build();
+    }
+
+    @Override
+    public void removeRewriteRule(String urlPattern) {
+        client.removeRewriteRule(urlPattern);
+    }
+
     public void clearRewriteRules() {
     	client.clearRewriteRules();
     }
@@ -367,6 +597,22 @@ public class ProxyServer implements LegacyProxyServer {
     
     public void blacklistRequests(String pattern, int responseCode, String method) {
         client.blacklistRequests(pattern, responseCode, method);
+    }
+
+    @Override
+    public void setBlacklist(Collection<BlacklistEntry> blacklist) {
+        for (BlacklistEntry entry : blacklist) {
+            if (entry.getHttpMethodPatern() == null) {
+                blacklistRequests(entry.getUrlPattern().pattern(), entry.getStatusCode());
+            } else {
+                blacklistRequests(entry.getUrlPattern().pattern(), entry.getStatusCode(), entry.getHttpMethodPatern().pattern());
+            }
+        }
+    }
+
+    @Override
+    public Collection<BlacklistEntry> getBlacklist() {
+        return getBlacklistedUrls();
     }
 
     /**
@@ -402,12 +648,30 @@ public class ProxyServer implements LegacyProxyServer {
         return whitelistUrls;
     }
 
-	public int getWhitelistResponseCode() {
+    @Override
+    public int getWhitelistStatusCode() {
+        return getWhitelistResponseCode();
+    }
+
+    public int getWhitelistResponseCode() {
 		return client.getWhitelistResponseCode();
 	}
 
     public void clearBlacklist() {
     	client.clearBlacklist();
+    }
+
+    @Override
+    public void whitelistRequests(Collection<String> urlPatterns, int statusCode) {
+        whitelistRequests(urlPatterns.toArray(new String[urlPatterns.size()]), statusCode);
+    }
+
+    @Override
+    public void addWhitelistPattern(String urlPattern) {
+        List<String> whitelistUrls = new ArrayList<>(getWhitelistUrls());
+        whitelistUrls.add(urlPattern);
+
+        whitelistRequests(whitelistUrls, getWhitelistStatusCode());
     }
 
     /**
@@ -430,13 +694,81 @@ public class ProxyServer implements LegacyProxyServer {
     public void enableEmptyWhitelist(int responseCode) {
     	client.whitelistRequests(new String[0], responseCode);
     }
-    
+
+    @Override
+    public void disableWhitelist() {
+        clearWhitelist();
+    }
+
     public void clearWhitelist() {
     	client.clearWhitelist();
     }
 
     public void addHeader(String name, String value) {
         client.addHeader(name, value);
+    }
+
+    @Override
+    public void removeHeader(String name) {
+        ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+
+        for (Map.Entry<String, String> entry : getAllHeaders().entrySet()) {
+            if (!entry.getKey().equals(name)) {
+                builder.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        client.setAdditionalHeaders(builder.build());
+    }
+
+    @Override
+    public void removeAllHeaders() {
+        client.setAdditionalHeaders(Collections.<String, String>emptyMap());
+    }
+
+    @Override
+    public Map<String, String> getAllHeaders() {
+        return client.getAdditionalHeaders();
+    }
+
+    @Override
+    public void setHostNameResolver(HostResolver resolver) {
+        if (resolver instanceof NativeResolver) {
+            System.setProperty(BrowserMobHostNameResolver.ALLOW_NATIVE_DNS_FALLBACK, "true");
+        } else {
+            LOG.warn("The legacy ProxyServer implementation does not support changing host name resolvers");
+        }
+    }
+
+    @Override
+    public HostResolver getHostNameResolver() {
+        if (Boolean.getBoolean(BrowserMobHostNameResolver.ALLOW_NATIVE_DNS_FALLBACK)) {
+            return new ChainedHostResolver(ImmutableList.of(new DnsJavaResolver(), new NativeResolver()));
+        } else {
+            return new DnsJavaResolver();
+        }
+    }
+
+    @Override
+    public boolean waitForQuiescence(long quietPeriod, long timeout, TimeUnit timeUnit) {
+        try {
+            waitForNetworkTrafficToStop(TimeUnit.MILLISECONDS.convert(quietPeriod, timeUnit), TimeUnit.MILLISECONDS.convert(timeout, timeUnit));
+
+            return true;
+        } catch (TimeoutException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public void setChainedProxy(InetSocketAddress chainedProxyAddress) {
+        this.chainedProxyAddress = chainedProxyAddress;
+        client.setHttpProxy(chainedProxyAddress.getHostString() + ":" + chainedProxyAddress.getPort());
+    }
+
+    @Override
+    public InetSocketAddress getChainedProxy() {
+        return this.chainedProxyAddress;
     }
 
     public void setCaptureHeaders(boolean captureHeaders) {
@@ -488,13 +820,24 @@ public class ProxyServer implements LegacyProxyServer {
         }, timeoutInMs, TimeUnit.MILLISECONDS);
 
         if (!result) {
-            throw new RuntimeException("Timed out after " + timeoutInMs + " ms while waiting for network traffic to stop");
+            throw new TimeoutException("Timed out after " + timeoutInMs + " ms while waiting for network traffic to stop");
         }
     }
 
     public void setOptions(Map<String, String> options) {
         if (options.containsKey("httpProxy")) {
             client.setHttpProxy(options.get("httpProxy"));
+        }
+    }
+
+    /**
+     * Exception thrown when waitForNetworkTrafficToStop does not successfully wait for network traffic to stop.
+     */
+    public static class TimeoutException extends RuntimeException {
+        private static final long serialVersionUID = -7179322468198775663L;
+
+        public TimeoutException(String message) {
+            super(message);
         }
     }
 }

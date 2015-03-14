@@ -1,43 +1,25 @@
 package net.lightbody.bmp.proxy.http;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.InflaterInputStream;
-import java.util.zip.Inflater;
-
-import net.lightbody.bmp.core.har.*;
+import com.google.common.collect.ImmutableMap;
+import net.lightbody.bmp.core.har.Har;
+import net.lightbody.bmp.core.har.HarCookie;
+import net.lightbody.bmp.core.har.HarEntry;
+import net.lightbody.bmp.core.har.HarNameValuePair;
+import net.lightbody.bmp.core.har.HarNameVersion;
+import net.lightbody.bmp.core.har.HarPostData;
+import net.lightbody.bmp.core.har.HarPostDataParam;
+import net.lightbody.bmp.core.har.HarRequest;
+import net.lightbody.bmp.core.har.HarResponse;
 import net.lightbody.bmp.proxy.BlacklistEntry;
+import net.lightbody.bmp.proxy.RewriteRule;
 import net.lightbody.bmp.proxy.Whitelist;
+import net.lightbody.bmp.proxy.jetty.util.MultiMap;
 import net.lightbody.bmp.proxy.jetty.util.UrlEncoded;
-import net.lightbody.bmp.proxy.util.*;
+import net.lightbody.bmp.proxy.util.BrowserMobProxyUtil;
+import net.lightbody.bmp.proxy.util.CappedByteArrayOutputStream;
+import net.lightbody.bmp.proxy.util.ClonedOutputStream;
+import net.lightbody.bmp.proxy.util.IOUtils;
 import net.sf.uadetector.ReadableUserAgent;
-import net.sf.uadetector.UserAgentStringParser;
-import net.sf.uadetector.service.UADetectorServiceFactory;
-
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpClientConnection;
@@ -108,9 +90,36 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xbill.DNS.Cache;
 import org.xbill.DNS.DClass;
-import net.lightbody.bmp.proxy.jetty.util.MultiMap;
 
 import javax.xml.bind.DatatypeConverter;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.Inflater;
+import java.util.zip.InflaterInputStream;
 
 /**
  * WARN : Require zlib > 1.1.4 (deflate support)
@@ -135,7 +144,7 @@ public class BrowserMobHttpClient {
      * keep contents
      */
     private volatile boolean captureContent;
-    
+
     /**
      * keep binary contents (if captureContent is set to true, default policy is to capture binary contents too)
      */
@@ -181,7 +190,7 @@ public class BrowserMobHttpClient {
     /**
      * List of URLs to rewrite
      */
-    private final List<RewriteRule> rewriteRules = new CopyOnWriteArrayList<RewriteRule>();
+    private final CopyOnWriteArrayList<RewriteRule> rewriteRules = new CopyOnWriteArrayList<RewriteRule>();
     
     /**
      * triggers to process when sending request
@@ -641,8 +650,8 @@ public class BrowserMobHttpClient {
         boolean rewrote = false;
         String newUrl = url;
         for (RewriteRule rule : rewriteRules) {
-            Matcher matcher = rule.match.matcher(newUrl);
-            newUrl = matcher.replaceAll(rule.replace);
+            Matcher matcher = rule.getMatch().matcher(newUrl);
+            newUrl = matcher.replaceAll(rule.getReplace());
             rewrote = true;
         }
 
@@ -1191,6 +1200,19 @@ public class BrowserMobHttpClient {
         rewriteRules.add(new RewriteRule(match, replace));
     }
 
+    public List<RewriteRule> getRewriteRules() {
+        return rewriteRules;
+    }
+
+    public void removeRewriteRule(String urlPattern) {
+        for (RewriteRule rewriteRule : rewriteRules) {
+            if (rewriteRule.getMatch().pattern().equals(urlPattern)) {
+                // rewriteRules is a CopyOnWriteArrayList, so we can modify it while iterating over it
+                rewriteRules.remove(rewriteRule);
+            }
+        }
+    }
+
     public void clearRewriteRules() {
     	rewriteRules.clear();
     }
@@ -1281,6 +1303,15 @@ public class BrowserMobHttpClient {
     
     public void addHeader(String name, String value) {
         additionalHeaders.put(name, value);
+    }
+
+    public void setAdditionalHeaders(Map<String, String> additionalHeaders) {
+        additionalHeaders.clear();
+        additionalHeaders.putAll(additionalHeaders);
+    }
+
+    public Map<String, String> getAdditionalHeaders() {
+        return ImmutableMap.<String, String>builder().putAll(additionalHeaders).build();
     }
 
     /**
@@ -1425,16 +1456,6 @@ public class BrowserMobHttpClient {
         }
     }
 
-    private class RewriteRule {
-        private final Pattern match;
-        private final String replace;
-
-        private RewriteRule(String match, String replace) {
-            this.match = Pattern.compile(match);
-            this.replace = replace;
-        }
-    }
-
     private enum AuthType {
         NONE, BASIC, NTLM
     }
@@ -1490,6 +1511,18 @@ public class BrowserMobHttpClient {
         }
 
         return bytesCopied;
+    }
+
+    public boolean isCaptureBinaryContent() {
+        return captureBinaryContent;
+    }
+
+    public boolean isCaptureContent() {
+        return captureContent;
+    }
+
+    public boolean isCaptureHeaders() {
+        return captureHeaders;
     }
 
 }
