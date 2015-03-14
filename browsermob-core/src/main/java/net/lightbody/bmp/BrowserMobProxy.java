@@ -207,10 +207,6 @@ public interface BrowserMobProxy {
      */
     void setWriteBandwidthLimit(long bytesPerSecond);
 
-    //TODO: add information on how data limits behave
-    void setReadDataLimit(long bytes);
-    void setWriteDataLimit(long bytes);
-
     /**
      * The minimum amount of time that will elapse between the time the proxy begins receiving a response from the server and the time the
      * proxy begins sending the response to the client.
@@ -420,9 +416,6 @@ public interface BrowserMobProxy {
      * Returns true if the whitelist is enabled, otherwise false.
      */
     boolean isWhitelistEnabled();
-
-    //TODO: need more information on what this retries. does it retry only connection timeouts/failures? how about DNS lookup failures, or 5xx response codes from the server?
-    void setRetryCount(int count);
 
     /**
      * Adds the specified HTTP headers to every request. Replaces any existing additional headers with the specified headers.
