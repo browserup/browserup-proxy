@@ -57,9 +57,8 @@ public interface BrowserMobProxy {
     boolean isStarted();
 
     /**
-     * Stops accepting new client connections and initiates a graceful shutdown of the proxy server, waiting for network traffic to stop.
-     * If the proxy was previously stopped or aborted, this method has no effect.
-     * TODO: define a time limit to wait for network traffic to stop     
+     * Stops accepting new client connections and initiates a graceful shutdown of the proxy server, waiting up to 5 seconds for network
+     * traffic to stop. If the proxy was previously stopped or aborted, this method has no effect.
      *
      * @throws java.lang.IllegalStateException if the proxy has not been started.
      */
@@ -433,8 +432,7 @@ public interface BrowserMobProxy {
     void addHeaders(Map<String, String> headers);
 
     /**
-     * Adds a new HTTP header to every request.
-     * TODO: do these headers replace an existing header on the request, if one exists? for example, can this be used to override User-Agent headers?
+     * Adds a new HTTP header to every request. If the header already exists on the request, it will be replaced with the specified header.
      *
      * @param name name of the header to add
      * @param value new header's value
