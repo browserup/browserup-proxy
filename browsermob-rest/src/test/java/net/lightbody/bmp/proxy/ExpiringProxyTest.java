@@ -1,7 +1,6 @@
 package net.lightbody.bmp.proxy;
 
-import com.google.inject.Provider;
-import org.junit.Before;
+import net.lightbody.bmp.proxy.guice.LegacyProxyServerProvider;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -15,20 +14,15 @@ public class ExpiringProxyTest {
     public void testExpiredProxyStops() throws InterruptedException {
         int minPort = new Random().nextInt(50000) + 10000;
 
-        ProxyManager proxyManager = new ProxyManager(new Provider<ProxyServer>() {
-            @Override
-            public ProxyServer get() {
-                return new ProxyServer();
-            }
-        },
+        ProxyManager proxyManager = new ProxyManager(new LegacyProxyServerProvider(),
                 minPort,
                 minPort + 100,
                 2);
 
-        ProxyServer proxy = proxyManager.create(Collections.<String, String>emptyMap());
+        LegacyProxyServer proxy = proxyManager.create(Collections.<String, String>emptyMap());
         int port = proxy.getPort();
 
-        ProxyServer retrievedProxy = proxyManager.get(port);
+        LegacyProxyServer retrievedProxy = proxyManager.get(port);
 
         assertEquals("ProxyManager did not return the expected proxy instance", proxy, retrievedProxy);
 
@@ -38,7 +32,7 @@ public class ExpiringProxyTest {
         int newPort = proxyManager.create(Collections.<String, String>emptyMap()).getPort();
         proxyManager.delete(newPort);
 
-        ProxyServer expiredProxy = proxyManager.get(port);
+        LegacyProxyServer expiredProxy = proxyManager.get(port);
 
         assertNull("ProxyManager did not expire proxy as expected", expiredProxy);
     }
@@ -47,20 +41,15 @@ public class ExpiringProxyTest {
     public void testZeroTtlProxyDoesNotExpire() throws InterruptedException {
         int minPort = new Random().nextInt(50000) + 10000;
 
-        ProxyManager proxyManager = new ProxyManager(new Provider<ProxyServer>() {
-            @Override
-            public ProxyServer get() {
-                return new ProxyServer();
-            }
-        },
+        ProxyManager proxyManager = new ProxyManager(new LegacyProxyServerProvider(),
                 minPort,
                 minPort + 100,
                 0);
 
-        ProxyServer proxy = proxyManager.create(Collections.<String, String>emptyMap());
+        LegacyProxyServer proxy = proxyManager.create(Collections.<String, String>emptyMap());
         int port = proxy.getPort();
 
-        ProxyServer retrievedProxy = proxyManager.get(port);
+        LegacyProxyServer retrievedProxy = proxyManager.get(port);
 
         assertEquals("ProxyManager did not return the expected proxy instance", proxy, retrievedProxy);
 
@@ -70,7 +59,7 @@ public class ExpiringProxyTest {
         int newPort = proxyManager.create(Collections.<String, String>emptyMap()).getPort();
         proxyManager.delete(newPort);
 
-        ProxyServer nonExpiredProxy = proxyManager.get(port);
+        LegacyProxyServer nonExpiredProxy = proxyManager.get(port);
 
         assertEquals("ProxyManager did not return the expected proxy instance", proxy, nonExpiredProxy);
     }

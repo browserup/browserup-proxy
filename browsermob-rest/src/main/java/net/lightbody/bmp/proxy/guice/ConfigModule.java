@@ -3,12 +3,14 @@ package net.lightbody.bmp.proxy.guice;
 import com.google.inject.Binder;
 import com.google.inject.Key;
 import com.google.inject.Module;
-import java.io.IOException;
-import static java.util.Arrays.asList;
-import java.util.List;
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import net.lightbody.bmp.proxy.LegacyProxyServer;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 public class ConfigModule implements Module {
     private String[] args;
@@ -44,7 +46,7 @@ public class ConfigModule implements Module {
                       .ofType(Integer.class)
                       .defaultsTo(0);
 
-        parser.acceptsAll(asList("help", "?"), "This help text");
+        parser.acceptsAll(Arrays.asList("help", "?"), "This help text");
 
         OptionSet options = parser.parse(args);
 
@@ -84,11 +86,7 @@ public class ConfigModule implements Module {
         binder.bind(Key.get(Integer.class, new NamedImpl("minPort"))).toInstance(minPort);
         binder.bind(Key.get(Integer.class, new NamedImpl("maxPort"))).toInstance(maxPort);                 
         binder.bind(Key.get(Integer.class, new NamedImpl("ttl"))).toInstance(ttlSpec.value(options));
-        
-        /*
-         * Init User Agent String Parser, update of the UAS datastore will run in background.
-         */
-        // temporarily disabled because user-agent-string.info no longer exists
-        //BrowserMobHttpClient.getUserAgentStringParser();
+
+        binder.bind(LegacyProxyServer.class).toProvider(LegacyProxyServerProvider.class);
     }
 }
