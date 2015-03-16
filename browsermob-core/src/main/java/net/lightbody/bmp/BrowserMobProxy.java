@@ -160,7 +160,8 @@ public interface BrowserMobProxy {
     /**
      * Starts a new HAR page using the default page naming convention. The default page naming convention is "Page #", where "#" resets to 1
      * every time {@link #newHar()} or {@link #newHar(String)} is called, and increments on every subsequent call to {@link #newPage()} or
-     * {@link #newHar(String)}.
+     * {@link #newHar(String)}. Populates the {@link net.lightbody.bmp.core.har.HarPageTimings#onLoad} value based on the amount of time
+     * the current page has been captured.
      *
      * @return the HAR as it existed immediately after ending the current page
      * @throws java.lang.IllegalStateException if HAR capture has not been enabled via {@link #newHar()} or {@link #newHar(String)}
@@ -168,7 +169,8 @@ public interface BrowserMobProxy {
     Har newPage();
 
     /**
-     * Starts a new HAR page using the specified pageRef as the page name and the page title.
+     * Starts a new HAR page using the specified pageRef as the page name and the page title. Populates the
+     * {@link net.lightbody.bmp.core.har.HarPageTimings#onLoad} value based on the amount of time the current page has been captured.
      *
      * @param pageRef name of the new page
      * @return the HAR as it existed immediately after ending the current page
@@ -177,7 +179,8 @@ public interface BrowserMobProxy {
     Har newPage(String pageRef);
 
     /**
-     * Starts a new HAR page using the specified pageRef as the page name and the pageTitle as the page title.
+     * Starts a new HAR page using the specified pageRef as the page name and the pageTitle as the page title. Populates the
+     * {@link net.lightbody.bmp.core.har.HarPageTimings#onLoad} value based on the amount of time the current page has been captured.
      *
      * @param pageRef name of the new page
      * @param pageTitle title of the new page
@@ -187,7 +190,8 @@ public interface BrowserMobProxy {
     Har newPage(String pageRef, String pageTitle);
 
     /**
-     * Stops capturing traffic in the HAR.
+     * Stops capturing traffic in the HAR. Populates the {@link net.lightbody.bmp.core.har.HarPageTimings#onLoad} value for the current page
+     * based on the amount of time it has been captured.
      *
      * @return the existing HAR
      */
