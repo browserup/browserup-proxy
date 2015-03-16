@@ -19,7 +19,7 @@ public class ProxyPortAssignmentTest extends ProxyManagerTest {
     @Test
     public void testAutoAssignment() throws Exception {
         int[] ports = {9091, 9092, 9093};
-        ProxyServer p;
+        LegacyProxyServer p;
         for(int port : ports){
             p = proxyManager.create(new HashMap<String, String>());
             assertEquals(port, p.getPort());
@@ -44,7 +44,7 @@ public class ProxyPortAssignmentTest extends ProxyManagerTest {
     
     @Test
     public void testManualAssignment() throws Exception {
-        ProxyServer p = proxyManager.create(new HashMap<String, String>(), 9094);
+        LegacyProxyServer p = proxyManager.create(new HashMap<String, String>(), 9094);
         assertEquals(9094, p.getPort());
         try{            
             proxyManager.create(new HashMap<String, String>(), 9094);            

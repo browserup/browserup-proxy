@@ -17,7 +17,7 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import static org.junit.Assume.assumeFalse;
 
 public class PhantomJSTest {
-    ProxyServer server;
+    private LegacyProxyServer server;
 
     @Before
     public void skipForTravisCi() {
