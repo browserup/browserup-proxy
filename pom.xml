@@ -54,7 +54,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <slf4j.version>1.7.10</slf4j.version>
-        <selenium.version>2.43.1</selenium.version>
+        <selenium.version>2.45.0</selenium.version>
 
         <maven-jar-plugin.version>2.5</maven-jar-plugin.version>
 
