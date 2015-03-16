@@ -5,6 +5,7 @@ import net.lightbody.bmp.proxy.BlacklistEntry;
 import net.lightbody.bmp.proxy.CaptureType;
 import net.lightbody.bmp.proxy.auth.AuthType;
 import net.lightbody.bmp.proxy.dns.HostResolver;
+import org.littleshoot.proxy.HttpFiltersSource;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -497,4 +498,26 @@ public interface BrowserMobProxy {
      * @return address and port of the upstream proxy, or null of there is none.
      */
     InetSocketAddress getChainedProxy();
+
+    /**
+     * Adds a new filter factory (request/response interceptor) to the beginning of the HttpFilters chain.
+     * <p/>
+     * <b>Note:</b> This method is only available in the LittleProxy-based implementation of BrowserMob Proxy. The legacy {@link net.lightbody.bmp.proxy.ProxyServer}
+     * implementation will not use the HTTP filters. You <b>must</b> use the addRequestInterceptor() and addResponseInterceptor() methods in
+     * {@link net.lightbody.bmp.proxy.LegacyProxyServer} when using the legacy ProxyServer implementation.
+     *
+     * @param filterFactory factory to generate HttpFilters
+     */
+    void addFirstHttpFilterFactory(HttpFiltersSource filterFactory);
+
+    /**
+     * Adds a new filter factory (request/response interceptor) to the end of the HttpFilters chain.
+     * <p/>
+     * <b>Note:</b> This method is only available in the LittleProxy-based implementation of BrowserMob Proxy. The legacy {@link net.lightbody.bmp.proxy.ProxyServer}
+     * implementation will not use the HTTP filters. You <b>must</b> use the addRequestInterceptor() and addResponseInterceptor() methods in
+     * {@link net.lightbody.bmp.proxy.LegacyProxyServer} when using the legacy ProxyServer implementation.
+     *
+     * @param filterFactory factory to generate HttpFilters
+     */
+    void addLastHttpFilterFactory(HttpFiltersSource filterFactory);
 }

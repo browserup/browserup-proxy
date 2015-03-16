@@ -29,6 +29,7 @@ import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponseInterceptor;
 import org.java_bandwidthlimiter.BandwidthLimiter;
 import org.java_bandwidthlimiter.StreamManager;
+import org.littleshoot.proxy.HttpFiltersSource;
 import org.openqa.selenium.Proxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -819,6 +820,17 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
             client.setHttpProxy(options.get("httpProxy"));
         }
     }
+
+    @Override
+    public void addFirstHttpFilterFactory(HttpFiltersSource filterFactory) {
+        LOG.warn("The legacy ProxyServer implementation does not support HTTP filter factories. Use addRequestInterceptor/addResponseInterceptor instead.");
+    }
+
+    @Override
+    public void addLastHttpFilterFactory(HttpFiltersSource filterFactory) {
+        LOG.warn("The legacy ProxyServer implementation does not support HTTP filter factories. Use addRequestInterceptor/addResponseInterceptor instead.");
+    }
+
 
     /**
      * Exception thrown when waitForNetworkTrafficToStop does not successfully wait for network traffic to stop.

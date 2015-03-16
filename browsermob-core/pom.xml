@@ -139,6 +139,34 @@
             <version>2.1.7</version>
         </dependency>
 
+        <!-- Including littleproxy (compile time only) because the BrowserMobProxy interface requires access to the HttpFiltersSource class.
+             Only the LittleProxy implementation can utilize the method, and the browsermob-core-littleproxy module includes the littleproxy
+             dependency at compile scope already. -->
+        <dependency>
+            <groupId>net.lightbody.bmp</groupId>
+            <artifactId>littleproxy</artifactId>
+            <version>1.1.0-beta1-SNAPSHOT</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>log4j</artifactId>
+                    <groupId>log4j</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>slf4j-log4j12</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.littleshoot</groupId>
+                    <artifactId>dnsjava</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.barchart.udt</groupId>
+                    <artifactId>barchart-udt-bundle</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
