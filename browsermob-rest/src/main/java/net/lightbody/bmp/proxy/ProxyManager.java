@@ -32,13 +32,13 @@ public class ProxyManager {
     private int lastPort;
     private final int minPort; 
     private final int maxPort;
-    private final Provider<ProxyServer> proxyServerProvider;
+    private final Provider<LegacyProxyServer> proxyServerProvider;
     // retain a reference to the Cache to allow the ProxyCleanupTask to .cleanUp(), since asMap() is just a view into the cache.
     // it would seem to make sense to pass the newly-built Cache directly to the ProxyCleanupTask and have it retain a WeakReference to it, and
     // only maintain a reference to the .asMap() result in this class. puzzlingly, however, the Cache can actually get garbage collected
     // before the .asMap() view of it does.
-    private final Cache<Integer, ProxyServer> proxyCache;
-    private final ConcurrentMap<Integer, ProxyServer> proxies;
+    private final Cache<Integer, LegacyProxyServer> proxyCache;
+    private final ConcurrentMap<Integer, LegacyProxyServer> proxies;
 
     /**
      * Interval at which expired proxy checks will actively clean up expired proxies. Proxies may still be cleaned up when accessing the
@@ -64,15 +64,15 @@ public class ProxyManager {
     private static class ProxyCleanupTask implements Runnable {
         // using a WeakReference that will indicate to us when the Cache (and thus its ProxyManager) has been garbage
         // collected, allowing this cleanup task to kill itself
-        private final WeakReference<Cache<Integer, ProxyServer>> proxyCache;
+        private final WeakReference<Cache<Integer, LegacyProxyServer>> proxyCache;
 
-        public ProxyCleanupTask(Cache<Integer, ProxyServer> cache) {
-            this.proxyCache = new WeakReference<Cache<Integer, ProxyServer>>(cache);
+        public ProxyCleanupTask(Cache<Integer, LegacyProxyServer> cache) {
+            this.proxyCache = new WeakReference<Cache<Integer, LegacyProxyServer>>(cache);
         }
 
         @Override
         public void run() {
-            Cache<Integer, ProxyServer> cache = proxyCache.get();
+            Cache<Integer, LegacyProxyServer> cache = proxyCache.get();
             if (cache != null) {
                 try {
                     cache.cleanUp();
@@ -90,17 +90,17 @@ public class ProxyManager {
     }
 
     @Inject
-    public ProxyManager(Provider<ProxyServer> proxyServerProvider, @Named("minPort") Integer minPort, @Named("maxPort") Integer maxPort, final @Named("ttl") Integer ttl) {
+    public ProxyManager(Provider<LegacyProxyServer> proxyServerProvider, @Named("minPort") Integer minPort, @Named("maxPort") Integer maxPort, final @Named("ttl") Integer ttl) {
         this.proxyServerProvider = proxyServerProvider;
         this.minPort = minPort;
         this.maxPort = maxPort;
         this.lastPort = maxPort;
         if (ttl > 0) {
             // proxies should be evicted after the specified ttl, so set up an evicting cache and a listener to stop the proxies when they're evicted
-            RemovalListener<Integer, ProxyServer> removalListener = new RemovalListener<Integer, ProxyServer> () {
-                public void onRemoval(RemovalNotification<Integer, ProxyServer> removal) {
+            RemovalListener<Integer, LegacyProxyServer> removalListener = new RemovalListener<Integer, LegacyProxyServer> () {
+                public void onRemoval(RemovalNotification<Integer, LegacyProxyServer> removal) {
                     try {
-                        ProxyServer proxy = removal.getValue();
+                        LegacyProxyServer proxy = removal.getValue();
                         if (proxy != null) {
                             LOG.info("Expiring ProxyServer on port {} after {} seconds without activity", proxy.getPort(), ttl);
                             proxy.stop();
@@ -122,15 +122,15 @@ public class ProxyManager {
             ScheduledExecutorHolder.expiredProxyCleanupExecutor.scheduleWithFixedDelay(new ProxyCleanupTask(proxyCache),
                     EXPIRED_PROXY_CLEANUP_INTERVAL_SECONDS, EXPIRED_PROXY_CLEANUP_INTERVAL_SECONDS, TimeUnit.SECONDS);
         } else {
-            this.proxies = new ConcurrentHashMap<Integer, ProxyServer>();
+            this.proxies = new ConcurrentHashMap<Integer, LegacyProxyServer>();
             // nothing to timeout, so no Cache
             this.proxyCache = null;
         }
     }
 
-    public ProxyServer create(Map<String, String> options, Integer port, String bindAddr) {
+    public LegacyProxyServer create(Map<String, String> options, Integer port, String bindAddr) {
         LOG.debug("Instantiate ProxyServer...");
-        ProxyServer proxy = proxyServerProvider.get();
+        LegacyProxyServer proxy = proxyServerProvider.get();
         
         LOG.debug("Apply options `{}` to new ProxyServer...", options);
         proxy.setOptions(options);                        
@@ -165,21 +165,21 @@ public class ProxyManager {
         throw new ProxyPortsExhaustedException();
     }
 
-    public ProxyServer create(Map<String, String> options, Integer port) {
+    public LegacyProxyServer create(Map<String, String> options, Integer port) {
         return create(options, port, null);
     }
 
-    public ProxyServer create(Map<String, String> options) {
+    public LegacyProxyServer create(Map<String, String> options) {
         return create(options, null, null);
     }
 
-    public ProxyServer get(int port) {
+    public LegacyProxyServer get(int port) {
         return proxies.get(port);
     }
     
-    private ProxyServer startProxy(ProxyServer proxy, int port) {
+    private LegacyProxyServer startProxy(LegacyProxyServer proxy, int port) {
         proxy.setPort(port);
-        ProxyServer old = proxies.putIfAbsent(port, proxy);
+        LegacyProxyServer old = proxies.putIfAbsent(port, proxy);
         if(old != null){
             LOG.info("Proxy already exists at port {}", port);
             throw new ProxyExistsException(port);
@@ -202,12 +202,12 @@ public class ProxyManager {
         return lastPort < maxPort? ++lastPort : (lastPort = minPort); 
     }
 
-    public Collection<ProxyServer> get() {
+    public Collection<LegacyProxyServer> get() {
         return proxies.values();
     }
 
     public void delete(int port) {
-        ProxyServer proxy = proxies.remove(port);
+        LegacyProxyServer proxy = proxies.remove(port);
         proxy.stop();
     }
     
