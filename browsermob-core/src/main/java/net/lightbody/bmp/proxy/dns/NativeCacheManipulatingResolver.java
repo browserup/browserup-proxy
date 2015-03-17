@@ -16,7 +16,8 @@ import java.util.concurrent.TimeUnit;
  * manipulate the cache, which includes access to private class members that are not part of the published Java specification. As such, this
  * implementation is brittle and may break in a future Java release, or may not work on non-Oracle JVMs. If this implementation cannot
  * perform any of its operations due to a failure to find or set the relevant field using reflection, it will log a warning but will not
- * throw an exception. You are using this class at your own risk!
+ * throw an exception. You are using this class at your own risk! <b>JVM cache manipulation does not work on Windows</b> -- this class will behave exactly
+ * the same as {@link net.lightbody.bmp.proxy.dns.NativeResolver} on that platform.
  */
 public class NativeCacheManipulatingResolver extends NativeResolver {
     private static final Logger log = LoggerFactory.getLogger(NativeCacheManipulatingResolver.class);

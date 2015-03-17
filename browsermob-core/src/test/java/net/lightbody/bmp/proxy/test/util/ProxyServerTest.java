@@ -166,4 +166,13 @@ public abstract class ProxyServerTest {
             throw new RuntimeException("Unable to create new HTTP client", e);
         }
     }
+
+    /**
+     * Checks if the test is running on a Windows OS.
+     *
+     * @return true if running on Windows, otherwise false
+     */
+    public static boolean isWindows() {
+        return System.getProperty("os.name").startsWith("Windows");
+    }
 }
