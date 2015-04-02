@@ -10,7 +10,7 @@ for instructions on creating a 2.1 beta release.
 Features
 --------
 
-The proxy is programmatically controlled via a REST interface or by being embedded directly inside Java-based programs and unit tests. It captures performance data the [HAR format](http://groups.google.com/group/http-archive-specification). It addition it also can actually control HTTP traffic, such as:
+The proxy is programmatically controlled via a REST interface or by being embedded directly inside Java-based programs and unit tests. It captures performance data in the [HAR format](http://groups.google.com/group/http-archive-specification). In addition it can actually control HTTP traffic, such as:
 
  - blacklisting and whitelisting certain URL patterns
  - simulating various bandwidth and latency
