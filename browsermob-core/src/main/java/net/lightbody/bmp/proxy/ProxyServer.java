@@ -1,8 +1,8 @@
 package net.lightbody.bmp.proxy;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import net.lightbody.bmp.BrowserMobProxy;
+import net.lightbody.bmp.client.ClientUtil;
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.core.har.HarEntry;
 import net.lightbody.bmp.core.har.HarLog;
@@ -12,11 +12,8 @@ import net.lightbody.bmp.core.util.ThreadUtils;
 import net.lightbody.bmp.exception.JettyException;
 import net.lightbody.bmp.exception.NameResolutionException;
 import net.lightbody.bmp.proxy.auth.AuthType;
-import net.lightbody.bmp.proxy.dns.ChainedHostResolver;
-import net.lightbody.bmp.proxy.dns.DnsJavaResolver;
+import net.lightbody.bmp.proxy.dns.AdvancedHostResolver;
 import net.lightbody.bmp.proxy.dns.HostResolver;
-import net.lightbody.bmp.proxy.dns.NativeResolver;
-import net.lightbody.bmp.proxy.http.BrowserMobHostNameResolver;
 import net.lightbody.bmp.proxy.http.BrowserMobHttpClient;
 import net.lightbody.bmp.proxy.http.RequestInterceptor;
 import net.lightbody.bmp.proxy.http.ResponseInterceptor;
@@ -61,13 +58,7 @@ import java.util.regex.Pattern;
  * <ul>
  *     <li>{@link net.lightbody.bmp.BrowserMobProxy#getServerBindAddress()} and {@link #start(int, java.net.InetAddress, java.net.InetAddress)} - server bind addresses are not supported</li>
  *     <li>{@link net.lightbody.bmp.BrowserMobProxy#stopAutoAuthorization(String)}</li>
- *     <li>{@link net.lightbody.bmp.BrowserMobProxy#setHostNameResolver(net.lightbody.bmp.proxy.dns.HostResolver)}</li> (see below)
  * </ul>
- *<h1>Host name resolvers</h1>
- * The {@link #setHostNameResolver(net.lightbody.bmp.proxy.dns.HostResolver)} and {@link #getHostNameResolver()}
- * methods from {@link net.lightbody.bmp.BrowserMobProxy} are not supported; this legacy implementation always uses dnsjava. However, passing
- * an instance of {@link net.lightbody.bmp.proxy.dns.NativeResolver} to {@link #setHostNameResolver(net.lightbody.bmp.proxy.dns.HostResolver)}
- * will enable native DNS fallback by setting the bmp.allowNativeDnsFallback system property to true.
  *
  * @deprecated Use the {@link net.lightbody.bmp.BrowserMobProxy} interface to preserve compatibility with future BrowserMob Proxy versions.
  */
@@ -75,6 +66,12 @@ import java.util.regex.Pattern;
 public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
     private static final HarNameVersion CREATOR = new HarNameVersion("BrowserMob Proxy", "2.1.0-beta-1-legacy");
     private static final Logger LOG = LoggerFactory.getLogger(ProxyServer.class);
+
+    /**
+     * System property to allow fallback to the native Java hostname lookup mechanism when dnsjava (xbill) cannot resolve the hostname. Native fallback
+     * is enabled by default and will be disabled only if the value of this property is explicitly set to false.
+     */
+    public static final String ALLOW_NATIVE_DNS_FALLBACK = "bmp.allowNativeDnsFallback";
 
     /*
      * The Jetty HttpServer use in BrowserMobProxyHandler
@@ -126,6 +123,12 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
         handler.setJettyServer(server);
         handler.setShutdownLock(new Object());
         client = new BrowserMobHttpClient(streamManager, requestCounter);
+
+        // if native DNS fallback is explicitly disabled, replace the default resolver with a dnsjava-only resolver
+        if ("false".equalsIgnoreCase(System.getProperty(ALLOW_NATIVE_DNS_FALLBACK))) {
+            client.setResolver(ClientUtil.createDnsJavaResolver());
+        }
+
         client.prepareForBrowser();
         handler.setHttpClient(client);
 
@@ -440,17 +443,17 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
 
     @Override
     public void setConnectTimeout(int connectionTimeout, TimeUnit timeUnit) {
-        setConnectionTimeout((int)TimeUnit.MILLISECONDS.convert(connectionTimeout, timeUnit));
+        setConnectionTimeout((int) TimeUnit.MILLISECONDS.convert(connectionTimeout, timeUnit));
     }
 
     @Override
     public void setIdleConnectionTimeout(int idleConnectionTimeout, TimeUnit timeUnit) {
-        setSocketOperationTimeout((int)TimeUnit.MILLISECONDS.convert(idleConnectionTimeout, timeUnit));
+        setSocketOperationTimeout((int) TimeUnit.MILLISECONDS.convert(idleConnectionTimeout, timeUnit));
     }
 
     @Override
     public void setRequestTimeout(int requestTimeout, TimeUnit timeUnit) {
-        setRequestTimeout((int)TimeUnit.MILLISECONDS.convert(requestTimeout, timeUnit));
+        setRequestTimeout((int) TimeUnit.MILLISECONDS.convert(requestTimeout, timeUnit));
     }
 
     @Override
@@ -489,7 +492,12 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
     }
 
     public void remapHost(String source, String target) {
-        client.remapHost(source, target);
+        if (client.getResolver() instanceof AdvancedHostResolver) {
+            AdvancedHostResolver advancedHostResolver = (AdvancedHostResolver) client.getResolver();
+            advancedHostResolver.remapHost(source, target);
+        } else {
+            LOG.warn("Attempting to remap host, but host resolver is not an AdvancedHostRemapper. Host resolver is: {}", client.getResolver());
+        }
     }
 
     @Deprecated
@@ -724,20 +732,12 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
 
     @Override
     public void setHostNameResolver(HostResolver resolver) {
-        if (resolver instanceof NativeResolver) {
-            System.setProperty(BrowserMobHostNameResolver.ALLOW_NATIVE_DNS_FALLBACK, "true");
-        } else {
-            LOG.warn("The legacy ProxyServer implementation does not support changing host name resolvers");
-        }
+        client.setResolver(resolver);
     }
 
     @Override
     public HostResolver getHostNameResolver() {
-        if (Boolean.getBoolean(BrowserMobHostNameResolver.ALLOW_NATIVE_DNS_FALLBACK)) {
-            return new ChainedHostResolver(ImmutableList.of(new DnsJavaResolver(), new NativeResolver()));
-        } else {
-            return new DnsJavaResolver();
-        }
+        return client.getResolver();
     }
 
     @Override
@@ -775,11 +775,22 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
     }
 
     public void clearDNSCache() {
-        client.clearDNSCache();
+        if (client.getResolver() instanceof AdvancedHostResolver) {
+            AdvancedHostResolver advancedHostResolver = (AdvancedHostResolver) client.getResolver();
+            advancedHostResolver.clearDNSCache();
+        } else {
+            LOG.warn("Attempting to clear DNS cache, but host resolver is not an AdvancedHostRemapper. Host resolver is: {}", client.getResolver());
+        }
     }
 
     public void setDNSCacheTimeout(int timeout) {
-        client.setDNSCacheTimeout(timeout);
+        if (client.getResolver() instanceof AdvancedHostResolver) {
+            AdvancedHostResolver advancedHostResolver = (AdvancedHostResolver) client.getResolver();
+            advancedHostResolver.setNegativeDNSCacheTimeout(timeout, TimeUnit.MILLISECONDS);
+            advancedHostResolver.setPositiveDNSCacheTimeout(timeout, TimeUnit.MILLISECONDS);
+        } else {
+            LOG.warn("Attempting to set DNS cache timeout, but host resolver is not an AdvancedHostRemapper. Host resolver is: {}", client.getResolver());
+        }
     }
 
     public void waitForNetworkTrafficToStop(final long quietPeriodInMs, long timeoutInMs) {

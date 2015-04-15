@@ -1,6 +1,8 @@
 package net.lightbody.bmp.proxy.http;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import net.lightbody.bmp.client.ClientUtil;
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.core.har.HarCookie;
 import net.lightbody.bmp.core.har.HarEntry;
@@ -13,6 +15,8 @@ import net.lightbody.bmp.core.har.HarResponse;
 import net.lightbody.bmp.proxy.BlacklistEntry;
 import net.lightbody.bmp.proxy.RewriteRule;
 import net.lightbody.bmp.proxy.Whitelist;
+import net.lightbody.bmp.proxy.dns.AdvancedHostResolver;
+import net.lightbody.bmp.proxy.dns.HostResolver;
 import net.lightbody.bmp.proxy.jetty.util.MultiMap;
 import net.lightbody.bmp.proxy.jetty.util.UrlEncoded;
 import net.lightbody.bmp.proxy.util.BrowserMobProxyUtil;
@@ -88,8 +92,6 @@ import org.apache.http.protocol.HttpRequestExecutor;
 import org.java_bandwidthlimiter.StreamManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xbill.DNS.Cache;
-import org.xbill.DNS.DClass;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
@@ -218,10 +220,12 @@ public class BrowserMobHttpClient {
     private final AtomicBoolean allowNewRequests = new AtomicBoolean(true);
     
     /**
-     * DNS lookup handler
+     * Hostname resolver that wraps a {@link net.lightbody.bmp.proxy.dns.HostResolver}. The wrapped HostResolver can be replaced safely at
+     * runtime using {@link LegacyHostResolverAdapter#setResolver(net.lightbody.bmp.proxy.dns.HostResolver)}.
+     * See {@link #setResolver(net.lightbody.bmp.proxy.dns.HostResolver)}.
      */
-    private final BrowserMobHostNameResolver hostNameResolver;
-    
+    private final LegacyHostResolverAdapter resolverWrapper = new LegacyHostResolverAdapter(ClientUtil.createDnsJavaWithNativeFallbackResolver());
+
     /**
      * does the proxy support gzip compression? (set to false if you go through a browser)
      */
@@ -269,7 +273,6 @@ public class BrowserMobHttpClient {
      */
     public BrowserMobHttpClient(final StreamManager streamManager, AtomicInteger requestCounter) {
         this.requestCounter = requestCounter;
-        hostNameResolver = new BrowserMobHostNameResolver(new Cache(DClass.ANY));
         socketFactory = new SimulatedSocketFactory(streamManager);
         sslSocketFactory = new TrustingSSLSocketFactory(new AllowAllHostnameVerifier(), streamManager);
 
@@ -284,7 +287,7 @@ public class BrowserMobHttpClient {
         	.register("https", this.sslSocketFactory)
         	.build();
         
-        httpClientConnMgr = new PoolingHttpClientConnectionManager(registry, hostNameResolver) {
+        httpClientConnMgr = new PoolingHttpClientConnectionManager(registry, resolverWrapper) {
             @Override
             public ConnectionRequest requestConnection(HttpRoute route, Object state) {
                 final ConnectionRequest wrapped = super.requestConnection(route, state);
@@ -383,9 +386,14 @@ public class BrowserMobHttpClient {
     	httpClientBuilder.setRetryHandler(new DefaultHttpRequestRetryHandler(count, false));
     	updateHttpClient();
     }
-	
+
     public void remapHost(String source, String target) {
-        hostNameResolver.remap(source, target);
+        if (resolverWrapper.getResolver() instanceof AdvancedHostResolver) {
+            AdvancedHostResolver advancedHostResolver = (AdvancedHostResolver) resolverWrapper.getResolver();
+            advancedHostResolver.remapHost(source, target);
+        } else {
+            LOG.warn("Attempting to remap host, but resolver is not an AdvancedHostResolver. Resolver: {}", resolverWrapper.getResolver());
+        }
     }
 
     @Deprecated
@@ -1364,11 +1372,26 @@ public class BrowserMobHttpClient {
     }
     
     public String remappedHost(String host) {
-        return hostNameResolver.remapping(host);
+        if (resolverWrapper.getResolver() instanceof  AdvancedHostResolver) {
+            AdvancedHostResolver advancedHostResolver = (AdvancedHostResolver) resolverWrapper.getResolver();
+
+            return advancedHostResolver.getHostRemappings().get(host);
+        } else {
+            LOG.warn("Attempting to find remapped host for {}, but resolver is not an AdvancedHostResolver. Resolver: {}", host, resolverWrapper.getResolver());
+
+            return "";
+        }
     }
 
     public List<String> originalHosts(String host) {
-        return hostNameResolver.original(host);
+        if (resolverWrapper.getResolver() instanceof AdvancedHostResolver) {
+            AdvancedHostResolver advancedHostResolver = (AdvancedHostResolver) resolverWrapper.getResolver();
+            return ImmutableList.copyOf(advancedHostResolver.getOriginalHostnames(host));
+        } else {
+            LOG.warn("Attempting to find original hosts for {}, but resolver is not an AdvancedHostResolver. Resolver: {}", host, resolverWrapper.getResolver());
+
+            return Collections.emptyList();
+        }
     }
 
     public Har getHar() {
@@ -1464,13 +1487,13 @@ public class BrowserMobHttpClient {
         return shutdown;
     }
 
-    public void clearDNSCache() {
-        this.hostNameResolver.clearCache();
-    }
+//    public void clearDNSCache() {
+//        this.hostNameResolver.clearCache();
+//    }
 
-    public void setDNSCacheTimeout(int timeout) {
-        this.hostNameResolver.setCacheTimeout(timeout);
-    }
+//    public void setDNSCacheTimeout(int timeout) {
+//        this.hostNameResolver.setCacheTimeout(timeout);
+//    }
 
     public static long copyWithStats(InputStream is, OutputStream os) throws IOException {
         long bytesCopied = 0;
@@ -1525,4 +1548,11 @@ public class BrowserMobHttpClient {
         return captureHeaders;
     }
 
+    public HostResolver getResolver() {
+        return resolverWrapper.getResolver();
+    }
+
+    public void setResolver(HostResolver resolver) {
+        resolverWrapper.setResolver(resolver);
+    }
 }

@@ -8,8 +8,9 @@ import org.junit.Test;
 
 import java.io.IOException;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class ErrorResponseTest extends ProxyServerTest {
     @Test
@@ -23,8 +24,8 @@ public class ErrorResponseTest extends ProxyServerTest {
 
             String hostNotFoundTitle = MessagesUtil.getMessage("response.dns_not_found.title");
 
-            assertTrue("Expected \"response.dns_not_found.title\" message in body of error response", responseBody.contains(hostNotFoundTitle));
-            assertTrue("Expected URL in body of error response", responseBody.contains(url));
+            assertThat("Expected \"response.dns_not_found.title\" message in body of error response", responseBody, containsString(hostNotFoundTitle));
+            assertThat("Expected URL in body of error response", responseBody, containsString(url));
         }
     }
 
@@ -39,8 +40,8 @@ public class ErrorResponseTest extends ProxyServerTest {
 
             String connectionFailureTitle = MessagesUtil.getMessage("response.conn_failure.title");
 
-            assertTrue("Expected \"response.conn_failure.title\" message in body of error response", responseBody.contains(connectionFailureTitle));
-            assertTrue("Expected URL in body of error response", responseBody.contains(url));
+            assertThat("Expected \"response.conn_failure.title\" message in body of error response", responseBody, containsString(connectionFailureTitle));
+            assertThat("Expected URL in body of error response", responseBody, containsString(url));
         }
     }
 
@@ -57,8 +58,8 @@ public class ErrorResponseTest extends ProxyServerTest {
 
             String networkTimeoutTitle = MessagesUtil.getMessage("response.net_timeout.title");
 
-            assertTrue("Expected \"response.net_timeout.title\" message in body of error response", responseBody.contains(networkTimeoutTitle));
-            assertTrue("Expected URL in body of error response", responseBody.contains(url));
+            assertThat("Expected \"response.net_timeout.title\" message in body of error response", responseBody, containsString(networkTimeoutTitle));
+            assertThat("Expected URL in body of error response", responseBody, containsString(url));
         }
     }
 

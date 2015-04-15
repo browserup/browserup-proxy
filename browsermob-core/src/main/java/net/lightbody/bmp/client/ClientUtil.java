@@ -1,7 +1,12 @@
 package net.lightbody.bmp.client;
 
+import com.google.common.collect.ImmutableList;
 import net.lightbody.bmp.BrowserMobProxy;
-import net.lightbody.bmp.exception.NameResolutionException;
+import net.lightbody.bmp.proxy.dns.AdvancedHostResolver;
+import net.lightbody.bmp.proxy.dns.ChainedHostResolver;
+import net.lightbody.bmp.proxy.dns.DnsJavaResolver;
+import net.lightbody.bmp.proxy.dns.NativeCacheManipulatingResolver;
+import net.lightbody.bmp.proxy.dns.NativeResolver;
 import org.openqa.selenium.Proxy;
 
 import java.net.InetAddress;
@@ -12,6 +17,46 @@ import java.net.UnknownHostException;
  * A utility class with convenience methods for clients using BrowserMob Proxy in embedded mode.
  */
 public class ClientUtil {
+    /**
+     * Creates a {@link net.lightbody.bmp.proxy.dns.NativeCacheManipulatingResolver} instance that can be used when
+     * calling {@link net.lightbody.bmp.BrowserMobProxy#setHostNameResolver(net.lightbody.bmp.proxy.dns.HostResolver)}.
+     *
+     * @return a new NativeCacheManipulatingResolver
+     */
+    public static AdvancedHostResolver createNativeCacheManipulatingResolver() {
+        return new NativeCacheManipulatingResolver();
+    }
+
+    /**
+     * Creates a {@link net.lightbody.bmp.proxy.dns.NativeResolver} instance that <b>does not support cache manipulation</b> that can be used when
+     * calling {@link net.lightbody.bmp.BrowserMobProxy#setHostNameResolver(net.lightbody.bmp.proxy.dns.HostResolver)}.
+     *
+     * @return a new NativeResolver
+     */
+    public static final AdvancedHostResolver createNativeResolver() {
+        return new NativeResolver();
+    }
+
+    /**
+     * Creates a {@link net.lightbody.bmp.proxy.dns.DnsJavaResolver} instance that can be used when
+     * calling {@link net.lightbody.bmp.BrowserMobProxy#setHostNameResolver(net.lightbody.bmp.proxy.dns.HostResolver)}.
+     *
+     * @return a new DnsJavaResolver
+     */
+    public static final AdvancedHostResolver createDnsJavaResolver() {
+        return new DnsJavaResolver();
+    }
+
+    /**
+     * Creates a {@link net.lightbody.bmp.proxy.dns.ChainedHostResolver} instance that first attempts to resolve a hostname using a
+     * {@link net.lightbody.bmp.proxy.dns.DnsJavaResolver}, then uses {@link net.lightbody.bmp.proxy.dns.NativeCacheManipulatingResolver}.
+     * Can be used when calling {@link net.lightbody.bmp.BrowserMobProxy#setHostNameResolver(net.lightbody.bmp.proxy.dns.HostResolver)}.
+     *
+     * @return a new ChainedHostResolver that resolves addresses first using a DnsJavaResolver, then using a NativeCacheManipulatingResolver
+     */
+    public static final AdvancedHostResolver createDnsJavaWithNativeFallbackResolver() {
+        return new ChainedHostResolver(ImmutableList.of(new DnsJavaResolver(), new NativeCacheManipulatingResolver()));
+    }
 
     /**
      * Creates a Selenium Proxy object from the BrowserMobProxy instance. The BrowserMobProxy must be started. Retrieves the address

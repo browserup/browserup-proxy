@@ -55,7 +55,7 @@ public class DnsJavaResolver extends AbstractHostNameRemapper implements Advance
     @Override
     public Collection<InetAddress> resolveRemapped(String remappedHost) {
         // special case for IP literals: return the InetAddress without doing a dnsjava lookup. dnsjava seems to handle ipv4 literals
-        // reasonably well, but does not handle ipv6 literals (with our without [] brackets) correctly.
+        // reasonably well, but does not handle ipv6 literals (with or without [] brackets) correctly.
         // note this does not work properly for ipv6 literals with a scope identifier, which is a known issue for InetAddresses.isInetAddress().
         // (dnsjava also handles the situation incorrectly)
         if (InetAddresses.isInetAddress(remappedHost)) {

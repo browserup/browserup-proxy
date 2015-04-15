@@ -1,5 +1,6 @@
 package net.lightbody.bmp.proxy.test.util;
 
+import net.lightbody.bmp.BrowserMobProxy;
 import net.lightbody.bmp.proxy.LegacyProxyServer;
 import net.lightbody.bmp.proxy.ProxyServer;
 import net.lightbody.bmp.proxy.util.IOUtils;
@@ -38,6 +39,11 @@ public abstract class ProxyServerTest {
     protected LegacyProxyServer proxy;
 
     /**
+     * This test's proxy server, running on 127.0.0.1. This is the same instance as the proxy.
+     */
+    protected BrowserMobProxy browserMobProxy;
+
+    /**
      * CloseableHttpClient that will connect through the local proxy running on 127.0.0.1.
      */
     protected CloseableHttpClient client;
@@ -50,6 +56,7 @@ public abstract class ProxyServerTest {
     @Before
     public void startProxyServer() throws Exception {
         this.proxy = createProxyServer();
+        this.browserMobProxy = (BrowserMobProxy) this.proxy;
         proxy.start();
         proxyServerPort = proxy.getPort();
 
@@ -86,8 +93,6 @@ public abstract class ProxyServerTest {
      * @return response body from the server
      */
     public String getResponseBodyFromHost(String url) {
-        HttpGet httpGet = new HttpGet(url);
-
         try {
             CloseableHttpResponse response = getResponseFromHost(url);
 
