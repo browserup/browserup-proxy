@@ -3,22 +3,24 @@ package net.lightbody.bmp.proxy.dns;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import net.lightbody.bmp.proxy.test.util.TestConstants;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -30,21 +32,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class ChainedHostResolverTest {
-    private static final InetAddress ones;
-    private static final InetAddress twos;
-    private static final List<InetAddress> firstList;
-    private static final List<InetAddress> secondList;
-    static {
-        try {
-            ones = InetAddress.getByName("1.1.1.1");
-            twos = InetAddress.getByName("2.2.2.2");
-            firstList = ImmutableList.of(ones);
-            secondList = ImmutableList.of(twos);
-        } catch (UnknownHostException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     @Test
     public void testEmptyResolver() {
         ChainedHostResolver resolver = new ChainedHostResolver(null);
@@ -52,7 +39,7 @@ public class ChainedHostResolverTest {
         Collection<InetAddress> results = resolver.resolve("www.google.com");
 
         assertNotNull("Resolver should not return null results", results);
-        assertTrue("Empty resolver chain should return empty results", results.isEmpty());
+        assertThat("Empty resolver chain should return empty results", results, empty());
 
         Map<String, String> remappings = resolver.getHostRemappings();
         assertTrue("Empty resolver chain should return empty results", remappings.isEmpty());
@@ -73,13 +60,13 @@ public class ChainedHostResolverTest {
         AdvancedHostResolver secondResolver = mock(AdvancedHostResolver.class);
         ChainedHostResolver chainResolver = new ChainedHostResolver(ImmutableList.of(firstResolver, secondResolver));
 
-        when(firstResolver.resolve("1.1.1.1")).thenReturn(firstList);
+        when(firstResolver.resolve("1.1.1.1")).thenReturn(TestConstants.addressOnesList);
         when(secondResolver.resolve("1.1.1.1")).thenReturn(Collections.<InetAddress>emptyList());
 
         Collection<InetAddress> results = chainResolver.resolve("1.1.1.1");
         assertNotNull("Resolver should not return null results", results);
-        assertFalse("Expected resolver to return a result", results.isEmpty());
-        assertEquals("Resolver returned unexpected result", ones, Iterables.get(results, 0));
+        assertThat("Expected resolver to return a result", results, not(empty()));
+        assertEquals("Resolver returned unexpected result", TestConstants.addressOnes, Iterables.get(results, 0));
 
         verify(secondResolver, never()).resolve("1.1.1.1");
 
@@ -87,12 +74,12 @@ public class ChainedHostResolverTest {
         reset(secondResolver);
 
         when(firstResolver.resolve("2.2.2.2")).thenReturn(Collections.<InetAddress>emptyList());
-        when(secondResolver.resolve("2.2.2.2")).thenReturn(secondList);
+        when(secondResolver.resolve("2.2.2.2")).thenReturn(TestConstants.addressTwosList);
 
         results = chainResolver.resolve("2.2.2.2");
         assertNotNull("Resolver should not return null results", results);
-        assertFalse("Expected resolver to return a result", results.isEmpty());
-        assertEquals("Resolver returned unexpected result", twos, Iterables.get(results, 0));
+        assertThat("Expected resolver to return a result", results, not(empty()));
+        assertEquals("Resolver returned unexpected result", TestConstants.addressTwos, Iterables.get(results, 0));
 
         verify(firstResolver).resolve("2.2.2.2");
         verify(secondResolver).resolve("2.2.2.2");
@@ -108,7 +95,7 @@ public class ChainedHostResolverTest {
 
         Collection<String> results = chainResolver.getOriginalHostnames("one");
         assertNotNull("Resolver should not return null results", results);
-        assertFalse("Expected resolver to return a result", results.isEmpty());
+        assertThat("Expected resolver to return a result", results, not(empty()));
         assertEquals("Resolver returned unexpected result", "originalOne", Iterables.get(results, 0));
 
         verify(secondResolver, never()).getOriginalHostnames(any(String.class));
@@ -147,7 +134,7 @@ public class ChainedHostResolverTest {
             @Override
             public Collection<InetAddress> answer(InvocationOnMock invocationOnMock) throws Throwable {
                 firstResolverStartedResolvingTime.set(System.nanoTime());
-                return firstList;
+                return TestConstants.addressOnesList;
             }
         });
 
@@ -170,11 +157,11 @@ public class ChainedHostResolverTest {
         Collection<InetAddress> results = chainResolver.resolve("1.1.1.1");
 
         assertNotNull("Resolver should not return null results", results);
-        assertFalse("Expected resolver to return a result", results.isEmpty());
-        assertEquals("Resolver returned unexpected result", ones, Iterables.get(results, 0));
+        assertThat("Expected resolver to return a result", results, not(empty()));
+        assertEquals("Resolver returned unexpected result", TestConstants.addressOnes, Iterables.get(results, 0));
 
-        assertTrue("Expected resolver to be finished clearing DNS cache", secondResolverCacheClearFinishedTime.get() > 0);
+        assertThat("Expected resolver to be finished clearing DNS cache", secondResolverCacheClearFinishedTime.get(), greaterThan(0L));
 
-        assertTrue("Expected resolver to finish clearing the DNS cache before starting to resolve an address", firstResolverStartedResolvingTime.get() > secondResolverCacheClearFinishedTime.get());
+        assertThat("Expected resolver to finish clearing the DNS cache before starting to resolve an address", firstResolverStartedResolvingTime.get(), greaterThan(secondResolverCacheClearFinishedTime.get()));
     }
 }
