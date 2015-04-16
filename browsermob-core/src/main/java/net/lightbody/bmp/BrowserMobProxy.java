@@ -77,7 +77,7 @@ public interface BrowserMobProxy {
     /**
      * Returns the address of the network interface on which the proxy is listening for client connections.
      *
-     * @throws java.lang.IllegalStateException if the proxy has not been started
+     * @return the client bind address, or null if the proxy has not been started
      */
     InetAddress getClientBindAddress();
 
@@ -89,9 +89,10 @@ public interface BrowserMobProxy {
     int getPort();
 
     /**
-     * Returns the address address of the network interface the proxy will use to initiate upstream connections
+     * Returns the address address of the network interface the proxy will use to initiate upstream connections. If no server bind address
+     * has been set, this method returns null, even if the proxy has been started.
      *
-     * @throws java.lang.IllegalStateException if the proxy has not been started
+     * @return server bind address if one has been set, otherwise null
      */
     InetAddress getServerBindAddress();
 

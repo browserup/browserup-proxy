@@ -1,5 +1,6 @@
 package net.lightbody.bmp.proxy;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import net.lightbody.bmp.BrowserMobProxy;
 import net.lightbody.bmp.client.ClientUtil;
@@ -77,13 +78,11 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
      * The Jetty HttpServer use in BrowserMobProxyHandler
      */
     private Server server;
+
     /*
-     * Init the port use to bind the socket
-     * value -1 means that the ProxyServer is it well configured yet
-     * 
-     * The port value can be change thanks to the setter method or by directly giving it as a constructor param
+     * Proxy port. Defaults to 0 (JVM-assigned).
      */
-    private int port = -1;
+    private int port = 0;
     private InetAddress localHost;
     private BrowserMobHttpClient client;
     private StreamManager streamManager;
@@ -103,11 +102,8 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
         this.port = port;
     }
 
+    @Override
     public void start() {
-        if (port == -1) {
-            throw new IllegalStateException("Must set port before starting");
-        }
-
         //create a stream manager that will be capped to 100 Megabits
         //remember that by default it is disabled!
         streamManager = new StreamManager( 100 * BandwidthLimiter.OneMbps );
@@ -167,6 +163,7 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
         return started;
     }
 
+    @Override
     public org.openqa.selenium.Proxy seleniumProxy() throws NameResolutionException {
         Proxy proxy = new Proxy();
         proxy.setProxyType(Proxy.ProxyType.MANUAL);
@@ -185,12 +182,14 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
         return proxy;
     }
 
+    @Override
     public void cleanup() {
         if (handler != null) {
             handler.cleanup();
         }
     }
 
+    @Override
     public void stop() {
         cleanup();
         if (client != null) {
@@ -241,6 +240,7 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
      * {@link #getConnectableLocalHost()} if you're looking for a host that can be
      * connected to.
      */
+    @Override
     public InetAddress getLocalHost() {
         if (localHost == null) {
         	try {
@@ -266,6 +266,7 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
      * No attempt is made to check the address for reachability before it is
      * returned.
      */
+    @Override
     public InetAddress getConnectableLocalHost() throws UnknownHostException {
         
     	if (getLocalHost().equals(InetAddress.getByName("0.0.0.0"))) {
@@ -275,6 +276,7 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
         }
     }
 
+    @Override
     public void setLocalHost(InetAddress localHost) {
         if (localHost.isAnyLocalAddress() ||
             localHost.isLoopbackAddress()) {
@@ -296,6 +298,7 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
         
     }
 
+    @Override
     public Har getHar() {
         // Wait up to 5 seconds for all active requests to cease before returning the HAR.
         // This helps with race conditions but won't cause deadlocks should a request hang
@@ -323,6 +326,7 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
         return newHar(initialPageRef, null);
     }
 
+    @Override
     public Har newHar(String initialPageRef, String initialPageTitle) {
         pageCount.set(0); // this will be automatically incremented by newPage() below
 
@@ -401,6 +405,7 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
         return newPage(pageRef, null);
     }
 
+    @Override
     public Har newPage(String pageRef, String pageTitle) {
         if (pageRef == null) {
             pageRef = "Page " + pageCount.get();
@@ -480,6 +485,7 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
         currentPage = null;
     }
 
+    @Override
     public void setRetryCount(int count) {
         client.setRetryCount(count);
     }
@@ -500,29 +506,35 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
         }
     }
 
+    @Override
     @Deprecated
     public void addRequestInterceptor(HttpRequestInterceptor i) {
         client.addRequestInterceptor(i);
     }
 
+    @Override
     public void addRequestInterceptor(RequestInterceptor interceptor) {
         client.addRequestInterceptor(interceptor);
     }
 
+    @Override
     @Deprecated
     public void addResponseInterceptor(HttpResponseInterceptor i) {
         client.addResponseInterceptor(i);
     }
 
+    @Override
     public void addResponseInterceptor(ResponseInterceptor interceptor) {
         client.addResponseInterceptor(interceptor);
     }
 
+    @Override
     public StreamManager getStreamManager() {
         return streamManager;
     }
 
     //use getStreamManager().setDownstreamKbps instead
+    @Override
     @Deprecated
     public void setDownstreamKbps(long downstreamKbps) {
         streamManager.setDownstreamKbps(downstreamKbps);
@@ -530,6 +542,7 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
     }
 
     //use getStreamManager().setUpstreamKbps instead
+    @Override
     @Deprecated
     public void setUpstreamKbps(long upstreamKbps) {
         streamManager.setUpstreamKbps(upstreamKbps);
@@ -537,28 +550,34 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
     }
 
     //use getStreamManager().setLatency instead
+    @Override
     @Deprecated
     public void setLatency(long latency) {
         streamManager.setLatency(latency);
         streamManager.enable();
     }
 
+    @Override
     public void setRequestTimeout(int requestTimeout) {
         client.setRequestTimeout(requestTimeout);
     }
 
+    @Override
     public void setSocketOperationTimeout(int readTimeout) {
         client.setSocketOperationTimeout(readTimeout);
     }
 
+    @Override
     public void setConnectionTimeout(int connectionTimeout) {
         client.setConnectionTimeout(connectionTimeout);
     }
 
+    @Override
     public void autoBasicAuthorization(String domain, String username, String password) {
         client.autoBasicAuthorization(domain, username, password);
     }
 
+    @Override
     public void rewriteUrl(String match, String replace) {
         client.rewriteUrl(match, replace);
     }
@@ -590,10 +609,12 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
     	client.clearRewriteRules();
     }
 
+    @Override
     public void blacklistRequests(String pattern, int responseCode) {
     	client.blacklistRequests(pattern, responseCode, null);
     }
     
+    @Override
     public void blacklistRequests(String pattern, int responseCode, String method) {
         client.blacklistRequests(pattern, responseCode, method);
     }
@@ -617,34 +638,39 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
     /**
      * @deprecated use getBlacklistedUrls()
      */
+    @Override
     @Deprecated
     public List<BlacklistEntry> getBlacklistedRequests() {
         return client.getBlacklistedRequests();
     }
     
+    @Override
     public Collection<BlacklistEntry> getBlacklistedUrls() {
     	return client.getBlacklistedUrls();
     }
 
-	public boolean isWhitelistEnabled() {
+	@Override
+    public boolean isWhitelistEnabled() {
 		return client.isWhitelistEnabled();
 	}
 
 	/**
 	 * @deprecated use getWhitelistUrls()
 	 */
-	@Deprecated
+	@Override
+    @Deprecated
 	public List<Pattern> getWhitelistRequests() {
 		return client.getWhitelistRequests();
 	}
 	
+    @Override
     public Collection<String> getWhitelistUrls() {
-        List<String> whitelistUrls = new ArrayList<String>(client.getWhitelistUrls().size());
-        for (Pattern pattern : client.getWhitelistUrls()) {
-            whitelistUrls.add(pattern.pattern());
+        ImmutableList.Builder<String> builder = ImmutableList.builder();
+        for (Pattern pattern : getWhitelistRequests()) {
+            builder.add(pattern.pattern());
         }
 
-        return whitelistUrls;
+        return builder.build();
     }
 
     @Override
@@ -656,6 +682,7 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
 		return client.getWhitelistResponseCode();
 	}
 
+    @Override
     public void clearBlacklist() {
     	client.clearBlacklist();
     }
@@ -681,6 +708,7 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
      * @param patterns regular expression patterns matching URLs to whitelist
      * @param responseCode response code to return for non-whitelisted URLs
      */
+    @Override
     public void whitelistRequests(String[] patterns, int responseCode) {
         client.whitelistRequests(patterns, responseCode);
     }
@@ -690,6 +718,7 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
      * 
      * @param responseCode HTTP response code to return for all requests
      */
+    @Override
     public void enableEmptyWhitelist(int responseCode) {
     	client.whitelistRequests(new String[0], responseCode);
     }
@@ -703,6 +732,7 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
     	client.clearWhitelist();
     }
 
+    @Override
     public void addHeader(String name, String value) {
         client.addHeader(name, value);
     }
@@ -766,14 +796,17 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
         client.setCaptureHeaders(captureHeaders);
     }
 
+    @Override
     public void setCaptureContent(boolean captureContent) {
         client.setCaptureContent(captureContent);
     }
     
+    @Override
     public void setCaptureBinaryContent(boolean captureBinaryContent) {
         client.setCaptureBinaryContent(captureBinaryContent);
     }
 
+    @Override
     public void clearDNSCache() {
         if (client.getResolver() instanceof AdvancedHostResolver) {
             AdvancedHostResolver advancedHostResolver = (AdvancedHostResolver) client.getResolver();
@@ -783,6 +816,7 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
         }
     }
 
+    @Override
     public void setDNSCacheTimeout(int timeout) {
         if (client.getResolver() instanceof AdvancedHostResolver) {
             AdvancedHostResolver advancedHostResolver = (AdvancedHostResolver) client.getResolver();
@@ -793,6 +827,7 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
         }
     }
 
+    @Override
     public void waitForNetworkTrafficToStop(final long quietPeriodInMs, long timeoutInMs) {
         boolean result = ThreadUtils.pollForCondition(new ThreadUtils.WaitCondition() {
             @Override
@@ -826,6 +861,7 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
         }
     }
 
+    @Override
     public void setOptions(Map<String, String> options) {
         if (options.containsKey("httpProxy")) {
             client.setHttpProxy(options.get("httpProxy"));

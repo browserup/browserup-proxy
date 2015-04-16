@@ -81,4 +81,18 @@ public class HarCookie {
     public void setComment(String comment) {
         this.comment = comment;
     }
+
+    @Override
+    public String toString() {
+        return "HarCookie{" +
+                "name='" + name + '\'' +
+                ", value='" + value + '\'' +
+                ", path='" + path + '\'' +
+                ", domain='" + domain + '\'' +
+                ", expires=" + expires +
+                ", httpOnly=" + httpOnly +
+                ", secure=" + secure +
+                ", comment='" + comment + '\'' +
+                '}';
+    }
 }

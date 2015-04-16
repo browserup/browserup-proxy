@@ -18,7 +18,12 @@ public class TimeoutsTest extends ProxyServerTest {
 		proxy.setRequestTimeout(2000);
 
         try (CloseableHttpResponse response = getResponseFromHost("http://blackhole.webpagetest.org/test")) {
-            assertEquals("Expected HTTP 502 response due to timeout", 502, response.getStatusLine().getStatusCode());
+            // TODO: see if the legacy implementation can be changed to also return a 504, which is the correct response
+            if (Boolean.getBoolean("bmp.use.littleproxy")) {
+                assertEquals("Expected HTTP 504 response due to timeout", 504, response.getStatusLine().getStatusCode());
+            } else {
+                assertEquals("Expected HTTP 502 response due to timeout", 502, response.getStatusLine().getStatusCode());
+            }
         }
 	}
 
