@@ -17,7 +17,7 @@
     <prerequisites>
         <maven>3.0.1</maven>
     </prerequisites>
-    
+
     <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
@@ -182,7 +182,7 @@
                 <artifactId>slf4j-api</artifactId>
                 <version>${slf4j.version}</version>
             </dependency>
-            
+
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>jcl-over-slf4j</artifactId>
@@ -249,6 +249,11 @@
                 <artifactId>groovy-all</artifactId>
                 <version>${groovy.version}</version>
             </dependency>
+            <dependency>
+                <groupId>net.lightbody.bmp</groupId>
+                <artifactId>littleproxy</artifactId>
+                <version>1.1.0-beta1-bmp-SNAPSHOT</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -285,19 +290,6 @@
             <properties>
                 <javadoc.opts>-Xdoclint:none</javadoc.opts>
             </properties>
-        </profile>
-        <profile>
-            <id>include-littleproxy</id>
-            <activation>
-                <property>
-                    <name>include.littleproxy</name>
-                    <value>true</value>
-                </property>
-            </activation>
-
-            <modules>
-                <module>browsermob-core-littleproxy</module>
-            </modules>
         </profile>
     </profiles>
 
