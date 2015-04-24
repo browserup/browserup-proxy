@@ -22,10 +22,10 @@ import net.lightbody.bmp.filters.RegisterRequestFilter;
 import net.lightbody.bmp.filters.RewriteUrlFilter;
 import net.lightbody.bmp.filters.UnregisterRequestFilter;
 import net.lightbody.bmp.filters.WhitelistFilter;
+import net.lightbody.bmp.proxy.ActivityMonitor;
 import net.lightbody.bmp.proxy.BlacklistEntry;
 import net.lightbody.bmp.proxy.CaptureType;
 import net.lightbody.bmp.proxy.LegacyProxyServer;
-import net.lightbody.bmp.proxy.ActivityMonitor;
 import net.lightbody.bmp.proxy.RewriteRule;
 import net.lightbody.bmp.proxy.Whitelist;
 import net.lightbody.bmp.proxy.auth.AuthType;
@@ -547,6 +547,18 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
             throw new IllegalStateException("No HAR exists for this proxy. Use newHar() to create a new HAR before calling newPage().");
         }
 
+        Har endOfPageHar = null;
+
+        if (currentHarPage != null) {
+            String currentPageRef = currentHarPage.getId();
+
+            // end the previous page, so that page-wide timings are populated
+            endPage();
+
+            // the interface requires newPage() to return the Har as it was immediately after the previous page was ended.
+            endOfPageHar = BrowserMobProxyUtil.copyHarThroughPageRef(har, currentPageRef);
+        }
+
         if (pageRef == null) {
             pageRef = "Page " + harPageCount.getAndIncrement();
         }
@@ -554,13 +566,6 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         if (pageTitle == null) {
             pageTitle = pageRef;
         }
-
-        //FIXME: end the previous page, so that page-wide timings are populated
-
-        //TODO: current interface design requires this to return the Har as it was immediately after the previous page was ended.
-        //FIXME: should not return the Har with the new page attached
-        Har endOfPageHar = har;
-
 
         HarPage newPage = new HarPage(pageRef, pageTitle);
         har.getLog().addPage(newPage);
@@ -592,7 +597,6 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         this.writeBandwidthLimitBps = bytesPerSecond;
     }
 
-    //FIXME: determine if this should be part of the interface
     @Override
     public void endPage() {
         if (har == null) {
