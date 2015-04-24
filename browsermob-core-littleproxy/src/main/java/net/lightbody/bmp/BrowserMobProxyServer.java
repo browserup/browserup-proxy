@@ -572,13 +572,14 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
 
     @Override
     public Har endHar() {
-        if (errorOnUnsupportedOperation) {
-            throw new UnsupportedOperationException("No LittleProxy implementation for operation: " + new Throwable().getStackTrace()[0].getMethodName());
-        } else {
-            log.warn("No LittleProxy implementation for operation: " + new Throwable().getStackTrace()[0].getMethodName());
+        Har oldHar = getHar();
 
-            return getHar();
-        }
+        // end the page and populate timings
+        endPage();
+
+        this.har = null;
+
+        return oldHar;
     }
 
     @Override

@@ -25,10 +25,12 @@ import java.util.concurrent.TimeUnit
 
 import static org.hamcrest.Matchers.empty
 import static org.hamcrest.Matchers.greaterThanOrEqualTo
+import static org.hamcrest.Matchers.greaterThan
 import static org.hamcrest.Matchers.not
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertNotNull
+import static org.junit.Assert.assertNull
 import static org.junit.Assert.assertThat
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.when
@@ -193,6 +195,84 @@ class NewHarTest extends MockServerTest {
         assertNotNull("Expected to find HAR content", content)
 
         assertEquals("Expected to capture body content in HAR", "success", content.text)
+    }
+
+    @Test
+    void testEndHar() {
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/testCaptureResponseContentInHar"),
+                Times.unlimited())
+                .respond(response()
+                .withStatusCode(200)
+                .withBody("success")
+                .withHeader(new Header("Content-Type", "text/plain; charset=UTF-8")))
+
+        BrowserMobProxy proxy = new BrowserMobProxyServer();
+        proxy.setHarCaptureTypes([CaptureType.RESPONSE_CONTENT] as Set)
+        proxy.start()
+
+        proxy.newHar()
+
+        // putting tests in code blocks to avoid variable name collisions
+        regularHarCanCapture: {
+            ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+                String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:" + mockServerPort + "/testCaptureResponseContentInHar")).getEntity().getContent());
+                assertEquals("Did not receive expected response from mock server", "success", responseBody);
+            };
+
+            Thread.sleep(500)
+            Har har = proxy.endHar()
+
+            assertThat("Expected to find entries in the HAR", har.getLog().getEntries(), not(empty()))
+
+            HarContent content = har.getLog().getEntries().first().response.content
+            assertNotNull("Expected to find HAR content", content)
+
+            assertEquals("Expected to capture body content in HAR", "success", content.text)
+
+            assertThat("Expected HAR page timing onLoad value to be populated", har.log.pages.last().pageTimings.onLoad, greaterThan(0L))
+        }
+
+        harEmptyAfterEnd: {
+            Har emptyHar = proxy.getHar()
+
+            assertNull("Expected getHar() to return null after calling endHar()", emptyHar)
+        }
+
+        harStillEmptyAfterRequest: {
+            ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+                String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:" + mockServerPort + "/testCaptureResponseContentInHar")).getEntity().getContent());
+                assertEquals("Did not receive expected response from mock server", "success", responseBody);
+            };
+
+            Har stillEmptyHar = proxy.getHar()
+
+            assertNull("Expected getHar() to return null after calling endHar()", stillEmptyHar)
+        }
+
+        newHarInitiallyEmpty: {
+            Har newHar = proxy.newHar()
+
+            assertNull("Expected newHar() to return the old (null) har", newHar)
+        }
+
+        newHarCanCapture: {
+            ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+                String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:" + mockServerPort + "/testCaptureResponseContentInHar")).getEntity().getContent());
+                assertEquals("Did not receive expected response from mock server", "success", responseBody);
+            };
+
+            Har populatedHar = proxy.getHar()
+
+            assertThat("Expected to find entries in the HAR", populatedHar.getLog().getEntries(), not(empty()))
+
+            HarContent newContent = populatedHar.getLog().getEntries().first().response.content
+            assertNotNull("Expected to find HAR content", newContent)
+
+            assertEquals("Expected to capture body content in HAR", "success", newContent.text)
+        }
+
     }
 
     //TODO: Add Request Capture Type tests
