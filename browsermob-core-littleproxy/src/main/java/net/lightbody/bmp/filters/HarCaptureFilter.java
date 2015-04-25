@@ -7,7 +7,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.Cookie;
 import io.netty.handler.codec.http.CookieDecoder;
-import io.netty.handler.codec.http.HttpConstants;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
@@ -28,9 +27,7 @@ import net.lightbody.bmp.core.har.HarResponse;
 import net.lightbody.bmp.proxy.CaptureType;
 import net.lightbody.bmp.proxy.util.BrowserMobProxyUtil;
 import net.lightbody.bmp.util.BrowserMobHttpUtil;
-import net.lightbody.bmp.util.HttpObjectUtil;
 import net.sf.uadetector.ReadableUserAgent;
-import org.apache.http.entity.ContentType;
 import org.littleshoot.proxy.HttpFiltersAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,18 +48,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class HarCaptureFilter extends HttpFiltersAdapter {
     private static final Logger log = LoggerFactory.getLogger(HarCaptureFilter.class);
-
-    /**
-     * According to the HTTP 1.1 spec, section 7.2.1:
-     * <pre>
-     *     Any HTTP/1.1 message containing an entity-body SHOULD include a Content-Type header field defining the media
-     *     type of that body. If and only if the media type is not given by a Content-Type field, the recipient MAY
-     *     attempt to guess the media type via inspection of its content and/or the name extension(s) of the URI used to
-     *     identify the resource. If the media type remains unknown, the recipient SHOULD treat it as
-     *     type "application/octet-stream".
-     * </pre>
-     */
-    private static final String UNKNOWN_CONTENT_TYPE = "application/octet-stream";
 
     private final Har har;
 
@@ -443,8 +428,8 @@ public class HarCaptureFilter extends HttpFiltersAdapter {
 
         String contentType = HttpHeaders.getHeader(httpRequest, HttpHeaders.Names.CONTENT_TYPE);
         if (contentType == null) {
-            log.warn("No content type specified in request to {}. Content will be treated as {}", httpRequest.getUri(), UNKNOWN_CONTENT_TYPE);
-            contentType = UNKNOWN_CONTENT_TYPE;
+            log.warn("No content type specified in request to {}. Content will be treated as {}", httpRequest.getUri(), BrowserMobHttpUtil.UNKNOWN_CONTENT_TYPE);
+            contentType = BrowserMobHttpUtil.UNKNOWN_CONTENT_TYPE;
         }
 
         HarPostData postData = new HarPostData();
@@ -487,8 +472,8 @@ public class HarCaptureFilter extends HttpFiltersAdapter {
 
         String contentType = HttpHeaders.getHeader(httpResponse, HttpHeaders.Names.CONTENT_TYPE);
         if (contentType == null) {
-            log.warn("No content type specified in response. Content will be treated as {}", UNKNOWN_CONTENT_TYPE);
-            contentType = UNKNOWN_CONTENT_TYPE;
+            log.warn("No content type specified in response. Content will be treated as {}", BrowserMobHttpUtil.UNKNOWN_CONTENT_TYPE);
+            contentType = BrowserMobHttpUtil.UNKNOWN_CONTENT_TYPE;
         }
 
         harEntry.getResponse().getContent().setMimeType(contentType);

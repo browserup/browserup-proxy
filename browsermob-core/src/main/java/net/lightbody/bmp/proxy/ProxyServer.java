@@ -12,6 +12,8 @@ import net.lightbody.bmp.core.har.HarPage;
 import net.lightbody.bmp.core.util.ThreadUtils;
 import net.lightbody.bmp.exception.JettyException;
 import net.lightbody.bmp.exception.NameResolutionException;
+import net.lightbody.bmp.filters.RequestFilter;
+import net.lightbody.bmp.filters.ResponseFilter;
 import net.lightbody.bmp.proxy.auth.AuthType;
 import net.lightbody.bmp.proxy.dns.AdvancedHostResolver;
 import net.lightbody.bmp.proxy.dns.HostResolver;
@@ -878,6 +880,15 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
         LOG.warn("The legacy ProxyServer implementation does not support HTTP filter factories. Use addRequestInterceptor/addResponseInterceptor instead.");
     }
 
+    @Override
+    public void addResponseFilter(ResponseFilter filter) {
+        LOG.warn("The legacy ProxyServer implementation does not support addRequestFilter and addResponseFilter. Use addRequestInterceptor/addResponseInterceptor instead.");
+    }
+
+    @Override
+    public void addRequestFilter(RequestFilter filter) {
+        LOG.warn("The legacy ProxyServer implementation does not support addRequestFilter and addResponseFilter. Use addRequestInterceptor/addResponseInterceptor instead.");
+    }
 
     /**
      * Exception thrown when waitForNetworkTrafficToStop does not successfully wait for network traffic to stop.

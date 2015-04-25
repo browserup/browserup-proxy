@@ -1,6 +1,8 @@
 package net.lightbody.bmp;
 
 import net.lightbody.bmp.core.har.Har;
+import net.lightbody.bmp.filters.RequestFilter;
+import net.lightbody.bmp.filters.ResponseFilter;
 import net.lightbody.bmp.proxy.BlacklistEntry;
 import net.lightbody.bmp.proxy.CaptureType;
 import net.lightbody.bmp.proxy.auth.AuthType;
@@ -521,4 +523,18 @@ public interface BrowserMobProxy {
      * @param filterFactory factory to generate HttpFilters
      */
     void addLastHttpFilterFactory(HttpFiltersSource filterFactory);
+
+    /**
+     * Adds a new ResponseFilter that can be used to examine and manipulate the response before sending it to the client.
+     *
+     * @param filter filter instance
+     */
+    void addResponseFilter(ResponseFilter filter);
+
+    /**
+     * Adds a new RequestFilter that can be used to examine and manipulate the request before sending it to the server.
+     *
+     * @param filter filter instance
+     */
+    void addRequestFilter(RequestFilter filter);
 }

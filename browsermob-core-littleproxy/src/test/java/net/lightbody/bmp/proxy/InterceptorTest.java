@@ -10,12 +10,18 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import net.lightbody.bmp.BrowserMobProxy;
 import net.lightbody.bmp.BrowserMobProxyServer;
+import net.lightbody.bmp.filters.RequestFilter;
+import net.lightbody.bmp.filters.ResponseFilter;
 import net.lightbody.bmp.proxy.test.util.MockServerTest;
 import net.lightbody.bmp.proxy.test.util.ProxyServerTest;
 import net.lightbody.bmp.proxy.util.IOUtils;
+import net.lightbody.bmp.util.HttpMessageContents;
 import net.lightbody.bmp.util.HttpObjectUtil;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.After;
 import org.junit.Test;
@@ -26,11 +32,15 @@ import org.mockserver.matchers.Times;
 import org.mockserver.model.Header;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -144,7 +154,7 @@ public class InterceptorTest extends MockServerTest {
                 Times.exactly(1))
                 .respond(response()
                         .withStatusCode(200)
-                        .withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=UTF-8"))
+                        .withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=utf-8"))
                         .withBody("success"));
 
         proxy = new BrowserMobProxyServer();
@@ -176,6 +186,154 @@ public class InterceptorTest extends MockServerTest {
         }
     }
 
+    @Test
+    public void testRequestFilterCanModifyRequestBody() throws IOException {
+        final String originalText = "original body";
+        final String newText = "modified body";
+
+        mockServer.when(request()
+                        .withMethod("PUT")
+                        .withPath("/modifyrequest")
+                        .withBody(newText),
+                Times.exactly(1))
+                .respond(response()
+                        .withStatusCode(200)
+                        .withBody("success"));
+
+        proxy = new BrowserMobProxyServer();
+        proxy.start();
+
+        proxy.addRequestFilter(new RequestFilter() {
+            @Override
+            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents) {
+                if (contents.isText()) {
+                    if (contents.getTextContents().equals(originalText)) {
+                        contents.setTextContents(newText);
+                    }
+                }
+
+                return null;
+            }
+        });
+
+        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+            HttpPut request = new HttpPut("http://localhost:" + mockServerPort + "/modifyrequest");
+            request.setEntity(new StringEntity(originalText));
+            CloseableHttpResponse response = httpClient.execute(request);
+            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
+
+            assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
+            assertEquals("Did not receive expected response from mock server", "success", responseBody);
+        }
+    }
+
+    @Test
+    public void testResponseFilterCanModifyBinaryContents() throws IOException {
+        final byte[] originalBytes = new byte[] {1, 2, 3, 4, 5};
+        final byte[] newBytes = new byte[] {20, 30, 40, 50, 60};
+
+        mockServer.when(request()
+                        .withMethod("GET")
+                        .withPath("/modifyresponse"),
+                Times.exactly(1))
+                .respond(response()
+                        .withStatusCode(200)
+                        .withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, "application/octet-stream"))
+                        .withBody(originalBytes));
+
+        proxy = new BrowserMobProxyServer();
+        proxy.start();
+
+        proxy.addResponseFilter(new ResponseFilter() {
+            @Override
+            public void filterResponse(HttpResponse response, HttpMessageContents contents) {
+                if (!contents.isText()) {
+                    if (Arrays.equals(originalBytes, contents.getBinaryContents())) {
+                        contents.setBinaryContents(newBytes);
+                    }
+                }
+            }
+        });
+
+        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+            HttpGet request = new HttpGet("http://localhost:" + mockServerPort + "/modifyresponse");
+            CloseableHttpResponse response = httpClient.execute(request);
+            byte[] responseBytes = org.apache.commons.io.IOUtils.toByteArray(response.getEntity().getContent());
+
+            assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
+            assertThat("Did not receive expected response from mock server", responseBytes, equalTo(newBytes));
+        }
+    }
+
+    @Test
+    public void testResponseFilterCanModifyTextContents() throws IOException {
+        final String originalText = "The quick brown fox jumps over the lazy dog";
+        final String newText = "The quick brown fox jumped.";
+
+        mockServer.when(request()
+                        .withMethod("GET")
+                        .withPath("/modifyresponse"),
+                Times.exactly(1))
+                .respond(response()
+                        .withStatusCode(200)
+                        .withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=utf-8"))
+                        .withBody(originalText));
+
+        proxy = new BrowserMobProxyServer();
+        proxy.start();
+
+        proxy.addResponseFilter(new ResponseFilter() {
+            @Override
+            public void filterResponse(HttpResponse response, HttpMessageContents contents) {
+                if (contents.isText()) {
+                    if (contents.getTextContents().equals(originalText)) {
+                        contents.setTextContents(newText);
+                    }
+                }
+            }
+        });
+
+        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+            HttpGet request = new HttpGet("http://localhost:" + mockServerPort + "/modifyresponse");
+            request.addHeader("Accept-Encoding", "gzip");
+            CloseableHttpResponse response = httpClient.execute(request);
+            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
+
+            assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
+            assertEquals("Did not receive expected response from mock server", newText, responseBody);
+        }
+    }
+
+    @Test
+    public void testResponseInterceptorWithoutBody() throws IOException {
+        mockServer.when(request()
+                        .withMethod("HEAD")
+                        .withPath("/interceptortest"),
+                Times.exactly(1))
+                .respond(response()
+                        .withStatusCode(200)
+                        .withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, "application/octet-stream")));
+
+        proxy = new BrowserMobProxyServer();
+        proxy.start();
+
+        final AtomicReference<byte[]> responseContents = new AtomicReference<>();
+
+        proxy.addResponseFilter(new ResponseFilter() {
+            @Override
+            public void filterResponse(HttpResponse response, HttpMessageContents contents) {
+                responseContents.set(contents.getBinaryContents());
+            }
+        });
+
+        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+            CloseableHttpResponse response = httpClient.execute(new HttpHead("http://localhost:" + mockServerPort + "/interceptortest"));
+
+            assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
+            assertEquals("Expected binary contents captured in interceptor to be empty", 0, responseContents.get().length);
+        }
+    }
+
     /**
      * Helper method for executing response modification tests.
      */
@@ -186,7 +344,7 @@ public class InterceptorTest extends MockServerTest {
                 Times.exactly(1))
                 .respond(response()
                         .withStatusCode(200)
-                        .withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=UTF-8"))
+                        .withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=utf-8"))
                         .withBody(originalText));
 
         proxy = new BrowserMobProxyServer();
@@ -204,7 +362,7 @@ public class InterceptorTest extends MockServerTest {
                             String bodyContent = HttpObjectUtil.extractHttpEntityBody(httpResponseAndContent);
 
                             if (bodyContent.equals(originalText)) {
-                                HttpObjectUtil.replaceHttpEntityBody(httpResponseAndContent, newText);
+                                HttpObjectUtil.replaceTextHttpEntityBody(httpResponseAndContent, newText);
                             }
                         }
 

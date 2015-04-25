@@ -19,7 +19,11 @@ import net.lightbody.bmp.filters.BrowserMobHttpFilterChain;
 import net.lightbody.bmp.filters.HarCaptureFilter;
 import net.lightbody.bmp.filters.LatencyFilter;
 import net.lightbody.bmp.filters.RegisterRequestFilter;
+import net.lightbody.bmp.filters.RequestFilter;
+import net.lightbody.bmp.filters.RequestFilterAdapter;
 import net.lightbody.bmp.filters.RewriteUrlFilter;
+import net.lightbody.bmp.filters.ResponseFilter;
+import net.lightbody.bmp.filters.ResponseFilterAdapter;
 import net.lightbody.bmp.filters.UnregisterRequestFilter;
 import net.lightbody.bmp.filters.WhitelistFilter;
 import net.lightbody.bmp.proxy.ActivityMonitor;
@@ -1116,6 +1120,16 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     @Override
     public void addLastHttpFilterFactory(HttpFiltersSource filterFactory) {
         filterFactories.add(filterFactory);
+    }
+
+    @Override
+    public void addResponseFilter(ResponseFilter filter) {
+        addLastHttpFilterFactory(new ResponseFilterAdapter.FilterSource(filter));
+    }
+
+    @Override
+    public void addRequestFilter(RequestFilter filter) {
+        addFirstHttpFilterFactory(new RequestFilterAdapter.FilterSource(filter));
     }
 
     /**

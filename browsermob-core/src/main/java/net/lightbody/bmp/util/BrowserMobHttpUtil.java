@@ -28,6 +28,18 @@ public class BrowserMobHttpUtil {
     private static final Logger log = LoggerFactory.getLogger(BrowserMobHttpUtil.class);
 
     /**
+     * Default MIME content type if no Content-Type header is present. According to the HTTP 1.1 spec, section 7.2.1:
+     * <pre>
+     *     Any HTTP/1.1 message containing an entity-body SHOULD include a Content-Type header field defining the media
+     *     type of that body. If and only if the media type is not given by a Content-Type field, the recipient MAY
+     *     attempt to guess the media type via inspection of its content and/or the name extension(s) of the URI used to
+     *     identify the resource. If the media type remains unknown, the recipient SHOULD treat it as
+     *     type "application/octet-stream".
+     * </pre>
+     */
+    public static final String UNKNOWN_CONTENT_TYPE = "application/octet-stream";
+
+    /**
      * The default charset when the Content-Type header does not specify a charset. From the HTTP 1.1 spec section 3.7.1:
      * <pre>
      *     When no explicit charset parameter is provided by the sender, media subtypes of the "text" type are defined to have a default
