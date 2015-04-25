@@ -181,6 +181,7 @@ public abstract class ProxyServerTest {
                     .setProxy(new HttpHost("127.0.0.1", proxyPort))
                     // disable decompressing content, since some tests want uncompressed content for testing purposes
                     .disableContentCompression()
+                    .disableAutomaticRetries()
                     .build();
 
             return httpclient;

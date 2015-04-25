@@ -28,6 +28,7 @@ import net.lightbody.bmp.core.har.HarResponse;
 import net.lightbody.bmp.proxy.CaptureType;
 import net.lightbody.bmp.proxy.util.BrowserMobProxyUtil;
 import net.lightbody.bmp.util.BrowserMobHttpUtil;
+import net.lightbody.bmp.util.HttpObjectUtil;
 import net.sf.uadetector.ReadableUserAgent;
 import org.apache.http.entity.ContentType;
 import org.littleshoot.proxy.HttpFiltersAdapter;
@@ -51,7 +52,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class HarCaptureFilter extends HttpFiltersAdapter {
     private static final Logger log = LoggerFactory.getLogger(HarCaptureFilter.class);
 
-    private static final String UNKNOWN_CONTENT_TYPE = "application/unknown; charset=" + HttpConstants.DEFAULT_CHARSET;
+    /**
+     * According to the HTTP 1.1 spec, section 7.2.1:
+     * <pre>
+     *     Any HTTP/1.1 message containing an entity-body SHOULD include a Content-Type header field defining the media
+     *     type of that body. If and only if the media type is not given by a Content-Type field, the recipient MAY
+     *     attempt to guess the media type via inspection of its content and/or the name extension(s) of the URI used to
+     *     identify the resource. If the media type remains unknown, the recipient SHOULD treat it as
+     *     type "application/octet-stream".
+     * </pre>
+     */
+    private static final String UNKNOWN_CONTENT_TYPE = "application/octet-stream";
 
     private final Har har;
 
@@ -450,12 +461,7 @@ public class HarCaptureFilter extends HttpFiltersAdapter {
 
         if (urlEncoded) {
             String textContents = BrowserMobHttpUtil.getContentAsString(fullMessage, contentType, originalRequest);
-            //FIXME: remove dependency on Apache HTTP client content type parser
-            ContentType contentTypeCharset = ContentType.parse(contentType);
-            Charset charset = contentTypeCharset.getCharset();
-            if (charset == null) {
-                charset = HttpConstants.DEFAULT_CHARSET;
-            }
+            Charset charset = BrowserMobHttpUtil.deriveCharsetFromContentTypeHeader(contentType);
 
             QueryStringDecoder queryStringDecoder = new QueryStringDecoder(textContents, charset, false);
             for (Map.Entry<String, List<String>> entry : queryStringDecoder.parameters().entrySet()) {

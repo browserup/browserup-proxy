@@ -306,12 +306,12 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
 
                     @Override
                     public int getMaximumRequestBufferSizeInBytes() {
-                        return 0;
+                        return getMaximumRequestBufferSize();
                     }
 
                     @Override
                     public int getMaximumResponseBufferSizeInBytes() {
-                        return 0;
+                        return getMaximumResponseBufferSize();
                     }
                 })
                 .withServerResolver(delegatingResolver)
@@ -1324,6 +1324,30 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
                 return new UnregisterRequestFilter(originalRequest, ctx, activityMonitor);
             }
         });
+    }
+
+    private int getMaximumRequestBufferSize() {
+        int maxBufferSize = 0;
+        for (HttpFiltersSource source : filterFactories) {
+            int requestBufferSize = source.getMaximumRequestBufferSizeInBytes();
+            if (requestBufferSize > maxBufferSize) {
+                maxBufferSize = requestBufferSize;
+            }
+        }
+
+        return maxBufferSize;
+    }
+
+    private int getMaximumResponseBufferSize() {
+        int maxBufferSize = 0;
+        for (HttpFiltersSource source : filterFactories) {
+            int requestBufferSize = source.getMaximumResponseBufferSizeInBytes();
+            if (requestBufferSize > maxBufferSize) {
+                maxBufferSize = requestBufferSize;
+            }
+        }
+
+        return maxBufferSize;
     }
 
     /**

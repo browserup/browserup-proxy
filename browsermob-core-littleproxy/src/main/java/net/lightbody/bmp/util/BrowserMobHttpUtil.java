@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
@@ -25,6 +26,16 @@ import java.util.zip.InflaterInputStream;
  */
 public class BrowserMobHttpUtil {
     private static final Logger log = LoggerFactory.getLogger(BrowserMobHttpUtil.class);
+
+    /**
+     * The default charset when the Content-Type header does not specify a charset. From the HTTP 1.1 spec section 3.7.1:
+     * <pre>
+     *     When no explicit charset parameter is provided by the sender, media subtypes of the "text" type are defined to have a default
+     *     charset value of "ISO-8859-1" when received via HTTP. Data in character sets other than "ISO-8859-1" or its subsets MUST be
+     *     labeled with an appropriate charset value.
+     * </pre>
+     */
+    public static final Charset DEFAULT_HTTP_CHARSET = StandardCharsets.ISO_8859_1;
 
     /**
      * Buffer size when decompressing content.
@@ -120,24 +131,13 @@ public class BrowserMobHttpUtil {
         content.markReaderIndex();
         content.readBytes(binaryContent);
         content.resetReaderIndex();
+
         return binaryContent;
     }
 
     /**
      * Converts the byte array into a String based on the charset specified in the contentTypeHeader. If no
-     * charset is specified in the contenttypeHeader, this method uses the platform default.
-     *
-     * @param content bytes to convert to a String
-     * @param contentTypeHeader request's content type header
-     * @return String containing the converted content
-     */
-    public static String getContentAsString(byte[] content, String contentTypeHeader) {
-        return getContentAsString(content, contentTypeHeader, null);
-    }
-
-    /**
-     * Converts the byte array into a String based on the charset specified in the contentTypeHeader. If no
-     * charset is specified in the contenttypeHeader, this method uses the platform default. The httpRequest is used
+     * charset is specified in the contentTypeHeader, this method uses default (see {@link #DEFAULT_HTTP_CHARSET}). The httpRequest is used
      * only for logging purposes if the contentTypeHeader does not contain a charset.
      *
      * @param content bytes to convert to a String
@@ -146,21 +146,52 @@ public class BrowserMobHttpUtil {
      * @return String containing the converted content
      */
     public static String getContentAsString(byte[] content, String contentTypeHeader, HttpRequest httpRequest) {
-        //FIXME: remove dependency on HttpCore's ContentType
-        ContentType contentTypeCharset = ContentType.parse(contentTypeHeader);
-        Charset charset = contentTypeCharset.getCharset();
+        Charset charset = readCharsetInContentTypeHeader(contentTypeHeader);
         if (charset == null) {
-            // no charset specified, so use the platform-default -- but log a message since this might not encode
-            // the data correctly if the browser's default charset is different from this platform's
-            charset = Charset.defaultCharset();
+            // no charset specified, so use the default -- but log a message since this might not encode the data correctly
+            charset = DEFAULT_HTTP_CHARSET;
             if (httpRequest != null) {
-                log.debug("No charset specified; using platform default charset {} to decode contents to/from {}", charset, httpRequest.getUri());
+                log.debug("No charset specified; using charset {} to decode contents to/from {}", charset, httpRequest.getUri());
             } else {
-                log.debug("No charset specified; using platform default charset {} to decode contents");
+                log.debug("No charset specified; using charset {} to decode contents", charset);
             }
         }
 
         return new String(content, charset);
+    }
+
+    /**
+     * Derives the charset from the Content-Type header. Unlike {@link #readCharsetInContentTypeHeader}, if contentTypeHeader is null or
+     * does not specify a charset, this method will return the ISO-8859-1 charset.
+     *
+     * @param contentTypeHeader the Content-Type header string; can be null or empty
+     * @return the character set indicated in the contentTypeHeader, or ISO-8859-1 if none is specified or no contentTypeHeader is specified
+     */
+    public static Charset deriveCharsetFromContentTypeHeader(String contentTypeHeader) {
+        Charset charset = readCharsetInContentTypeHeader(contentTypeHeader);
+        if (charset == null) {
+            return DEFAULT_HTTP_CHARSET;
+        }
+
+        return charset;
+    }
+
+    /**
+     * Reads the charset directly from the Content-Type header string. If the Content-Type header does not contain a charset, or if the header
+     * is null or empty, this method returns null. See also {@link #deriveCharsetFromContentTypeHeader(String)}.
+     *
+     * @param contentTypeHeader the Content-Type header string; can be null or empty
+     * @return the character set indicated in the contentTypeHeader, or null if the charset is not present
+     */
+    public static Charset readCharsetInContentTypeHeader(String contentTypeHeader) {
+        if (contentTypeHeader == null || contentTypeHeader.isEmpty()) {
+            return DEFAULT_HTTP_CHARSET;
+        }
+
+        //FIXME: remove dependency on HttpCore's ContentType
+        ContentType contentTypeCharset = ContentType.parse(contentTypeHeader);
+
+        return contentTypeCharset.getCharset();
     }
 
     /**
