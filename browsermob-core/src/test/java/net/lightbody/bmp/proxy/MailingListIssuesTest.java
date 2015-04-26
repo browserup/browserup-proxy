@@ -27,9 +27,13 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assume.assumeFalse;
+
 public class MailingListIssuesTest extends LocalServerTest {
     @Test
     public void testThatInterceptorIsCalled() throws IOException, InterruptedException {
+        assumeFalse(Boolean.getBoolean("bmp.use.littleproxy"));
+
         final boolean[] interceptorHit = {false};
         proxy.addRequestInterceptor(new RequestInterceptor() {
             @Override
@@ -46,6 +50,8 @@ public class MailingListIssuesTest extends LocalServerTest {
 
     @Test
     public void testThatInterceptorCanCaptureCallingIpAddress() throws IOException, InterruptedException {
+        assumeFalse(Boolean.getBoolean("bmp.use.littleproxy"));
+
         final String[] remoteHost = {null};
         proxy.addRequestInterceptor(new RequestInterceptor() {
             @Override
@@ -62,6 +68,8 @@ public class MailingListIssuesTest extends LocalServerTest {
 
     @Test
     public void testThatWeCanChangeTheUserAgent() throws IOException, InterruptedException {
+        assumeFalse(Boolean.getBoolean("bmp.use.littleproxy"));
+
         proxy.addRequestInterceptor(new RequestInterceptor() {
             @Override
             public void process(BrowserMobHttpRequest request, Har har) {
@@ -77,6 +85,8 @@ public class MailingListIssuesTest extends LocalServerTest {
 
     @Test
     public void testThatInterceptorsCanRewriteUrls() throws IOException, InterruptedException {
+        assumeFalse(Boolean.getBoolean("bmp.use.littleproxy"));
+
         proxy.addRequestInterceptor(new RequestInterceptor() {
             @Override
             public void process(BrowserMobHttpRequest request, Har har) {
@@ -95,6 +105,8 @@ public class MailingListIssuesTest extends LocalServerTest {
 
     @Test
     public void testThatInterceptorsCanReadResponseBodies() throws IOException, InterruptedException {
+        assumeFalse(Boolean.getBoolean("bmp.use.littleproxy"));
+
         final String[] interceptedBody = {null};
 
         proxy.setCaptureContent(true);
@@ -121,6 +133,8 @@ public class MailingListIssuesTest extends LocalServerTest {
     @Test
     @Ignore
     public void testThatInterceptorsCanReadPostParamaters() throws IOException {
+        assumeFalse(Boolean.getBoolean("bmp.use.littleproxy"));
+
         proxy.setCaptureContent(true);
         proxy.newHar("testThatInterceptorsCanReadPostParamaters");
 

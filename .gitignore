@@ -9,3 +9,5 @@ target
 atlassian-ide-plugin.xml
 .DS_Store
 dependency-reduced-pom.xml
+littleproxy_cert
+littleproxy_keystore.jks

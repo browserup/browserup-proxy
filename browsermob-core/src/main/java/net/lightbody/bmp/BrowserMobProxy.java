@@ -1,6 +1,8 @@
 package net.lightbody.bmp;
 
 import net.lightbody.bmp.core.har.Har;
+import net.lightbody.bmp.filters.RequestFilter;
+import net.lightbody.bmp.filters.ResponseFilter;
 import net.lightbody.bmp.proxy.BlacklistEntry;
 import net.lightbody.bmp.proxy.CaptureType;
 import net.lightbody.bmp.proxy.auth.AuthType;
@@ -77,7 +79,7 @@ public interface BrowserMobProxy {
     /**
      * Returns the address of the network interface on which the proxy is listening for client connections.
      *
-     * @throws java.lang.IllegalStateException if the proxy has not been started
+     * @return the client bind address, or null if the proxy has not been started
      */
     InetAddress getClientBindAddress();
 
@@ -89,9 +91,10 @@ public interface BrowserMobProxy {
     int getPort();
 
     /**
-     * Returns the address address of the network interface the proxy will use to initiate upstream connections
+     * Returns the address address of the network interface the proxy will use to initiate upstream connections. If no server bind address
+     * has been set, this method returns null, even if the proxy has been started.
      *
-     * @throws java.lang.IllegalStateException if the proxy has not been started
+     * @return server bind address if one has been set, otherwise null
      */
     InetAddress getServerBindAddress();
 
@@ -520,4 +523,18 @@ public interface BrowserMobProxy {
      * @param filterFactory factory to generate HttpFilters
      */
     void addLastHttpFilterFactory(HttpFiltersSource filterFactory);
+
+    /**
+     * Adds a new ResponseFilter that can be used to examine and manipulate the response before sending it to the client.
+     *
+     * @param filter filter instance
+     */
+    void addResponseFilter(ResponseFilter filter);
+
+    /**
+     * Adds a new RequestFilter that can be used to examine and manipulate the request before sending it to the server.
+     *
+     * @param filter filter instance
+     */
+    void addRequestFilter(RequestFilter filter);
 }

@@ -16,11 +16,15 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
+import static org.junit.Assume.assumeFalse;
+
 public class RepeatableInputStreamTest extends LocalServerTest {
 
     @Test
     public void test()
             throws UnsupportedEncodingException {
+        assumeFalse(Boolean.getBoolean("bmp.use.littleproxy"));
+
         TestRequestInterceptor testRequestInterceptor = new TestRequestInterceptor();
 
         proxy.addRequestInterceptor(testRequestInterceptor);

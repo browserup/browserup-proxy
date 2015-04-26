@@ -13,6 +13,8 @@ import org.junit.Test;
 
 import java.io.IOException;
 
+import static org.junit.Assume.assumeTrue;
+
 public class CookieTest extends LocalServerTest {
     @Test
     public void testNoDoubleCookies() throws IOException {
@@ -30,8 +32,10 @@ public class CookieTest extends LocalServerTest {
     }
 
     @Test
-    @Ignore // not sure how this test ever worked, since the code does literally nothing with response cookies. it should but it doesn't at the moment :)
     public void testCookiesAreCapturedWhenSet() throws IOException {
+        // this test only works with the littleproxy implementation (new feature)
+        assumeTrue(Boolean.getBoolean("bmp.use.littleproxy"));
+
         proxy.setCaptureContent(true);
         proxy.newHar("Test");
 

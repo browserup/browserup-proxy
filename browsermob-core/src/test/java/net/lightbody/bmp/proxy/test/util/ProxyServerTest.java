@@ -16,6 +16,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.junit.After;
 import org.junit.Before;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
 import java.security.cert.CertificateException;
@@ -28,6 +30,8 @@ import java.security.cert.X509Certificate;
  * Call getNewHttpClient() to get an HttpClient that can be used to make requests via the local proxy.
  */
 public abstract class ProxyServerTest {
+    private static final Logger log = LoggerFactory.getLogger(ProxyServerTest.class);
+
     /**
      * The port the local proxy server is currently running on.
      */
@@ -69,7 +73,20 @@ public abstract class ProxyServerTest {
      * functionality in ProxyServerTest. The default implementation creates a new proxy server on port 0 (JVM-assigned port).
      */
     protected LegacyProxyServer createProxyServer() {
-        return new ProxyServer(0);
+        if (Boolean.getBoolean("bmp.use.littleproxy")) {
+            // HACK! since browsermob-core has no knowledge of littleproxy, we have to use reflection to grab the LP implementation
+            try {
+                Class<LegacyProxyServer> littleProxyImplClass = (Class<LegacyProxyServer>) Class.forName("net.lightbody.bmp.BrowserMobProxyServer");
+                LegacyProxyServer littleProxyImpl = littleProxyImplClass.newInstance();
+
+                log.info("Using LittleProxy implementation to execute test for class: " + getClass().getSimpleName());
+                return littleProxyImpl;
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+                throw new RuntimeException("The System property bmp.use.littleproxy was true, but the LittleProxy implementation could not be loaded.", e);
+            }
+        } else {
+            return new ProxyServer(0);
+        }
     }
 
     @After
@@ -80,7 +97,7 @@ public abstract class ProxyServerTest {
             }
         } finally {
             if (proxy != null) {
-                proxy.stop();
+                proxy.abort();
             }
         }
     }
@@ -164,6 +181,7 @@ public abstract class ProxyServerTest {
                     .setProxy(new HttpHost("127.0.0.1", proxyPort))
                     // disable decompressing content, since some tests want uncompressed content for testing purposes
                     .disableContentCompression()
+                    .disableAutomaticRetries()
                     .build();
 
             return httpclient;

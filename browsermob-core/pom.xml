@@ -40,6 +40,21 @@
                 </includes>
             </resource>
         </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+
+                <executions>
+                    <execution>
+                        <id>test-jar</id>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 
     <dependencies>
@@ -151,7 +166,6 @@
         <dependency>
             <groupId>net.lightbody.bmp</groupId>
             <artifactId>littleproxy</artifactId>
-            <version>1.1.0-beta1-SNAPSHOT</version>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
