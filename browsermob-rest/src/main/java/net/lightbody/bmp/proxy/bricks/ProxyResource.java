@@ -12,38 +12,51 @@ import com.google.sitebricks.http.Delete;
 import com.google.sitebricks.http.Get;
 import com.google.sitebricks.http.Post;
 import com.google.sitebricks.http.Put;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Map;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponse;
+import net.lightbody.bmp.BrowserMobProxy;
+import net.lightbody.bmp.BrowserMobProxyServer;
+import net.lightbody.bmp.core.har.Har;
+import net.lightbody.bmp.exception.ProxyExistsException;
+import net.lightbody.bmp.exception.ProxyPortsExhaustedException;
+import net.lightbody.bmp.filters.RequestFilter;
+import net.lightbody.bmp.filters.ResponseFilter;
+import net.lightbody.bmp.proxy.LegacyProxyServer;
+import net.lightbody.bmp.proxy.ProxyManager;
+import net.lightbody.bmp.proxy.ProxyServer;
+import net.lightbody.bmp.proxy.http.BrowserMobHttpRequest;
+import net.lightbody.bmp.proxy.http.BrowserMobHttpResponse;
+import net.lightbody.bmp.proxy.http.RequestInterceptor;
+import net.lightbody.bmp.proxy.http.ResponseInterceptor;
+import net.lightbody.bmp.util.BrowserMobHttpUtil;
+import net.lightbody.bmp.util.HttpMessageContents;
+import org.java_bandwidthlimiter.StreamManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.script.Bindings;
 import javax.script.Compilable;
 import javax.script.CompiledScript;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import net.lightbody.bmp.core.har.Har;
-import net.lightbody.bmp.exception.ProxyExistsException;
-import net.lightbody.bmp.proxy.LegacyProxyServer;
-import net.lightbody.bmp.proxy.ProxyManager;
-import net.lightbody.bmp.exception.ProxyPortsExhaustedException;
-import net.lightbody.bmp.proxy.http.BrowserMobHttpRequest;
-import net.lightbody.bmp.proxy.http.BrowserMobHttpResponse;
-import net.lightbody.bmp.proxy.http.RequestInterceptor;
-import net.lightbody.bmp.proxy.http.ResponseInterceptor;
-import org.java_bandwidthlimiter.StreamManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
 
 @At("/proxy")
 @Service
 public class ProxyResource {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyResource.class);
+
+    private static final JavascriptRequestResponseFilter requestResponseFilter = new JavascriptRequestResponseFilter();
 
     private final ProxyManager proxyManager;
 
@@ -264,6 +277,10 @@ public class ProxyResource {
             return Reply.saying().notFound();
         }
 
+        if (!(proxy instanceof ProxyServer)) {
+            return Reply.saying().badRequest();
+        }
+
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         request.readTo(baos);
 
@@ -287,8 +304,6 @@ public class ProxyResource {
             }
         });
 
-
-
         return Reply.saying().ok();
     }
 
@@ -296,6 +311,13 @@ public class ProxyResource {
     @At("/:port/interceptor/request")
     public Reply<?> addRequestInterceptor(@Named("port") int port, Request<String> request) throws IOException, ScriptException {
         LegacyProxyServer proxy = proxyManager.get(port);
+        if (proxy == null) {
+            return Reply.saying().notFound();
+        }
+
+        if (!(proxy instanceof ProxyServer)) {
+            return Reply.saying().badRequest();
+        }
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         request.readTo(baos);
@@ -319,6 +341,52 @@ public class ProxyResource {
                 }
             }
         });
+
+        return Reply.saying().ok();
+    }
+
+    @Post
+    @At("/:port/filter/request")
+    public Reply<?> addRequestFilter(@Named("port") int port, Request<String> request) throws IOException, ScriptException {
+        LegacyProxyServer legacyProxy = proxyManager.get(port);
+        if (legacyProxy == null) {
+            return Reply.saying().notFound();
+        }
+
+        if (!(legacyProxy instanceof BrowserMobProxyServer)) {
+            return Reply.saying().badRequest();
+        }
+
+        BrowserMobProxy proxy = (BrowserMobProxy) legacyProxy;
+
+        String script = getEntityBodyFromRequest(request);
+
+        proxy.addRequestFilter(requestResponseFilter);
+
+        requestResponseFilter.setRequestFilterScript(script);
+
+        return Reply.saying().ok();
+    }
+
+    @Post
+    @At("/:port/filter/response")
+    public Reply<?> addResponseFilter(@Named("port") int port, Request<String> request) throws IOException, ScriptException {
+        LegacyProxyServer legacyProxy = proxyManager.get(port);
+        if (legacyProxy == null) {
+            return Reply.saying().notFound();
+        }
+
+        if (!(legacyProxy instanceof BrowserMobProxyServer)) {
+            return Reply.saying().badRequest();
+        }
+
+        BrowserMobProxy proxy = (BrowserMobProxy) legacyProxy;
+
+        String script = getEntityBodyFromRequest(request);
+
+        proxy.addResponseFilter(requestResponseFilter);
+
+        requestResponseFilter.setResponseFilterScript(script);
 
         return Reply.saying().ok();
     }
@@ -629,5 +697,85 @@ public class ProxyResource {
         public void setRemainingDownstreamKB(long remainingDownstreamKB) {
             this.remainingDownstreamKB = remainingDownstreamKB;
         }        
+    }
+
+    private String getEntityBodyFromRequest(Request<String> request) throws IOException {
+        String contentTypeHeader = request.header("Content-Type");
+        Charset charset = BrowserMobHttpUtil.deriveCharsetFromContentTypeHeader(contentTypeHeader);
+        ByteArrayOutputStream entityBodyBytes = new ByteArrayOutputStream();
+        request.readTo(entityBodyBytes);
+
+        return new String(entityBodyBytes.toByteArray(), charset);
+    }
+
+    /**
+     * Convenience class that executes arbitrary javascript code as a {@link RequestFilter} or {@link ResponseFilter}.
+     */
+    public static class JavascriptRequestResponseFilter implements RequestFilter, ResponseFilter {
+        private static final ScriptEngine JAVASCRIPT_ENGINE = new ScriptEngineManager().getEngineByName("JavaScript");
+
+        private CompiledScript compiledRequestFilterScript;
+        private CompiledScript compiledResponseFilterScript;
+
+        public void setRequestFilterScript(String script) {
+            Compilable compilable = (Compilable) JAVASCRIPT_ENGINE;
+            try {
+                compiledRequestFilterScript = compilable.compile(script);
+            } catch (ScriptException e) {
+                throw new RuntimeException("Unable to compile javascript. Script in error: " + script, e);
+            }
+        }
+
+        public void setResponseFilterScript(String script) {
+            Compilable compilable = (Compilable) JAVASCRIPT_ENGINE;
+            try {
+                compiledResponseFilterScript = compilable.compile(script);
+            } catch (ScriptException e) {
+                throw new RuntimeException("Unable to compile javascript. Script in error: " + script, e);
+            }
+        }
+
+        @Override
+        public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents) {
+            if (compiledRequestFilterScript == null) {
+                return null;
+            }
+
+            Bindings bindings = JAVASCRIPT_ENGINE.createBindings();
+            bindings.put("request", request);
+            bindings.put("contents", contents);
+            bindings.put("log", LOG);
+
+            try {
+                Object retVal = compiledRequestFilterScript.eval(bindings);
+                // avoid implicit javascript returns
+                if (retVal instanceof HttpResponse) {
+                    return (HttpResponse) retVal;
+                } else {
+                    return null;
+                }
+            } catch (ScriptException e) {
+                LOG.error("Could not invoke filterRequest using supplied javascript", e);
+
+                return null;
+            }
+        }
+
+        @Override
+        public void filterResponse(HttpResponse response, HttpMessageContents contents) {
+            if (compiledResponseFilterScript == null) {
+                return;
+            }
+
+            Bindings bindings = JAVASCRIPT_ENGINE.createBindings();
+            bindings.put("response", response);
+            bindings.put("contents", contents);
+            bindings.put("log", LOG);
+            try {
+                compiledResponseFilterScript.eval(bindings);
+            } catch (ScriptException e) {
+                LOG.error("Could not invoke filterResponse using supplied javascript", e);
+            }
+        }
     }
 }

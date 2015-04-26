@@ -46,6 +46,12 @@ public class ConfigModule implements Module {
                       .ofType(Integer.class)
                       .defaultsTo(0);
 
+        ArgumentAcceptingOptionSpec<Boolean> useLittleProxy =
+                parser.accepts("use-littleproxy", "Use the littleproxy backend instead of the legacy Jetty 5-based implementation")
+                .withOptionalArg()
+                .ofType(Boolean.class)
+                .defaultsTo(false);
+
         parser.acceptsAll(Arrays.asList("help", "?"), "This help text");
 
         OptionSet options = parser.parse(args);
@@ -60,7 +66,15 @@ public class ConfigModule implements Module {
             }
             return;
         }
-        
+
+        // temporary, until REST API is replaced
+        LegacyProxyServerProvider.useLittleProxy = useLittleProxy.value(options);
+        if (LegacyProxyServerProvider.useLittleProxy) {
+            System.out.println("Running BrowserMob Proxy using LittleProxy implementation.");
+        } else {
+            System.out.println("Running BrowserMob Proxy using legacy implementation. To enable the LittleProxy implementation, run the proxy with the command-line option '--use-littleproxy true'.");
+        }
+
         List<Integer> ports = options.valuesOf(proxyPortRange); 
         if(ports.size() < 2){
             throw new IllegalArgumentException();

@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import net.lightbody.bmp.BrowserMobProxyServer;
 import net.lightbody.bmp.exception.ProxyExistsException;
 import net.lightbody.bmp.exception.ProxyPortsExhaustedException;
 import org.slf4j.Logger;
@@ -131,9 +132,11 @@ public class ProxyManager {
     public LegacyProxyServer create(Map<String, String> options, Integer port, String bindAddr) {
         LOG.debug("Instantiate ProxyServer...");
         LegacyProxyServer proxy = proxyServerProvider.get();
-        
-        LOG.debug("Apply options `{}` to new ProxyServer...", options);
-        proxy.setOptions(options);                        
+
+        if (options != null) {
+            LOG.debug("Apply options `{}` to new ProxyServer...", options);
+            proxy.setOptions(options);
+        }
         
         if (bindAddr != null) {            
             LOG.debug("Bind ProxyServer to `{}`...", bindAddr);
@@ -173,22 +176,40 @@ public class ProxyManager {
         return create(options, null, null);
     }
 
+    public LegacyProxyServer create() {
+        return create(null, null, null);
+    }
+
+    public LegacyProxyServer create(int port) {
+        return create(null, port, null);
+    }
+
     public LegacyProxyServer get(int port) {
         return proxies.get(port);
     }
     
     private LegacyProxyServer startProxy(LegacyProxyServer proxy, int port) {
-        proxy.setPort(port);
-        LegacyProxyServer old = proxies.putIfAbsent(port, proxy);
-        if(old != null){
-            LOG.info("Proxy already exists at port {}", port);
-            throw new ProxyExistsException(port);
+        if (port != 0) {
+            proxy.setPort(port);
+            LegacyProxyServer old = proxies.putIfAbsent(port, proxy);
+            if (old != null) {
+                LOG.info("Proxy already exists at port {}", port);
+                throw new ProxyExistsException(port);
+            }
         }
+
         try{
             proxy.start();
+            if (port == 0) {
+                int realPort = proxy.getPort();
+                proxies.put(realPort, proxy);
+            }
+
             return proxy;
         }catch(Exception ex){
-            proxies.remove(port);
+            if (port != 0) {
+                proxies.remove(port);
+            }
             try{
                 proxy.stop();
             }catch(Exception ex2){
@@ -208,7 +229,14 @@ public class ProxyManager {
 
     public void delete(int port) {
         LegacyProxyServer proxy = proxies.remove(port);
-        proxy.stop();
+        if (proxy == null) {
+            return;
+        }
+
+        // temporary: to avoid stopping an already-stopped BrowserMobProxyServer instance, see if it's stopped before re-stopping it
+        if (proxy instanceof ProxyServer || !((BrowserMobProxyServer) proxy).isStopped()) {
+            proxy.stop();
+        }
     }
     
 }

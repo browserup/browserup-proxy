@@ -157,7 +157,6 @@
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-netty</artifactId>
-            <version>3.9.7</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
