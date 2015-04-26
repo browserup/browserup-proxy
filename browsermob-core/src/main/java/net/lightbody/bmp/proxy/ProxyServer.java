@@ -596,7 +596,7 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
         for (RewriteRule rewriteRule : client.getRewriteRules()) {
-            builder.put(rewriteRule.getMatch().pattern(), rewriteRule.getReplace());
+            builder.put(rewriteRule.getPattern().pattern(), rewriteRule.getReplace());
         }
 
         return builder.build();

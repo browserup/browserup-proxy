@@ -658,7 +658,7 @@ public class BrowserMobHttpClient {
         boolean rewrote = false;
         String newUrl = url;
         for (RewriteRule rule : rewriteRules) {
-            Matcher matcher = rule.getMatch().matcher(newUrl);
+            Matcher matcher = rule.getPattern().matcher(newUrl);
             newUrl = matcher.replaceAll(rule.getReplace());
             rewrote = true;
         }
@@ -1214,7 +1214,7 @@ public class BrowserMobHttpClient {
 
     public void removeRewriteRule(String urlPattern) {
         for (RewriteRule rewriteRule : rewriteRules) {
-            if (rewriteRule.getMatch().pattern().equals(urlPattern)) {
+            if (rewriteRule.getPattern().pattern().equals(urlPattern)) {
                 // rewriteRules is a CopyOnWriteArrayList, so we can modify it while iterating over it
                 rewriteRules.remove(rewriteRule);
             }
