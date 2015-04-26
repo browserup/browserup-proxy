@@ -59,11 +59,11 @@ The proxy is programmatically controlled via a REST interface or by being embedd
 
 ### REST API
 
-**Note: LittleProxy support is currently only available in Embedded Mode. LittleProxy-specific features, including the new interceptors, are not yet available in the REST API.**
+**New in 2.1:** The REST API now supports LittleProxy. When running browsermob-proxy, specify `--use-littleproxy true` to enable LittleProxy support.
 
 To get started, first start the proxy by running `browsermob-proxy` or `browsermob-proxy.bat` in the bin directory:
 
-    $ sh browsermob-proxy -port 9090
+    $ sh browsermob-proxy -port 9090 --use-littleproxy true
     INFO 05/31 03:12:48 o.b.p.Main           - Starting up...
     2011-05-30 20:12:49.517:INFO::jetty-7.3.0.v20110203
     2011-05-30 20:12:49.689:INFO::started o.e.j.s.ServletContextHandler{/,null}
@@ -291,6 +291,30 @@ With Java 8, the syntax is even more concise:
 See the javadoc for the `RequestFilter` and `ResponseFilter` classes for more information.
 
 For fine-grained control over the request and response lifecycle, you can add "filter factories" directly using `addFirstHttpFilterFactory` and `addLastHttpFilterFactory` (see the examples in the InterceptorTest unit tests).
+
+#### REST API interceptors with LittleProxy
+
+When running the REST API with LittleProxy enabled, you cannot use the legacy `/:port/interceptor/` endpoints. Instead, POST the javascript payload to the new `/:port/filter/request` and `/:port/filter/response` endpoints.
+
+##### Request filters
+
+Javascript request filters have access to the variables `request` (type `io.netty.handler.codec.http.HttpRequest`) and `contents` (type `net.lightbody.bmp.util.HttpMessageContents`). If the javascript returns an object of type `io.netty.handler.codec.http.HttpResponse`, the HTTP request will "short-circuit" and return the response immediately.
+
+**Example: Modify User-Agent header**
+
+```sh
+curl -i -X POST -H 'Content-Type: text/plain' -d "request.headers().remove('User-Agent'); request.headers().add('User-Agent', 'My-Custom-User-Agent-String 1.0');" http://localhost:8080/proxy/8081/filter/request
+```
+
+##### Response filters
+
+Javascript response filters have access to the variables `response` (type `io.netty.handler.codec.http.HttpResponse`) and `contents` (type `net.lightbody.bmp.util.HttpMessageContents`). 
+
+**Example: Modify response body**
+
+```sh
+curl -i -X POST -H 'Content-Type: text/plain' -d "contents.setTextContents('<html><body>Response successfully intercepted</body></html>');" http://localhost:8080/proxy/8081/filter/response
+```
 
 #### Legacy interceptors
 
