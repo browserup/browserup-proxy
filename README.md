@@ -1,14 +1,52 @@
-BrowserMob Proxy
-================
+# BrowserMob Proxy
 
 BrowserMob Proxy is a simple utility that makes it easy to capture performance data from browsers, typically written using automation toolkits such as Selenium and Watir.
 
-The current stable version of BrowserMob Proxy is 2.0 -- see the [2.0.x README](https://github.com/lightbody/browsermob-proxy/tree/2.0) for usage information. Version 2.1 is currently in
-development, and already contains a number of improvements over 2.0. See the [build instructions](https://github.com/lightbody/browsermob-proxy#creating-the-batch-files-from-source)
-for instructions on creating a 2.1 beta release.
+Version 2.1 is currently in development, and contains a number of improvements over 2.0. We highly recommend that you use a 2.1 beta version instead of the previous 2.0.0 release.
 
-Features
---------
+To build the current development version, see the [build instructions](https://github.com/lightbody/browsermob-proxy#creating-the-batch-files-from-source).
+
+The previous version of BrowserMob Proxy is 2.0.0 -- see the [2.0.x README](https://github.com/lightbody/browsermob-proxy/tree/2.0) for usage information.
+
+## Important Changes since 2.0.0
+
+Since the 2.1 release is still in beta, some features and functionality (including the BrowserMobProxy interface) may change, although the new interface is largely stable. The most important changes are:
+
+- [Separate REST API and Embedded Mode modules](#embedded-mode). Include only the functionality you need.
+- [New BrowserMobProxy interface](https://github.com/lightbody/browsermob-proxy/blob/master/browsermob-core/src/main/java/net/lightbody/bmp/BrowserMobProxy.java). The new interface will completely replace the legacy 2.0 ProxyServer contract in version 3.0 and higher.
+- [LittleProxy support](#littleproxy-support). More powerful than the legacy Jetty back-end. For 2.1 releases, LittleProxy support will be provided through the browsermob-core-littleproxy module.
+
+See the [New Interface Compatibility Guide](new-interface-compatibility.md) for information on using the new BrowserMobProxy interface with the legacy ProxyServer implementation.
+
+### New BrowserMobProxy API
+
+BrowserMob Proxy 2.1 includes a [new BrowserMobProxy interface](https://github.com/lightbody/browsermob-proxy/blob/master/browsermob-core/src/main/java/net/lightbody/bmp/BrowserMobProxy.java) to interact with BrowserMob Proxy programmatically. The new interface defines the functionality that BrowserMob Proxy will support in future releases (including 3.0+).
+
+### Deprecated LegacyProxyServer Interface
+
+The legacy interface, implicitly defined by the ProxyServer class, has been extracted into `net.lightbody.bmp.proxy.LegacyProxyServer` and is now officially deprecated. The existing ProxyServer implementation will continue to implement the LegacyProxyServer interface, and the new LittleProxy-based implementation will also implement LegacyProxyServer for all 2.1.x releases. LegacyProxyServer will not be supported after 3.0 is released.
+
+**All users are highly encouraged to use the `net.lightbody.bmp.BrowserMobProxy` interface for all new code.** The new interface provides additional functionality and is compatible with both the legacy Jetty-based ProxyServer implementation [(with some exceptions)](new-interface-compatibility.md) and the new LittleProxy implementation. Using the new interface will greatly increase the likelihood of a smooth transition to 3.0, when the legacy ProxyServer implementation will not be supported.
+
+### LittleProxy Support
+
+BrowserMob Proxy now supports using LittleProxy instead of Jetty 5 + Apache HTTP Client. To enable LittleProxy support, include the `browsermob-core-littleproxy` artifact:
+```xml
+    <dependency>
+        <groupId>net.lightbody.bmp</groupId>
+        <artifactId>browsermob-core-littleproxy</artifactId>
+        <version>2.1.0-beta-1-SNAPSHOT</version>
+        <scope>test</scope>
+    </dependency>
+```
+
+Instead of creating a `ProxyServer` instance, create a `BrowserMobProxyServer` instance:
+```java
+    BrowserMobProxy proxy = new BrowserMobProxyServer();
+    proxy.start();
+```
+
+## Features and Usage
 
 The proxy is programmatically controlled via a REST interface or by being embedded directly inside Java-based programs and unit tests. It captures performance data in the [HAR format](http://groups.google.com/group/http-archive-specification). In addition it can actually control HTTP traffic, such as:
 
@@ -19,8 +57,9 @@ The proxy is programmatically controlled via a REST interface or by being embedd
  - controlling DNS and request timeouts
  - automatic BASIC authorization
 
-REST API
---------
+### REST API
+
+**Note: LittleProxy support is currently only available in Embedded Mode. LittleProxy-specific features, including the new interceptors, are not yet available in the REST API.**
 
 To get started, first start the proxy by running `browsermob-proxy` or `browsermob-proxy.bat` in the bin directory:
 
@@ -125,8 +164,7 @@ system properties will be used to specify the upstream proxy.
 
 *TODO*: Other REST APIs supporting all the BrowserMob Proxy features will be added soon.
 
-Command-line Arguments
-----------------------
+### Command-line Arguments
 
  - -port \<port\>
   - Port on which the API listens. Default value is 8080.
@@ -137,56 +175,46 @@ Command-line Arguments
  - -ttl \<seconds\>
   - Proxy will be automatically deleted after a specified time period. Off by default.
 
-Embedded Mode
--------------
+### Embedded Mode
 
 **New in 2.1:** New Embedded Mode module
+
+**New in 2.1:** New [BrowserMobProxy interface](#new-browsermobproxy-api) for Embedded Mode
 
 BrowserMob Proxy 2.1 separates the Embedded Mode and REST API into two modules. If you only need Embedded Mode functionality, add the `browsermob-core` artifact (or `browsermob-core.jar` file) as a dependency. The REST API artifact is `browsermob-rest`.
 
 If you're using Java and Selenium, the easiest way to get started is to embed the project directly in your test. First, you'll need to make sure that all the dependencies are imported in to the project. You can find them in the *lib* directory. Or, if you're using Maven, you can add this to your pom:
-
+```xml
     <dependency>
         <groupId>net.lightbody.bmp</groupId>
         <artifactId>browsermob-core</artifactId>
         <version>2.1.0-beta-1-SNAPSHOT</version>
         <scope>test</scope>
     </dependency>
+```
 
-Once done, you can start a proxy using `net.lightbody.bmp.proxy.ProxyServer`:
+Once done, you can start a proxy using `net.lightbody.bmp.BrowserMobProxy`:
+```java
+    BrowserMobProxy server = new ProxyServer();
+    server.start(0);
+    // get the JVM-assigned port and get to work!
+    int port = server.getPort();
+    //...
+    
+```
 
-    ProxyServer server = new ProxyServer(9090);
-    server.start();
+Consult the Javadocs on the `net.lightbody.bmp.BrowserMobProxy` class for the full API.
 
-This class supports every feature that the proxy supports. In fact, the REST API is a subset of the methods exposed here, so new features will show up here before they show up in the REST API. Consult the Javadocs for the full API.
-
-If your project already defines a Selenium dependency then you may want to exclude the version that browsermob-proxy pulls in, like so:
-
-    <dependency>
-        <groupId>net.lightbody.bmp</groupId>
-        <artifactId>browsermob-core</artifactId>
-        <version>2.1.0-beta-1-SNAPSHOT</version>
-        <scope>test</scope>
-        <exclusions>
-            <exclusion>
-                <groupId>org.seleniumhq.selenium</groupId>
-                <artifactId>selenium-api</artifactId>
-            </exclusion>
-        </exclusions>
-    </dependency>
-
-
-Using With Selenium
--------------------
+### Using With Selenium
 
 You can use the REST API with Selenium however you want. But if you're writing your tests in Java and using Selenium 2, this is the easiest way to use it:
-
+```java
     // start the proxy
-    ProxyServer server = new ProxyServer(4444);
-    server.start();
+    BrowserMobProxy server = new ProxyServer();
+    server.start(0);
 
     // get the Selenium proxy object
-    Proxy proxy = server.seleniumProxy();
+    Proxy proxy = ClientUtil.createSeleniumProxy(server);
 
     // configure it as a desired capability
     DesiredCapabilities capabilities = new DesiredCapabilities();
@@ -203,68 +231,130 @@ You can use the REST API with Selenium however you want. But if you're writing y
 
     // get the HAR data
     Har har = server.getHar();
+```
 
+### HTTP Request Manipulation
 
-HTTP Request Manipulation
--------------------
+**HTTP request manipulation is changing with LittleProxy.** The LittleProxy-based interceptors are easier to use and more reliable. The legacy ProxyServer implementation **will not** support the new interceptor methods.
 
-You can manipulate the requests like so:
+#### LittleProxy interceptors
 
-    server.addRequestInterceptor(new RequestInterceptor() {
+There are four new methods to support request and response interception in LittleProxy:
+
+  - `addRequestFilter`
+  - `addResponseFilter`
+  - `addFirstHttpFilterFactory`
+  - `addLastHttpFilterFactory`
+
+For most use cases, including inspecting and modifying requests/responses, `addRequestFilter` and `addResponseFilter` will be sufficient. The request and response filters are easy to use:
+```java
+	proxy.addRequestFilter(new RequestFilter() {
+            @Override
+            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents) {
+                if (request.getUri().equals("/some-endpoint-to-intercept")) {
+                    // retrieve the existing message contents as a String or, for binary contents, as a byte[]
+                    String messageContents = contents.getTextContents();
+
+                    // do some manipulation of the contents
+                    String newContents = messageContents.replaceAll("original-string", "my-modified-string");
+                    //[...]
+
+                    // replace the existing content by calling setTextContents() or setBinaryContents()
+                    contents.setTextContents(newContents);
+                }
+
+                // in the request filter, you can return an HttpResponse object to "short-circuit" the request
+                return null;
+            }
+        });
+        
+        // responses are equally as simple:
+        proxy.addResponseFilter(new ResponseFilter() {
+            @Override
+            public void filterResponse(HttpResponse response, HttpMessageContents contents) {
+                if (/*...some filtering criteria...*/) {
+                    contents.setTextContents("This message body will appear in all responses!");
+                }
+            }
+        });
+```
+
+With Java 8, the syntax is even more concise:
+```java
+        proxy.addResponseFilter((response, contents) -> {
+            if (/*...some filtering criteria...*/) {
+                contents.setTextContents("This message body will appear in all responses!");
+            }
+        });
+```
+
+See the javadoc for the `RequestFilter` and `ResponseFilter` classes for more information.
+
+For fine-grained control over the request and response lifecycle, you can add "filter factories" directly using `addFirstHttpFilterFactory` and `addLastHttpFilterFactory` (see the examples in the InterceptorTest unit tests).
+
+#### Legacy interceptors
+
+If you are using the legacy ProxyServer implementation, you can manipulate the requests like so:
+```java
+    BrowserMobProxy server = new ProxyServer();
+    ((LegacyProxyServer)server).addRequestInterceptor(new RequestInterceptor() {
         @Override
         public void process(BrowserMobHttpRequest request, Har har) {
             request.getMethod().removeHeaders("User-Agent");
             request.getMethod().addHeader("User-Agent", "Bananabot/1.0");
         }
     });
-
+```
 You can also POST a JavaScript payload to `/:port/interceptor/request` and `/:port/interceptor/response` using the REST interface. The functions will have a `request`/`response` variable, respectively, and a `har` variable (which may be null if a HAR isn't set up yet). The JavaScript code will be run by [Rhino](https://github.com/mozilla/rhino) and have access to the same Java API in the example above:
 
     [~]$ curl -X POST -H 'Content-Type: text/plain' -d 'request.getMethod().removeHeaders("User-Agent");' http://localhost:9090/proxy/9091/interceptor/request
-
+    
 Consult the Java API docs for more info.
 
-SSL Support
------------
+### SSL Support
 
 While the proxy supports SSL, it requires that a Certificate Authority be installed in to the browser. This allows the browser to trust all the SSL traffic coming from the proxy, which will be proxied using a classic man-in-the-middle technique. IT IS CRITICAL THAT YOU NOT INSTALL THIS CERTIFICATE AUTHORITY ON A BROWSER THAT IS USED FOR ANYTHING OTHER THAN TESTING.
 
 If you're doing testing with Selenium, you'll want to make sure that the browser profile that gets set up by Selenium not only has the proxy configured, but also has the CA installed (Firefox set up by Selenium has installed CA by default). Unfortuantely, there is no API for doing this in Selenium, so you'll have to solve it uniquely for each browser type. We hope to make this easier in upcoming releases.
 
-NodeJS Support
---------------
+### NodeJS Support
 
 NodeJS bindings for browswermob-proxy are available [here](https://github.com/zzo/browsermob-node).  Built-in support for [Selenium](http://seleniumhq.org) or use [CapserJS-on-PhantomJS](http://casperjs.org) or anything else to drive traffic for HAR generation.
 
-Logging
--------
+### Logging
 
 When running in stand-alone mode, the proxy loads the default logging configuration from the conf/bmp-logging.properties file. To increase/decrease the logging level, change the logging entry for net.lightbody.bmp.
 
 **New in 2.1:** Neither Embedded Mode nor the REST API include an slf4j static binding, so you no longer need to exclude the slf4j-jdk14 dependency when including `browsermob-core` or `browsermob-rest`.
 
-Native DNS Resolution
----------------------
+### DNS Resolution
 
-If you are having name resolution issues with the proxy, you can use native Java name resolution as a fallback to browsermob-proxy's default XBill resolution. To enable native DNS fallback, set the JVM property `bmp.allowNativeDnsFallback` to `true`.
+**New in 2.1:** BrowserMob Proxy enables native DNS resolution by default.
+
+The legacy Jetty-based ProxyServer implementation uses XBill (dnsjava) resolution, but automatically falls back to the default JVM DNS resolution if XBill cannot resolve the address. To disable native DNS fallback, set the `bmp.allowNativeDnsFallback` JVM property to `false`. You can also use the `BrowserMobProxy.setHostNameResolver()` method to disable native DNS fallback and/or dnsjava resolution itself.
 
 When running from the command line:
 
-    $ JAVA_OPTS="-Dbmp.allowNativeDnsFallback=true" sh browsermob-proxy
+    $ JAVA_OPTS="-Dbmp.allowNativeDnsFallback=false" sh browsermob-proxy
 
 or in Windows:
 
-    C:\browsermob-proxy\bin> set JAVA_OPTS="-Dbmp.allowNativeDnsFallback=true"
+    C:\browsermob-proxy\bin> set JAVA_OPTS="-Dbmp.allowNativeDnsFallback=false"
     C:\browsermob-proxy\bin> browsermob-proxy.bat
 
-If you are running within a Selenium test, you can set the `bmp.allowNativeDnsFallback` JVM property when you launch your Selenium tests, or programmatically when creating the Proxy:
+If you are running in Embedded Mode (for example, within a Selenium test) you can disable native fallback or dnsjava by setting the implementation directly:
 
-    System.setProperty("bmp.allowNativeDnsFallback", "true");
-    ProxyServer proxyServer = new ProxyServer(0);
-    proxyServer.start();
+```java
+    BrowserMobProxy proxyServer = new ProxyServer();
+    // use only dnsjava
+    proxyServer.setHostNameResolver(ClientUtil.createDnsJavaResolver());
+    // or use only native resolution
+    proxyServer.setHostNameResolver(ClientUtil.createNativeCacheManipulatingResolver());
+    //...
+    proxyServer.start(0);
+```
 
-Creating the batch files from source
-------------------------------------
+## Creating the batch files from source
 
 You'll need maven (`brew install maven` if you're on OS X); use the `release` profile to generate the batch files from this repository. Optionally, proceed at your own risk and append the `-DskipTests` option if the tests are failing.
 
