@@ -53,7 +53,8 @@ class FilterTest extends ProxyResourceTest {
         final String requestFilterJavaScript =
                 '''
                 if (request.getUri().endsWith('/modifyrequest') && contents.isText()) {
-                    if (contents.getTextContents() === 'original request text') {
+                    // using == instead of === since under Java 7 the js engine treats js strings as 'string' but Java Strings as 'object'
+                    if (contents.getTextContents() == 'original request text') {
                         contents.setTextContents('modified request text');
                     }
                 }
@@ -90,7 +91,8 @@ class FilterTest extends ProxyResourceTest {
         final String responseFilterJavaScript =
                 '''
                 if (contents.isText()) {
-                    if (contents.getTextContents() === 'original response text') {
+                    // using == instead of === since under Java 7 the js engine treats js strings as 'string' but Java Strings as 'object'
+                    if (contents.getTextContents() == 'original response text') {
                         contents.setTextContents('modified response text');
                     }
                 }
