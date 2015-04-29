@@ -736,7 +736,7 @@ public class ProxyResource {
         }
 
         @Override
-        public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents) {
+        public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpRequest originalRequest) {
             if (compiledRequestFilterScript == null) {
                 return null;
             }
@@ -744,6 +744,7 @@ public class ProxyResource {
             Bindings bindings = JAVASCRIPT_ENGINE.createBindings();
             bindings.put("request", request);
             bindings.put("contents", contents);
+            bindings.put("originalRequest", originalRequest);
             bindings.put("log", LOG);
 
             try {
@@ -762,7 +763,7 @@ public class ProxyResource {
         }
 
         @Override
-        public void filterResponse(HttpResponse response, HttpMessageContents contents) {
+        public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpRequest originalRequest) {
             if (compiledResponseFilterScript == null) {
                 return;
             }
@@ -770,6 +771,7 @@ public class ProxyResource {
             Bindings bindings = JAVASCRIPT_ENGINE.createBindings();
             bindings.put("response", response);
             bindings.put("contents", contents);
+            bindings.put("originalRequest", originalRequest);
             bindings.put("log", LOG);
             try {
                 compiledResponseFilterScript.eval(bindings);

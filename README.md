@@ -250,7 +250,7 @@ For most use cases, including inspecting and modifying requests/responses, `addR
 ```java
 	proxy.addRequestFilter(new RequestFilter() {
             @Override
-            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents) {
+            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpRequest originalRequest) {
                 if (request.getUri().equals("/some-endpoint-to-intercept")) {
                     // retrieve the existing message contents as a String or, for binary contents, as a byte[]
                     String messageContents = contents.getTextContents();
@@ -271,7 +271,7 @@ For most use cases, including inspecting and modifying requests/responses, `addR
         // responses are equally as simple:
         proxy.addResponseFilter(new ResponseFilter() {
             @Override
-            public void filterResponse(HttpResponse response, HttpMessageContents contents) {
+            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpRequest originalRequest) {
                 if (/*...some filtering criteria...*/) {
                     contents.setTextContents("This message body will appear in all responses!");
                 }
@@ -281,7 +281,7 @@ For most use cases, including inspecting and modifying requests/responses, `addR
 
 With Java 8, the syntax is even more concise:
 ```java
-        proxy.addResponseFilter((response, contents) -> {
+        proxy.addResponseFilter((response, contents, originalRequest) -> {
             if (/*...some filtering criteria...*/) {
                 contents.setTextContents("This message body will appear in all responses!");
             }
@@ -298,7 +298,7 @@ When running the REST API with LittleProxy enabled, you cannot use the legacy `/
 
 ##### Request filters
 
-Javascript request filters have access to the variables `request` (type `io.netty.handler.codec.http.HttpRequest`) and `contents` (type `net.lightbody.bmp.util.HttpMessageContents`). If the javascript returns an object of type `io.netty.handler.codec.http.HttpResponse`, the HTTP request will "short-circuit" and return the response immediately.
+Javascript request filters have access to the variables `request` (type `io.netty.handler.codec.http.HttpRequest`), `contents` (type `net.lightbody.bmp.util.HttpMessageContents`), and `originalRequest` (type `io.netty.handler.codec.http.HttpRequest`). `originalRequest` contains the original request received from the client and does not reflect any changes made by previous filters. If the javascript returns an object of type `io.netty.handler.codec.http.HttpResponse`, the HTTP request will "short-circuit" and return the response immediately.
 
 **Example: Modify User-Agent header**
 
@@ -308,7 +308,7 @@ curl -i -X POST -H 'Content-Type: text/plain' -d "request.headers().remove('User
 
 ##### Response filters
 
-Javascript response filters have access to the variables `response` (type `io.netty.handler.codec.http.HttpResponse`) and `contents` (type `net.lightbody.bmp.util.HttpMessageContents`). 
+Javascript response filters have access to the variables `response` (type `io.netty.handler.codec.http.HttpResponse`), `contents` (type `net.lightbody.bmp.util.HttpMessageContents`), and `originalRequest` (type `io.netty.handler.codec.http.HttpRequest`). As in the request filter, `originalRequest` contains the original request received from the client and does not reflect any changes made by previous filters.
 
 **Example: Modify response body**
 

@@ -9,7 +9,9 @@ import org.junit.Test
 import org.mockserver.matchers.Times
 import org.mockserver.model.Header
 
+import static org.hamcrest.Matchers.endsWith
 import static org.junit.Assert.assertEquals
+import static org.junit.Assert.assertThat
 import static org.mockserver.model.HttpRequest.request
 import static org.mockserver.model.HttpResponse.response
 
@@ -71,7 +73,7 @@ class FilterTest extends ProxyResourceTest {
                 Times.exactly(1))
                 .respond(response()
                 .withStatusCode(200)
-                .withHeader(new Header("Content-Type", "text/plain"))
+                .withHeader(new Header("Content-Type", "text/plain; charset=UTF-8"))
                 .withBody("success"));
 
         HTTPBuilder http = getHttpBuilder()
@@ -108,7 +110,7 @@ class FilterTest extends ProxyResourceTest {
                 Times.exactly(1))
                 .respond(response()
                 .withStatusCode(200)
-                .withHeader(new Header("Content-Type", "text/plain"))
+                .withHeader(new Header("Content-Type", "text/plain; charset=UTF-8"))
                 .withBody("original response text"));
 
         HTTPBuilder http = getHttpBuilder()
@@ -118,6 +120,45 @@ class FilterTest extends ProxyResourceTest {
 
             response.success = { resp, reader ->
                 assertEquals("Javascript interceptor did not modify response text", "modified response text", reader.text)
+            }
+        }
+    }
+
+    @Test
+    void testCanAccessOriginalRequestWithJavascript() {
+        final String requestFilterJavaScript =
+                '''
+                if (request.getUri().endsWith('/originalrequest')) {
+                    request.setUri(request.getUri().replaceAll('originalrequest', 'modifiedrequest'));
+                }
+                '''
+
+        Request<String> mockRestAddReqFilterRequest = createMockRestRequestWithEntity(requestFilterJavaScript)
+        proxyResource.addRequestFilter(proxyPort, mockRestAddReqFilterRequest)
+
+        final String responseFilterJavaScript =
+                '''
+                contents.setTextContents(originalRequest.getUri());
+                '''
+        Request<String> mockRestAddRespFilterRequest = createMockRestRequestWithEntity(responseFilterJavaScript)
+        proxyResource.addResponseFilter(proxyPort, mockRestAddRespFilterRequest)
+
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/modifiedrequest"),
+                Times.exactly(1))
+                .respond(response()
+                .withStatusCode(200)
+                .withHeader(new Header("Content-Type", "text/plain; charset=UTF-8"))
+                .withBody("should-be-replaced"));
+
+        HTTPBuilder http = getHttpBuilder()
+
+        http.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+            uri.path = "/originalrequest"
+
+            response.success = { resp, reader ->
+                assertThat("Javascript interceptor did not read originalRequest variable successfully", reader.text, endsWith("originalrequest"))
             }
         }
     }

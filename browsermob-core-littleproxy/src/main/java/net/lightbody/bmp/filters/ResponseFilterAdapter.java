@@ -43,7 +43,7 @@ public class ResponseFilterAdapter extends HttpFiltersAdapter {
             FullHttpMessage httpContent = (FullHttpMessage) httpObject;
 
             HttpMessageContents contents = new HttpMessageContents(httpContent);
-            responseFilter.filterResponse(httpResponse, contents);
+            responseFilter.filterResponse(httpResponse, contents, originalRequest);
         }
 
         return super.serverToProxyResponse(httpObject);

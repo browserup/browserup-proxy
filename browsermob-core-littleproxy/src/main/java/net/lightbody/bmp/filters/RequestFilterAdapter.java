@@ -42,7 +42,7 @@ public class RequestFilterAdapter extends HttpFiltersAdapter {
             FullHttpMessage httpContent = (FullHttpMessage) httpObject;
 
             HttpMessageContents contents = new HttpMessageContents(httpContent);
-            HttpResponse response = requestFilter.filterRequest(httpRequest, contents);
+            HttpResponse response = requestFilter.filterRequest(httpRequest, contents, originalRequest);
             if (response != null) {
                 return response;
             }
