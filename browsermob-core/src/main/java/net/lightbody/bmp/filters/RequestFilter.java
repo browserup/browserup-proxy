@@ -16,7 +16,8 @@ public interface RequestFilter {
      *
      * @param request The request object, including method, URI, headers, etc. Modifications to the request object will be reflected in the request sent to the server.
      * @param contents The request contents.
+     * @param originalRequest The original request from the client. Does not reflect any modifications from previous filters.
      * @return if the return value is non-null, the proxy will suppress the request and send the specified response to the client immediately
      */
-    HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents);
+    HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpRequest originalRequest);
 }

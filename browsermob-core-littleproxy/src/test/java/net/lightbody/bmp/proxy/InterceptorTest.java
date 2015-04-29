@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -205,7 +206,7 @@ public class InterceptorTest extends MockServerTest {
 
         proxy.addRequestFilter(new RequestFilter() {
             @Override
-            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents) {
+            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpRequest originalRequest) {
                 if (contents.isText()) {
                     if (contents.getTextContents().equals(originalText)) {
                         contents.setTextContents(newText);
@@ -246,7 +247,7 @@ public class InterceptorTest extends MockServerTest {
 
         proxy.addResponseFilter(new ResponseFilter() {
             @Override
-            public void filterResponse(HttpResponse response, HttpMessageContents contents) {
+            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpRequest originalRequest) {
                 if (!contents.isText()) {
                     if (Arrays.equals(originalBytes, contents.getBinaryContents())) {
                         contents.setBinaryContents(newBytes);
@@ -284,7 +285,7 @@ public class InterceptorTest extends MockServerTest {
 
         proxy.addResponseFilter(new ResponseFilter() {
             @Override
-            public void filterResponse(HttpResponse response, HttpMessageContents contents) {
+            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpRequest originalRequest) {
                 if (contents.isText()) {
                     if (contents.getTextContents().equals(originalText)) {
                         contents.setTextContents(newText);
@@ -321,7 +322,7 @@ public class InterceptorTest extends MockServerTest {
 
         proxy.addResponseFilter(new ResponseFilter() {
             @Override
-            public void filterResponse(HttpResponse response, HttpMessageContents contents) {
+            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpRequest originalRequest) {
                 responseContents.set(contents.getBinaryContents());
             }
         });
@@ -331,6 +332,47 @@ public class InterceptorTest extends MockServerTest {
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertEquals("Expected binary contents captured in interceptor to be empty", 0, responseContents.get().length);
+        }
+    }
+
+    @Test
+    public void testResponseInterceptorOriginalRequestNotModified() throws IOException {
+        mockServer.when(request()
+                        .withMethod("GET")
+                        .withPath("/modifiedendpoint"),
+                Times.exactly(1))
+                .respond(response()
+                        .withStatusCode(200)
+                        .withBody("success"));
+
+        proxy = new BrowserMobProxyServer();
+        proxy.start();
+
+        proxy.addRequestFilter(new RequestFilter() {
+            @Override
+            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpRequest originalRequest) {
+                if (request.getUri().endsWith("/originalendpoint")) {
+                    request.setUri(request.getUri().replaceAll("originalendpoint", "modifiedendpoint"));
+                }
+
+                return null;
+            }
+        });
+
+        final AtomicReference<String> originalRequestUri = new AtomicReference<>();
+
+        proxy.addResponseFilter(new ResponseFilter() {
+            @Override
+            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpRequest originalRequest) {
+                originalRequestUri.set(originalRequest.getUri());
+            }
+        });
+
+        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+            CloseableHttpResponse response = httpClient.execute(new HttpGet("http://localhost:" + mockServerPort + "/originalendpoint"));
+
+            assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
+            assertThat("Expected URI on originalRequest to match actual URI of original HTTP request", originalRequestUri.get(), endsWith("/originalendpoint"));
         }
     }
 
