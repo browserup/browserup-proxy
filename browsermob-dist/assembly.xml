@@ -40,7 +40,7 @@
             <outputDirectory>./</outputDirectory>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/src/main/config</directory>
+            <directory>${project.basedir}/src/main/resources</directory>
             <includes/>
             <outputDirectory>bin/conf</outputDirectory>
         </fileSet>

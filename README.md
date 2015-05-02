@@ -347,7 +347,7 @@ NodeJS bindings for browswermob-proxy are available [here](https://github.com/zz
 
 ### Logging
 
-When running in stand-alone mode, the proxy loads the default logging configuration from the conf/bmp-logging.properties file. To increase/decrease the logging level, change the logging entry for net.lightbody.bmp.
+When running in stand-alone mode, the proxy loads the default logging configuration from the conf/bmp-logging.yaml file. To increase/decrease the logging level, change the logging entry for net.lightbody.bmp.
 
 **New in 2.1:** Neither Embedded Mode nor the REST API include an slf4j static binding, so you no longer need to exclude the slf4j-jdk14 dependency when including `browsermob-core` or `browsermob-rest`.
 

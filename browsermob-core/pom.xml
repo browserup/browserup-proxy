@@ -15,8 +15,6 @@
     <name>BrowserMob Proxy Core Module</name>
 
     <properties>
-        <jackson.version>2.4.4</jackson.version>
-
         <unit-test-jetty.version>7.6.16.v20140903</unit-test-jetty.version>
     </properties>
 
@@ -61,13 +59,16 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
         </dependency>
 
         <dependency>
