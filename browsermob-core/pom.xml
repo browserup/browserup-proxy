@@ -175,10 +175,6 @@
                     <groupId>org.slf4j</groupId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.littleshoot</groupId>
-                    <artifactId>dnsjava</artifactId>
-                </exclusion>
-                <exclusion>
                     <groupId>com.barchart.udt</groupId>
                     <artifactId>barchart-udt-bundle</artifactId>
                 </exclusion>
