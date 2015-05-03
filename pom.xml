@@ -6,8 +6,8 @@
     <modules>
         <module>browsermob-core</module>
         <module>browsermob-rest</module>
-        <module>browsermob-dist</module>
         <module>browsermob-core-littleproxy</module>
+        <module>browsermob-dist</module>
     </modules>
     <name>BrowserMob Proxy Parent Project</name>
     <description>A programmatic HTTP/S designed for performance and functional testing</description>
@@ -255,7 +255,7 @@
             <dependency>
                 <groupId>net.lightbody.bmp</groupId>
                 <artifactId>littleproxy</artifactId>
-                <version>1.1.0-beta-bmp-1-SNAPSHOT</version>
+                <version>1.1.0-beta-bmp-1</version>
             </dependency>
 
             <dependency>

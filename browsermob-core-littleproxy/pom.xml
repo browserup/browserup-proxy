@@ -18,22 +18,6 @@
         <unit-test-jetty.version>7.6.16.v20140903</unit-test-jetty.version>
     </properties>
 
-    <!-- Adding the sonatype snapshot repository temporarily, to grab our custom build of littleproxy. Once a version of littleproxy with
-         all recent changes is released to Central, this can be removed. -->
-    <repositories>
-        <repository>
-            <id>sonatype-nexus-snapshots</id>
-            <name>Sonatype Nexus Snapshots</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
     <build>
         <plugins>
             <plugin>
