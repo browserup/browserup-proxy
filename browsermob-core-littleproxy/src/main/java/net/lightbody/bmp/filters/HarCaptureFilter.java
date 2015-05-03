@@ -36,6 +36,7 @@ import javax.xml.bind.DatatypeConverter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumSet;
@@ -348,14 +349,23 @@ public class HarCaptureFilter extends HttpFiltersAdapter {
         HarRequest request = new HarRequest(httpRequest.getMethod().toString(), httpRequest.getUri(), httpRequest.getProtocolVersion().text());
         harEntry.setRequest(request);
 
-        // capture query parameters
-        QueryStringDecoder queryStringDecoder = new QueryStringDecoder(httpRequest.getUri());
-        for (Map.Entry<String, List<String>> entry : queryStringDecoder.parameters().entrySet()) {
-         for (String value : entry.getValue()) {
-             harEntry.getRequest().getQueryString().add(new HarNameValuePair(entry.getKey(), value));
-         }
+        // capture query parameters. it is safe to assume the query string is UTF-8, since it "should" be in US-ASCII (a subset of UTF-8),
+        // but sometimes does include UTF-8 characters.
+        QueryStringDecoder queryStringDecoder = new QueryStringDecoder(httpRequest.getUri(), StandardCharsets.UTF_8);
+
+        try {
+            for (Map.Entry<String, List<String>> entry : queryStringDecoder.parameters().entrySet()) {
+                for (String value : entry.getValue()) {
+                    harEntry.getRequest().getQueryString().add(new HarNameValuePair(entry.getKey(), value));
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            // QueryStringDecoder will throw an IllegalArgumentException if it cannot interpret a query string. rather than cause the entire request to
+            // fail by propagating the exception, simply skip the query parameter capture.
+            // TODO: add error information to custom fields in the HAR
+            log.info("Could not decode query parameters on URI: " + httpRequest.getUri(), e);
         }
-     }
+    }
 
     protected void captureUserAgent(HttpRequest httpRequest) {
         // save the browser and version if it's not yet been set
