@@ -255,19 +255,25 @@
             <dependency>
                 <groupId>net.lightbody.bmp</groupId>
                 <artifactId>littleproxy</artifactId>
-                <version>1.1.0-beta1-bmp-SNAPSHOT</version>
+                <version>1.1.0-beta-bmp-1-SNAPSHOT</version>
             </dependency>
 
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-netty</artifactId>
-                <version>3.9.7</version>
+                <version>3.9.11</version>
                 <exclusions>
                     <exclusion>
                         <groupId>ch.qos.logback</groupId>
                         <artifactId>logback-classic</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jboss.arquillian.extension</groupId>
+                <artifactId>arquillian-phantom-driver</artifactId>
+                <version>1.1.4.Final</version>
             </dependency>
 
             <dependency>
@@ -292,6 +298,23 @@
                 <groupId>com.fasterxml.jackson.dataformat</groupId>
                 <artifactId>jackson-dataformat-yaml</artifactId>
                 <version>${jackson.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+                <version>4.0.27.Final</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>4.3.4</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpmime</artifactId>
+                <version>4.3.4</version>
             </dependency>
 
         </dependencies>
