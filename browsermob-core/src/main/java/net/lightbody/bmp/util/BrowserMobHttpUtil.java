@@ -214,12 +214,15 @@ public class BrowserMobHttpUtil {
      * @return the host the request is connecting to, or null if no host can be found
      */
     public static String identifyHostFromRequest(HttpRequest httpRequest) {
-        // use the URI from the request first, if it contains a hostname
+        // try to use the URI from the request first, if the URI starts with http:// or https://. checking for http/https avoids confusing
+        // java's URI class when the request is for a malformed URL like '//some-resource'.
         String host = null;
-        try {
-            URI uri = new URI(httpRequest.getUri());
-            host = uri.getHost();
-        } catch (URISyntaxException e) {
+        if (startsWithHttpOrHttps(httpRequest.getUri())) {
+            try {
+                URI uri = new URI(httpRequest.getUri());
+                host = uri.getHost();
+            } catch (URISyntaxException e) {
+            }
         }
 
         // if there was no host in the URI, attempt to grab the host from the HOST header
@@ -236,5 +239,23 @@ public class BrowserMobHttpUtil {
         }
 
         return host;
+    }
+
+    /**
+     * Returns true if the string starts with http:// or https://.
+     *
+     * @param uri string to evaluate
+     * @return true if the string starts with http:// or https://
+     */
+    public static boolean startsWithHttpOrHttps(String uri) {
+        if (uri == null) {
+            return false;
+        }
+
+        if (uri.startsWith("http://") || uri.startsWith("https://")) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
