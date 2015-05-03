@@ -15,6 +15,7 @@ import net.lightbody.bmp.proxy.jetty.util.InetAddrPort;
 import net.lightbody.bmp.proxy.jetty.util.StringMap;
 import net.lightbody.bmp.proxy.jetty.util.URI;
 import net.lightbody.bmp.proxy.util.TrustEverythingSSLTrustManager;
+import net.lightbody.bmp.util.DeleteDirectoryTask;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -37,11 +38,8 @@ import java.net.Socket;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownHostException;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -813,45 +811,4 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
           }
       }
 
-    /**
-     * A Runnable that deletes the specified directory. Useful as a shutdown hook.
-     */
-    private static class DeleteDirectoryTask implements Runnable {
-        private final Path directory;
-
-        public DeleteDirectoryTask(Path directory) {
-            this.directory = directory;
-        }
-
-        @Override
-        public void run() {
-            try {
-                Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
-                    @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                        try {
-                            Files.delete(file);
-                        } catch (IOException e) {
-                            log.warn("Unable to delete file or directory", e);
-                        }
-
-                        return FileVisitResult.CONTINUE;
-                    }
-
-                    @Override
-                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                        try {
-                            Files.delete(dir);
-                        } catch (IOException e) {
-                            log.warn("Unable to delete file or directory", e);
-                        }
-                        
-                        return FileVisitResult.CONTINUE;
-                    }
-                });
-            } catch (IOException e) {
-                log.warn("Unable to delete file or directory", e);
-            }
-        }
-    }
 }
