@@ -11,7 +11,9 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import net.lightbody.bmp.BrowserMobProxy;
 import net.lightbody.bmp.BrowserMobProxyServer;
 import net.lightbody.bmp.filters.RequestFilter;
+import net.lightbody.bmp.filters.RequestFilterAdapter;
 import net.lightbody.bmp.filters.ResponseFilter;
+import net.lightbody.bmp.filters.ResponseFilterAdapter;
 import net.lightbody.bmp.proxy.test.util.MockServerTest;
 import net.lightbody.bmp.proxy.test.util.ProxyServerTest;
 import net.lightbody.bmp.proxy.util.IOUtils;
@@ -373,6 +375,51 @@ public class InterceptorTest extends MockServerTest {
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertThat("Expected URI on originalRequest to match actual URI of original HTTP request", originalRequestUri.get(), endsWith("/originalendpoint"));
+        }
+    }
+
+    @Test
+    public void testMessageContentsNotAvailableWithoutAggregation() throws IOException {
+        mockServer.when(request()
+                        .withMethod("GET")
+                        .withPath("/endpoint"),
+                Times.exactly(1))
+                .respond(response()
+                        .withStatusCode(200)
+                        .withBody("success"));
+
+        proxy = new BrowserMobProxyServer();
+        proxy.start();
+
+        final AtomicBoolean requestContentsNull = new AtomicBoolean(false);
+        final AtomicBoolean responseContentsNull = new AtomicBoolean(false);
+
+        proxy.addFirstHttpFilterFactory(new RequestFilterAdapter.FilterSource(new RequestFilter() {
+            @Override
+            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpRequest originalRequest) {
+                if (contents == null) {
+                    requestContentsNull.set(true);
+                }
+
+                return null;
+            }
+        }, 0));
+
+        proxy.addFirstHttpFilterFactory(new ResponseFilterAdapter.FilterSource(new ResponseFilter() {
+            @Override
+            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpRequest originalRequest) {
+                if (contents == null) {
+                    responseContentsNull.set(true);
+                }
+            }
+        }, 0));
+
+        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+            CloseableHttpResponse response = httpClient.execute(new HttpGet("http://localhost:" + mockServerPort + "/endpoint"));
+
+            assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
+            assertTrue("Expected HttpMessageContents to be null in RequestFilter because HTTP message aggregation is disabled", requestContentsNull.get());
+            assertTrue("Expected HttpMessageContents to be null in ResponseFilter because HTTP message aggregation is disabled", responseContentsNull.get());
         }
     }
 
