@@ -17,6 +17,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import net.lightbody.bmp.BrowserMobProxy;
 import net.lightbody.bmp.BrowserMobProxyServer;
 import net.lightbody.bmp.core.har.Har;
+import net.lightbody.bmp.exception.JavascriptCompilationException;
 import net.lightbody.bmp.exception.ProxyExistsException;
 import net.lightbody.bmp.exception.ProxyPortsExhaustedException;
 import net.lightbody.bmp.filters.RequestFilter;
@@ -55,8 +56,6 @@ import java.util.Map;
 @Service
 public class ProxyResource {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyResource.class);
-
-    private static final JavascriptRequestResponseFilter requestResponseFilter = new JavascriptRequestResponseFilter();
 
     private final ProxyManager proxyManager;
 
@@ -359,11 +358,12 @@ public class ProxyResource {
 
         BrowserMobProxy proxy = (BrowserMobProxy) legacyProxy;
 
+        JavascriptRequestResponseFilter requestResponseFilter = new JavascriptRequestResponseFilter();
+
         String script = getEntityBodyFromRequest(request);
+        requestResponseFilter.setRequestFilterScript(script);
 
         proxy.addRequestFilter(requestResponseFilter);
-
-        requestResponseFilter.setRequestFilterScript(script);
 
         return Reply.saying().ok();
     }
@@ -382,11 +382,12 @@ public class ProxyResource {
 
         BrowserMobProxy proxy = (BrowserMobProxy) legacyProxy;
 
+        JavascriptRequestResponseFilter requestResponseFilter = new JavascriptRequestResponseFilter();
+
         String script = getEntityBodyFromRequest(request);
+        requestResponseFilter.setResponseFilterScript(script);
 
         proxy.addResponseFilter(requestResponseFilter);
-
-        requestResponseFilter.setResponseFilterScript(script);
 
         return Reply.saying().ok();
     }
@@ -722,7 +723,7 @@ public class ProxyResource {
             try {
                 compiledRequestFilterScript = compilable.compile(script);
             } catch (ScriptException e) {
-                throw new RuntimeException("Unable to compile javascript. Script in error: " + script, e);
+                throw new JavascriptCompilationException("Unable to compile javascript. Script in error:\n" + script, e);
             }
         }
 
@@ -731,7 +732,7 @@ public class ProxyResource {
             try {
                 compiledResponseFilterScript = compilable.compile(script);
             } catch (ScriptException e) {
-                throw new RuntimeException("Unable to compile javascript. Script in error: " + script, e);
+                throw new JavascriptCompilationException("Unable to compile javascript. Script in error:\n" + script, e);
             }
         }
 
