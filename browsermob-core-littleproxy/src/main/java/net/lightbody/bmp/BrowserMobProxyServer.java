@@ -21,9 +21,9 @@ import net.lightbody.bmp.filters.LatencyFilter;
 import net.lightbody.bmp.filters.RegisterRequestFilter;
 import net.lightbody.bmp.filters.RequestFilter;
 import net.lightbody.bmp.filters.RequestFilterAdapter;
-import net.lightbody.bmp.filters.RewriteUrlFilter;
 import net.lightbody.bmp.filters.ResponseFilter;
 import net.lightbody.bmp.filters.ResponseFilterAdapter;
+import net.lightbody.bmp.filters.RewriteUrlFilter;
 import net.lightbody.bmp.filters.UnregisterRequestFilter;
 import net.lightbody.bmp.filters.WhitelistFilter;
 import net.lightbody.bmp.proxy.ActivityMonitor;
@@ -42,6 +42,7 @@ import net.lightbody.bmp.proxy.dns.NativeResolver;
 import net.lightbody.bmp.proxy.http.RequestInterceptor;
 import net.lightbody.bmp.proxy.http.ResponseInterceptor;
 import net.lightbody.bmp.proxy.util.BrowserMobProxyUtil;
+import net.lightbody.bmp.ssl.BrowserMobProxyMitmManager;
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponseInterceptor;
 import org.java_bandwidthlimiter.StreamManager;
@@ -53,7 +54,6 @@ import org.littleshoot.proxy.HttpFiltersSource;
 import org.littleshoot.proxy.HttpFiltersSourceAdapter;
 import org.littleshoot.proxy.HttpProxyServer;
 import org.littleshoot.proxy.HttpProxyServerBootstrap;
-import org.littleshoot.proxy.extras.SelfSignedMitmManager;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
 import org.openqa.selenium.Proxy;
 import org.slf4j.Logger;
@@ -329,7 +329,7 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
 
 
         if (!harDisabled) {
-            bootstrap.withManInTheMiddle(new SelfSignedMitmManager());
+            bootstrap.withManInTheMiddle(new BrowserMobProxyMitmManager());
         }
 
         if (readBandwidthLimitBps > 0 || writeBandwidthLimitBps > 0) {
@@ -396,10 +396,14 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     protected void stop(boolean graceful) {
         if (started.get()) {
             if (stopped.compareAndSet(false, true)) {
-                if (graceful) {
-                    proxyServer.stop();
+                if (proxyServer != null) {
+                    if (graceful) {
+                        proxyServer.stop();
+                    } else {
+                        proxyServer.abort();
+                    }
                 } else {
-                    proxyServer.abort();
+                    log.warn("Attempted to stop proxy server, but proxy was never successfully started.");
                 }
             } else {
                 throw new IllegalStateException("Proxy server is already stopped. Cannot re-stop.");
