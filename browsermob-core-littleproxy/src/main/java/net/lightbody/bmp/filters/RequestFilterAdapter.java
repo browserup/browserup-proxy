@@ -17,8 +17,6 @@ import org.littleshoot.proxy.HttpFiltersSourceAdapter;
 public class RequestFilterAdapter extends HttpFiltersAdapter {
     private final RequestFilter requestFilter;
 
-    private HttpRequest httpRequest;
-
     public RequestFilterAdapter(HttpRequest originalRequest, ChannelHandlerContext ctx, RequestFilter requestFilter) {
         super(originalRequest, ctx);
 
@@ -33,15 +31,20 @@ public class RequestFilterAdapter extends HttpFiltersAdapter {
 
     @Override
     public HttpResponse clientToProxyRequest(HttpObject httpObject) {
+        // only filter when the original HttpRequest comes through. the RequestFilterAdapter is not designed to filter
+        // any subsequent HttpContents.
         if (httpObject instanceof HttpRequest) {
-            // technically TODO we don't need to do this...
-            this.httpRequest = (HttpRequest) httpObject;
-        }
+            HttpRequest httpRequest = (HttpRequest) httpObject;
 
-        if (httpObject instanceof FullHttpMessage) {
-            FullHttpMessage httpContent = (FullHttpMessage) httpObject;
+            HttpMessageContents contents;
+            if (httpObject instanceof FullHttpMessage) {
+                FullHttpMessage httpContent = (FullHttpMessage) httpObject;
+                contents = new HttpMessageContents(httpContent);
+            } else {
+                // the HTTP object is not a FullHttpMessage, which means that message contents are not available on this request and cannot be modified.
+                contents = null;
+            }
 
-            HttpMessageContents contents = new HttpMessageContents(httpContent);
             HttpResponse response = requestFilter.filterRequest(httpRequest, contents, originalRequest);
             if (response != null) {
                 return response;
@@ -52,7 +55,8 @@ public class RequestFilterAdapter extends HttpFiltersAdapter {
     }
 
     /**
-     * A {@link HttpFiltersSourceAdapter} for {@link RequestFilterAdapter}s.
+     * A {@link HttpFiltersSourceAdapter} for {@link RequestFilterAdapter}s. By default, this FilterSource enables HTTP message aggregation
+     * and sets a maximum request buffer size of 2 MiB.
      */
     public static class FilterSource extends HttpFiltersSourceAdapter {
         private static final int DEFAULT_MAXIMUM_REQUEST_BUFFER_SIZE = 2097152;
@@ -73,7 +77,10 @@ public class RequestFilterAdapter extends HttpFiltersAdapter {
 
         /**
          * Creates a new filter source that will invoke the specified filter and uses the maximumRequestBufferSizeInBytes as the maximum
-         * buffer size.
+         * buffer size. Set maximumRequestBufferSizeInBytes to 0 to disable aggregation. <b>If message aggregation is disabled,
+         * the {@link HttpMessageContents} will not be available for modification.</b> (<b>Note:</b> HTTP message aggregation will
+         * be enabled if <i>any</i> filter has a maximum request or response buffer size greater than 0. See
+         * {@link org.littleshoot.proxy.HttpFiltersSource#getMaximumRequestBufferSizeInBytes()} for details.)
          *
          * @param filter RequestFilter to invoke
          * @param maximumRequestBufferSizeInBytes maximum buffer size when aggregating Requests for filtering
