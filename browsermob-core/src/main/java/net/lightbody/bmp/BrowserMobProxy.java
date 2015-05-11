@@ -537,4 +537,9 @@ public interface BrowserMobProxy {
      * @param filter filter instance
      */
     void addRequestFilter(RequestFilter filter);
+
+    /**
+     * Cleaning certificates on request
+     */
+    void cleanSslCertificat();
 }
