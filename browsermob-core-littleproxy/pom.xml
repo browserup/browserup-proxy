@@ -210,6 +210,12 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- deflate support; not a transitive dependency of netty out-of-the-box -->
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jzlib</artifactId>
+        </dependency>
+
         <!-- Due to usage in LegacyProxyServer and BrowserMobProxyServer, this dependency needs to be given "provided" scope.
                      It is not used by the BMP LittleProxy implementation itself. -->
         <dependency>
