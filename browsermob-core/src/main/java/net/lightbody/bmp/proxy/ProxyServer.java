@@ -890,8 +890,7 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
         LOG.warn("The legacy ProxyServer implementation does not support addRequestFilter and addResponseFilter. Use addRequestInterceptor/addResponseInterceptor instead.");
     }
 
-    @Override
-    public void cleanSslCertificat() {
+    public void cleanSslCertificates() {
         handler.cleanSslWithCyberVilliansCA();
     }
 

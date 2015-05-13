@@ -1146,11 +1146,6 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         addFirstHttpFilterFactory(new RequestFilterAdapter.FilterSource(filter));
     }
 
-    @Override
-    public void cleanSslCertificat() {
-        // This method is not useful in this context
-    }
-
     /**
      * @deprecated use {@link #setChainedProxy(java.net.InetSocketAddress)} to set an upstream proxy
      */

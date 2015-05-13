@@ -638,7 +638,7 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
 
       public void cleanSslWithCyberVilliansCA(){
           if(deleteDirectoryTask != null) {
-              new Thread(deleteDirectoryTask).start();
+              deleteDirectoryTask.run();
           }
       }
 
