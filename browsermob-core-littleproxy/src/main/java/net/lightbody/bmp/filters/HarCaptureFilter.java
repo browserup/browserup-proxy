@@ -2,6 +2,7 @@ package net.lightbody.bmp.filters;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ImmutableList;
 import com.google.common.net.HostAndPort;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -37,7 +38,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
@@ -459,14 +459,16 @@ public class HarCaptureFilter extends HttpFiltersAdapter {
             Charset charset = BrowserMobHttpUtil.deriveCharsetFromContentTypeHeader(contentType);
 
             QueryStringDecoder queryStringDecoder = new QueryStringDecoder(textContents, charset, false);
-            for (Map.Entry<String, List<String>> entry : queryStringDecoder.parameters().entrySet()) {
-                List<HarPostDataParam> params = new ArrayList<HarPostDataParam>();
-                harEntry.getRequest().getPostData().setParams(params);
 
+            ImmutableList.Builder<HarPostDataParam> paramBuilder = ImmutableList.builder();
+
+            for (Map.Entry<String, List<String>> entry : queryStringDecoder.parameters().entrySet()) {
                 for (String value : entry.getValue()) {
-                    params.add(new HarPostDataParam(entry.getKey(), value));
+                    paramBuilder.add(new HarPostDataParam(entry.getKey(), value));
                 }
             }
+
+            harEntry.getRequest().getPostData().setParams(paramBuilder.build());
         } else {
             //TODO: implement capture of files and multipart form data
 
