@@ -76,6 +76,7 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
       private final boolean proxyInjectionMode;
       private final boolean forceProxyChain;
       private boolean fakeCertsGenerated;
+      private DeleteDirectoryTask deleteDirectoryTask;
 
       // see docs for the lock object on SeleniumServer for information on this and why it is IMPORTANT!
       private Object shutdownLock;
@@ -608,7 +609,8 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
               final File root = tempDir.toFile();
 
               // delete the temp directory when the VM stops or aborts
-              Runtime.getRuntime().addShutdownHook(new Thread(new DeleteDirectoryTask(tempDir)));
+              deleteDirectoryTask = new DeleteDirectoryTask(tempDir);
+              Runtime.getRuntime().addShutdownHook(new Thread(deleteDirectoryTask));
 
               // copy the cybervillains cert files to the temp directory from the classpath
               Path cybervillainsCer = tempDir.resolve("cybervillainsCA.cer");
@@ -631,6 +633,12 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
           } catch (Exception e) {
               log.error("Error occurred wiring CA", e);
               throw new RuntimeException(e);
+          }
+      }
+
+      public void cleanSslWithCyberVilliansCA(){
+          if(deleteDirectoryTask != null) {
+              deleteDirectoryTask.run();
           }
       }
 
