@@ -301,7 +301,6 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         addBrowserMobFilters();
 
         HttpProxyServerBootstrap bootstrap = DefaultHttpProxyServer.bootstrap()
-                .withPort(port)
                 .withFiltersSource(new HttpFiltersSource() {
                     @Override
                     public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext channelHandlerContext) {
