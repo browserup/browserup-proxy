@@ -16,7 +16,6 @@ import net.lightbody.bmp.proxy.BlacklistEntry;
 import net.lightbody.bmp.proxy.RewriteRule;
 import net.lightbody.bmp.proxy.Whitelist;
 import net.lightbody.bmp.proxy.dns.AdvancedHostResolver;
-import net.lightbody.bmp.proxy.dns.HostResolver;
 import net.lightbody.bmp.proxy.jetty.util.MultiMap;
 import net.lightbody.bmp.proxy.jetty.util.UrlEncoded;
 import net.lightbody.bmp.proxy.util.BrowserMobProxyUtil;
@@ -1548,11 +1547,11 @@ public class BrowserMobHttpClient {
         return captureHeaders;
     }
 
-    public HostResolver getResolver() {
+    public AdvancedHostResolver getResolver() {
         return resolverWrapper.getResolver();
     }
 
-    public void setResolver(HostResolver resolver) {
+    public void setResolver(AdvancedHostResolver resolver) {
         resolverWrapper.setResolver(resolver);
     }
 }

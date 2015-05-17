@@ -16,5 +16,5 @@ public interface HostResolver {
      * @param host host to resolve
      * @return resolved InetAddresses, or an empty collection if no addresses were found
      */
-    public Collection<InetAddress> resolve(String host);
+    Collection<InetAddress> resolve(String host);
 }

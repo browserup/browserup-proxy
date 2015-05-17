@@ -1,6 +1,5 @@
 package net.lightbody.bmp.proxy.dns;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 import java.net.InetAddress;
@@ -9,49 +8,38 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 
 /**
- * A HostResolver that delegates to the specified {@link net.lightbody.bmp.proxy.dns.HostResolver} instances. This class will use the
- * first resolved InetAddress, invoking the specified HostResolvers in order. This class can be used instead
- * of {@link net.lightbody.bmp.proxy.dns.ChainedHostResolver} if clients need fine-grained control over DNS resolution.
+ * A LittleProxy HostResolver that delegates to the specified {@link net.lightbody.bmp.proxy.dns.AdvancedHostResolver} instance. This class
+ * serves as a bridge between {@link AdvancedHostResolver} and {@link org.littleshoot.proxy.HostResolver}.
 */
 public class DelegatingHostResolver implements org.littleshoot.proxy.HostResolver {
-    private volatile Collection<? extends HostResolver> resolvers;
+    private volatile AdvancedHostResolver resolver;
 
     /**
-     * Creates a new resolver that will delegate to the specified resolvers in the order determined by the Collection's iterator. This class
-     * does not make a defensive copy of the Collection, so any changes to the Collection will be reflected in subsequent calls to {@link #resolve(String, int)}.
+     * Creates a new resolver that will delegate to the specified resolver.
      *
-     * @param resolvers HostResolvers to delegate to
+     * @param resolver HostResolver to delegate to
      */
-    public DelegatingHostResolver(Collection<? extends HostResolver> resolvers) {
-        this.resolvers = resolvers;
+    public DelegatingHostResolver(AdvancedHostResolver resolver) {
+        this.resolver = resolver;
     }
 
-    /**
-     * Creates a new delegating resolver that does not actually delegate to any resolver ({@link #resolve(String, int)} will always throw UnknownHostException).
-     */
-    public DelegatingHostResolver() {
-        this(ImmutableList.<HostResolver>of());
+    public AdvancedHostResolver getResolver() {
+        return resolver;
     }
 
-    public Collection<? extends HostResolver> getResolvers() {
-        return resolvers;
-    }
-
-    public void setResolvers(Collection<? extends HostResolver> resolvers) {
-        this.resolvers = resolvers;
+    public void setResolver(AdvancedHostResolver resolver) {
+        this.resolver = resolver;
     }
 
     @Override
     public InetSocketAddress resolve(String host, int port) throws UnknownHostException {
-        for (HostResolver resolver : resolvers) {
-            Collection<InetAddress> resolvedAddresses = resolver.resolve(host);
-            if (!resolvedAddresses.isEmpty()) {
-                InetAddress resolvedAddress = Iterables.get(resolvedAddresses, 0);
-                return new InetSocketAddress(resolvedAddress, port);
-            }
+        Collection<InetAddress> resolvedAddresses = resolver.resolve(host);
+        if (!resolvedAddresses.isEmpty()) {
+            InetAddress resolvedAddress = Iterables.get(resolvedAddresses, 0);
+            return new InetSocketAddress(resolvedAddress, port);
         }
 
-        // no address found by any resolver
+        // no address found by the resolver
         throw new UnknownHostException(host);
     }
 }

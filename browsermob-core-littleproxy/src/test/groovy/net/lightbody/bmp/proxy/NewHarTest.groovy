@@ -8,7 +8,8 @@ import net.lightbody.bmp.core.har.HarContent
 import net.lightbody.bmp.core.har.HarCookie
 import net.lightbody.bmp.core.har.HarEntry
 import net.lightbody.bmp.core.har.HarNameValuePair
-import net.lightbody.bmp.proxy.dns.HostResolver
+import net.lightbody.bmp.proxy.dns.AdvancedHostResolver
+import net.lightbody.bmp.proxy.dns.BasicHostResolver
 import net.lightbody.bmp.proxy.test.util.MockServerTest
 import net.lightbody.bmp.proxy.test.util.ProxyServerTest
 import net.lightbody.bmp.proxy.util.IOUtils
@@ -53,7 +54,7 @@ class NewHarTest extends MockServerTest {
     @Test
     void testDnsTimingPopulated() {
         // mock up a resolver with a DNS resolution delay
-        HostResolver mockResolver = mock(HostResolver.class);
+        AdvancedHostResolver mockResolver = mock(AdvancedHostResolver.class);
         when(mockResolver.resolve("localhost")).then(new Answer<Collection<InetAddress>>() {
             @Override
             public Collection<InetAddress> answer(InvocationOnMock invocationOnMock) throws Throwable {
