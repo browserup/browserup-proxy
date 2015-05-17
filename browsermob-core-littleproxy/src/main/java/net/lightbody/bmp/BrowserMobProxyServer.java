@@ -17,6 +17,8 @@ import net.lightbody.bmp.filters.AddHeadersFilter;
 import net.lightbody.bmp.filters.BlacklistFilter;
 import net.lightbody.bmp.filters.BrowserMobHttpFilterChain;
 import net.lightbody.bmp.filters.HarCaptureFilter;
+import net.lightbody.bmp.filters.HttpsHostCaptureFilter;
+import net.lightbody.bmp.filters.HttpsOriginalHostCaptureFilter;
 import net.lightbody.bmp.filters.LatencyFilter;
 import net.lightbody.bmp.filters.RegisterRequestFilter;
 import net.lightbody.bmp.filters.RequestFilter;
@@ -301,7 +303,6 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         addBrowserMobFilters();
 
         HttpProxyServerBootstrap bootstrap = DefaultHttpProxyServer.bootstrap()
-                .withPort(port)
                 .withFiltersSource(new HttpFiltersSource() {
                     @Override
                     public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext channelHandlerContext) {
@@ -1312,6 +1313,13 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
 
         addHttpFilterFactory(new HttpFiltersSourceAdapter() {
             @Override
+            public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
+                return new HttpsOriginalHostCaptureFilter(originalRequest, ctx);
+            }
+        });
+
+        addHttpFilterFactory(new HttpFiltersSourceAdapter() {
+            @Override
             public HttpFilters filterRequest(HttpRequest originalRequest) {
                 return new BlacklistFilter(originalRequest, getBlacklist());
             }
@@ -1329,6 +1337,13 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
             @Override
             public HttpFilters filterRequest(HttpRequest originalRequest) {
                 return new RewriteUrlFilter(originalRequest, rewriteRules);
+            }
+        });
+
+        addHttpFilterFactory(new HttpFiltersSourceAdapter() {
+            @Override
+            public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
+                return new HttpsHostCaptureFilter(originalRequest, ctx);
             }
         });
 

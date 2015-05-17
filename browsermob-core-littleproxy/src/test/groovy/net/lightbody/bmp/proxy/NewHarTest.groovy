@@ -80,7 +80,7 @@ class NewHarTest extends MockServerTest {
         proxy.newHar();
 
         ProxyServerTest.getNewHttpClient(proxyPort).withCloseable {
-            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:" + mockServerPort + "/testDnsTimingPopulated")).getEntity().getContent());
+            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testDnsTimingPopulated")).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
 
@@ -114,7 +114,7 @@ class NewHarTest extends MockServerTest {
         proxy.newHar()
 
         ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:" + mockServerPort + "/testCaptureResponseCookiesInHar")).getEntity().getContent());
+            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testCaptureResponseCookiesInHar")).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
 
@@ -147,7 +147,7 @@ class NewHarTest extends MockServerTest {
         proxy.newHar()
 
         ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:" + mockServerPort + "/testCaptureResponseHeaderInHar")).getEntity().getContent());
+            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testCaptureResponseHeaderInHar")).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
 
@@ -182,7 +182,7 @@ class NewHarTest extends MockServerTest {
         proxy.newHar()
 
         ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:" + mockServerPort + "/testCaptureResponseContentInHar")).getEntity().getContent());
+            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testCaptureResponseContentInHar")).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
 
@@ -217,7 +217,7 @@ class NewHarTest extends MockServerTest {
         // putting tests in code blocks to avoid variable name collisions
         regularHarCanCapture: {
             ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-                String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:" + mockServerPort + "/testEndHar")).getEntity().getContent());
+                String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testEndHar")).getEntity().getContent());
                 assertEquals("Did not receive expected response from mock server", "success", responseBody);
             };
 
@@ -242,7 +242,7 @@ class NewHarTest extends MockServerTest {
 
         harStillEmptyAfterRequest: {
             ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-                String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:" + mockServerPort + "/testEndHar")).getEntity().getContent());
+                String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testEndHar")).getEntity().getContent());
                 assertEquals("Did not receive expected response from mock server", "success", responseBody);
             };
 
@@ -260,7 +260,7 @@ class NewHarTest extends MockServerTest {
 
         newHarCanCapture: {
             ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-                String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:" + mockServerPort + "/testEndHar")).getEntity().getContent());
+                String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testEndHar")).getEntity().getContent());
                 assertEquals("Did not receive expected response from mock server", "success", responseBody);
             };
 
@@ -294,7 +294,7 @@ class NewHarTest extends MockServerTest {
         proxy.newHar("first-page")
 
         ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:" + mockServerPort + "/testEndHar")).getEntity().getContent());
+            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testEndHar")).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
 
@@ -314,7 +314,7 @@ class NewHarTest extends MockServerTest {
         Har harWithFirstPageOnly = proxy.newPage("second-page")
 
         ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:" + mockServerPort + "/testEndHar")).getEntity().getContent());
+            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testEndHar")).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
 
@@ -326,6 +326,151 @@ class NewHarTest extends MockServerTest {
 
         assertEquals("Expected HAR returned from newPage() not to contain second page", 1, harWithFirstPageOnly.log.pages.size())
         assertEquals("Expected id of HAR page to be 'first-page'", "first-page", harWithFirstPageOnly.log.pages.first().id)
+    }
+
+    @Test
+    void testCaptureHttpRequestUrlInHar() {
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/httprequesturlcaptured"),
+                Times.once())
+                .respond(response()
+                .withStatusCode(200)
+                .withBody("success"))
+
+        BrowserMobProxy proxy = new BrowserMobProxyServer();
+        proxy.start()
+
+        proxy.newHar()
+
+        String requestUrl = "http://localhost:${mockServerPort}/httprequesturlcaptured"
+
+        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet(requestUrl)).getEntity().getContent());
+            assertEquals("Did not receive expected response from mock server", "success", responseBody);
+        };
+
+        Thread.sleep(500)
+        Har har = proxy.getHar()
+
+        assertThat("Expected to find entries in the HAR", har.getLog().getEntries(), not(empty()))
+
+        String capturedUrl = har.log.entries[0].request.url
+        assertEquals("URL captured in HAR did not match request URL", requestUrl, capturedUrl)
+    }
+
+    @Test
+    void testCaptureHttpRequestUrlWithQueryParamInHar() {
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/httprequesturlcaptured")
+                .withQueryStringParameter("param1", "value1"),
+                Times.once())
+                .respond(response()
+                .withStatusCode(200)
+                .withBody("success"))
+
+        BrowserMobProxy proxy = new BrowserMobProxyServer();
+        proxy.start()
+
+        proxy.newHar()
+
+        String requestUrl = "http://localhost:${mockServerPort}/httprequesturlcaptured?param1=value1"
+
+        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet(requestUrl)).getEntity().getContent());
+            assertEquals("Did not receive expected response from mock server", "success", responseBody);
+        };
+
+        Thread.sleep(500)
+        Har har = proxy.getHar()
+
+        assertThat("Expected to find entries in the HAR", har.getLog().getEntries(), not(empty()))
+
+        String capturedUrl = har.log.entries[0].request.url
+        assertEquals("URL captured in HAR did not match request URL", requestUrl, capturedUrl)
+
+        assertThat("Expected to find query parameters in the HAR", har.log.entries[0].request.queryString, not(empty()));
+
+        assertEquals("Expected first query parameter name to be param1", "param1", har.log.entries[0].request.queryString[0].name)
+        assertEquals("Expected first query parameter value to be value1", "value1", har.log.entries[0].request.queryString[0].value)
+    }
+
+    @Test
+    void testCaptureHttpsRequestUrlInHar() {
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/httpsrequesturlcaptured")
+                .withQueryStringParameter("param1", "value1"),
+                Times.once())
+                .respond(response()
+                .withStatusCode(200)
+                .withBody("success"))
+
+        BrowserMobProxy proxy = new BrowserMobProxyServer();
+        proxy.start()
+
+        proxy.newHar()
+
+        // use HTTPS to force a CONNECT. subsequent requests through the tunnel will only contain te resource path, not the full hostname.
+        String requestUrl = "https://localhost:${mockServerPort}/httpsrequesturlcaptured?param1=value1"
+
+        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet(requestUrl)).getEntity().getContent());
+            assertEquals("Did not receive expected response from mock server", "success", responseBody);
+        };
+
+        Thread.sleep(500)
+        Har har = proxy.getHar()
+
+        assertThat("Expected to find entries in the HAR", har.getLog().getEntries(), not(empty()))
+
+        String capturedUrl = har.log.entries[0].request.url
+        assertEquals("URL captured in HAR did not match request URL", requestUrl, capturedUrl)
+
+        assertThat("Expected to find query parameters in the HAR", har.log.entries[0].request.queryString, not(empty()));
+
+        assertEquals("Expected first query parameter name to be param1", "param1", har.log.entries[0].request.queryString[0].name)
+        assertEquals("Expected first query parameter value to be value1", "value1", har.log.entries[0].request.queryString[0].value)
+    }
+
+    @Test
+    void testCaptureHttpsRewrittenUrlInHar() {
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/httpsrewrittenurlcaptured")
+                .withQueryStringParameter("param1", "value1"),
+                Times.once())
+                .respond(response()
+                .withStatusCode(200)
+                .withBody("success"))
+
+        BrowserMobProxy proxy = new BrowserMobProxyServer();
+        proxy.rewriteUrl("www.rewrittenurl.com:443", "localhost:${mockServerPort}")
+        proxy.start()
+
+        proxy.newHar()
+
+        String requestUrl = "https://www.rewrittenurl.com/httpsrewrittenurlcaptured?param1=value1"
+        String rewrittenUrl = "https://localhost:${mockServerPort}/httpsrewrittenurlcaptured?param1=value1"
+
+        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet(requestUrl)).getEntity().getContent());
+            assertEquals("Did not receive expected response from mock server", "success", responseBody);
+        };
+
+        Thread.sleep(500)
+        Har har = proxy.getHar()
+
+        assertThat("Expected to find entries in the HAR", har.getLog().getEntries(), not(empty()))
+
+        String capturedUrl = har.log.entries[0].request.url
+        assertEquals("URL captured in HAR did not match request URL", rewrittenUrl, capturedUrl)
+
+        assertThat("Expected to find query parameters in the HAR", har.log.entries[0].request.queryString, not(empty()));
+
+        assertEquals("Expected first query parameter name to be param1", "param1", har.log.entries[0].request.queryString[0].name)
+        assertEquals("Expected first query parameter value to be value1", "value1", har.log.entries[0].request.queryString[0].value)
     }
 
     //TODO: Add Request Capture Type tests
