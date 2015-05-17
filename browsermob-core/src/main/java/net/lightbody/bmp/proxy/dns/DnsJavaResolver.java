@@ -35,7 +35,7 @@ public class DnsJavaResolver extends AbstractHostNameRemapper implements Advance
     /**
      * Maximum number of times to retry a DNS lookup due to a failure to connect to the DNS server.
      */
-    private final int DNS_NETWORK_FAILURE_RETRY_COUNT = 5;
+    private static final int DNS_NETWORK_FAILURE_RETRY_COUNT = 5;
 
     @Override
     public void clearDNSCache() {
@@ -62,13 +62,15 @@ public class DnsJavaResolver extends AbstractHostNameRemapper implements Advance
             return Collections.singletonList(InetAddresses.forString(remappedHost));
         }
 
-        List<InetAddress> addresses = new ArrayList<InetAddress>();
+        // retrieve IPv4 addresses, then retrieve IPv6 addresses only if no IPv4 addresses are found. the current implementation always uses the
+        // first returned address, so there is no need to look for IPv6 addresses if an IPv4 address is found.
+        Collection<InetAddress> ipv4addresses = resolveHostByType(remappedHost, Type.A);
 
-        // retrieve both IPv4 and IPv6 addresses
-        addresses.addAll(resolveHostByType(remappedHost, Type.A));
-        addresses.addAll(resolveHostByType(remappedHost, Type.AAAA));
-
-        return addresses;
+        if (!ipv4addresses.isEmpty()) {
+            return ipv4addresses;
+        } else {
+            return resolveHostByType(remappedHost, Type.AAAA);
+        }
     }
 
     /**
