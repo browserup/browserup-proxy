@@ -213,7 +213,7 @@ public class BrowserMobHttpUtil {
      * @param httpRequest HTTP request to parse the host from
      * @return the host the request is connecting to, or null if no host can be found
      */
-    public static String identifyHostFromRequest(HttpRequest httpRequest) {
+    public static String getHostFromRequest(HttpRequest httpRequest) {
         // try to use the URI from the request first, if the URI starts with http:// or https://. checking for http/https avoids confusing
         // java's URI class when the request is for a malformed URL like '//some-resource'.
         String host = null;
@@ -225,20 +225,59 @@ public class BrowserMobHttpUtil {
             }
         }
 
-        // if there was no host in the URI, attempt to grab the host from the HOST header
+        // if there was no host in the URI, attempt to grab the host from the Host header
         if (host == null || host.isEmpty()) {
-            // this header parsing logic is taken from ClientToProxyConnection#identifyHostAndPort.
-            List<String> hosts = httpRequest.headers().getAll(
-                    HttpHeaders.Names.HOST);
-            if (hosts != null && !hosts.isEmpty()) {
-                String hostAndPort = hosts.get(0);
-                HostAndPort parsedHostAndPort = HostAndPort.fromString(hostAndPort);
-
-                host = parsedHostAndPort.getHostText();
-            }
+            host = parseHostHeader(httpRequest, false);
         }
 
         return host;
+    }
+
+    /**
+     * Gets the host and port from the specified request. Returns the host and port from the request URI if available,
+     * otherwise retrieves the host and port from the Host header.
+     *
+     * @param httpRequest HTTP request
+     * @return host and port of the request
+     */
+    public static String getHostAndPortFromRequest(HttpRequest httpRequest) {
+        if (startsWithHttpOrHttps(httpRequest.getUri())) {
+            try {
+                URI uri = new URI(httpRequest.getUri());
+                if (uri.getPort() == -1) {
+                    return uri.getHost();
+                } else {
+                    return HostAndPort.fromParts(uri.getHost(), uri.getPort()).toString();
+                }
+            } catch (URISyntaxException e) {
+            }
+        }
+
+        return parseHostHeader(httpRequest, true);
+    }
+
+    /**
+     * Retrieves the path + query string from the specified request. The returned path will not include
+     * the scheme, host, or port.
+     *
+     * @param httpRequest HTTP request
+     * @return the path + query string from the HTTP request
+     */
+    public static String getPathFromRequest(HttpRequest httpRequest) {
+        // if this request's URI contains a full URI (including scheme, host, etc.), strip away the non-path components
+        if (startsWithHttpOrHttps(httpRequest.getUri())) {
+            try {
+                URI uri = new URI(httpRequest.getUri());
+                if (uri.getQuery() != null) {
+                    return uri.getPath() + '?' + uri.getQuery();
+                } else {
+                    return uri.getPath();
+                }
+            } catch (URISyntaxException e) {
+            }
+        }
+
+        return httpRequest.getUri();
     }
 
     /**
@@ -256,6 +295,30 @@ public class BrowserMobHttpUtil {
             return true;
         } else {
             return false;
+        }
+    }
+
+    /**
+     * Retrieves the host and, optionally, the port from the specified request's Host header.
+     *
+     * @param httpRequest HTTP request
+     * @param includePort when true, include the port
+     * @return the host and, optionally, the port specified in the request's Host header
+     */
+    private static String parseHostHeader(HttpRequest httpRequest, boolean includePort) {
+        // this header parsing logic is adapted from ClientToProxyConnection#identifyHostAndPort.
+        List<String> hosts = httpRequest.headers().getAll(HttpHeaders.Names.HOST);
+        if (!hosts.isEmpty()) {
+            String hostAndPort = hosts.get(0);
+
+            if (includePort) {
+                return hostAndPort;
+            } else {
+                HostAndPort parsedHostAndPort = HostAndPort.fromString(hostAndPort);
+                return parsedHostAndPort.getHostText();
+            }
+        } else {
+            return null;
         }
     }
 }

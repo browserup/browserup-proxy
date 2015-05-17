@@ -31,6 +31,7 @@ public class RewriteUrlFilter extends HttpFiltersAdapter {
 
     @Override
     public HttpResponse clientToProxyRequest(HttpObject httpObject) {
+        //TODO: if the host is rewritten, update the Host header
         if (httpObject instanceof HttpRequest) {
             HttpRequest httpRequest = (HttpRequest) httpObject;
 
