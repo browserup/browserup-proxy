@@ -2,7 +2,6 @@ package net.lightbody.bmp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.MapMaker;
 import com.google.common.net.HostAndPort;
 import io.netty.channel.ChannelHandlerContext;
@@ -36,11 +35,7 @@ import net.lightbody.bmp.proxy.RewriteRule;
 import net.lightbody.bmp.proxy.Whitelist;
 import net.lightbody.bmp.proxy.auth.AuthType;
 import net.lightbody.bmp.proxy.dns.AdvancedHostResolver;
-import net.lightbody.bmp.proxy.dns.ChainedHostResolver;
 import net.lightbody.bmp.proxy.dns.DelegatingHostResolver;
-import net.lightbody.bmp.proxy.dns.DnsJavaResolver;
-import net.lightbody.bmp.proxy.dns.HostResolver;
-import net.lightbody.bmp.proxy.dns.NativeResolver;
 import net.lightbody.bmp.proxy.http.RequestInterceptor;
 import net.lightbody.bmp.proxy.http.ResponseInterceptor;
 import net.lightbody.bmp.proxy.util.BrowserMobProxyUtil;
@@ -219,13 +214,13 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
 
     /**
      * Resolver to use when resolving hostnames to IP addresses. This is a bridge between {@link org.littleshoot.proxy.HostResolver} and
-     * {@link net.lightbody.bmp.proxy.dns.HostResolver}. It allows the resolvers to be changed on-the-fly without re-bootstrapping the
-     * littleproxy server. The default resolver is a {@link net.lightbody.bmp.proxy.dns.ChainedHostResolver} that uses dnsjava, then native,
-     * but this can be changed using {@link #setHostNameResolver(net.lightbody.bmp.proxy.dns.HostResolver)}.
+     * {@link net.lightbody.bmp.proxy.dns.AdvancedHostResolver}. It allows the resolvers to be changed on-the-fly without re-bootstrapping the
+     * littleproxy server. The default resolver (native JDK resolver) can be changed using {@link #setHostNameResolver(net.lightbody.bmp.proxy.dns.AdvancedHostResolver)} and
+     * supplying one of the pre-defined resolvers in {@link ClientUtil}, such as {@link ClientUtil#createDnsJavaWithNativeFallbackResolver()}
+     * or {@link ClientUtil#createDnsJavaResolver()}. You can also build your own resolver, or use {@link net.lightbody.bmp.proxy.dns.ChainedHostResolver}
+     * to chain together multiple DNS resolvers.
      */
-    private final DelegatingHostResolver delegatingResolver = new DelegatingHostResolver(ImmutableList.of(
-            new ChainedHostResolver(ImmutableList.of(new DnsJavaResolver(), new NativeResolver()))
-    ));
+    private final DelegatingHostResolver delegatingResolver = new DelegatingHostResolver(ClientUtil.createNativeCacheManipulatingResolver());
 
     private final ActivityMonitor activityMonitor = new ActivityMonitor();
 
@@ -646,12 +641,8 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     @Override
     @Deprecated
     public void remapHost(String source, String target) {
-        for (HostResolver resolver : delegatingResolver.getResolvers()) {
-            if (resolver instanceof AdvancedHostResolver) {
-                AdvancedHostResolver advancedResolver = (AdvancedHostResolver) resolver;
-                advancedResolver.remapHost(source, target);
-            }
-        }
+        AdvancedHostResolver advancedResolver = delegatingResolver.getResolver();
+        advancedResolver.remapHost(source, target);
     }
 
     /**
@@ -1042,17 +1033,13 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     }
 
     @Override
-    public void setHostNameResolver(HostResolver resolver) {
-        delegatingResolver.setResolvers(ImmutableList.of(resolver));
+    public void setHostNameResolver(AdvancedHostResolver resolver) {
+        delegatingResolver.setResolver(resolver);
     }
 
     @Override
-    public HostResolver getHostNameResolver() {
-        if (delegatingResolver.getResolvers().isEmpty()) {
-            return null;
-        } else {
-            return Iterables.get(delegatingResolver.getResolvers(), 0);
-        }
+    public AdvancedHostResolver getHostNameResolver() {
+        return delegatingResolver.getResolver();
     }
 
     /**
@@ -1062,12 +1049,8 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     @Override
     @Deprecated
     public void clearDNSCache() {
-        for (HostResolver resolver : delegatingResolver.getResolvers()) {
-            if (resolver instanceof AdvancedHostResolver) {
-                AdvancedHostResolver advancedResolver = (AdvancedHostResolver) resolver;
-                advancedResolver.clearDNSCache();
-            }
-        }
+        AdvancedHostResolver resolver = delegatingResolver.getResolver();
+        resolver.clearDNSCache();
     }
 
     /**
@@ -1078,13 +1061,9 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     @Override
     @Deprecated
     public void setDNSCacheTimeout(int timeout) {
-        for (HostResolver resolver : delegatingResolver.getResolvers()) {
-            if (resolver instanceof AdvancedHostResolver) {
-                AdvancedHostResolver advancedResolver = (AdvancedHostResolver) resolver;
-                advancedResolver.setPositiveDNSCacheTimeout(timeout, TimeUnit.SECONDS);
-                advancedResolver.setNegativeDNSCacheTimeout(timeout, TimeUnit.SECONDS);
-            }
-        }
+        AdvancedHostResolver resolver = delegatingResolver.getResolver();
+        resolver.setPositiveDNSCacheTimeout(timeout, TimeUnit.SECONDS);
+        resolver.setNegativeDNSCacheTimeout(timeout, TimeUnit.SECONDS);
     }
 
     /**

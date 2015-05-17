@@ -1,6 +1,6 @@
 package net.lightbody.bmp.proxy.http;
 
-import net.lightbody.bmp.proxy.dns.HostResolver;
+import net.lightbody.bmp.proxy.dns.AdvancedHostResolver;
 import org.apache.http.conn.DnsResolver;
 
 import java.net.InetAddress;
@@ -8,22 +8,22 @@ import java.net.UnknownHostException;
 
 /**
  * An adapter that allows the legacy {@link net.lightbody.bmp.proxy.http.BrowserMobHttpClient} to use the new
- * {@link net.lightbody.bmp.proxy.dns.HostResolver} implementations. In addition to implementing the
+ * {@link net.lightbody.bmp.proxy.dns.AdvancedHostResolver} implementations. In addition to implementing the
  * {@link org.apache.http.conn.DnsResolver} interface that BrowserMobHttpClient needs, this adapter also populates timing and address
  * info in the RequestInfo class.
  */
 public class LegacyHostResolverAdapter implements DnsResolver {
-    private volatile HostResolver resolver;
+    private volatile AdvancedHostResolver resolver;
 
-    public LegacyHostResolverAdapter(HostResolver resolver) {
+    public LegacyHostResolverAdapter(AdvancedHostResolver resolver) {
         this.resolver = resolver;
     }
 
-    public void setResolver(HostResolver resolver) {
+    public void setResolver(AdvancedHostResolver resolver) {
         this.resolver = resolver;
     }
 
-    public HostResolver getResolver() {
+    public AdvancedHostResolver getResolver() {
         return resolver;
     }
 

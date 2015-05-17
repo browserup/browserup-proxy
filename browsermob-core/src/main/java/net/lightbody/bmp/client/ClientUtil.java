@@ -19,7 +19,7 @@ import java.net.UnknownHostException;
 public class ClientUtil {
     /**
      * Creates a {@link net.lightbody.bmp.proxy.dns.NativeCacheManipulatingResolver} instance that can be used when
-     * calling {@link net.lightbody.bmp.BrowserMobProxy#setHostNameResolver(net.lightbody.bmp.proxy.dns.HostResolver)}.
+     * calling {@link net.lightbody.bmp.BrowserMobProxy#setHostNameResolver(net.lightbody.bmp.proxy.dns.AdvancedHostResolver)}.
      *
      * @return a new NativeCacheManipulatingResolver
      */
@@ -29,32 +29,32 @@ public class ClientUtil {
 
     /**
      * Creates a {@link net.lightbody.bmp.proxy.dns.NativeResolver} instance that <b>does not support cache manipulation</b> that can be used when
-     * calling {@link net.lightbody.bmp.BrowserMobProxy#setHostNameResolver(net.lightbody.bmp.proxy.dns.HostResolver)}.
+     * calling {@link net.lightbody.bmp.BrowserMobProxy#setHostNameResolver(net.lightbody.bmp.proxy.dns.AdvancedHostResolver)}.
      *
      * @return a new NativeResolver
      */
-    public static final AdvancedHostResolver createNativeResolver() {
+    public static AdvancedHostResolver createNativeResolver() {
         return new NativeResolver();
     }
 
     /**
      * Creates a {@link net.lightbody.bmp.proxy.dns.DnsJavaResolver} instance that can be used when
-     * calling {@link net.lightbody.bmp.BrowserMobProxy#setHostNameResolver(net.lightbody.bmp.proxy.dns.HostResolver)}.
+     * calling {@link net.lightbody.bmp.BrowserMobProxy#setHostNameResolver(net.lightbody.bmp.proxy.dns.AdvancedHostResolver)}.
      *
      * @return a new DnsJavaResolver
      */
-    public static final AdvancedHostResolver createDnsJavaResolver() {
+    public static AdvancedHostResolver createDnsJavaResolver() {
         return new DnsJavaResolver();
     }
 
     /**
      * Creates a {@link net.lightbody.bmp.proxy.dns.ChainedHostResolver} instance that first attempts to resolve a hostname using a
      * {@link net.lightbody.bmp.proxy.dns.DnsJavaResolver}, then uses {@link net.lightbody.bmp.proxy.dns.NativeCacheManipulatingResolver}.
-     * Can be used when calling {@link net.lightbody.bmp.BrowserMobProxy#setHostNameResolver(net.lightbody.bmp.proxy.dns.HostResolver)}.
+     * Can be used when calling {@link net.lightbody.bmp.BrowserMobProxy#setHostNameResolver(net.lightbody.bmp.proxy.dns.AdvancedHostResolver)}.
      *
      * @return a new ChainedHostResolver that resolves addresses first using a DnsJavaResolver, then using a NativeCacheManipulatingResolver
      */
-    public static final AdvancedHostResolver createDnsJavaWithNativeFallbackResolver() {
+    public static AdvancedHostResolver createDnsJavaWithNativeFallbackResolver() {
         return new ChainedHostResolver(ImmutableList.of(new DnsJavaResolver(), new NativeCacheManipulatingResolver()));
     }
 

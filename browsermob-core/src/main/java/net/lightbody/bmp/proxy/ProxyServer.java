@@ -16,7 +16,6 @@ import net.lightbody.bmp.filters.RequestFilter;
 import net.lightbody.bmp.filters.ResponseFilter;
 import net.lightbody.bmp.proxy.auth.AuthType;
 import net.lightbody.bmp.proxy.dns.AdvancedHostResolver;
-import net.lightbody.bmp.proxy.dns.HostResolver;
 import net.lightbody.bmp.proxy.http.BrowserMobHttpClient;
 import net.lightbody.bmp.proxy.http.RequestInterceptor;
 import net.lightbody.bmp.proxy.http.ResponseInterceptor;
@@ -763,12 +762,12 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
     }
 
     @Override
-    public void setHostNameResolver(HostResolver resolver) {
+    public void setHostNameResolver(AdvancedHostResolver resolver) {
         client.setResolver(resolver);
     }
 
     @Override
-    public HostResolver getHostNameResolver() {
+    public AdvancedHostResolver getHostNameResolver() {
         return client.getResolver();
     }
 
