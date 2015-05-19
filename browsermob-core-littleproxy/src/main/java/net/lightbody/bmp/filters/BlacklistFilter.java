@@ -35,7 +35,7 @@ public class BlacklistFilter extends HttpFiltersAdapter {
 
             for (BlacklistEntry entry : blacklistedUrls) {
                 if (entry.matches(httpRequest.getUri(), httpRequest.getMethod().name())) {
-                    HttpResponseStatus status = HttpResponseStatus.valueOf(entry.getResponseCode());
+                    HttpResponseStatus status = HttpResponseStatus.valueOf(entry.getStatusCode());
                     HttpResponse resp = new DefaultHttpResponse(httpRequest.getProtocolVersion(), status);
 
                     return resp;
