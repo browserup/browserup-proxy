@@ -1261,13 +1261,7 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         return filterFactories;
     }
 
-    /**
-     * Completely disables MITM for this proxy server. The proxy will no longer intercept HTTPS requests, but they will
-     * still be proxied. This option must be set before the proxy is started; otherwise an IllegalStateException will be thrown.
-     *
-     * @param mitmDisabled when true, MITM capture will be disabled
-     * @throws java.lang.IllegalStateException if the proxy is already started
-     */
+    @Override
     public void setMitmDisabled(boolean mitmDisabled) throws IllegalStateException {
         if (isStarted()) {
             throw new IllegalStateException("Cannot disable MITM after the proxy has been started");
