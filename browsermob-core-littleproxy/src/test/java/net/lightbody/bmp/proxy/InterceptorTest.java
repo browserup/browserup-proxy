@@ -190,7 +190,7 @@ public class InterceptorTest extends MockServerTest {
     }
 
     @Test
-    public void testRequestFilterCanModifyRequestBody() throws IOException {
+    public void testRequestFilterCanModifyHttpRequestBody() throws IOException {
         final String originalText = "original body";
         final String newText = "modified body";
 
@@ -221,6 +221,47 @@ public class InterceptorTest extends MockServerTest {
 
         try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
             HttpPut request = new HttpPut("http://localhost:" + mockServerPort + "/modifyrequest");
+            request.setEntity(new StringEntity(originalText));
+            CloseableHttpResponse response = httpClient.execute(request);
+            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
+
+            assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
+            assertEquals("Did not receive expected response from mock server", "success", responseBody);
+        }
+    }
+
+    @Test
+    public void testRequestFilterCanModifyHttpsRequestBody() throws IOException {
+        final String originalText = "original body";
+        final String newText = "modified body";
+
+        mockServer.when(request()
+                        .withMethod("PUT")
+                        .withPath("/modifyrequest")
+                        .withBody(newText),
+                Times.exactly(1))
+                .respond(response()
+                        .withStatusCode(200)
+                        .withBody("success"));
+
+        proxy = new BrowserMobProxyServer();
+        proxy.start();
+
+        proxy.addRequestFilter(new RequestFilter() {
+            @Override
+            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpRequest originalRequest) {
+                if (contents.isText()) {
+                    if (contents.getTextContents().equals(originalText)) {
+                        contents.setTextContents(newText);
+                    }
+                }
+
+                return null;
+            }
+        });
+
+        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+            HttpPut request = new HttpPut("https://localhost:" + mockServerPort + "/modifyrequest");
             request.setEntity(new StringEntity(originalText));
             CloseableHttpResponse response = httpClient.execute(request);
             String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
@@ -269,7 +310,7 @@ public class InterceptorTest extends MockServerTest {
     }
 
     @Test
-    public void testResponseFilterCanModifyTextContents() throws IOException {
+    public void testResponseFilterCanModifyHttpTextContents() throws IOException {
         final String originalText = "The quick brown fox jumps over the lazy dog";
         final String newText = "The quick brown fox jumped.";
 
@@ -298,6 +339,45 @@ public class InterceptorTest extends MockServerTest {
 
         try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
             HttpGet request = new HttpGet("http://localhost:" + mockServerPort + "/modifyresponse");
+            request.addHeader("Accept-Encoding", "gzip");
+            CloseableHttpResponse response = httpClient.execute(request);
+            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
+
+            assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
+            assertEquals("Did not receive expected response from mock server", newText, responseBody);
+        }
+    }
+
+    @Test
+    public void testResponseFilterCanModifyHttpsTextContents() throws IOException {
+        final String originalText = "The quick brown fox jumps over the lazy dog";
+        final String newText = "The quick brown fox jumped.";
+
+        mockServer.when(request()
+                        .withMethod("GET")
+                        .withPath("/modifyresponse"),
+                Times.exactly(1))
+                .respond(response()
+                        .withStatusCode(200)
+                        .withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=utf-8"))
+                        .withBody(originalText));
+
+        proxy = new BrowserMobProxyServer();
+        proxy.start();
+
+        proxy.addResponseFilter(new ResponseFilter() {
+            @Override
+            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpRequest originalRequest) {
+                if (contents.isText()) {
+                    if (contents.getTextContents().equals(originalText)) {
+                        contents.setTextContents(newText);
+                    }
+                }
+            }
+        });
+
+        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+            HttpGet request = new HttpGet("https://localhost:" + mockServerPort + "/modifyresponse");
             request.addHeader("Accept-Encoding", "gzip");
             CloseableHttpResponse response = httpClient.execute(request);
             String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
