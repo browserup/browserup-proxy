@@ -101,10 +101,9 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     private final AtomicInteger harPageCount = new AtomicInteger(0);
 
     /**
-     * When true, HAR capture will be disabled. Completely disables littleproxy MITM support, which will make SSL connections slightly
-     * more efficient.
+     * When true, MITM will be disabled. The proxy will no longer intercept HTTPS requests, but they will still be proxied.
      */
-    private volatile boolean harDisabled = false;
+    private volatile boolean mitmDisabled = false;
 
     /**
      * The list of filterFactories that will generate the filters that implement browsermob-proxy behavior.
@@ -324,7 +323,7 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         }
 
 
-        if (!harDisabled) {
+        if (!mitmDisabled) {
             bootstrap.withManInTheMiddle(new BrowserMobProxyMitmManager());
         }
 
@@ -390,7 +389,7 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     }
 
     protected void stop(boolean graceful) {
-        if (started.get()) {
+        if (isStarted()) {
             if (stopped.compareAndSet(false, true)) {
                 if (proxyServer != null) {
                     if (graceful) {
@@ -494,10 +493,6 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
 
     @Override
     public Har newHar(String initialPageRef, String initialPageTitle) {
-        if (harDisabled) {
-            throw new IllegalStateException("HAR capture is disabled for this proxy");
-        }
-
         // eagerly initialize the User Agent String Parser, since it will be needed for the HAR
         BrowserMobProxyUtil.getUserAgentStringParser();
 
@@ -593,11 +588,19 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
 
     @Override
     public void setReadBandwidthLimit(long bytesPerSecond) {
+        if (isStarted()) {
+            throw new IllegalStateException("LittleProxy implementation does not allow changes to read bandwidth limit after proxy has been started");
+        }
+
         this.readBandwidthLimitBps = bytesPerSecond;
     }
 
     @Override
     public void setWriteBandwidthLimit(long bytesPerSecond) {
+        if (isStarted()) {
+            throw new IllegalStateException("LittleProxy implementation does not allow changes to write bandwidth limit after proxy has been started");
+        }
+
         this.writeBandwidthLimitBps = bytesPerSecond;
     }
 
@@ -774,7 +777,7 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
 
     @Override
     public void setConnectTimeout(int connectTimeout, TimeUnit timeUnit) {
-        if (started.get()) {
+        if (isStarted()) {
             throw new IllegalStateException("LittleProxy implementation does not allow changes to connect timeout after proxy has been started");
         }
 
@@ -794,7 +797,7 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
             this.idleConnectionTimeoutSec = (int) timeout;
         }
 
-        if (started.get()) {
+        if (isStarted()) {
             proxyServer.setIdleConnectionTimeout(idleConnectionTimeoutSec);
         }
     }
@@ -1258,25 +1261,17 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         return filterFactories;
     }
 
-    /**
-     * Completely disables HAR capture for this proxy server, which improves the efficiency of requests. This option may only be changed
-     * before the proxy is started; otherwise an IllegalStateException will be thrown.
-     *
-     * @param harDisabled when true, HAR capture will be disabled
-     * @throws java.lang.IllegalStateException if the proxy is already started
-     */
-    public void setHarDisabled(boolean harDisabled) throws IllegalStateException {
-        if (harDisabled != this.harDisabled) {
-            if (started.get()) {
-                throw new IllegalStateException("Cannot disable HAR after the proxy has been started");
-            }
-
-            this.harDisabled = harDisabled;
+    @Override
+    public void setMitmDisabled(boolean mitmDisabled) throws IllegalStateException {
+        if (isStarted()) {
+            throw new IllegalStateException("Cannot disable MITM after the proxy has been started");
         }
+
+        this.mitmDisabled = mitmDisabled;
     }
 
-    public boolean isHarDisabled() {
-        return this.harDisabled;
+    public boolean isMitmDisabled() {
+        return this.mitmDisabled;
     }
 
     /**

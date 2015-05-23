@@ -889,6 +889,11 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
         LOG.warn("The legacy ProxyServer implementation does not support addRequestFilter and addResponseFilter. Use addRequestInterceptor/addResponseInterceptor instead.");
     }
 
+    @Override
+    public void setMitmDisabled(boolean mitmDisabled) {
+        LOG.warn("The legacy ProxyServer implementation does not support disabling MITM.");
+    }
+
     public void cleanSslCertificates() {
         handler.cleanSslWithCyberVilliansCA();
     }

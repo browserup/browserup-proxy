@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit
 import static org.hamcrest.Matchers.empty
 import static org.hamcrest.Matchers.greaterThan
 import static org.hamcrest.Matchers.greaterThanOrEqualTo
+import static org.hamcrest.Matchers.hasSize
 import static org.hamcrest.Matchers.not
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertFalse
@@ -472,6 +473,74 @@ class NewHarTest extends MockServerTest {
 
         assertEquals("Expected first query parameter name to be param1", "param1", har.log.entries[0].request.queryString[0].name)
         assertEquals("Expected first query parameter value to be value1", "value1", har.log.entries[0].request.queryString[0].value)
+    }
+
+    @Test
+    void testMitmDisabledStopsHTTPCapture() {
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/httpmitmdisabled"),
+                Times.once())
+                .respond(response()
+                .withStatusCode(200)
+                .withBody("Response over HTTP"))
+
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/httpsmitmdisabled"),
+                Times.exactly(2))
+                .respond(response()
+                .withStatusCode(200)
+                .withBody("Response over HTTPS"))
+
+        BrowserMobProxy proxy = new BrowserMobProxyServer();
+        proxy.setMitmDisabled(true);
+        proxy.start()
+
+        proxy.newHar()
+
+        httpsRequest: {
+            String httpsUrl = "https://localhost:${mockServerPort}/httpsmitmdisabled"
+            ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+                String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet(httpsUrl)).getEntity().getContent());
+                assertEquals("Did not receive expected response from mock server", "Response over HTTPS", responseBody);
+            };
+
+            Thread.sleep(500)
+            Har har = proxy.getHar()
+
+            assertThat("Expected to find no entries in the HAR because MITM is disabled", har.getLog().getEntries(), empty())
+        }
+
+        httpRequest: {
+            String httpUrl = "http://localhost:${mockServerPort}/httpmitmdisabled"
+            ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+                String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet(httpUrl)).getEntity().getContent());
+                assertEquals("Did not receive expected response from mock server", "Response over HTTP", responseBody);
+            };
+
+            Thread.sleep(500)
+            Har har = proxy.getHar()
+
+            assertThat("Expected to find entries in the HAR", har.getLog().getEntries(), not(empty()))
+
+            String capturedUrl = har.log.entries[0].request.url
+            assertEquals("URL captured in HAR did not match request URL", httpUrl, capturedUrl)
+        }
+
+        secondHttpsRequest: {
+            String httpsUrl = "https://localhost:${mockServerPort}/httpsmitmdisabled"
+            ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+                String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet(httpsUrl)).getEntity().getContent());
+                assertEquals("Did not receive expected response from mock server", "Response over HTTPS", responseBody);
+            };
+
+            Thread.sleep(500)
+            Har har = proxy.getHar()
+
+            assertThat("Expected to find only the HTTP entry in the HAR", har.getLog().getEntries(), hasSize(1))
+        }
+
     }
 
     //TODO: Add Request Capture Type tests

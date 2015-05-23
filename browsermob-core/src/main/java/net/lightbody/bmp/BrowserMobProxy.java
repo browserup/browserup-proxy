@@ -7,7 +7,6 @@ import net.lightbody.bmp.proxy.BlacklistEntry;
 import net.lightbody.bmp.proxy.CaptureType;
 import net.lightbody.bmp.proxy.auth.AuthType;
 import net.lightbody.bmp.proxy.dns.AdvancedHostResolver;
-import net.lightbody.bmp.proxy.dns.HostResolver;
 import org.littleshoot.proxy.HttpFiltersSource;
 
 import java.net.InetAddress;
@@ -535,4 +534,13 @@ public interface BrowserMobProxy {
      * @param filter filter instance
      */
     void addRequestFilter(RequestFilter filter);
+
+    /**
+     * Completely disables MITM for this proxy server. The proxy will no longer intercept HTTPS requests, but they will
+     * still be pass-through proxied. This option must be set before the proxy is started; otherwise an IllegalStateException will be thrown.
+     *
+     * @param mitmDisabled when true, MITM capture will be disabled
+     * @throws java.lang.IllegalStateException if the proxy is already started
+     */
+    void setMitmDisabled(boolean mitmDisabled);
 }
