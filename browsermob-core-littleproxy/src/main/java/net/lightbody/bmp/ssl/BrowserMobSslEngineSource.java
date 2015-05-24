@@ -35,6 +35,11 @@ public class BrowserMobSslEngineSource implements SslEngineSource {
         return sslContext.createSSLEngine();
     }
 
+    @Override
+    public SSLEngine newSslEngine(String host, int port) {
+        return sslContext.createSSLEngine(host, port);
+    }
+
     private SSLContext initializeSSLContext() {
         String algorithm = Security
                 .getProperty("ssl.KeyManagerFactory.algorithm");
