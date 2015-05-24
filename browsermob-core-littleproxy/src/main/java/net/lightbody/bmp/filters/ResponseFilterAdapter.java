@@ -6,25 +6,19 @@ import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import net.lightbody.bmp.util.HttpMessageContents;
+import net.lightbody.bmp.util.HttpMessageInfo;
 import org.littleshoot.proxy.HttpFilters;
-import org.littleshoot.proxy.HttpFiltersAdapter;
 import org.littleshoot.proxy.HttpFiltersSourceAdapter;
 
 /**
  * A filter adapter for {@link ResponseFilter} implementations. Executes the filter when the {@link HttpFilters#serverToProxyResponse(HttpObject)}
  * method is invoked.
  */
-public class ResponseFilterAdapter extends HttpFiltersAdapter {
+public class ResponseFilterAdapter extends HttpsAwareFiltersAdapter {
     private final ResponseFilter responseFilter;
 
     public ResponseFilterAdapter(HttpRequest originalRequest, ChannelHandlerContext ctx, ResponseFilter responseFilter) {
         super(originalRequest, ctx);
-
-        this.responseFilter = responseFilter;
-    }
-
-    public ResponseFilterAdapter(HttpRequest originalRequest, ResponseFilter responseFilter) {
-        super(originalRequest);
 
         this.responseFilter = responseFilter;
     }
@@ -45,7 +39,9 @@ public class ResponseFilterAdapter extends HttpFiltersAdapter {
                 contents = null;
             }
 
-            responseFilter.filterResponse(httpResponse, contents, originalRequest);
+            HttpMessageInfo messageData = new HttpMessageInfo(originalRequest, ctx, isHttps(), getOriginalUrl());
+
+            responseFilter.filterResponse(httpResponse, contents, messageData);
         }
 
         return super.serverToProxyResponse(httpObject);

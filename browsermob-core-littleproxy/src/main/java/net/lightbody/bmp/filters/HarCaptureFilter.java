@@ -349,23 +349,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         //     url [string] - Absolute URL of the request (fragments are not included).
         // the URI on the httpRequest may only identify the path of the resource, so find the full URL.
         // the full URL consists of the scheme + host + port (if non-standard) + path + query params + fragment.
-        // Scheme: the scheme (HTTP/HTTPS) may or may not be part of the request, and so must be generated based on the
-        //   type of connection.
-        // Host and Port: for HTTP requests, the host and port can be read from the request itself using the URI and/or
-        //   Host header. for HTTPS requests, the host and port are not available in the request. by using the
-        //   getRequestHostAndPort() helper method in HttpsAwareFiltersAdapter, we can capture the host and port for
-        //   HTTPS requests.
-        // Path + Query Params + Fragment: these elements are contained in the HTTP request
-        String url;
-        if (isHttps()) {
-            String hostAndPort = getRequestHostAndPort();
-            String path = BrowserMobHttpUtil.getPathFromRequest(httpRequest);
-            url = "https://" + hostAndPort + path;
-        } else {
-            String hostAndPort = BrowserMobHttpUtil.getHostAndPortFromRequest(httpRequest);
-            String path = BrowserMobHttpUtil.getPathFromRequest(httpRequest);
-            url = "http://" + hostAndPort + path;
-        }
+        String url = getFullUrl(httpRequest);
 
         HarRequest request = new HarRequest(httpRequest.getMethod().toString(), url, httpRequest.getProtocolVersion().text());
         harEntry.setRequest(request);
@@ -625,13 +609,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
      * @param httpRequest HTTP request to take the hostname from
      */
     protected void populateAddressFromCache(HttpRequest httpRequest) {
-        String serverHost;
-        if (isHttps()) {
-            HostAndPort hostAndPort = HostAndPort.fromString(getRequestHostAndPort());
-            serverHost = hostAndPort.getHostText();
-        } else {
-            serverHost = BrowserMobHttpUtil.getHostFromRequest(httpRequest);
-        }
+        String serverHost = getHostAndPort(httpRequest);
 
         if (serverHost != null && !serverHost.isEmpty()) {
             String resolvedAddress = resolvedAddresses.get(serverHost);
