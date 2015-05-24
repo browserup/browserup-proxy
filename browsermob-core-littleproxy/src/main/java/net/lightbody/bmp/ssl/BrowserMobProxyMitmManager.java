@@ -4,6 +4,7 @@ import org.littleshoot.proxy.MitmManager;
 
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSession;
+import java.net.InetSocketAddress;
 
 /**
  * This implementation mirrors the implementation of {@link org.littleshoot.proxy.extras.SelfSignedMitmManager}, but uses the
@@ -14,8 +15,8 @@ public class BrowserMobProxyMitmManager implements MitmManager {
             new BrowserMobSslEngineSource();
 
     @Override
-    public SSLEngine serverSslEngine() {
-        return bmpSslEngineSource.newSslEngine();
+    public SSLEngine serverSslEngine(InetSocketAddress inetSocketAddress) {
+        return bmpSslEngineSource.newSslEngine(inetSocketAddress.getHostString(), inetSocketAddress.getPort());
     }
 
     @Override
