@@ -1,8 +1,8 @@
 package net.lightbody.bmp.filters;
 
-import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import net.lightbody.bmp.util.HttpMessageContents;
+import net.lightbody.bmp.util.HttpMessageInfo;
 
 /**
  * A functional interface to simplify modification and manipulation of responses.
@@ -16,7 +16,7 @@ public interface ResponseFilter {
      *
      * @param response The response object, including URI, headers, status line, etc. Modifications to the response object will be reflected in the client response.
      * @param contents The response contents.
-     * @param originalRequest The original request from the client. Does not reflect any modifications from previous filters.
+     * @param messageInfo Additional information relating to the HTTP message.
      */
-    void filterResponse(HttpResponse response, HttpMessageContents contents, HttpRequest originalRequest);
+    void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo);
 }

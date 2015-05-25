@@ -3,6 +3,7 @@ package net.lightbody.bmp.filters;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import net.lightbody.bmp.util.HttpMessageContents;
+import net.lightbody.bmp.util.HttpMessageInfo;
 
 /**
  * A functional interface to simplify modification and manipulation of requests.
@@ -16,8 +17,8 @@ public interface RequestFilter {
      *
      * @param request The request object, including method, URI, headers, etc. Modifications to the request object will be reflected in the request sent to the server.
      * @param contents The request contents.
-     * @param originalRequest The original request from the client. Does not reflect any modifications from previous filters.
+     * @param messageInfo Additional information relating to the HTTP message.
      * @return if the return value is non-null, the proxy will suppress the request and send the specified response to the client immediately
      */
-    HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpRequest originalRequest);
+    HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo);
 }

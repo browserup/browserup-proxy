@@ -1,5 +1,6 @@
 package net.lightbody.bmp.proxy;
 
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -18,6 +19,7 @@ import net.lightbody.bmp.proxy.test.util.MockServerTest;
 import net.lightbody.bmp.proxy.test.util.ProxyServerTest;
 import net.lightbody.bmp.proxy.util.IOUtils;
 import net.lightbody.bmp.util.HttpMessageContents;
+import net.lightbody.bmp.util.HttpMessageInfo;
 import net.lightbody.bmp.util.HttpObjectUtil;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -42,6 +44,7 @@ import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -118,7 +121,7 @@ public class InterceptorTest extends MockServerTest {
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
-        };
+        }
 
         interceptorFired.set(false);
 
@@ -130,7 +133,7 @@ public class InterceptorTest extends MockServerTest {
 
             assertEquals("Expected interceptor to return a 204 (No Content)", 204, response.getStatusLine().getStatusCode());
             assertNull("Expected no entity attached to response", response.getEntity());
-        };
+        }
     }
 
     @Test
@@ -208,7 +211,7 @@ public class InterceptorTest extends MockServerTest {
 
         proxy.addRequestFilter(new RequestFilter() {
             @Override
-            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpRequest originalRequest) {
+            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
                 if (contents.isText()) {
                     if (contents.getTextContents().equals(originalText)) {
                         contents.setTextContents(newText);
@@ -249,7 +252,7 @@ public class InterceptorTest extends MockServerTest {
 
         proxy.addRequestFilter(new RequestFilter() {
             @Override
-            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpRequest originalRequest) {
+            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
                 if (contents.isText()) {
                     if (contents.getTextContents().equals(originalText)) {
                         contents.setTextContents(newText);
@@ -290,7 +293,7 @@ public class InterceptorTest extends MockServerTest {
 
         proxy.addResponseFilter(new ResponseFilter() {
             @Override
-            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpRequest originalRequest) {
+            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
                 if (!contents.isText()) {
                     if (Arrays.equals(originalBytes, contents.getBinaryContents())) {
                         contents.setBinaryContents(newBytes);
@@ -328,7 +331,7 @@ public class InterceptorTest extends MockServerTest {
 
         proxy.addResponseFilter(new ResponseFilter() {
             @Override
-            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpRequest originalRequest) {
+            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
                 if (contents.isText()) {
                     if (contents.getTextContents().equals(originalText)) {
                         contents.setTextContents(newText);
@@ -367,7 +370,7 @@ public class InterceptorTest extends MockServerTest {
 
         proxy.addResponseFilter(new ResponseFilter() {
             @Override
-            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpRequest originalRequest) {
+            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
                 if (contents.isText()) {
                     if (contents.getTextContents().equals(originalText)) {
                         contents.setTextContents(newText);
@@ -404,7 +407,7 @@ public class InterceptorTest extends MockServerTest {
 
         proxy.addResponseFilter(new ResponseFilter() {
             @Override
-            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpRequest originalRequest) {
+            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
                 responseContents.set(contents.getBinaryContents());
             }
         });
@@ -418,7 +421,7 @@ public class InterceptorTest extends MockServerTest {
     }
 
     @Test
-    public void testResponseInterceptorOriginalRequestNotModified() throws IOException {
+    public void testResponseFilterOriginalRequestNotModified() throws IOException {
         mockServer.when(request()
                         .withMethod("GET")
                         .withPath("/modifiedendpoint"),
@@ -432,7 +435,7 @@ public class InterceptorTest extends MockServerTest {
 
         proxy.addRequestFilter(new RequestFilter() {
             @Override
-            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpRequest originalRequest) {
+            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
                 if (request.getUri().endsWith("/originalendpoint")) {
                     request.setUri(request.getUri().replaceAll("originalendpoint", "modifiedendpoint"));
                 }
@@ -445,8 +448,8 @@ public class InterceptorTest extends MockServerTest {
 
         proxy.addResponseFilter(new ResponseFilter() {
             @Override
-            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpRequest originalRequest) {
-                originalRequestUri.set(originalRequest.getUri());
+            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
+                originalRequestUri.set(messageInfo.getOriginalRequest().getUri());
             }
         });
 
@@ -476,7 +479,7 @@ public class InterceptorTest extends MockServerTest {
 
         proxy.addFirstHttpFilterFactory(new RequestFilterAdapter.FilterSource(new RequestFilter() {
             @Override
-            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpRequest originalRequest) {
+            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
                 if (contents == null) {
                     requestContentsNull.set(true);
                 }
@@ -487,7 +490,7 @@ public class InterceptorTest extends MockServerTest {
 
         proxy.addFirstHttpFilterFactory(new ResponseFilterAdapter.FilterSource(new ResponseFilter() {
             @Override
-            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpRequest originalRequest) {
+            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
                 if (contents == null) {
                     responseContentsNull.set(true);
                 }
@@ -523,7 +526,7 @@ public class InterceptorTest extends MockServerTest {
 
         proxy.addRequestFilter(new RequestFilter() {
             @Override
-            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpRequest originalRequest) {
+            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
                 if (request.getMethod().equals(HttpMethod.CONNECT)) {
                     connectRequestFilterFired.set(true);
                 } else if (request.getMethod().equals(HttpMethod.GET)) {
@@ -566,7 +569,7 @@ public class InterceptorTest extends MockServerTest {
 
         proxy.addResponseFilter(new ResponseFilter() {
             @Override
-            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpRequest originalRequest) {
+            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
                 responseFilterFired.set(true);
             }
         });
@@ -628,6 +631,131 @@ public class InterceptorTest extends MockServerTest {
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertEquals("Did not receive expected response from mock server", newText, responseBody);
+        }
+    }
+
+    @Test
+    public void testHttpResponseFilterMessageInfoPopulated() throws IOException {
+        mockServer.when(request()
+                        .withMethod("GET")
+                        .withPath("/httpmessageinfopopulated")
+                        .withQueryStringParameter("param1", "value1"),
+                Times.exactly(1))
+                .respond(response()
+                        .withStatusCode(200)
+                        .withBody("success"));
+
+        proxy = new BrowserMobProxyServer();
+        proxy.start();
+
+        final AtomicReference<ChannelHandlerContext> requestCtx = new AtomicReference<>();
+        final AtomicReference<HttpRequest> requestOriginalRequest = new AtomicReference<>();
+        final AtomicBoolean requestIsHttps = new AtomicBoolean(false);
+        final AtomicReference<String> requestOriginalUrl = new AtomicReference<>();
+
+        proxy.addRequestFilter(new RequestFilter() {
+            @Override
+            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
+                requestCtx.set(messageInfo.getChannelHandlerContext());
+                requestOriginalRequest.set(messageInfo.getOriginalRequest());
+                requestIsHttps.set(messageInfo.isHttps());
+                requestOriginalUrl.set(messageInfo.getOriginalUrl());
+                return null;
+            }
+        });
+
+        final AtomicReference<ChannelHandlerContext> responseCtx = new AtomicReference<>();
+        final AtomicReference<HttpRequest> responseOriginalRequest = new AtomicReference<>();
+        final AtomicBoolean responseIsHttps = new AtomicBoolean(false);
+        final AtomicReference<String> responseOriginalUrl = new AtomicReference<>();
+
+        proxy.addResponseFilter(new ResponseFilter() {
+            @Override
+            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
+                responseCtx.set(messageInfo.getChannelHandlerContext());
+                responseOriginalRequest.set(messageInfo.getOriginalRequest());
+                responseIsHttps.set(messageInfo.isHttps());
+                responseOriginalUrl.set(messageInfo.getOriginalUrl());
+            }
+        });
+
+        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+            String requestUrl = "http://localhost:" + mockServerPort + "/httpmessageinfopopulated?param1=value1";
+            CloseableHttpResponse response = httpClient.execute(new HttpGet(requestUrl));
+
+            assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
+            assertNotNull("Expected ChannelHandlerContext to be populated in request filter", requestCtx.get());
+            assertNotNull("Expected originalRequest to be populated in request filter", requestOriginalRequest.get());
+            assertFalse("Expected isHttps to return false in request filter", requestIsHttps.get());
+            assertEquals("Expected originalUrl in request filter to match actual request URL", requestUrl, requestOriginalUrl.get());
+
+            assertNotNull("Expected ChannelHandlerContext to be populated in response filter", responseCtx.get());
+            assertNotNull("Expected originalRequest to be populated in response filter", responseOriginalRequest.get());
+            assertFalse("Expected isHttps to return false in response filter", responseIsHttps.get());
+            assertEquals("Expected originalUrl in response filter to match actual request URL", requestUrl, responseOriginalUrl.get());
+        }
+    }
+
+    @Test
+    public void testHttpsResponseFilterMessageInfoPopulated() throws IOException {
+        mockServer.when(request()
+                        .withMethod("GET")
+                        .withPath("/httpmessageinfopopulated")
+                        .withQueryStringParameter("param1", "value1"),
+                Times.exactly(1))
+                .respond(response()
+                        .withStatusCode(200)
+                        .withBody("success"));
+
+        proxy = new BrowserMobProxyServer();
+        proxy.start();
+
+        final AtomicReference<ChannelHandlerContext> requestCtx = new AtomicReference<>();
+        final AtomicReference<HttpRequest> requestOriginalRequest = new AtomicReference<>();
+        final AtomicBoolean requestIsHttps = new AtomicBoolean(false);
+        final AtomicReference<String> requestOriginalUrl = new AtomicReference<>();
+
+        proxy.addRequestFilter(new RequestFilter() {
+            @Override
+            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
+                requestCtx.set(messageInfo.getChannelHandlerContext());
+                requestOriginalRequest.set(messageInfo.getOriginalRequest());
+                requestIsHttps.set(messageInfo.isHttps());
+                requestOriginalUrl.set(messageInfo.getOriginalUrl());
+                return null;
+            }
+        });
+
+        final AtomicReference<ChannelHandlerContext> responseCtx = new AtomicReference<>();
+        final AtomicReference<HttpRequest> responseOriginalRequest = new AtomicReference<>();
+        final AtomicBoolean responseIsHttps = new AtomicBoolean(false);
+        final AtomicReference<String> responseOriginalUrl = new AtomicReference<>();
+
+        proxy.addResponseFilter(new ResponseFilter() {
+            @Override
+            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
+                responseCtx.set(messageInfo.getChannelHandlerContext());
+                responseOriginalRequest.set(messageInfo.getOriginalRequest());
+                responseIsHttps.set(messageInfo.isHttps());
+                responseOriginalUrl.set(messageInfo.getOriginalUrl());
+            }
+        });
+
+        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+            String requestUrl = "https://localhost:" + mockServerPort + "/httpmessageinfopopulated?param1=value1";
+            CloseableHttpResponse response = httpClient.execute(new HttpGet(requestUrl));
+
+            assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
+
+            assertNotNull("Expected ChannelHandlerContext to be populated in request filter", requestCtx.get());
+            assertNotNull("Expected originalRequest to be populated in request filter", requestOriginalRequest.get());
+            assertTrue("Expected isHttps to return true in request filter", requestIsHttps.get());
+            assertEquals("Expected originalUrl in request filter to match actual request URL", requestUrl, requestOriginalUrl.get());
+
+            assertNotNull("Expected ChannelHandlerContext to be populated in response filter", responseCtx.get());
+            assertNotNull("Expected originalRequest to be populated in response filter", responseOriginalRequest.get());
+            assertTrue("Expected isHttps to return true in response filter", responseIsHttps.get());
+            assertEquals("Expected originalUrl in response filter to match actual request URL", requestUrl, responseOriginalUrl.get());
         }
     }
 }

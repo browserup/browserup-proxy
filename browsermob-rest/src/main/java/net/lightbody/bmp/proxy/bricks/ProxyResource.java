@@ -12,16 +12,12 @@ import com.google.sitebricks.http.Delete;
 import com.google.sitebricks.http.Get;
 import com.google.sitebricks.http.Post;
 import com.google.sitebricks.http.Put;
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpResponse;
 import net.lightbody.bmp.BrowserMobProxy;
 import net.lightbody.bmp.BrowserMobProxyServer;
 import net.lightbody.bmp.core.har.Har;
-import net.lightbody.bmp.exception.JavascriptCompilationException;
 import net.lightbody.bmp.exception.ProxyExistsException;
 import net.lightbody.bmp.exception.ProxyPortsExhaustedException;
-import net.lightbody.bmp.filters.RequestFilter;
-import net.lightbody.bmp.filters.ResponseFilter;
+import net.lightbody.bmp.filters.JavascriptRequestResponseFilter;
 import net.lightbody.bmp.proxy.LegacyProxyServer;
 import net.lightbody.bmp.proxy.ProxyManager;
 import net.lightbody.bmp.proxy.ProxyServer;
@@ -30,7 +26,6 @@ import net.lightbody.bmp.proxy.http.BrowserMobHttpResponse;
 import net.lightbody.bmp.proxy.http.RequestInterceptor;
 import net.lightbody.bmp.proxy.http.ResponseInterceptor;
 import net.lightbody.bmp.util.BrowserMobHttpUtil;
-import net.lightbody.bmp.util.HttpMessageContents;
 import org.java_bandwidthlimiter.StreamManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -709,76 +704,4 @@ public class ProxyResource {
         return new String(entityBodyBytes.toByteArray(), charset);
     }
 
-    /**
-     * Convenience class that executes arbitrary javascript code as a {@link RequestFilter} or {@link ResponseFilter}.
-     */
-    public static class JavascriptRequestResponseFilter implements RequestFilter, ResponseFilter {
-        private static final ScriptEngine JAVASCRIPT_ENGINE = new ScriptEngineManager().getEngineByName("JavaScript");
-
-        private CompiledScript compiledRequestFilterScript;
-        private CompiledScript compiledResponseFilterScript;
-
-        public void setRequestFilterScript(String script) {
-            Compilable compilable = (Compilable) JAVASCRIPT_ENGINE;
-            try {
-                compiledRequestFilterScript = compilable.compile(script);
-            } catch (ScriptException e) {
-                throw new JavascriptCompilationException("Unable to compile javascript. Script in error:\n" + script, e);
-            }
-        }
-
-        public void setResponseFilterScript(String script) {
-            Compilable compilable = (Compilable) JAVASCRIPT_ENGINE;
-            try {
-                compiledResponseFilterScript = compilable.compile(script);
-            } catch (ScriptException e) {
-                throw new JavascriptCompilationException("Unable to compile javascript. Script in error:\n" + script, e);
-            }
-        }
-
-        @Override
-        public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpRequest originalRequest) {
-            if (compiledRequestFilterScript == null) {
-                return null;
-            }
-
-            Bindings bindings = JAVASCRIPT_ENGINE.createBindings();
-            bindings.put("request", request);
-            bindings.put("contents", contents);
-            bindings.put("originalRequest", originalRequest);
-            bindings.put("log", LOG);
-
-            try {
-                Object retVal = compiledRequestFilterScript.eval(bindings);
-                // avoid implicit javascript returns
-                if (retVal instanceof HttpResponse) {
-                    return (HttpResponse) retVal;
-                } else {
-                    return null;
-                }
-            } catch (ScriptException e) {
-                LOG.error("Could not invoke filterRequest using supplied javascript", e);
-
-                return null;
-            }
-        }
-
-        @Override
-        public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpRequest originalRequest) {
-            if (compiledResponseFilterScript == null) {
-                return;
-            }
-
-            Bindings bindings = JAVASCRIPT_ENGINE.createBindings();
-            bindings.put("response", response);
-            bindings.put("contents", contents);
-            bindings.put("originalRequest", originalRequest);
-            bindings.put("log", LOG);
-            try {
-                compiledResponseFilterScript.eval(bindings);
-            } catch (ScriptException e) {
-                LOG.error("Could not invoke filterResponse using supplied javascript", e);
-            }
-        }
-    }
 }

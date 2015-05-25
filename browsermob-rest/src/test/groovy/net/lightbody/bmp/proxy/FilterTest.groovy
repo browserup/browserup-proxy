@@ -148,7 +148,7 @@ class FilterTest extends ProxyResourceTest {
 
         final String responseFilterJavaScript =
                 '''
-                contents.setTextContents(originalRequest.getUri());
+                contents.setTextContents(messageInfo.getOriginalRequest().getUri());
                 '''
         Request<String> mockRestAddRespFilterRequest = createMockRestRequestWithEntity(responseFilterJavaScript)
         proxyResource.addResponseFilter(proxyPort, mockRestAddRespFilterRequest)
@@ -168,7 +168,7 @@ class FilterTest extends ProxyResourceTest {
             uri.path = "/originalrequest"
 
             response.success = { resp, reader ->
-                assertThat("Javascript interceptor did not read originalRequest variable successfully", reader.text, endsWith("originalrequest"))
+                assertThat("Javascript interceptor did not read messageData.originalRequest variable successfully", reader.text, endsWith("originalrequest"))
             }
         }
     }
