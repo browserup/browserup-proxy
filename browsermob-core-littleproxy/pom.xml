@@ -216,6 +216,12 @@
             <artifactId>jzlib</artifactId>
         </dependency>
 
+        <!-- pull in a version of netty that is known to work with LP+BMP -->
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+        </dependency>
+
         <!-- Due to usage in LegacyProxyServer and BrowserMobProxyServer, this dependency needs to be given "provided" scope.
                      It is not used by the BMP LittleProxy implementation itself. -->
         <dependency>
