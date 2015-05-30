@@ -588,20 +588,21 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
 
     @Override
     public void setReadBandwidthLimit(long bytesPerSecond) {
+        this.readBandwidthLimitBps = bytesPerSecond;
+
         if (isStarted()) {
-            throw new IllegalStateException("LittleProxy implementation does not allow changes to read bandwidth limit after proxy has been started");
+            proxyServer.setThrottle(this.readBandwidthLimitBps, this.writeBandwidthLimitBps);
         }
 
-        this.readBandwidthLimitBps = bytesPerSecond;
     }
 
     @Override
     public void setWriteBandwidthLimit(long bytesPerSecond) {
-        if (isStarted()) {
-            throw new IllegalStateException("LittleProxy implementation does not allow changes to write bandwidth limit after proxy has been started");
-        }
-
         this.writeBandwidthLimitBps = bytesPerSecond;
+
+        if (isStarted()) {
+            proxyServer.setThrottle(this.readBandwidthLimitBps, this.writeBandwidthLimitBps);
+        }
     }
 
     @Override
