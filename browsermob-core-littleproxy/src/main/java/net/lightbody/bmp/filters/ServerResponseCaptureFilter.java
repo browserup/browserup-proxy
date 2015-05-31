@@ -29,7 +29,7 @@ public class ServerResponseCaptureFilter extends HttpFiltersAdapter {
     /**
      * Populated by serverToProxyResponse() when processing the HttpResponse object
      */
-    private HttpResponse httpResponse;
+    private volatile HttpResponse httpResponse;
 
     /**
      * Populated by serverToProxyResponse() as it receives HttpContent responses. If the response is chunked, it will
@@ -41,27 +41,27 @@ public class ServerResponseCaptureFilter extends HttpFiltersAdapter {
      * Populated when processing the LastHttpContent. If the response is compressed and decompression is requested,
      * this contains the entire decompressed response. Otherwise it contains the raw response.
      */
-    private byte[] fullResponseContents;
+    private volatile byte[] fullResponseContents;
 
     /**
      * Populated by serverToProxyResponse() when it processes the LastHttpContent object.
      */
-    private HttpHeaders trailingHeaders;
+    private volatile HttpHeaders trailingHeaders;
 
     /**
      * Set to true when processing the LastHttpContent if the server indicates there is a content encoding.
      */
-    private boolean responseCompressed;
+    private volatile boolean responseCompressed;
 
     /**
      * Set to true when processing the LastHttpContent if decompression was requested and successful.
      */
-    private boolean decompressionSuccessful;
+    private volatile boolean decompressionSuccessful;
 
     /**
      * Populated when processing the LastHttpContent.
      */
-    private String contentEncoding;
+    private volatile String contentEncoding;
 
     /**
      * User option indicating compressed content should be uncompressed.

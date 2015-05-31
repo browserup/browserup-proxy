@@ -26,18 +26,18 @@ public class ClientRequestCaptureFilter extends HttpFiltersAdapter {
      * Populated by clientToProxyRequest() when processing the HttpRequest object. Unlike originalRequest,
      * this represents the "real" request that is being sent to the server, including headers.
      */
-    private HttpRequest httpRequest;
+    private volatile HttpRequest httpRequest;
 
     /**
      * Populated by clientToProxyRequest() when processing the HttpContent objects. If the request is chunked,
      * it will be populated across multiple calls to clientToProxyRequest().
      */
-    private ByteArrayOutputStream requestContents = new ByteArrayOutputStream();
+    private final ByteArrayOutputStream requestContents = new ByteArrayOutputStream();
 
     /**
      * Populated by clientToProxyRequest() when processing the LastHttpContent.
      */
-    private HttpHeaders trailingHeaders;
+    private volatile HttpHeaders trailingHeaders;
 
     public ClientRequestCaptureFilter(HttpRequest originalRequest) {
         super(originalRequest);
