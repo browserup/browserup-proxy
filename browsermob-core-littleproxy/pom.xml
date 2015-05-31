@@ -151,6 +151,13 @@
             <artifactId>phantomjsdriver</artifactId>
             <version>1.2.1</version>
             <scope>test</scope>
+            <!-- exclude legacy netty implementations in transitive dependencies -->
+            <exclusions>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -173,6 +180,35 @@
                 <exclusion>
                     <groupId>ch.qos.logback</groupId>
                     <artifactId>logback-classic</artifactId>
+                </exclusion>
+                <!-- exclude individual netty transitive dependencies, since we include netty-all -->
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-codec-socks</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-buffer</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-codec</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-codec-http</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-handler</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-transport</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
