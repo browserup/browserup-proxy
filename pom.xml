@@ -62,7 +62,7 @@
 
         <maven-jar-plugin.version>2.6</maven-jar-plugin.version>
 
-        <log4j.version>2.2</log4j.version>
+        <log4j.version>2.3</log4j.version>
 
         <groovy.version>2.4.3</groovy.version>
     </properties>

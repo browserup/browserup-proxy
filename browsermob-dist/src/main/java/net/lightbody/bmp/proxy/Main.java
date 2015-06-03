@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.ServletContextEvent;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -159,7 +160,13 @@ public class Main {
                 }
             }
 
-            System.setProperty("log4j.configurationFile", logFilePath.toAbsolutePath().toString());
+            try {
+                // convert the path to a URL, to avoid a MalformedURLException with log4j 2 on Windows
+                System.setProperty("log4j.configurationFile", logFilePath.toAbsolutePath().toFile().toURI().toURL().toString());
+            } catch (MalformedURLException | RuntimeException e) {
+                System.out.println("Could not set log4j.configurationFile to " + logFilePath.toAbsolutePath().toString() + " due to error: "  + e.getMessage());
+                e.printStackTrace();
+            }
         }
     }
 }
