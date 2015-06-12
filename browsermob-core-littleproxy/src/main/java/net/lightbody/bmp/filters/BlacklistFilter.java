@@ -1,6 +1,7 @@
 package net.lightbody.bmp.filters;
 
-import io.netty.handler.codec.http.DefaultHttpResponse;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
@@ -36,7 +37,8 @@ public class BlacklistFilter extends HttpFiltersAdapter {
             for (BlacklistEntry entry : blacklistedUrls) {
                 if (entry.matches(httpRequest.getUri(), httpRequest.getMethod().name())) {
                     HttpResponseStatus status = HttpResponseStatus.valueOf(entry.getStatusCode());
-                    HttpResponse resp = new DefaultHttpResponse(httpRequest.getProtocolVersion(), status);
+                    HttpResponse resp = new DefaultFullHttpResponse(httpRequest.getProtocolVersion(), status);
+                    HttpHeaders.setContentLength(resp, 0L);
 
                     return resp;
                 }
