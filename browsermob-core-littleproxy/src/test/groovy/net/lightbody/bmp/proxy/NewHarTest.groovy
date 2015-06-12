@@ -9,7 +9,6 @@ import net.lightbody.bmp.core.har.HarCookie
 import net.lightbody.bmp.core.har.HarEntry
 import net.lightbody.bmp.core.har.HarNameValuePair
 import net.lightbody.bmp.proxy.dns.AdvancedHostResolver
-import net.lightbody.bmp.proxy.dns.BasicHostResolver
 import net.lightbody.bmp.proxy.test.util.MockServerTest
 import net.lightbody.bmp.proxy.test.util.ProxyServerTest
 import net.lightbody.bmp.proxy.util.IOUtils
@@ -73,7 +72,7 @@ class NewHarTest extends MockServerTest {
                 .withStatusCode(200)
                 .withBody("success"));
 
-        BrowserMobProxy proxy = new BrowserMobProxyServer();
+        proxy = new BrowserMobProxyServer();
         proxy.setHostNameResolver(mockResolver);
 
         proxy.start();
@@ -109,7 +108,7 @@ class NewHarTest extends MockServerTest {
                 .withBody("success")
                 .withCookie(new Cookie("mock-cookie", "mock value")))
 
-        BrowserMobProxy proxy = new BrowserMobProxyServer();
+        proxy = new BrowserMobProxyServer();
         proxy.setHarCaptureTypes([CaptureType.RESPONSE_COOKIES] as Set)
         proxy.start()
 
@@ -142,7 +141,7 @@ class NewHarTest extends MockServerTest {
                 .withBody("success")
                 .withHeader(new Header("Mock-Header", "mock value")))
 
-        BrowserMobProxy proxy = new BrowserMobProxyServer();
+        proxy = new BrowserMobProxyServer();
         proxy.setHarCaptureTypes([CaptureType.RESPONSE_HEADERS] as Set)
         proxy.start()
 
@@ -177,7 +176,7 @@ class NewHarTest extends MockServerTest {
                 .withBody("success")
                 .withHeader(new Header("Content-Type", "text/plain; charset=UTF-8")))
 
-        BrowserMobProxy proxy = new BrowserMobProxyServer();
+        proxy = new BrowserMobProxyServer();
         proxy.setHarCaptureTypes([CaptureType.RESPONSE_CONTENT] as Set)
         proxy.start()
 
@@ -210,7 +209,7 @@ class NewHarTest extends MockServerTest {
                 .withBody("success")
                 .withHeader(new Header("Content-Type", "text/plain; charset=UTF-8")))
 
-        BrowserMobProxy proxy = new BrowserMobProxyServer();
+        proxy = new BrowserMobProxyServer();
         proxy.setHarCaptureTypes([CaptureType.RESPONSE_CONTENT] as Set)
         proxy.start()
 
@@ -289,7 +288,7 @@ class NewHarTest extends MockServerTest {
                 .withBody("success")
                 .withHeader(new Header("Content-Type", "text/plain; charset=UTF-8")))
 
-        BrowserMobProxy proxy = new BrowserMobProxyServer();
+        proxy = new BrowserMobProxyServer();
         proxy.setHarCaptureTypes([CaptureType.RESPONSE_CONTENT] as Set)
         proxy.start()
 
@@ -340,7 +339,7 @@ class NewHarTest extends MockServerTest {
                 .withStatusCode(200)
                 .withBody("success"))
 
-        BrowserMobProxy proxy = new BrowserMobProxyServer();
+        proxy = new BrowserMobProxyServer();
         proxy.start()
 
         proxy.newHar()
@@ -372,7 +371,7 @@ class NewHarTest extends MockServerTest {
                 .withStatusCode(200)
                 .withBody("success"))
 
-        BrowserMobProxy proxy = new BrowserMobProxyServer();
+        proxy = new BrowserMobProxyServer();
         proxy.start()
 
         proxy.newHar()
@@ -409,7 +408,7 @@ class NewHarTest extends MockServerTest {
                 .withStatusCode(200)
                 .withBody("success"))
 
-        BrowserMobProxy proxy = new BrowserMobProxyServer();
+        proxy = new BrowserMobProxyServer();
         proxy.start()
 
         proxy.newHar()
@@ -447,7 +446,7 @@ class NewHarTest extends MockServerTest {
                 .withStatusCode(200)
                 .withBody("success"))
 
-        BrowserMobProxy proxy = new BrowserMobProxyServer();
+        proxy = new BrowserMobProxyServer();
         proxy.rewriteUrl("www.rewrittenurl.com:443", "localhost:${mockServerPort}")
         proxy.start()
 
@@ -493,7 +492,7 @@ class NewHarTest extends MockServerTest {
                 .withStatusCode(200)
                 .withBody("Response over HTTPS"))
 
-        BrowserMobProxy proxy = new BrowserMobProxyServer();
+        proxy = new BrowserMobProxyServer();
         proxy.setMitmDisabled(true);
         proxy.start()
 
