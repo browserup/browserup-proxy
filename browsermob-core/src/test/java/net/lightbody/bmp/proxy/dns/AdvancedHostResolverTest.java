@@ -96,9 +96,8 @@ public class AdvancedHostResolverTest {
 
         // disabling this assert to prevent test failures on systems without ipv6 access, or when the DNS server does not return IPv6 addresses
         //assertTrue("Expected to find at least one IPv6 address for www.google.com", foundIPv6);
-        if (!foundIPv6) {
-            log.warn("Could not resolve IPv6 address for www.google.com using resolver {}", resolver.getClass().getSimpleName());
-        }
+        // update: since the dnsjava resolver now returns ipv6 addresses *only if there are no ipv4 addresses*, it will generally not return
+        // any ipv6 addresses for most hostnames
 
     }
 

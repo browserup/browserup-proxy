@@ -6,6 +6,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.util.Arrays;
@@ -21,6 +23,8 @@ import static org.junit.Assume.assumeFalse;
 
 @RunWith(Parameterized.class)
 public class AdvancedHostResolverCacheTest {
+    private static final Logger log = LoggerFactory.getLogger(AdvancedHostResolverCacheTest.class);
+
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][]{
@@ -194,13 +198,13 @@ public class AdvancedHostResolverCacheTest {
         resolver.clearDNSCache();
         resolver.setPositiveDNSCacheTimeout(-1, TimeUnit.SECONDS);
 
-        System.out.println("Resolver: " + resolver);
+        log.info("Using resolver: {}", resolver.getClass().getSimpleName());
 
         // populate the cache
         long one = System.nanoTime();
         Collection<InetAddress> addresses = resolver.resolve("www.msn.com");
         long two = System.nanoTime();
-        System.out.println("Time to resolve without cache: " + TimeUnit.MILLISECONDS.convert(two - one, TimeUnit.NANOSECONDS));
+        log.info("Time to resolve address without cache: {}ms", TimeUnit.MILLISECONDS.convert(two - one, TimeUnit.NANOSECONDS));
 
         // make sure there are addresses, since this is a *positive* TTL test
         assertNotNull("Collection of resolved addresses should never be null", addresses);
@@ -212,7 +216,7 @@ public class AdvancedHostResolverCacheTest {
 
         long cachedLookupMs = TimeUnit.MILLISECONDS.convert(finish - start, TimeUnit.NANOSECONDS);
 
-        System.out.println("Time to resolve with cache: " + TimeUnit.MILLISECONDS.convert(finish - start, TimeUnit.NANOSECONDS));
+        log.info("Time to resolve address with cache: {}ms", TimeUnit.MILLISECONDS.convert(finish - start, TimeUnit.NANOSECONDS));
 
         assertNotNull("Collection of resolved addresses should never be null", addresses);
         assertNotEquals("Expected to find addresses for www.msn.com", 0, addresses.size());
