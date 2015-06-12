@@ -14,7 +14,7 @@ import static org.hamcrest.Matchers.isEmptyOrNullString
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertThat
 
-class BlacklistTest extends MockServerTest {
+class WhitelistTest extends MockServerTest {
     BrowserMobProxy proxy
 
     @After
@@ -25,15 +25,15 @@ class BlacklistTest extends MockServerTest {
     }
 
     @Test
-    void testBlacklistedRequestReturnsBlacklistStatusCode() {
+    void testNonWhitelistedRequestReturnsWhitelistStatusCode() {
         proxy = new BrowserMobProxyServer();
         proxy.start();
         int proxyPort = proxy.getPort();
 
-        proxy.blacklistRequests("https?://www\\.blacklisted\\.domain/.*", 405)
+        proxy.whitelistRequests(["https?://localhost/.*"], 405);
 
         ProxyServerTest.getNewHttpClient(proxyPort).withCloseable {
-            CloseableHttpResponse response = it.execute(new HttpGet("http://www.blacklisted.domain/someresource"))
+            CloseableHttpResponse response = it.execute(new HttpGet("http://www.someother.domain/someresource"))
             assertEquals("Did not receive blacklisted status code in response", 405, response.getStatusLine().getStatusCode());
 
             String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
