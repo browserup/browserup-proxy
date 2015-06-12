@@ -1,7 +1,8 @@
 package net.lightbody.bmp.filters;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.DefaultHttpResponse;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
@@ -50,7 +51,9 @@ public class BrowserMobHttpFilterChain extends HttpFiltersAdapter {
     public HttpResponse clientToProxyRequest(HttpObject httpObject) {
         if (proxyServer.isStopped()) {
             log.warn("Aborting request to {} because proxy is stopped", originalRequest.getUri());
-            return new DefaultHttpResponse(originalRequest.getProtocolVersion(), HttpResponseStatus.SERVICE_UNAVAILABLE);
+            HttpResponse abortedResponse = new DefaultFullHttpResponse(originalRequest.getProtocolVersion(), HttpResponseStatus.SERVICE_UNAVAILABLE);
+            HttpHeaders.setContentLength(abortedResponse, 0L);
+            return abortedResponse;
         }
 
         for (HttpFilters filter : filters) {
