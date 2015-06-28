@@ -14,8 +14,13 @@ import org.littleshoot.proxy.HttpFiltersSourceAdapter;
  * A filter adapter for {@link ResponseFilter} implementations. Executes the filter when the {@link HttpFilters#serverToProxyResponse(HttpObject)}
  * method is invoked.
  */
-public class ResponseFilterAdapter extends HttpsAwareFiltersAdapter {
+public class ResponseFilterAdapter extends HttpsAwareFiltersAdapter implements ModifiedRequestAwareFilter {
     private final ResponseFilter responseFilter;
+
+    /**
+     * The final HttpRequest sent to the server, reflecting all modifications from request filters.
+     */
+    private HttpRequest modifiedHttpRequest;
 
     public ResponseFilterAdapter(HttpRequest originalRequest, ChannelHandlerContext ctx, ResponseFilter responseFilter) {
         super(originalRequest, ctx);
@@ -39,12 +44,17 @@ public class ResponseFilterAdapter extends HttpsAwareFiltersAdapter {
                 contents = null;
             }
 
-            HttpMessageInfo messageData = new HttpMessageInfo(originalRequest, ctx, isHttps(), getOriginalUrl());
+            HttpMessageInfo messageInfo = new HttpMessageInfo(originalRequest, ctx, isHttps(), getFullUrl(modifiedHttpRequest), getOriginalUrl());
 
-            responseFilter.filterResponse(httpResponse, contents, messageData);
+            responseFilter.filterResponse(httpResponse, contents, messageInfo);
         }
 
         return super.serverToProxyResponse(httpObject);
+    }
+
+    @Override
+    public void setModifiedHttpRequest(HttpRequest modifiedHttpRequest) {
+        this.modifiedHttpRequest = modifiedHttpRequest;
     }
 
     /**

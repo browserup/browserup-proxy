@@ -10,12 +10,14 @@ public class HttpMessageInfo {
     private final HttpRequest originalRequest;
     private final ChannelHandlerContext channelHandlerContext;
     private final boolean isHttps;
+    private final String url;
     private final String originalUrl;
 
-    public HttpMessageInfo(HttpRequest originalRequest, ChannelHandlerContext channelHandlerContext, boolean isHttps, String originalUrl) {
+    public HttpMessageInfo(HttpRequest originalRequest, ChannelHandlerContext channelHandlerContext, boolean isHttps, String url, String originalUrl) {
         this.originalRequest = originalRequest;
         this.channelHandlerContext = channelHandlerContext;
         this.isHttps = isHttps;
+        this.url = url;
         this.originalUrl = originalUrl;
     }
 
@@ -46,5 +48,14 @@ public class HttpMessageInfo {
      */
     public String getOriginalUrl() {
         return originalUrl;
+    }
+
+    /**
+     * Returns the full, absolute URL of this request from the client for both HTTP and HTTPS URLs. The URL will reflect
+     * modifications from filters. If this method is called while a request filter is processing, it will reflect any
+     * modifications to the URL from all previous filters.
+     */
+    public String getUrl() {
+        return url;
     }
 }

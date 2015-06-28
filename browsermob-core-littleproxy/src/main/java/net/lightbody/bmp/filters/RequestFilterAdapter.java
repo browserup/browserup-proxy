@@ -39,9 +39,9 @@ public class RequestFilterAdapter extends HttpsAwareFiltersAdapter {
                 contents = null;
             }
 
-            HttpMessageInfo messageData = new HttpMessageInfo(originalRequest, ctx, isHttps(), getOriginalUrl());
+            HttpMessageInfo messageInfo = new HttpMessageInfo(originalRequest, ctx, isHttps(), getFullUrl(httpRequest), getOriginalUrl());
 
-            HttpResponse response = requestFilter.filterRequest(httpRequest, contents, messageData);
+            HttpResponse response = requestFilter.filterRequest(httpRequest, contents, messageInfo);
             if (response != null) {
                 return response;
             }

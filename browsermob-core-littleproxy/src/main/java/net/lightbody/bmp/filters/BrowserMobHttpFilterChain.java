@@ -59,8 +59,20 @@ public class BrowserMobHttpFilterChain extends HttpFiltersAdapter {
         for (HttpFilters filter : filters) {
             HttpResponse filterResponse = filter.clientToProxyRequest(httpObject);
             if (filterResponse != null) {
+                // if we are short-circuiting the response to an HttpRequest, update ModifiedRequestAwareFilter instances
+                // with this (possibly) modified HttpRequest before returning the short-circuit response
+                if (httpObject instanceof HttpRequest) {
+                    updateFiltersWithModifiedResponse((HttpRequest) httpObject);
+                }
+
                 return filterResponse;
             }
+        }
+
+        // if this httpObject is the HTTP request, set the modified request object on all ModifiedRequestAwareFilter
+        // instances, so they have access to all modifications the request filters made while filtering
+        if (httpObject instanceof HttpRequest) {
+            updateFiltersWithModifiedResponse((HttpRequest) httpObject);
         }
 
         return null;
@@ -191,6 +203,21 @@ public class BrowserMobHttpFilterChain extends HttpFiltersAdapter {
     public void proxyToServerConnectionQueued() {
         for (HttpFilters filter : filters) {
             filter.proxyToServerConnectionQueued();
+        }
+    }
+
+    /**
+     * Updates {@link ModifiedRequestAwareFilter} filters with the final, modified request after all request filters have
+     * processed the request.
+     *
+     * @param modifiedRequest the modified HttpRequest after all filters have finished processing it
+     */
+    private void updateFiltersWithModifiedResponse(HttpRequest modifiedRequest) {
+        for (HttpFilters filter : filters) {
+            if (filter instanceof ModifiedRequestAwareFilter) {
+                ModifiedRequestAwareFilter requestCaptureFilter = (ModifiedRequestAwareFilter) filter;
+                requestCaptureFilter.setModifiedHttpRequest(modifiedRequest);
+            }
         }
     }
 }
