@@ -651,7 +651,8 @@ public class InterceptorTest extends MockServerTest {
         final AtomicReference<ChannelHandlerContext> requestCtx = new AtomicReference<>();
         final AtomicReference<HttpRequest> requestOriginalRequest = new AtomicReference<>();
         final AtomicBoolean requestIsHttps = new AtomicBoolean(false);
-        final AtomicReference<String> requestOriginalUrl = new AtomicReference<>();
+        final AtomicReference<String> requestFilterOriginalUrl = new AtomicReference<>();
+        final AtomicReference<String> requestFilterUrl = new AtomicReference<>();
 
         proxy.addRequestFilter(new RequestFilter() {
             @Override
@@ -659,7 +660,8 @@ public class InterceptorTest extends MockServerTest {
                 requestCtx.set(messageInfo.getChannelHandlerContext());
                 requestOriginalRequest.set(messageInfo.getOriginalRequest());
                 requestIsHttps.set(messageInfo.isHttps());
-                requestOriginalUrl.set(messageInfo.getOriginalUrl());
+                requestFilterOriginalUrl.set(messageInfo.getOriginalUrl());
+                requestFilterUrl.set(messageInfo.getUrl());
                 return null;
             }
         });
@@ -667,7 +669,8 @@ public class InterceptorTest extends MockServerTest {
         final AtomicReference<ChannelHandlerContext> responseCtx = new AtomicReference<>();
         final AtomicReference<HttpRequest> responseOriginalRequest = new AtomicReference<>();
         final AtomicBoolean responseIsHttps = new AtomicBoolean(false);
-        final AtomicReference<String> responseOriginalUrl = new AtomicReference<>();
+        final AtomicReference<String> responseFilterOriginalUrl = new AtomicReference<>();
+        final AtomicReference<String> responseFilterUrl = new AtomicReference<>();
 
         proxy.addResponseFilter(new ResponseFilter() {
             @Override
@@ -675,7 +678,8 @@ public class InterceptorTest extends MockServerTest {
                 responseCtx.set(messageInfo.getChannelHandlerContext());
                 responseOriginalRequest.set(messageInfo.getOriginalRequest());
                 responseIsHttps.set(messageInfo.isHttps());
-                responseOriginalUrl.set(messageInfo.getOriginalUrl());
+                responseFilterOriginalUrl.set(messageInfo.getOriginalUrl());
+                responseFilterUrl.set(messageInfo.getUrl());
             }
         });
 
@@ -687,14 +691,143 @@ public class InterceptorTest extends MockServerTest {
             assertNotNull("Expected ChannelHandlerContext to be populated in request filter", requestCtx.get());
             assertNotNull("Expected originalRequest to be populated in request filter", requestOriginalRequest.get());
             assertFalse("Expected isHttps to return false in request filter", requestIsHttps.get());
-            assertEquals("Expected originalUrl in request filter to match actual request URL", requestUrl, requestOriginalUrl.get());
+            assertEquals("Expected originalUrl in request filter to match actual request URL", requestUrl, requestFilterOriginalUrl.get());
+            assertEquals("Expected url in request filter to match actual request URL", requestUrl, requestFilterUrl.get());
 
             assertNotNull("Expected ChannelHandlerContext to be populated in response filter", responseCtx.get());
             assertNotNull("Expected originalRequest to be populated in response filter", responseOriginalRequest.get());
             assertFalse("Expected isHttps to return false in response filter", responseIsHttps.get());
-            assertEquals("Expected originalUrl in response filter to match actual request URL", requestUrl, responseOriginalUrl.get());
+            assertEquals("Expected originalUrl in response filter to match actual request URL", requestUrl, responseFilterOriginalUrl.get());
+            assertEquals("Expected url in response filter to match actual request URL", requestUrl, responseFilterUrl.get());
         }
     }
+
+    @Test
+    public void testHttpResponseFilterUrlReflectsModifications() throws IOException {
+        mockServer.when(request()
+                        .withMethod("GET")
+                        .withPath("/urlreflectsmodifications"),
+                Times.exactly(1))
+                .respond(response()
+                        .withStatusCode(200)
+                        .withBody("success"));
+
+        proxy = new BrowserMobProxyServer();
+        proxy.start();
+
+        final AtomicReference<String> requestFilterOriginalUrl = new AtomicReference<>();
+        final AtomicReference<String> requestFilterUrl = new AtomicReference<>();
+
+        proxy.addRequestFilter(new RequestFilter() {
+            @Override
+            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
+                requestFilterOriginalUrl.set(messageInfo.getOriginalUrl());
+                requestFilterUrl.set(messageInfo.getUrl());
+                return null;
+            }
+        });
+
+        // request filters get added to the beginning of the filter chain, so add this uri-modifying request filter after
+        // adding the capturing request filter above.
+        proxy.addRequestFilter(new RequestFilter() {
+            @Override
+            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
+                if (request.getUri().endsWith("/originalurl")) {
+                    String newUrl = request.getUri().replaceAll("originalurl", "urlreflectsmodifications");
+                    request.setUri(newUrl);
+                }
+                return null;
+            }
+        });
+
+        final AtomicReference<String> responseFilterOriginalUrl = new AtomicReference<>();
+        final AtomicReference<String> responseFilterUrl = new AtomicReference<>();
+
+        proxy.addResponseFilter(new ResponseFilter() {
+            @Override
+            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
+                responseFilterOriginalUrl.set(messageInfo.getOriginalUrl());
+                responseFilterUrl.set(messageInfo.getUrl());
+            }
+        });
+
+        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+            String originalRequestUrl = "http://localhost:" + mockServerPort + "/originalurl";
+            String modifiedRequestUrl = "http://localhost:" + mockServerPort + "/urlreflectsmodifications";
+            CloseableHttpResponse response = httpClient.execute(new HttpGet(originalRequestUrl));
+
+            assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
+            assertEquals("Expected originalUrl in request filter to match actual request URL", originalRequestUrl, requestFilterOriginalUrl.get());
+            assertEquals("Expected url in request filter to match modified request URL", modifiedRequestUrl, requestFilterUrl.get());
+
+            assertEquals("Expected originalUrl in response filter to match actual request URL", originalRequestUrl, responseFilterOriginalUrl.get());
+            assertEquals("Expected url in response filter to match modified request URL", modifiedRequestUrl, responseFilterUrl.get());
+        }
+    }
+
+    @Test
+    public void testHttpsResponseFilterUrlReflectsModifications() throws IOException {
+        mockServer.when(request()
+                        .withMethod("GET")
+                        .withPath("/urlreflectsmodifications"),
+                Times.exactly(1))
+                .respond(response()
+                        .withStatusCode(200)
+                        .withBody("success"));
+
+        proxy = new BrowserMobProxyServer();
+        proxy.start();
+
+        final AtomicReference<String> requestFilterOriginalUrl = new AtomicReference<>();
+        final AtomicReference<String> requestFilterUrl = new AtomicReference<>();
+
+        proxy.addRequestFilter(new RequestFilter() {
+            @Override
+            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
+                requestFilterOriginalUrl.set(messageInfo.getOriginalUrl());
+                requestFilterUrl.set(messageInfo.getUrl());
+                return null;
+            }
+        });
+
+        // request filters get added to the beginning of the filter chain, so add this uri-modifying request filter after
+        // adding the capturing request filter above.
+        proxy.addRequestFilter(new RequestFilter() {
+            @Override
+            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
+                if (request.getUri().endsWith("/originalurl")) {
+                    String newUrl = request.getUri().replaceAll("originalurl", "urlreflectsmodifications");
+                    request.setUri(newUrl);
+                }
+                return null;
+            }
+        });
+
+        final AtomicReference<String> responseFilterOriginalUrl = new AtomicReference<>();
+        final AtomicReference<String> responseFilterUrl = new AtomicReference<>();
+
+        proxy.addResponseFilter(new ResponseFilter() {
+            @Override
+            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
+                responseFilterOriginalUrl.set(messageInfo.getOriginalUrl());
+                responseFilterUrl.set(messageInfo.getUrl());
+            }
+        });
+
+        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+            String originalRequestUrl = "https://localhost:" + mockServerPort + "/originalurl";
+            String modifiedRequestUrl = "https://localhost:" + mockServerPort + "/urlreflectsmodifications";
+            CloseableHttpResponse response = httpClient.execute(new HttpGet(originalRequestUrl));
+
+            assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
+            assertEquals("Expected originalUrl in request filter to match actual request URL", originalRequestUrl, requestFilterOriginalUrl.get());
+            assertEquals("Expected url in request filter to match modified request URL", modifiedRequestUrl, requestFilterUrl.get());
+
+            assertEquals("Expected originalUrl in response filter to match actual request URL", originalRequestUrl, responseFilterOriginalUrl.get());
+            assertEquals("Expected url in response filter to match modified request URL", modifiedRequestUrl, responseFilterUrl.get());
+        }
+    }
+
 
     @Test
     public void testHttpsResponseFilterMessageInfoPopulated() throws IOException {
