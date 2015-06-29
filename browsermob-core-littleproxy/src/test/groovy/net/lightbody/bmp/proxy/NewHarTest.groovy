@@ -12,6 +12,7 @@ import net.lightbody.bmp.proxy.dns.AdvancedHostResolver
 import net.lightbody.bmp.proxy.test.util.MockServerTest
 import net.lightbody.bmp.proxy.test.util.ProxyServerTest
 import net.lightbody.bmp.proxy.util.IOUtils
+import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.junit.After
 import org.junit.Test
@@ -413,7 +414,7 @@ class NewHarTest extends MockServerTest {
 
         proxy.newHar()
 
-        // use HTTPS to force a CONNECT. subsequent requests through the tunnel will only contain te resource path, not the full hostname.
+        // use HTTPS to force a CONNECT. subsequent requests through the tunnel will only contain the resource path, not the full hostname.
         String requestUrl = "https://localhost:${mockServerPort}/httpsrequesturlcaptured?param1=value1"
 
         ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
@@ -447,16 +448,19 @@ class NewHarTest extends MockServerTest {
                 .withBody("success"))
 
         proxy = new BrowserMobProxyServer();
-        proxy.rewriteUrl("www.rewrittenurl.com:443", "localhost:${mockServerPort}")
+        proxy.rewriteUrl("https://localhost:${mockServerPort}/originalurl(.*)", "https://localhost:${mockServerPort}/httpsrewrittenurlcaptured\$1")
         proxy.start()
 
         proxy.newHar()
 
-        String requestUrl = "https://www.rewrittenurl.com/httpsrewrittenurlcaptured?param1=value1"
-        String rewrittenUrl = "https://localhost:${mockServerPort}/httpsrewrittenurlcaptured?param1=value1"
+        String requestUrl = "https://localhost:${mockServerPort}/originalurl?param1=value1"
+        String expectedRewrittenUrl = "https://localhost:${mockServerPort}/httpsrewrittenurlcaptured?param1=value1"
 
         ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet(requestUrl)).getEntity().getContent());
+            CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
+            assertEquals("Did not receive HTTP 200 from mock server", 200, response.getStatusLine().getStatusCode())
+
+            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
 
@@ -466,7 +470,7 @@ class NewHarTest extends MockServerTest {
         assertThat("Expected to find entries in the HAR", har.getLog().getEntries(), not(empty()))
 
         String capturedUrl = har.log.entries[0].request.url
-        assertEquals("URL captured in HAR did not match request URL", rewrittenUrl, capturedUrl)
+        assertEquals("URL captured in HAR did not match request URL", expectedRewrittenUrl, capturedUrl)
 
         assertThat("Expected to find query parameters in the HAR", har.log.entries[0].request.queryString, not(empty()));
 
