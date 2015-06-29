@@ -1295,16 +1295,16 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
 
         addHttpFilterFactory(new HttpFiltersSourceAdapter() {
             @Override
-            public HttpFilters filterRequest(HttpRequest originalRequest) {
-                return new BlacklistFilter(originalRequest, getBlacklist());
+            public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
+                return new BlacklistFilter(originalRequest, ctx, getBlacklist());
             }
         });
 
         addHttpFilterFactory(new HttpFiltersSourceAdapter() {
             @Override
-            public HttpFilters filterRequest(HttpRequest originalRequest) {
+            public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
                 Whitelist currentWhitelist = whitelist.get();
-                return new WhitelistFilter(originalRequest, isWhitelistEnabled(), currentWhitelist.getStatusCode(), currentWhitelist.getPatterns());
+                return new WhitelistFilter(originalRequest, ctx, isWhitelistEnabled(), currentWhitelist.getStatusCode(), currentWhitelist.getPatterns());
             }
         });
 

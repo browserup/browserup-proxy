@@ -343,6 +343,10 @@ public interface BrowserMobProxy {
      * Adds a URL-matching regular expression to the blacklist. Requests that match a blacklisted URL will return the specified HTTP
      * statusCode for all HTTP methods. If there are existing patterns on the blacklist, the urlPattern will be evaluated last,
      * after the URL is checked against all other blacklist entries.
+     * <p/>
+     * The urlPattern matches the full URL of the request, including scheme, host, and port, path, and query parameters
+     * for both HTTP and HTTPS requests. For example, to blacklist both HTTP and HTTPS requests to www.google.com,
+     * use a urlPattern of "https?://www\\.google\\.com/.*".
      *
      * @param urlPattern URL-matching regular expression to blacklist
      * @param statusCode HTTP status code to return
@@ -353,7 +357,9 @@ public interface BrowserMobProxy {
      * Adds a URL-matching regular expression to the blacklist. Requests that match a blacklisted URL will return the specified HTTP
      * statusCode only when the request's HTTP method (GET, POST, PUT, etc.) matches the specified httpMethodPattern regular expression.
      * If there are existing patterns on the blacklist, the urlPattern will be evaluated last, after the URL is checked against all
-     * other blacklist entries
+     * other blacklist entries.
+     * <p/>
+     * See {@link #blacklistRequests(String, int)} for details on the URL the urlPattern will match.
      *
      * @param urlPattern URL-matching regular expression to blacklist
      * @param statusCode HTTP status code to return
@@ -384,6 +390,12 @@ public interface BrowserMobProxy {
 
     /**
      * Whitelists URLs matching the specified regular expression patterns. Replaces any existing whitelist.
+     * The urlPattern matches the full URL of the request, including scheme, host, and port, path, and query parameters
+     * for both HTTP and HTTPS requests. For example, to whitelist both HTTP and HTTPS requests to www.google.com, use a urlPattern
+     * of "https?://www\\.google\\.com/.*".
+     * <p/>
+     * <b>Note:</b> All HTTP CONNECT requests are automatically whitelisted and cannot be short-circuited using the
+     * whitelist response code.
      *
      * @param urlPatterns URL-matching regular expressions to whitelist; null or an empty collection will enable an empty whitelist
      * @param statusCode HTTP status code to return to clients when a URL matches a pattern

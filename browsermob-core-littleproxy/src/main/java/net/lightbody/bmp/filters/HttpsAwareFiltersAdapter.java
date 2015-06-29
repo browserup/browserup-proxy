@@ -7,6 +7,7 @@ import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import net.lightbody.bmp.util.BrowserMobHttpUtil;
 import org.littleshoot.proxy.HttpFiltersAdapter;
+import org.littleshoot.proxy.impl.ProxyUtils;
 
 /**
  * The HttpsAwareFiltersAdapter exposes the original host and the "real" host (after filter modifications) to filters for HTTPS
@@ -80,6 +81,11 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
      * @return the full URL of the request, including scheme, host, port, path, and query parameters
      */
     public String getFullUrl(HttpRequest modifiedRequest) {
+        // special case: for HTTPS requests, the full URL is scheme (https://) + the URI of this request
+        if (ProxyUtils.isCONNECT(modifiedRequest)) {
+            return "https://" + modifiedRequest.getUri();
+        }
+
         // To get the full URL, we need to retrieve the Scheme, Host + Port, Path, and Query Params from the request.
         // Scheme: the scheme (HTTP/HTTPS) may or may not be part of the request, and so must be generated based on the
         //   type of connection.
