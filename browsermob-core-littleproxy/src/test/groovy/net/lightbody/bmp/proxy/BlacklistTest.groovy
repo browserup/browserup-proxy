@@ -9,10 +9,13 @@ import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.junit.After
 import org.junit.Test
+import org.mockserver.matchers.Times
 
 import static org.hamcrest.Matchers.isEmptyOrNullString
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertThat
+import static org.mockserver.model.HttpRequest.request
+import static org.mockserver.model.HttpResponse.response
 
 class BlacklistTest extends MockServerTest {
     BrowserMobProxy proxy
@@ -25,19 +28,123 @@ class BlacklistTest extends MockServerTest {
     }
 
     @Test
-    void testBlacklistedRequestReturnsBlacklistStatusCode() {
-        proxy = new BrowserMobProxyServer();
-        proxy.start();
-        int proxyPort = proxy.getPort();
+    void testBlacklistedHttpRequestReturnsBlacklistStatusCode() {
+        proxy = new BrowserMobProxyServer()
+        proxy.start()
+        int proxyPort = proxy.getPort()
 
-        proxy.blacklistRequests("https?://www\\.blacklisted\\.domain/.*", 405)
+        proxy.blacklistRequests("http://www\\.blacklisted\\.domain/.*", 405)
 
         ProxyServerTest.getNewHttpClient(proxyPort).withCloseable {
             CloseableHttpResponse response = it.execute(new HttpGet("http://www.blacklisted.domain/someresource"))
-            assertEquals("Did not receive blacklisted status code in response", 405, response.getStatusLine().getStatusCode());
+            assertEquals("Did not receive blacklisted status code in response", 405, response.getStatusLine().getStatusCode())
 
-            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
-            assertThat("Expected  blacklisted response to contain 0-length body", responseBody, isEmptyOrNullString())
-        };
+            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent())
+            assertThat("Expected blacklisted response to contain 0-length body", responseBody, isEmptyOrNullString())
+        }
+    }
+
+    @Test
+    void testBlacklistedHttpsRequestReturnsBlacklistStatusCode() {
+        // need to set up a mock server to handle the CONNECT, since that is not blacklisted
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/thisrequestshouldnotoccur"),
+                Times.unlimited())
+                .respond(response()
+                .withStatusCode(500)
+                .withBody("this URL should never be called"))
+
+        proxy = new BrowserMobProxyServer()
+        proxy.start()
+        int proxyPort = proxy.getPort()
+
+        proxy.blacklistRequests("https://localhost:${mockServerPort}/.*", 405)
+
+        ProxyServerTest.getNewHttpClient(proxyPort).withCloseable {
+            CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerPort}/thisrequestshouldnotoccur"))
+            assertEquals("Did not receive blacklisted status code in response", 405, response.getStatusLine().getStatusCode())
+
+            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent())
+            assertThat("Expected blacklisted response to contain 0-length body", responseBody, isEmptyOrNullString())
+        }
+    }
+
+    @Test
+    void testCanBlacklistSingleHttpResource() {
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/blacklistedresource"),
+                Times.unlimited())
+                .respond(response()
+                .withStatusCode(500)
+                .withBody("this URL should never be called"))
+
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/nonblacklistedresource"),
+                Times.unlimited())
+                .respond(response()
+                .withStatusCode(200)
+                .withBody("not blacklisted"))
+
+        proxy = new BrowserMobProxyServer()
+        proxy.start()
+        int proxyPort = proxy.getPort()
+
+        proxy.blacklistRequests("http://localhost:${mockServerPort}/blacklistedresource", 405)
+
+        ProxyServerTest.getNewHttpClient(proxyPort).withCloseable {
+            CloseableHttpResponse nonBlacklistedResourceResponse = it.execute(new HttpGet("http://localhost:${mockServerPort}/nonblacklistedresource"))
+            assertEquals("Did not receive blacklisted status code in response", 200, nonBlacklistedResourceResponse.getStatusLine().getStatusCode())
+
+            String nonBlacklistedResponseBody = IOUtils.toStringAndClose(nonBlacklistedResourceResponse.getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "not blacklisted", nonBlacklistedResponseBody)
+
+            CloseableHttpResponse blacklistedResourceResponse = it.execute(new HttpGet("http://localhost:${mockServerPort}/blacklistedresource"))
+            assertEquals("Did not receive blacklisted status code in response", 405, blacklistedResourceResponse.getStatusLine().getStatusCode())
+
+            String blacklistedResponseBody = IOUtils.toStringAndClose(blacklistedResourceResponse.getEntity().getContent())
+            assertThat("Expected blacklisted response to contain 0-length body", blacklistedResponseBody, isEmptyOrNullString())
+        }
+    }
+
+    @Test
+    void testCanBlacklistSingleHttpsResource() {
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/blacklistedresource"),
+                Times.unlimited())
+                .respond(response()
+                .withStatusCode(500)
+                .withBody("this URL should never be called"))
+
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/nonblacklistedresource"),
+                Times.unlimited())
+                .respond(response()
+                .withStatusCode(200)
+                .withBody("not blacklisted"))
+
+        proxy = new BrowserMobProxyServer()
+        proxy.start()
+        int proxyPort = proxy.getPort()
+
+        proxy.blacklistRequests("https://localhost:${mockServerPort}/blacklistedresource", 405)
+
+        ProxyServerTest.getNewHttpClient(proxyPort).withCloseable {
+            CloseableHttpResponse nonBlacklistedResourceResponse = it.execute(new HttpGet("https://localhost:${mockServerPort}/nonblacklistedresource"))
+            assertEquals("Did not receive blacklisted status code in response", 200, nonBlacklistedResourceResponse.getStatusLine().getStatusCode())
+
+            String nonBlacklistedResponseBody = IOUtils.toStringAndClose(nonBlacklistedResourceResponse.getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "not blacklisted", nonBlacklistedResponseBody)
+
+            CloseableHttpResponse blacklistedResourceResponse = it.execute(new HttpGet("https://localhost:${mockServerPort}/blacklistedresource"))
+            assertEquals("Did not receive blacklisted status code in response", 405, blacklistedResourceResponse.getStatusLine().getStatusCode())
+
+            String blacklistedResponseBody = IOUtils.toStringAndClose(blacklistedResourceResponse.getEntity().getContent())
+            assertThat("Expected blacklisted response to contain 0-length body", blacklistedResponseBody, isEmptyOrNullString())
+        }
     }
 }
