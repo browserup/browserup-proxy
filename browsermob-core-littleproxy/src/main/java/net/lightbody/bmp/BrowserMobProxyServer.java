@@ -1310,8 +1310,8 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
 
         addHttpFilterFactory(new HttpFiltersSourceAdapter() {
             @Override
-            public HttpFilters filterRequest(HttpRequest originalRequest) {
-                return new RewriteUrlFilter(originalRequest, rewriteRules);
+            public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
+                return new RewriteUrlFilter(originalRequest, ctx, rewriteRules);
             }
         });
 

@@ -243,13 +243,9 @@ public class BrowserMobHttpUtil {
     public static String getHostAndPortFromRequest(HttpRequest httpRequest) {
         if (startsWithHttpOrHttps(httpRequest.getUri())) {
             try {
-                URI uri = new URI(httpRequest.getUri());
-                if (uri.getPort() == -1) {
-                    return uri.getHost();
-                } else {
-                    return HostAndPort.fromParts(uri.getHost(), uri.getPort()).toString();
-                }
+                return getHostAndPortFromUri(httpRequest.getUri());
             } catch (URISyntaxException e) {
+                // the URI could not be parsed, so return the host and port in the Host header
             }
         }
 
@@ -267,13 +263,9 @@ public class BrowserMobHttpUtil {
         // if this request's URI contains a full URI (including scheme, host, etc.), strip away the non-path components
         if (startsWithHttpOrHttps(httpRequest.getUri())) {
             try {
-                URI uri = new URI(httpRequest.getUri());
-                if (uri.getQuery() != null) {
-                    return uri.getPath() + '?' + uri.getQuery();
-                } else {
-                    return uri.getPath();
-                }
+                return getPathFromUri(httpRequest.getUri());
             } catch (URISyntaxException e) {
+                // could not parse the URI, so fall through and return the URI as-is
             }
         }
 
@@ -295,6 +287,39 @@ public class BrowserMobHttpUtil {
             return true;
         } else {
             return false;
+        }
+    }
+
+    /**
+     * Retrieves the path from the URI, stripping out the scheme, host, and port. The path will begin with a
+     * leading '/'. For example, 'http://example.com/some/resource' would return '/some/resource'.
+     *
+     * @param uriString the URI to parse, containing a scheme, host, port, and path
+     * @return the path from the URI
+     * @throws URISyntaxException if the specified URI is invalid or cannot be parsed
+     */
+    public static String getPathFromUri(String uriString) throws URISyntaxException {
+        URI uri = new URI(uriString);
+        if (uri.getQuery() != null) {
+            return uri.getPath() + '?' + uri.getQuery();
+        } else {
+            return uri.getPath();
+        }
+    }
+
+    /**
+     * Retrieves the host and port from the specified URI.
+     *
+     * @param uriString URI to retrieve the host and port from
+     * @return the host and port from the URI as a String
+     * @throws URISyntaxException if the specified URI is invalid or cannot be parsed
+     */
+    public static String getHostAndPortFromUri(String uriString) throws URISyntaxException {
+        URI uri = new URI(uriString);
+        if (uri.getPort() == -1) {
+            return uri.getHost();
+        } else {
+            return HostAndPort.fromParts(uri.getHost(), uri.getPort()).toString();
         }
     }
 

@@ -280,6 +280,11 @@ public interface BrowserMobProxy {
      * The replacementExpression may consist of capture groups specified in the urlPattern, denoted
      * by a $ (see {@link java.util.regex.Matcher#appendReplacement(StringBuffer, String)}.
      * <p/>
+     * For HTTP requests (not HTTPS), if the hostname and/or port is changed as a result of a rewrite rule, the Host header of the request will be modified
+     * to reflect the updated hostname/port. For HTTPS requests, the host and port cannot be changed by rewrite rules
+     * (use {@link #getHostNameResolver()} and {@link AdvancedHostResolver#remapHost(String, String)} to direct HTTPS requests
+     * to a different host).
+     * <p/>
      * <b>Note:</b> The rewriting applies to the entire URL, including scheme (http:// or https://), hostname/address, port, and query string. Note that this means
      * a urlPattern of {@code "http://www\.website\.com/page"} will NOT match {@code http://www.website.com:80/page}.
      * <p/>
