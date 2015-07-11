@@ -49,6 +49,39 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
     private static final Logger log = LoggerFactory.getLogger(HarCaptureFilter.class);
 
+    /**
+     * The HTTP version string in the {@link HarResponse} for failed requests.
+     */
+    private static final String HTTP_VERSION_STRING_FOR_FAILURE = "unknown";
+
+    /**
+     * The HTTP status code in the {@link HarResponse} for failed requests.
+     */
+    private static final int HTTP_STATUS_CODE_FOR_FAILURE = 0;
+
+    /**
+     * The HTTP status text/reason phrase in the {@link HarResponse} for failed requests.
+     */
+    private static final String HTTP_REASON_PHRASE_FOR_FAILURE = "";
+
+    /**
+     * The error message that will be populated in the _error field of the {@link HarResponse} due to a name
+     * lookup failure.
+     */
+    private static final String RESOLUTION_FAILED_ERROR_MESSAGE = "Unable to resolve host: ";
+
+    /**
+     * The error message that will be populated in the _error field of the {@link HarResponse} due to a
+     * connection failure.
+     */
+    private static final String CONNECTION_FAILED_ERROR_MESSAGE = "Unable to connect to host";
+
+    /**
+     * The error message that will be populated in the _error field of the {@link HarResponse} when the proxy fails to
+     * receive a response in a timely manner.
+     */
+    private static final String RESPONSE_TIMED_OUT_ERROR_MESSAGE = "Response timed out";
+
     private final Har har;
 
     /**
@@ -230,13 +263,13 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
             // we may need to capture both the request and the response, so set up the request/response filters and delegate to them when
             // the corresponding filter methods are invoked. to save time and memory, only set up the capturing filters when
             // we actually need to capture the data.
-            if (dataToCapture.contains(CaptureType.REQUEST_CONTENT) || dataToCapture.contains(CaptureType.REQUEST_BINARY_CONTENT)) {
+            if (this.dataToCapture.contains(CaptureType.REQUEST_CONTENT) || this.dataToCapture.contains(CaptureType.REQUEST_BINARY_CONTENT)) {
                 requestCaptureFilter = new ClientRequestCaptureFilter(originalRequest);
             } else {
                 requestCaptureFilter = null;
             }
 
-            if (dataToCapture.contains(CaptureType.RESPONSE_CONTENT) || dataToCapture.contains(CaptureType.RESPONSE_BINARY_CONTENT)) {
+            if (this.dataToCapture.contains(CaptureType.RESPONSE_CONTENT) || this.dataToCapture.contains(CaptureType.RESPONSE_BINARY_CONTENT)) {
                 responseCaptureFilter = new ServerResponseCaptureFilter(originalRequest, true);
             } else {
                 responseCaptureFilter = null;
@@ -281,9 +314,9 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
                 captureRequestHeaders(httpRequest);
             }
 
-            // The HTTP CONNECT to the proxy server establishes the SSL connection to the remote server, but the HTTP CONNECT is not recorded in
-            // a separate HarEntry. Instead, the ssl and connect times are recorded in the first request between the client and remote server
-            // after the HTTP CONNECT.
+            // The HTTP CONNECT to the proxy server establishes the SSL connection to the remote server, but the
+            // HTTP CONNECT is not recorded in a separate HarEntry (except in case of error). Instead, the ssl and
+            // connect times are recorded in the first request between the client and remote server after the HTTP CONNECT.
             captureConnectTiming();
         }
 
@@ -344,14 +377,39 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         return super.serverToProxyResponse(httpObject);
     }
 
-    protected void captureRequestUrl(HttpRequest httpRequest) {
-        // the HAR spec defines the request.url field as:
-        //     url [string] - Absolute URL of the request (fragments are not included).
-        // the URI on the httpRequest may only identify the path of the resource, so find the full URL.
-        // the full URL consists of the scheme + host + port (if non-standard) + path + query params + fragment.
-        String url = getFullUrl(httpRequest);
+    @Override
+    public void serverToProxyResponseTimedOut() {
+        if (har == null && !httpConnect) {
+            return;
+        }
 
-        HarRequest request = new HarRequest(httpRequest.getMethod().toString(), url, httpRequest.getProtocolVersion().text());
+        // replace any existing HarResponse that was created if the server sent a partial response
+        HarResponse response = createHarResponseForFailure();
+        harEntry.setResponse(response);
+
+        response.setError(RESPONSE_TIMED_OUT_ERROR_MESSAGE);
+
+
+        // include this timeout time in the HarTimings object
+        long timeoutTimestampNanos = System.nanoTime();
+
+        // if the proxy started to send the request but has not yet finished, we are currently "sending"
+        if (sendStartedNanos > 0L && sendFinishedNanos == 0L) {
+            harEntry.getTimings().setSend(timeoutTimestampNanos - sendStartedNanos, TimeUnit.NANOSECONDS);
+        }
+        // if the entire request was sent but the proxy has not begun receiving the response, we are currently "waiting"
+        else if (sendFinishedNanos > 0L && responseReceiveStartedNanos == 0L) {
+            harEntry.getTimings().setWait(timeoutTimestampNanos - sendFinishedNanos, TimeUnit.NANOSECONDS);
+        }
+        // if the proxy has already begun to receive the response, we are currenting "receiving"
+        else if (responseReceiveStartedNanos > 0L) {
+            harEntry.getTimings().setReceive(timeoutTimestampNanos - responseReceiveStartedNanos, TimeUnit.NANOSECONDS);
+        }
+    }
+
+    protected void captureRequestUrl(HttpRequest httpRequest) {
+        HarRequest request = createHarRequestForHttpRequest(httpRequest);
+
         harEntry.setRequest(request);
 
         // capture query parameters. it is safe to assume the query string is UTF-8, since it "should" be in US-ASCII (a subset of UTF-8),
@@ -367,9 +425,25 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         } catch (IllegalArgumentException e) {
             // QueryStringDecoder will throw an IllegalArgumentException if it cannot interpret a query string. rather than cause the entire request to
             // fail by propagating the exception, simply skip the query parameter capture.
-            // TODO: add error information to custom fields in the HAR
-            log.info("Could not decode query parameters on URI: " + httpRequest.getUri(), e);
+            harEntry.setComment("Unable to decode query parameters on URI: " + httpRequest.getUri());
+            log.info("Unable to decode query parameters on URI: " + httpRequest.getUri(), e);
         }
+    }
+
+    /**
+     * Creates a HarRequest object using the method, url, and HTTP version of the specified request.
+     *
+     * @param httpRequest HTTP request on which the HarRequest will be based
+     * @return a new HarRequest object
+     */
+    private HarRequest createHarRequestForHttpRequest(HttpRequest httpRequest) {
+        // the HAR spec defines the request.url field as:
+        //     url [string] - Absolute URL of the request (fragments are not included).
+        // the URI on the httpRequest may only identify the path of the resource, so find the full URL.
+        // the full URL consists of the scheme + host + port (if non-standard) + path + query params + fragment.
+        String url = getFullUrl(httpRequest);
+
+        return new HarRequest(httpRequest.getMethod().toString(), url, httpRequest.getProtocolVersion().text());
     }
 
     protected void captureUserAgent(HttpRequest httpRequest) {
@@ -390,7 +464,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
     }
 
     protected void captureRequestHeaderSize(HttpRequest httpRequest) {
-        String requestLine = httpRequest.getMethod().toString() + ' ' + httpRequest.getUri().toString() + ' ' + httpRequest.getProtocolVersion().toString();
+        String requestLine = httpRequest.getMethod().toString() + ' ' + httpRequest.getUri() + ' ' + httpRequest.getProtocolVersion().toString();
         // +2 => CRLF after status line, +4 => header/data separation
         long requestHeadersSize = requestLine.length() + 6;
 
@@ -642,6 +716,24 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
     }
 
     @Override
+    public void proxyToServerResolutionFailed(String hostAndPort) {
+        //TODO: populate values in har for CONNECT requests when resolution fails
+        if (har == null && !httpConnect) {
+            return;
+        }
+
+        HarResponse response = createHarResponseForFailure();
+        harEntry.setResponse(response);
+
+        response.setError(RESOLUTION_FAILED_ERROR_MESSAGE + hostAndPort);
+
+        // record the amount of time we attempted to resolve the hostname in the HarTimings object
+        if (dnsResolutionStartedNanos > 0L) {
+            harEntry.getTimings().setDns(System.nanoTime() - dnsResolutionStartedNanos, TimeUnit.NANOSECONDS);
+        }
+    }
+
+    @Override
     public void proxyToServerResolutionSucceeded(String serverHostAndPort, InetSocketAddress resolvedRemoteAddress) {
         if (har == null && !httpConnect) {
             return;
@@ -687,6 +779,24 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
     @Override
     public void proxyToServerConnectionSSLHandshakeStarted() {
         this.sslHandshakeStartedNanos = System.nanoTime();
+    }
+
+    @Override
+    public void proxyToServerConnectionFailed() {
+        //TODO: populate values in the har when CONNECT requests fail
+        if (har == null || httpConnect) {
+            return;
+        }
+
+        HarResponse response = createHarResponseForFailure();
+        harEntry.setResponse(response);
+
+        response.setError(CONNECTION_FAILED_ERROR_MESSAGE);
+
+        // record the amount of time we attempted to connect in the HarTimings object
+        if (connectionStartedNanos > 0L) {
+            harEntry.getTimings().setConnect(System.nanoTime() - connectionStartedNanos, TimeUnit.NANOSECONDS);
+        }
     }
 
     @Override
@@ -800,4 +910,14 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         }
     }
 
+    /**
+     * Creates a HarResponse object for failed requests. Normally the HarResponse is populated when the response is received
+     * from the server, but if the request fails due to a name resolution issue, connection problem, timeout, etc., no
+     * HarResponse would otherwise be created.
+     *
+     * @return a new HarResponse object with invalid HTTP status code (0) and version string ("unknown")
+     */
+    private static HarResponse createHarResponseForFailure() {
+        return new HarResponse(HTTP_STATUS_CODE_FOR_FAILURE, HTTP_REASON_PHRASE_FOR_FAILURE, HTTP_VERSION_STRING_FOR_FAILURE);
+    }
 }

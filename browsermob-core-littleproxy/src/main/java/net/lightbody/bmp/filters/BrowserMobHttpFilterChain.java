@@ -113,6 +113,13 @@ public class BrowserMobHttpFilterChain extends HttpFiltersAdapter {
     }
 
     @Override
+    public void serverToProxyResponseTimedOut() {
+        for (HttpFilters filter : filters) {
+            filter.serverToProxyResponseTimedOut();
+        }
+    }
+
+    @Override
     public void serverToProxyResponseReceiving() {
         for (HttpFilters filter : filters) {
             filter.serverToProxyResponseReceiving();
@@ -133,6 +140,13 @@ public class BrowserMobHttpFilterChain extends HttpFiltersAdapter {
         }
 
         return overrideAddress;
+    }
+
+    @Override
+    public void proxyToServerResolutionFailed(String hostAndPort) {
+        for (HttpFilters filter : filters) {
+            filter.proxyToServerResolutionFailed(hostAndPort);
+        }
     }
 
     @Override
