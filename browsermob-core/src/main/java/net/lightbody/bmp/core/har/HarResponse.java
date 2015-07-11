@@ -1,6 +1,7 @@
 package net.lightbody.bmp.core.har;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -14,9 +15,20 @@ public class HarResponse {
     private final List<HarNameValuePair> headers = new CopyOnWriteArrayList<HarNameValuePair>();
     private final HarContent content = new HarContent();
     private volatile String redirectURL = "";
-    private volatile long headersSize;
-    private volatile long bodySize;
+
+    /* the values of headersSize and bodySize are set to -1 by default, in accordance with the HAR spec:
+            headersSize [number] - Total number of bytes from the start of the HTTP request message until (and including) the double CRLF before the body. Set to -1 if the info is not available.
+            bodySize [number] - Size of the request body (POST data payload) in bytes. Set to -1 if the info is not available.
+    */
+    private volatile long headersSize = -1;
+    private volatile long bodySize = -1;
     private volatile String comment = "";
+
+    /**
+     * A custom field indicating that an error occurred, such as DNS resolution failure.
+     */
+    @JsonProperty("_error")
+    private volatile String error;
 
     public HarResponse() {
     }
@@ -93,5 +105,13 @@ public class HarResponse {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
     }
 }
