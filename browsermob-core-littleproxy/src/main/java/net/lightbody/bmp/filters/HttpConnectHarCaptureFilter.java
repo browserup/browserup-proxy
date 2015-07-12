@@ -1,5 +1,6 @@
 package net.lightbody.bmp.filters;
 
+import com.google.common.cache.CacheBuilder;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
@@ -9,11 +10,17 @@ import net.lightbody.bmp.core.har.HarEntry;
 import net.lightbody.bmp.core.har.HarRequest;
 import net.lightbody.bmp.core.har.HarResponse;
 import net.lightbody.bmp.core.har.HarTimings;
+import net.lightbody.bmp.filters.support.HttpConnectTiming;
 import net.lightbody.bmp.filters.util.HarCaptureUtil;
+import net.lightbody.bmp.util.BrowserMobHttpUtil;
 import org.littleshoot.proxy.impl.ProxyUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Date;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -25,9 +32,10 @@ import java.util.concurrent.TimeUnit;
  * would otherwise not be any record in the HAR of the error (if the CONNECT fails, there will be no subsequent "real"
  * request in which to record the error).
  *
- * TODO: refactor other HTTP CONNECT-specific logic out of HarCaptureFilter
  */
-public class HttpsConnectHarCaptureFilter extends HttpsAwareFiltersAdapter {
+public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implements ModifiedRequestAwareFilter {
+    private static final Logger log = LoggerFactory.getLogger(HttpConnectHarCaptureFilter.class);
+
     /**
      * The currently active HAR at the time the current request is received.
      */
@@ -42,6 +50,13 @@ public class HttpsConnectHarCaptureFilter extends HttpsAwareFiltersAdapter {
      * The time this CONNECT began. Used to populate the HAR entry in case of failure.
      */
     private volatile Date requestStartTime;
+
+    /**
+     * True if this filter instance processed a {@link #proxyToServerResolutionSucceeded(String, java.net.InetSocketAddress)} call, indicating
+     * that the hostname was resolved and populated in the HAR (if this is not a CONNECT).
+     */
+//    private volatile boolean addressResolved = false;
+    private volatile InetAddress resolvedAddress;
 
     /**
      * Populated by proxyToServerResolutionStarted when DNS resolution starts. If any previous filters already resolved the address, their resolution time
@@ -60,26 +75,70 @@ public class HttpsConnectHarCaptureFilter extends HttpsAwareFiltersAdapter {
     private volatile long responseReceiveStartedNanos;
     private volatile long sslHandshakeStartedNanos;
 
-    public HttpsConnectHarCaptureFilter(HttpRequest originalRequest, ChannelHandlerContext ctx, Har har, String currentPageRef) {
+    /**
+     * The address of the client making the request. Captured in the constructor and used when calculating and capturing ssl handshake and connect
+     * timing information for SSL connections.
+     */
+    private final InetSocketAddress clientAddress;
+
+    /**
+     * Stores HTTP CONNECT timing information for this request, if it is an HTTP CONNECT.
+     */
+    private final HttpConnectTiming httpConnectTiming;
+
+    /**
+     * The maximum amount of time to save timing information between an HTTP CONNECT and the subsequent HTTP request. Typically this is done
+     * immediately, but if for some reason it is not (e.g. due to a client crash or dropped connection), the timing information will be
+     * kept for this long before being evicted to prevent a memory leak. If a subsequent request does come through after eviction, it will still
+     * be recorded, but the timing information will not be populated in the HAR.
+     */
+    private static final int HTTP_CONNECT_TIMING_EVICTION_SECONDS = 60;
+
+    /**
+     * Concurrency of the httpConnectTiming map. Should be approximately equal to the maximum number of simultaneous connection
+     * attempts (but not necessarily simultaneous connections). A lower value will inhibit performance.
+     * TODO: tune this value for a large number of concurrent requests. develop a non-cache-based mechanism of passing ssl timings to subsequent requests.
+     */
+    private static final int HTTP_CONNECT_TIMING_CONCURRENCY_LEVEL = 50;
+
+    /**
+     * Stores SSL connection timing information from HTTP CONNNECT requests. This timing information is stored in the first HTTP request
+     * after the CONNECT, not in the CONNECT itself, so it needs to be stored across requests.
+     *
+     * This is the only state stored across multiple requests.
+     */
+    private static final ConcurrentMap<InetSocketAddress, HttpConnectTiming> httpConnectTimes =
+            CacheBuilder.newBuilder()
+                    .expireAfterWrite(HTTP_CONNECT_TIMING_EVICTION_SECONDS, TimeUnit.SECONDS)
+                    .concurrencyLevel(HTTP_CONNECT_TIMING_CONCURRENCY_LEVEL)
+                    .<InetSocketAddress, HttpConnectTiming>build()
+                    .asMap();
+
+    private volatile HttpRequest modifiedHttpRequest;
+
+    public HttpConnectHarCaptureFilter(HttpRequest originalRequest, ChannelHandlerContext ctx, Har har, String currentPageRef) {
         super(originalRequest, ctx);
 
-        boolean httpConnect = ProxyUtils.isCONNECT(originalRequest);
-
-        if (!httpConnect) {
-            this.har = null;
-            this.currentPageRef = null;
-        } else {
-            this.har = har;
-            this.currentPageRef = currentPageRef;
+        if (har == null) {
+            throw new IllegalStateException("Attempted har capture when har is null");
         }
+
+        if (!ProxyUtils.isCONNECT(originalRequest)) {
+            throw new IllegalStateException("Attempted HTTP CONNECT har capture on non-HTTP CONNECT request");
+        }
+
+        this.har = har;
+        this.currentPageRef = currentPageRef;
+
+        this.clientAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+
+        // create and cache an HTTP CONNECT timing object to capture timing-related information
+        this.httpConnectTiming = new HttpConnectTiming();
+        httpConnectTimes.put(clientAddress, httpConnectTiming);
     }
 
     @Override
     public HttpResponse clientToProxyRequest(HttpObject httpObject) {
-        if (har == null) {
-            return null;
-        }
-
         if (httpObject instanceof HttpRequest) {
             // store the CONNECT start time in case of failure, so we can populate the HarEntry with it
             requestStartTime = new Date();
@@ -90,10 +149,6 @@ public class HttpsConnectHarCaptureFilter extends HttpsAwareFiltersAdapter {
 
     @Override
     public void proxyToServerResolutionFailed(String hostAndPort) {
-        if (har == null) {
-            return;
-        }
-
         // since this is a CONNECT, which is not handled by the HarCaptureFilter, we need to create and populate the
         // entire HarEntry and add it to this har.
         HarEntry harEntry = createHarEntryForFailedCONNECT(HarCaptureUtil.getResolutionFailedErrorMessage(hostAndPort));
@@ -103,14 +158,12 @@ public class HttpsConnectHarCaptureFilter extends HttpsAwareFiltersAdapter {
         if (dnsResolutionStartedNanos > 0L) {
             harEntry.getTimings().setDns(System.nanoTime() - dnsResolutionStartedNanos, TimeUnit.NANOSECONDS);
         }
+
+        httpConnectTimes.remove(clientAddress);
     }
 
     @Override
     public void proxyToServerConnectionFailed() {
-        if (har == null) {
-            return;
-        }
-
         // since this is a CONNECT, which is not handled by the HarCaptureFilter, we need to create and populate the
         // entire HarEntry and add it to this har.
         HarEntry harEntry = createHarEntryForFailedCONNECT(HarCaptureUtil.getConnectionFailedErrorMessage());
@@ -120,32 +173,25 @@ public class HttpsConnectHarCaptureFilter extends HttpsAwareFiltersAdapter {
         if (connectionStartedNanos > 0L) {
             harEntry.getTimings().setConnect(System.nanoTime() - connectionStartedNanos, TimeUnit.NANOSECONDS);
         }
+
+        httpConnectTimes.remove(clientAddress);
     }
 
     @Override
     public void proxyToServerConnectionSucceeded() {
-        if (har == null) {
-            return;
-        }
-
         this.connectionSucceededTimeNanos = System.nanoTime();
+
+        httpConnectTiming.setConnectTimeNanos(connectionSucceededTimeNanos - this.connectionStartedNanos);
+        httpConnectTiming.setSslHandshakeTimeNanos(connectionSucceededTimeNanos - this.sslHandshakeStartedNanos);
     }
 
     @Override
     public void proxyToServerConnectionSSLHandshakeStarted() {
-        if (har == null) {
-            return;
-        }
-
         this.sslHandshakeStartedNanos = System.nanoTime();
     }
 
     @Override
     public void serverToProxyResponseTimedOut() {
-        if (har == null) {
-            return;
-        }
-
         HarEntry harEntry = createHarEntryForFailedCONNECT(HarCaptureUtil.getResponseTimedOutErrorMessage());
         har.getLog().addEntry(harEntry);
 
@@ -168,67 +214,46 @@ public class HttpsConnectHarCaptureFilter extends HttpsAwareFiltersAdapter {
 
     @Override
     public void proxyToServerConnectionQueued() {
-        if (har == null) {
-            return;
-        }
-
         this.connectionQueuedNanos = System.nanoTime();
     }
 
 
     @Override
     public InetSocketAddress proxyToServerResolutionStarted(String resolvingServerHostAndPort) {
-        if (har == null) {
-            return null;
-        }
-
         dnsResolutionStartedNanos = System.nanoTime();
+
+        httpConnectTiming.setBlockedTimeNanos(dnsResolutionStartedNanos - connectionQueuedNanos);
 
         return null;
     }
 
     @Override
     public void proxyToServerResolutionSucceeded(String serverHostAndPort, InetSocketAddress resolvedRemoteAddress) {
-        if (har == null) {
-            return;
-        }
-
         this.dnsResolutionFinishedNanos = System.nanoTime();
+
+        httpConnectTiming.setDnsTimeNanos(dnsResolutionFinishedNanos - dnsResolutionStartedNanos);
+
+        // the address *should* always be resolved at this point
+        this.resolvedAddress = resolvedRemoteAddress.getAddress();
     }
 
     @Override
     public void proxyToServerConnectionStarted() {
-        if (har == null) {
-            return;
-        }
-
         this.connectionStartedNanos = System.nanoTime();
     }
 
     @Override
     public void proxyToServerRequestSending() {
-        if (har == null) {
-            return;
-        }
-
         this.sendStartedNanos = System.nanoTime();
     }
 
     @Override
     public void proxyToServerRequestSent() {
-        if (har == null) {
-            return;
-        }
-
         this.sendFinishedNanos = System.nanoTime();
     }
 
     @Override
     public void serverToProxyResponseReceiving() {
-        if (har == null) {
-            return;
-        }
-
         this.responseReceiveStartedNanos = System.nanoTime();
     }
 
@@ -291,10 +316,31 @@ public class HttpsConnectHarCaptureFilter extends HttpsAwareFiltersAdapter {
 
         response.setError(errorMessage);
 
-        // populate all timing information for this failed request
         populateTimingsForFailedCONNECT(harEntry);
 
+        populateServerIpAddress(harEntry);
+
+
         return harEntry;
+    }
+
+    private void populateServerIpAddress(HarEntry harEntry) {
+        // populate the server IP address if it was resolved as part of this request. otherwise, populate the IP address from the cache.
+        if (resolvedAddress != null) {
+            harEntry.setServerIPAddress(resolvedAddress.getHostAddress());
+        } else {
+            String serverHost = BrowserMobHttpUtil.getHostFromRequest(modifiedHttpRequest);
+            if (serverHost != null && !serverHost.isEmpty()) {
+                String resolvedAddress = ResolvedHostnameCacheFilter.getPreviouslyResolvedAddressForHost(serverHost);
+                if (resolvedAddress != null) {
+                    harEntry.setServerIPAddress(resolvedAddress);
+                } else {
+                    log.warn("Unable to find cached IP address for host: {}. IP address in HAR entry will be blank.", serverHost);
+                }
+            } else {
+                log.warn("Unable to identify host from request uri: {}", modifiedHttpRequest.getUri());
+            }
+        }
     }
 
     /**
@@ -310,4 +356,18 @@ public class HttpsConnectHarCaptureFilter extends HttpsAwareFiltersAdapter {
         return new HarRequest(httpConnectRequest.getMethod().toString(), url, httpConnectRequest.getProtocolVersion().text());
     }
 
+    /**
+     * Retrieves and removes (thus "consumes") the SSL timing information from the connection cache for the specified address.
+     *
+     * @param clientAddress the address of the client connection that established the HTTP tunnel
+     * @return the timing information for the tunnel previously established from the clientAddress
+     */
+    public static HttpConnectTiming consumeConnectTimingForConnection(InetSocketAddress clientAddress) {
+        return httpConnectTimes.remove(clientAddress);
+    }
+
+    @Override
+    public void setModifiedHttpRequest(HttpRequest modifiedHttpRequest) {
+        this.modifiedHttpRequest = modifiedHttpRequest;
+    }
 }

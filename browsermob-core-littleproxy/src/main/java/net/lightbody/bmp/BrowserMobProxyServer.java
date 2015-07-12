@@ -16,7 +16,8 @@ import net.lightbody.bmp.filters.AddHeadersFilter;
 import net.lightbody.bmp.filters.BlacklistFilter;
 import net.lightbody.bmp.filters.BrowserMobHttpFilterChain;
 import net.lightbody.bmp.filters.HarCaptureFilter;
-import net.lightbody.bmp.filters.HttpsConnectHarCaptureFilter;
+import net.lightbody.bmp.filters.ResolvedHostnameCacheFilter;
+import net.lightbody.bmp.filters.HttpConnectHarCaptureFilter;
 import net.lightbody.bmp.filters.HttpsHostCaptureFilter;
 import net.lightbody.bmp.filters.HttpsOriginalHostCaptureFilter;
 import net.lightbody.bmp.filters.LatencyFilter;
@@ -1284,6 +1285,13 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         addHttpFilterFactory(new HttpFiltersSourceAdapter() {
             @Override
             public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
+                return new ResolvedHostnameCacheFilter(originalRequest, ctx);
+            }
+        });
+
+        addHttpFilterFactory(new HttpFiltersSourceAdapter() {
+            @Override
+            public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
                 return new RegisterRequestFilter(originalRequest, ctx, activityMonitor);
             }
         });
@@ -1376,11 +1384,14 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
      */
     protected void addHarCaptureFilter() {
         if (harCaptureFilterEnabled.compareAndSet(false, true)) {
+            // the HAR capture filter is (relatively) expensive, so only enable it when a HAR is being captured. furthermore,
+            // restricting the HAR capture filter to requests where the HAR exists, as well as  excluding HTTP CONNECTs
+            // from the HAR capture filter, greatly simplifies the filter code.
             addHttpFilterFactory(new HttpFiltersSourceAdapter() {
                 @Override
                 public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
                     Har har = getHar();
-                    if (har != null) {
+                    if (har != null && !ProxyUtils.isCONNECT(originalRequest)) {
                         return new HarCaptureFilter(originalRequest, ctx, har, getCurrentHarPage() == null ? null : getCurrentHarPage().getId(), getHarCaptureTypes());
                     } else {
                         return null;
@@ -1388,12 +1399,13 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
                 }
             });
 
+            // HTTP CONNECTs are a special case, since they require special timing and error handling
             addHttpFilterFactory(new HttpFiltersSourceAdapter() {
                 @Override
                 public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
                     Har har = getHar();
                     if (har != null && ProxyUtils.isCONNECT(originalRequest)) {
-                        return new HttpsConnectHarCaptureFilter(originalRequest, ctx, har, getCurrentHarPage() == null ? null : getCurrentHarPage().getId());
+                        return new HttpConnectHarCaptureFilter(originalRequest, ctx, har, getCurrentHarPage() == null ? null : getCurrentHarPage().getId());
                     } else {
                         return null;
                     }

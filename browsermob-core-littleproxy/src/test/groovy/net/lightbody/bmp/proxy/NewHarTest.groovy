@@ -670,6 +670,8 @@ class NewHarTest extends MockServerTest {
         String capturedUrl = har.log.entries[0].request.url
         assertEquals("URL captured in HAR did not match request URL", requestUrl, capturedUrl)
 
+        assertEquals("Expected IP address to be populated", "127.0.0.1", har.log.entries[0].serverIPAddress)
+
         HarResponse harResponse = har.log.entries[0].response
         assertNotNull("No HAR response found", harResponse)
 
@@ -714,6 +716,8 @@ class NewHarTest extends MockServerTest {
         // make sure request data is still captured despite the failure
         String capturedUrl = har.log.entries[0].request.url
         assertEquals("URL captured in HAR did not match request URL", "https://localhost:2", capturedUrl)
+
+        assertEquals("Expected IP address to be populated", "127.0.0.1", har.log.entries[0].serverIPAddress)
 
         HarResponse harResponse = har.log.entries[0].response
         assertNotNull("No HAR response found", harResponse)
@@ -767,6 +771,8 @@ class NewHarTest extends MockServerTest {
         // make sure request data is still captured despite the failure
         String capturedUrl = har.log.entries[0].request.url
         assertEquals("URL captured in HAR did not match request URL", requestUrl, capturedUrl)
+
+        assertEquals("Expected IP address to be populated", "127.0.0.1", har.log.entries[0].serverIPAddress)
 
         HarResponse harResponse = har.log.entries[0].response
         assertNotNull("No HAR response found", harResponse)
@@ -824,6 +830,8 @@ class NewHarTest extends MockServerTest {
         // make sure request data is still captured despite the failure
         String capturedUrl = har.log.entries[0].request.url
         assertEquals("URL captured in HAR did not match request URL", requestUrl, capturedUrl)
+
+        assertEquals("Expected IP address to be populated", "127.0.0.1", har.log.entries[0].serverIPAddress)
 
         HarResponse harResponse = har.log.entries[0].response
         assertNotNull("No HAR response found", harResponse)

@@ -3,7 +3,7 @@ package net.lightbody.bmp.filters.util;
 import net.lightbody.bmp.core.har.HarResponse;
 
 /**
- * Static utility methods for {@link net.lightbody.bmp.filters.HarCaptureFilter} and {@link net.lightbody.bmp.filters.HttpsConnectHarCaptureFilter}.
+ * Static utility methods for {@link net.lightbody.bmp.filters.HarCaptureFilter} and {@link net.lightbody.bmp.filters.HttpConnectHarCaptureFilter}.
  */
 public class HarCaptureUtil {
     /**
