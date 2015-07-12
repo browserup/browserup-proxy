@@ -519,6 +519,11 @@ public interface BrowserMobProxy {
     /**
      * Adds a new filter factory (request/response interceptor) to the beginning of the HttpFilters chain.
      * <p/>
+     * <b>Usage note:</b> The actual filter (interceptor) instance is created on every request by implementing the
+     * {@link HttpFiltersSource#filterRequest(io.netty.handler.codec.http.HttpRequest, io.netty.channel.ChannelHandlerContext)} method and returning an
+     * {@link org.littleshoot.proxy.HttpFilters} instance (typically, a subclass of {@link org.littleshoot.proxy.HttpFiltersAdapter}).
+     * To disable or bypass a filter on a per-request basis, the filterRequest() method may return null.
+     * <p/>
      * <b>Note:</b> This method is only available in the LittleProxy-based implementation of BrowserMob Proxy. The legacy {@link net.lightbody.bmp.proxy.ProxyServer}
      * implementation will not use the HTTP filters. You <b>must</b> use the addRequestInterceptor() and addResponseInterceptor() methods in
      * {@link net.lightbody.bmp.proxy.LegacyProxyServer} when using the legacy ProxyServer implementation.
@@ -529,6 +534,11 @@ public interface BrowserMobProxy {
 
     /**
      * Adds a new filter factory (request/response interceptor) to the end of the HttpFilters chain.
+     * <p/>
+     * <b>Usage note:</b> The actual filter (interceptor) instance is created on every request by implementing the
+     * {@link HttpFiltersSource#filterRequest(io.netty.handler.codec.http.HttpRequest, io.netty.channel.ChannelHandlerContext)} method and returning an
+     * {@link org.littleshoot.proxy.HttpFilters} instance (typically, a subclass of {@link org.littleshoot.proxy.HttpFiltersAdapter}).
+     * To disable or bypass a filter on a per-request basis, the filterRequest() method may return null.
      * <p/>
      * <b>Note:</b> This method is only available in the LittleProxy-based implementation of BrowserMob Proxy. The legacy {@link net.lightbody.bmp.proxy.ProxyServer}
      * implementation will not use the HTTP filters. You <b>must</b> use the addRequestInterceptor() and addResponseInterceptor() methods in

@@ -10,7 +10,7 @@ import net.lightbody.bmp.core.har.HarEntry
 import net.lightbody.bmp.core.har.HarNameValuePair
 import net.lightbody.bmp.core.har.HarResponse
 import net.lightbody.bmp.core.har.HarTimings
-import net.lightbody.bmp.filters.HarCaptureFilter
+import net.lightbody.bmp.filters.util.HarCaptureUtil
 import net.lightbody.bmp.proxy.dns.AdvancedHostResolver
 import net.lightbody.bmp.proxy.test.util.MockServerTest
 import net.lightbody.bmp.proxy.test.util.ProxyServerTest
@@ -18,7 +18,6 @@ import net.lightbody.bmp.proxy.util.IOUtils
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.junit.After
-import org.junit.Ignore
 import org.junit.Test
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
@@ -580,9 +579,9 @@ class NewHarTest extends MockServerTest {
         HarResponse harResponse = har.log.entries[0].response
         assertNotNull("No HAR response found", harResponse)
 
-        assertEquals("Error in HAR response did not match expected DNS failure error message", HarCaptureFilter.RESOLUTION_FAILED_ERROR_MESSAGE + "www.doesnotexist.address", harResponse.error)
-        assertEquals("Expected HTTP status code of 0 for failed request", HarCaptureFilter.HTTP_STATUS_CODE_FOR_FAILURE, harResponse.status)
-        assertEquals("Expected unknown HTTP version for failed request", HarCaptureFilter.HTTP_VERSION_STRING_FOR_FAILURE, harResponse.httpVersion)
+        assertEquals("Error in HAR response did not match expected DNS failure error message", HarCaptureUtil.getResolutionFailedErrorMessage("www.doesnotexist.address"), harResponse.error)
+        assertEquals("Expected HTTP status code of 0 for failed request", HarCaptureUtil.HTTP_STATUS_CODE_FOR_FAILURE, harResponse.status)
+        assertEquals("Expected unknown HTTP version for failed request", HarCaptureUtil.HTTP_VERSION_STRING_FOR_FAILURE, harResponse.httpVersion)
         assertEquals("Expected default value for headersSize for failed request", -1L, harResponse.headersSize)
         assertEquals("Expected default value for bodySize for failed request", -1L, harResponse.bodySize)
 
@@ -598,8 +597,6 @@ class NewHarTest extends MockServerTest {
         assertEquals("Expected HAR timings to contain default values after DNS failure", 0L, harTimings.getReceive(TimeUnit.NANOSECONDS))
     }
 
-    // TODO: unignore when a strategy for handling failed HTTP CONNECT requests is implemented
-    @Ignore
     @Test
     void testHttpsDnsFailureCapturedInHar() {
         AdvancedHostResolver mockFailingResolver = mock(AdvancedHostResolver)
@@ -625,14 +622,14 @@ class NewHarTest extends MockServerTest {
 
         // make sure request data is still captured despite the failure
         String capturedUrl = har.log.entries[0].request.url
-        assertEquals("URL captured in HAR did not match request URL", requestUrl, capturedUrl)
+        assertEquals("URL captured in HAR did not match expected HTTP CONNECT URL", "https://www.doesnotexist.address:443", capturedUrl)
 
         HarResponse harResponse = har.log.entries[0].response
         assertNotNull("No HAR response found", harResponse)
 
-        assertEquals("Error in HAR response did not match expected DNS failure error message", HarCaptureFilter.RESOLUTION_FAILED_ERROR_MESSAGE + "www.doesnotexist.address", harResponse.error)
-        assertEquals("Expected HTTP status code of 0 for failed request", HarCaptureFilter.HTTP_STATUS_CODE_FOR_FAILURE, harResponse.status)
-        assertEquals("Expected unknown HTTP version for failed request", HarCaptureFilter.HTTP_VERSION_STRING_FOR_FAILURE, harResponse.httpVersion)
+        assertEquals("Error in HAR response did not match expected DNS failure error message", HarCaptureUtil.getResolutionFailedErrorMessage("www.doesnotexist.address:443"), harResponse.error)
+        assertEquals("Expected HTTP status code of 0 for failed request", HarCaptureUtil.HTTP_STATUS_CODE_FOR_FAILURE, harResponse.status)
+        assertEquals("Expected unknown HTTP version for failed request", HarCaptureUtil.HTTP_VERSION_STRING_FOR_FAILURE, harResponse.httpVersion)
         assertEquals("Expected default value for headersSize for failed request", -1L, harResponse.headersSize)
         assertEquals("Expected default value for bodySize for failed request", -1L, harResponse.bodySize)
 
@@ -655,7 +652,9 @@ class NewHarTest extends MockServerTest {
 
         proxy.newHar()
 
-        String requestUrl = "http://localhost:0/some-resource"
+        // TCP port 2 is reserved for "CompressNET Management Utility". since it's almost certainly not in use, connections
+        // to port 2 will fail.
+        String requestUrl = "http://localhost:2/some-resource"
 
         ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
@@ -671,12 +670,14 @@ class NewHarTest extends MockServerTest {
         String capturedUrl = har.log.entries[0].request.url
         assertEquals("URL captured in HAR did not match request URL", requestUrl, capturedUrl)
 
+        assertEquals("Expected IP address to be populated", "127.0.0.1", har.log.entries[0].serverIPAddress)
+
         HarResponse harResponse = har.log.entries[0].response
         assertNotNull("No HAR response found", harResponse)
 
-        assertEquals("Error in HAR response did not match expected connection failure error message", HarCaptureFilter.CONNECTION_FAILED_ERROR_MESSAGE, harResponse.error)
-        assertEquals("Expected HTTP status code of 0 for failed request", HarCaptureFilter.HTTP_STATUS_CODE_FOR_FAILURE, harResponse.status)
-        assertEquals("Expected unknown HTTP version for failed request", HarCaptureFilter.HTTP_VERSION_STRING_FOR_FAILURE, harResponse.httpVersion)
+        assertEquals("Error in HAR response did not match expected connection failure error message", HarCaptureUtil.getConnectionFailedErrorMessage(), harResponse.error)
+        assertEquals("Expected HTTP status code of 0 for failed request", HarCaptureUtil.HTTP_STATUS_CODE_FOR_FAILURE, harResponse.status)
+        assertEquals("Expected unknown HTTP version for failed request", HarCaptureUtil.HTTP_VERSION_STRING_FOR_FAILURE, harResponse.httpVersion)
         assertEquals("Expected default value for headersSize for failed request", -1L, harResponse.headersSize)
         assertEquals("Expected default value for bodySize for failed request", -1L, harResponse.bodySize)
 
@@ -691,8 +692,6 @@ class NewHarTest extends MockServerTest {
         assertEquals("Expected HAR timings to contain default values after connection failure", 0L, harTimings.getReceive(TimeUnit.NANOSECONDS))
     }
 
-    // TODO: unignore when a strategy for handling failed HTTP CONNECT requests is implemented
-    @Ignore
     @Test
     void testHttpsConnectTimeoutCapturedInHar() {
         proxy = new BrowserMobProxyServer();
@@ -700,7 +699,9 @@ class NewHarTest extends MockServerTest {
 
         proxy.newHar()
 
-        String requestUrl = "https://localhost:0/some-resource"
+        // TCP port 2 is reserved for "CompressNET Management Utility". since it's almost certainly not in use, connections
+        // to port 2 will fail.
+        String requestUrl = "https://localhost:2/some-resource"
 
         ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
@@ -714,14 +715,16 @@ class NewHarTest extends MockServerTest {
 
         // make sure request data is still captured despite the failure
         String capturedUrl = har.log.entries[0].request.url
-        assertEquals("URL captured in HAR did not match request URL", requestUrl, capturedUrl)
+        assertEquals("URL captured in HAR did not match request URL", "https://localhost:2", capturedUrl)
+
+        assertEquals("Expected IP address to be populated", "127.0.0.1", har.log.entries[0].serverIPAddress)
 
         HarResponse harResponse = har.log.entries[0].response
         assertNotNull("No HAR response found", harResponse)
 
-        assertEquals("Error in HAR response did not match expected connection failure error message", HarCaptureFilter.CONNECTION_FAILED_ERROR_MESSAGE, harResponse.error)
-        assertEquals("Expected HTTP status code of 0 for failed request", HarCaptureFilter.HTTP_STATUS_CODE_FOR_FAILURE, harResponse.status)
-        assertEquals("Expected unknown HTTP version for failed request", HarCaptureFilter.HTTP_VERSION_STRING_FOR_FAILURE, harResponse.httpVersion)
+        assertEquals("Error in HAR response did not match expected connection failure error message", HarCaptureUtil.getConnectionFailedErrorMessage(), harResponse.error)
+        assertEquals("Expected HTTP status code of 0 for failed request", HarCaptureUtil.HTTP_STATUS_CODE_FOR_FAILURE, harResponse.status)
+        assertEquals("Expected unknown HTTP version for failed request", HarCaptureUtil.HTTP_VERSION_STRING_FOR_FAILURE, harResponse.httpVersion)
         assertEquals("Expected default value for headersSize for failed request", -1L, harResponse.headersSize)
         assertEquals("Expected default value for bodySize for failed request", -1L, harResponse.bodySize)
 
@@ -769,12 +772,14 @@ class NewHarTest extends MockServerTest {
         String capturedUrl = har.log.entries[0].request.url
         assertEquals("URL captured in HAR did not match request URL", requestUrl, capturedUrl)
 
+        assertEquals("Expected IP address to be populated", "127.0.0.1", har.log.entries[0].serverIPAddress)
+
         HarResponse harResponse = har.log.entries[0].response
         assertNotNull("No HAR response found", harResponse)
 
-        assertEquals("Error in HAR response did not match expected response timeout error message", HarCaptureFilter.RESPONSE_TIMED_OUT_ERROR_MESSAGE, harResponse.error)
-        assertEquals("Expected HTTP status code of 0 for response timeout", HarCaptureFilter.HTTP_STATUS_CODE_FOR_FAILURE, harResponse.status)
-        assertEquals("Expected unknown HTTP version for response timeout", HarCaptureFilter.HTTP_VERSION_STRING_FOR_FAILURE, harResponse.httpVersion)
+        assertEquals("Error in HAR response did not match expected response timeout error message", HarCaptureUtil.getResponseTimedOutErrorMessage(), harResponse.error)
+        assertEquals("Expected HTTP status code of 0 for response timeout", HarCaptureUtil.HTTP_STATUS_CODE_FOR_FAILURE, harResponse.status)
+        assertEquals("Expected unknown HTTP version for response timeout", HarCaptureUtil.HTTP_VERSION_STRING_FOR_FAILURE, harResponse.httpVersion)
         assertEquals("Expected default value for headersSize for response timeout", -1L, harResponse.headersSize)
         assertEquals("Expected default value for bodySize for response timeout", -1L, harResponse.bodySize)
 
@@ -793,8 +798,6 @@ class NewHarTest extends MockServerTest {
         assertEquals("Expected receive time to not be populated", 0L, harTimings.getReceive(TimeUnit.NANOSECONDS))
     }
 
-    // TODO: unignore when a strategy for handling failed HTTP CONNECT requests is implemented
-    @Ignore
     @Test
     void testHttpsResponseTimeoutCapturedInHar() {
         mockServer.when(request()
@@ -828,19 +831,21 @@ class NewHarTest extends MockServerTest {
         String capturedUrl = har.log.entries[0].request.url
         assertEquals("URL captured in HAR did not match request URL", requestUrl, capturedUrl)
 
+        assertEquals("Expected IP address to be populated", "127.0.0.1", har.log.entries[0].serverIPAddress)
+
         HarResponse harResponse = har.log.entries[0].response
         assertNotNull("No HAR response found", harResponse)
 
-        assertEquals("Error in HAR response did not match expected response timeout error message", HarCaptureFilter.RESPONSE_TIMED_OUT_ERROR_MESSAGE, harResponse.error)
-        assertEquals("Expected HTTP status code of 0 for response timeout", HarCaptureFilter.HTTP_STATUS_CODE_FOR_FAILURE, harResponse.status)
-        assertEquals("Expected unknown HTTP version for response timeout", HarCaptureFilter.HTTP_VERSION_STRING_FOR_FAILURE, harResponse.httpVersion)
+        assertEquals("Error in HAR response did not match expected response timeout error message", HarCaptureUtil.RESPONSE_TIMED_OUT_ERROR_MESSAGE, harResponse.error)
+        assertEquals("Expected HTTP status code of 0 for response timeout", HarCaptureUtil.HTTP_STATUS_CODE_FOR_FAILURE, harResponse.status)
+        assertEquals("Expected unknown HTTP version for response timeout", HarCaptureUtil.HTTP_VERSION_STRING_FOR_FAILURE, harResponse.httpVersion)
         assertEquals("Expected default value for headersSize for response timeout", -1L, harResponse.headersSize)
         assertEquals("Expected default value for bodySize for response timeout", -1L, harResponse.bodySize)
 
         HarTimings harTimings = har.log.entries[0].timings
         assertNotNull("No HAR timings found", harTimings)
 
-        assertEquals("Expected ssl timing to contain default value", -1L, harTimings.getSsl(TimeUnit.NANOSECONDS))
+        assertThat("Expected ssl timing to be populated", harTimings.getSsl(TimeUnit.NANOSECONDS), greaterThan(0L))
 
         // this timeout was caused by a failure of the server to respond, so dns, connect, send, and wait should all be populated,
         // but receive should not be populated since no response was received.

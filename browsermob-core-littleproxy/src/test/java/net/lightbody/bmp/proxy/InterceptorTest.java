@@ -38,6 +38,7 @@ import org.mockserver.model.Header;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.hamcrest.Matchers.endsWith;
@@ -635,6 +636,64 @@ public class InterceptorTest extends MockServerTest {
     }
 
     @Test
+    public void testCanBypassFilterForRequest() throws IOException {
+        mockServer.when(request()
+                        .withMethod("GET")
+                        .withPath("/bypassfilter"),
+                Times.exactly(2))
+                .respond(response()
+                        .withStatusCode(200)
+                        .withBody("success"));
+
+        proxy = new BrowserMobProxyServer();
+        proxy.start();
+
+        final AtomicInteger filtersSourceHitCount = new AtomicInteger();
+        final AtomicInteger filterHitCount = new AtomicInteger();
+
+        proxy.addFirstHttpFilterFactory(new HttpFiltersSourceAdapter() {
+            @Override
+            public HttpFilters filterRequest(HttpRequest originalRequest) {
+                if (filtersSourceHitCount.getAndIncrement() == 0) {
+                    return null;
+                } else {
+                    return new HttpFiltersAdapter(originalRequest) {
+                        @Override
+                        public void serverToProxyResponseReceived() {
+                            filterHitCount.incrementAndGet();
+                        }
+                    };
+                }
+            }
+        });
+
+        // during the first request, the filterRequest(...) method should return null, which will prevent the filter instance from
+        // being added to the filter chain
+        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+            CloseableHttpResponse response = httpClient.execute(new HttpGet("http://localhost:" + mockServerPort + "/bypassfilter"));
+            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
+
+            assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
+            assertEquals("Did not receive expected response from mock server", "success", responseBody);
+        }
+
+        assertEquals("Expected filters source to be invoked on first request", 1, filtersSourceHitCount.get());
+        assertEquals("Expected filter instance to be bypassed on first request", 0, filterHitCount.get());
+
+        // during the second request, the filterRequest(...) method will return a filter instance, which should be invoked during processing
+        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+            CloseableHttpResponse response = httpClient.execute(new HttpGet("http://localhost:" + mockServerPort + "/bypassfilter"));
+            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
+
+            assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
+            assertEquals("Did not receive expected response from mock server", "success", responseBody);
+        }
+
+        assertEquals("Expected filters source to be invoked again on second request", 2, filtersSourceHitCount.get());
+        assertEquals("Expected filter instance to be invoked on second request (only)", 1, filterHitCount.get());
+    }
+
+    @Test
     public void testHttpResponseFilterMessageInfoPopulated() throws IOException {
         mockServer.when(request()
                         .withMethod("GET")
@@ -827,7 +886,6 @@ public class InterceptorTest extends MockServerTest {
             assertEquals("Expected url in response filter to match modified request URL", modifiedRequestUrl, responseFilterUrl.get());
         }
     }
-
 
     @Test
     public void testHttpsResponseFilterMessageInfoPopulated() throws IOException {
