@@ -16,6 +16,7 @@ import net.lightbody.bmp.filters.AddHeadersFilter;
 import net.lightbody.bmp.filters.BlacklistFilter;
 import net.lightbody.bmp.filters.BrowserMobHttpFilterChain;
 import net.lightbody.bmp.filters.HarCaptureFilter;
+import net.lightbody.bmp.filters.HttpsConnectHarCaptureFilter;
 import net.lightbody.bmp.filters.HttpsHostCaptureFilter;
 import net.lightbody.bmp.filters.HttpsOriginalHostCaptureFilter;
 import net.lightbody.bmp.filters.LatencyFilter;
@@ -52,6 +53,7 @@ import org.littleshoot.proxy.HttpFiltersSourceAdapter;
 import org.littleshoot.proxy.HttpProxyServer;
 import org.littleshoot.proxy.HttpProxyServerBootstrap;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
+import org.littleshoot.proxy.impl.ProxyUtils;
 import org.openqa.selenium.Proxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1377,7 +1379,24 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
             addHttpFilterFactory(new HttpFiltersSourceAdapter() {
                 @Override
                 public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
-                    return new HarCaptureFilter(originalRequest, ctx, getHar(), getCurrentHarPage() == null ? null : getCurrentHarPage().getId(), getHarCaptureTypes());
+                    Har har = getHar();
+                    if (har != null) {
+                        return new HarCaptureFilter(originalRequest, ctx, har, getCurrentHarPage() == null ? null : getCurrentHarPage().getId(), getHarCaptureTypes());
+                    } else {
+                        return null;
+                    }
+                }
+            });
+
+            addHttpFilterFactory(new HttpFiltersSourceAdapter() {
+                @Override
+                public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
+                    Har har = getHar();
+                    if (har != null && ProxyUtils.isCONNECT(originalRequest)) {
+                        return new HttpsConnectHarCaptureFilter(originalRequest, ctx, har, getCurrentHarPage() == null ? null : getCurrentHarPage().getId());
+                    } else {
+                        return null;
+                    }
                 }
             });
         }
