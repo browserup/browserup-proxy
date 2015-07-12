@@ -40,7 +40,11 @@ public class BrowserMobHttpFilterChain extends HttpFiltersAdapter {
             // instantiate all HttpFilters using the proxy's filter factories
             for (HttpFiltersSource filterFactory : proxyServer.getFilterFactories()) {
                 HttpFilters filter = filterFactory.filterRequest(originalRequest, ctx);
-                filters.add(filter);
+                // allow filter factories to avoid adding a filter on a per-request basis by returning a null
+                // HttpFilters instance
+                if (filter != null) {
+                    filters.add(filter);
+                }
             }
         } else {
             filters = Collections.emptyList();
