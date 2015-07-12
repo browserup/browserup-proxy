@@ -403,6 +403,14 @@ public class ProxyResource {
                 streamManager.enable();
             } catch (NumberFormatException e) { }
         }
+
+        String upstreamBps = request.param("upstreamBps");
+        if (upstreamBps != null) {
+            try {
+                ((BrowserMobProxy) proxy).setWriteBandwidthLimit(Integer.parseInt(upstreamBps));
+            } catch (NumberFormatException e) {}
+        }
+
         String downstreamKbps = request.param("downstreamKbps");
         if (downstreamKbps != null) {
             try {
@@ -410,6 +418,14 @@ public class ProxyResource {
                 streamManager.enable();
             } catch (NumberFormatException e) { }
         }
+
+        String downstreamBps = request.param("downstreamBps");
+        if (downstreamBps != null) {
+            try {
+                ((BrowserMobProxy) proxy).setReadBandwidthLimit(Integer.parseInt(downstreamBps));
+            } catch (NumberFormatException e) {}
+        }
+
         String upstreamMaxKB = request.param("upstreamMaxKB");
         if (upstreamMaxKB != null) {
             try {
