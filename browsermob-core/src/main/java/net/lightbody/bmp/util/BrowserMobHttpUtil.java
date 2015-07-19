@@ -4,6 +4,7 @@ import com.google.common.net.HostAndPort;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponse;
 import net.lightbody.bmp.exception.DecompressionException;
 import org.apache.http.entity.ContentType;
 import org.slf4j.Logger;
@@ -320,6 +321,26 @@ public class BrowserMobHttpUtil {
             return uri.getHost();
         } else {
             return HostAndPort.fromParts(uri.getHost(), uri.getPort()).toString();
+        }
+    }
+
+    /**
+     * Returns true if the specified response is an HTTP redirect response, i.e. a 300, 301, 302, 303, or 307.
+     *
+     * @param httpResponse HTTP response
+     * @return true if the response is a redirect, otherwise false
+     */
+    public static boolean isRedirect(HttpResponse httpResponse) {
+        switch (httpResponse.getStatus().code()) {
+            case 300:
+            case 301:
+            case 302:
+            case 303:
+            case 307:
+                return true;
+
+            default:
+                return false;
         }
     }
 

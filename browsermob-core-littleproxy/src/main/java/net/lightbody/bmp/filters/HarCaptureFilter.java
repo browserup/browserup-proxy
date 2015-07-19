@@ -479,6 +479,10 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         if (dataToCapture.contains(CaptureType.RESPONSE_HEADERS)) {
             captureResponseHeaders(httpResponse);
         }
+
+        if (BrowserMobHttpUtil.isRedirect(httpResponse)) {
+            captureRedirectUrl(httpResponse);
+        }
     }
 
     protected void captureResponseCookies(HttpResponse httpResponse) {
@@ -521,6 +525,13 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         HttpHeaders headers = httpResponse.headers();
         for (Map.Entry<String, String> header : headers.entries()) {
             harEntry.getResponse().getHeaders().add(new HarNameValuePair(header.getKey(), header.getValue()));
+        }
+    }
+
+    protected void captureRedirectUrl(HttpResponse httpResponse) {
+        String locationHeaderValue = HttpHeaders.getHeader(httpResponse, HttpHeaders.Names.LOCATION);
+        if (locationHeaderValue != null) {
+            harEntry.getResponse().setRedirectURL(locationHeaderValue);
         }
     }
 

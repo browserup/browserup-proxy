@@ -15,6 +15,7 @@ import net.lightbody.bmp.proxy.dns.AdvancedHostResolver
 import net.lightbody.bmp.proxy.test.util.MockServerTest
 import net.lightbody.bmp.proxy.test.util.ProxyServerTest
 import net.lightbody.bmp.proxy.util.IOUtils
+import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.junit.After
@@ -855,6 +856,106 @@ class NewHarTest extends MockServerTest {
         assertThat("Expected wait time to be populated", harTimings.getWait(TimeUnit.NANOSECONDS), greaterThan(0L))
 
         assertEquals("Expected receive time to not be populated", 0L, harTimings.getReceive(TimeUnit.NANOSECONDS))
+    }
+
+    @Test
+    void testRedirectUrlCapturedForRedirects() {
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/test300"),
+                Times.once())
+                .respond(response()
+                .withStatusCode(300)
+                .withHeader("Location", "/redirected-location"))
+
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/test301"),
+                Times.once())
+                .respond(response()
+                .withStatusCode(301)
+                .withHeader("Location", "/redirected-location"))
+
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/test302"),
+                Times.once())
+                .respond(response()
+                .withStatusCode(302)
+                .withHeader("Location", "/redirected-location"))
+
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/test303"),
+                Times.once())
+                .respond(response()
+                .withStatusCode(303)
+                .withHeader("Location", "/redirected-location"))
+
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/test307"),
+                Times.once())
+                .respond(response()
+                .withStatusCode(307)
+                .withHeader("Location", "/redirected-location"))
+
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/test301-no-location-header"),
+                Times.once())
+                .respond(response()
+                .withStatusCode(301))
+
+        proxy = new BrowserMobProxyServer();
+        proxy.start()
+
+        proxy.newHar()
+
+        def verifyRedirect = { String requestUrl, expectedStatusCode, expectedLocationValue ->
+            ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+                // for some reason, even when the HTTP client is built with .disableRedirectHandling(), it still tries to follow
+                // the 301. so explicitly disable following redirects at the request level.
+                def request = new HttpGet(requestUrl)
+                request.setConfig(RequestConfig.custom().setRedirectsEnabled(false).build())
+
+                CloseableHttpResponse response = it.execute(request)
+                assertEquals("HTTP response code did not match expected response code", expectedStatusCode, response.getStatusLine().getStatusCode())
+            };
+
+            Thread.sleep(500)
+            Har har = proxy.getHar()
+
+            assertThat("Expected to find entries in the HAR", har.getLog().getEntries(), not(empty()))
+
+            // make sure request data is still captured despite the failure
+            String capturedUrl = har.log.entries[0].request.url
+            assertEquals("URL captured in HAR did not match request URL", requestUrl, capturedUrl)
+
+            HarResponse harResponse = har.log.entries[0].response
+            assertNotNull("No HAR response found", harResponse)
+
+            assertEquals("Expected redirect location to be populated in redirectURL field", expectedLocationValue, harResponse.redirectURL);
+        }
+
+        verifyRedirect("http://localhost:${mockServerPort}/test300", 300, "/redirected-location")
+
+        // clear the HAR between every request, to make the verification step easier
+        proxy.newHar()
+        verifyRedirect("http://localhost:${mockServerPort}/test301", 301, "/redirected-location")
+
+        proxy.newHar()
+        verifyRedirect("http://localhost:${mockServerPort}/test302", 302, "/redirected-location")
+
+        proxy.newHar()
+        verifyRedirect("http://localhost:${mockServerPort}/test303", 303, "/redirected-location")
+
+        proxy.newHar()
+        verifyRedirect("http://localhost:${mockServerPort}/test307", 307, "/redirected-location")
+
+        proxy.newHar()
+        // redirectURL should always be populated or an empty string, never null
+        verifyRedirect("http://localhost:${mockServerPort}/test301-no-location-header", 301, "")
     }
 
     //TODO: Add Request Capture Type tests
