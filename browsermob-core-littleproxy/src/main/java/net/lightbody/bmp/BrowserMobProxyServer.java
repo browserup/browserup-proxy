@@ -87,7 +87,7 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     private static final Logger log = LoggerFactory.getLogger(BrowserMobProxyServer.class);
 
     //TODO: extract the version string into a more suitable location
-    private static final HarNameVersion HAR_CREATOR_VERSION = new HarNameVersion("BrowserMob Proxy", "2.1.0-beta-2-littleproxy");
+    private static final HarNameVersion HAR_CREATOR_VERSION = new HarNameVersion("BrowserMob Proxy", "2.1.0-beta-3-littleproxy");
 
     /**
      * True only after the proxy has been successfully started.

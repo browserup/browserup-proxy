@@ -66,7 +66,7 @@ import java.util.regex.Pattern;
  */
 @Deprecated
 public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
-    private static final HarNameVersion CREATOR = new HarNameVersion("BrowserMob Proxy", "2.1.0-beta-2-legacy");
+    private static final HarNameVersion CREATOR = new HarNameVersion("BrowserMob Proxy", "2.1.0-beta-3-legacy");
     private static final Logger LOG = LoggerFactory.getLogger(ProxyServer.class);
 
     /**
