@@ -40,6 +40,12 @@ public class HarCaptureUtil {
     private static final String RESPONSE_TIMED_OUT_ERROR_MESSAGE = "Response timed out";
 
     /**
+     * The error message that will be populated in the _error field of the {@link HarResponse} when no response is received
+     * from the server for any reason other than a server response timeout.
+     */
+    private static final String NO_RESPONSE_RECEIVED_ERROR_MESSAGE = "No response received";
+
+    /**
      * Creates a HarResponse object for failed requests. Normally the HarResponse is populated when the response is received
      * from the server, but if the request fails due to a name resolution issue, connection problem, timeout, etc., no
      * HarResponse would otherwise be created.
@@ -70,11 +76,21 @@ public class HarCaptureUtil {
     }
 
     /**
-     * Returs the error message for the HAR response when the response from the server times out.
+     * Returns the error message for the HAR response when the response from the server times out.
      *
      * @return the response timed out error message
      */
     public static String getResponseTimedOutErrorMessage() {
         return RESPONSE_TIMED_OUT_ERROR_MESSAGE;
+    }
+
+    /**
+     * Returns the error message for the HAR response when no response was received from the server (e.g. when the
+     * browser is closed).
+     * 
+     * @return the no response received error message
+     */
+    public static String getNoResponseReceivedErrorMessage() {
+        return NO_RESPONSE_RECEIVED_ERROR_MESSAGE;
     }
 }
