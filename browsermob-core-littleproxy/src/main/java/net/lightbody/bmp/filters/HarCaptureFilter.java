@@ -194,6 +194,12 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
             HarRequest request = createHarRequestForHttpRequest(httpRequest);
             harEntry.setRequest(request);
 
+            // create a "no response received" HarResponse, in case the connection is interrupted, terminated, or the response is not received
+            // for any other reason. having a "default" HarResponse prevents us from generating an invalid HAR.
+            HarResponse defaultHarResponse = HarCaptureUtil.createHarResponseForFailure();
+            defaultHarResponse.setError(HarCaptureUtil.getNoResponseReceivedErrorMessage());
+            harEntry.setResponse(defaultHarResponse);
+
             captureQueryParameters(httpRequest);
             captureUserAgent(httpRequest);
             captureRequestHeaderSize(httpRequest);
