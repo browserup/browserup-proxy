@@ -244,11 +244,11 @@ You can use the REST API with Selenium however you want. But if you're writing y
     proxy.start(0);
 
     // get the Selenium proxy object
-    Proxy proxy = ClientUtil.createSeleniumProxy(proxy);
+    Proxy seleniumProxy = ClientUtil.createSeleniumProxy(proxy);
 
     // configure it as a desired capability
     DesiredCapabilities capabilities = new DesiredCapabilities();
-    capabilities.setCapability(CapabilityType.PROXY, proxy);
+    capabilities.setCapability(CapabilityType.PROXY, seleniumProxy);
 
     // start the browser up
     WebDriver driver = new FirefoxDriver(capabilities);
