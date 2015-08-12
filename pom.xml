@@ -56,7 +56,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <slf4j.version>1.7.12</slf4j.version>
-        <selenium.version>2.46.0</selenium.version>
+        <selenium.version>2.47.1</selenium.version>
 
         <jackson.version>2.4.4</jackson.version>
 
