@@ -29,6 +29,12 @@
             <groupId>com.google.sitebricks</groupId>
             <artifactId>sitebricks</artifactId>
             <version>0.8.10</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jboss.netty</groupId>
+                    <artifactId>netty</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
