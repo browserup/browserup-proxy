@@ -178,7 +178,7 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
     }
 
     @Override
-    public void proxyToServerConnectionSucceeded() {
+    public void proxyToServerConnectionSucceeded(ChannelHandlerContext serverCtx) {
         this.connectionSucceededTimeNanos = System.nanoTime();
 
         if (connectionStartedNanos > 0L) {

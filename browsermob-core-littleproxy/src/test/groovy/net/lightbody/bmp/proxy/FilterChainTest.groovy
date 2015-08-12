@@ -313,7 +313,7 @@ class FilterChainTest extends MockServerTest {
         }
 
         @Override
-        void proxyToServerConnectionSucceeded() {
+        void proxyToServerConnectionSucceeded(ChannelHandlerContext serverCtx) {
             throw new RuntimeException("Throwing exception from filter")
         }
     }

@@ -35,7 +35,7 @@ public class BrowserMobHttpFilterChain extends HttpFiltersAdapter {
         this.proxyServer = proxyServer;
 
         if (proxyServer.getFilterFactories() != null) {
-            filters = new ArrayList<HttpFilters>(proxyServer.getFilterFactories().size());
+            filters = new ArrayList<>(proxyServer.getFilterFactories().size());
 
             // instantiate all HttpFilters using the proxy's filter factories
             for (HttpFiltersSource filterFactory : proxyServer.getFilterFactories()) {
@@ -232,10 +232,10 @@ public class BrowserMobHttpFilterChain extends HttpFiltersAdapter {
     }
 
     @Override
-    public void proxyToServerConnectionSucceeded() {
+    public void proxyToServerConnectionSucceeded(ChannelHandlerContext serverCtx) {
         for (HttpFilters filter : filters) {
             try {
-                filter.proxyToServerConnectionSucceeded();
+                filter.proxyToServerConnectionSucceeded(serverCtx);
             } catch (RuntimeException e) {
                 log.warn("Filter in filter chain threw exception. Filter method may have been aborted.", e);
             }
