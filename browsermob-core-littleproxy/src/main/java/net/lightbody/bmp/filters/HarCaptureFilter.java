@@ -666,7 +666,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
     }
 
     @Override
-    public void proxyToServerConnectionSucceeded() {
+    public void proxyToServerConnectionSucceeded(ChannelHandlerContext serverCtx) {
         long connectionSucceededTimeNanos = System.nanoTime();
 
         // make sure the previous timestamp was captured, to avoid setting an absurd value in the har (see serverToProxyResponseReceiving())
