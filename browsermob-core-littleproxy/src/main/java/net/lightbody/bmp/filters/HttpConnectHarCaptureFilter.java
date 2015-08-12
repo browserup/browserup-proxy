@@ -181,8 +181,17 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
     public void proxyToServerConnectionSucceeded() {
         this.connectionSucceededTimeNanos = System.nanoTime();
 
-        httpConnectTiming.setConnectTimeNanos(connectionSucceededTimeNanos - this.connectionStartedNanos);
-        httpConnectTiming.setSslHandshakeTimeNanos(connectionSucceededTimeNanos - this.sslHandshakeStartedNanos);
+        if (connectionStartedNanos > 0L) {
+            httpConnectTiming.setConnectTimeNanos(connectionSucceededTimeNanos - connectionStartedNanos);
+        } else {
+            httpConnectTiming.setConnectTimeNanos(0L);
+        }
+
+        if (sslHandshakeStartedNanos > 0L) {
+            httpConnectTiming.setSslHandshakeTimeNanos(connectionSucceededTimeNanos - sslHandshakeStartedNanos);
+        } else {
+            httpConnectTiming.setSslHandshakeTimeNanos(0L);
+        }
     }
 
     @Override
@@ -222,7 +231,11 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
     public InetSocketAddress proxyToServerResolutionStarted(String resolvingServerHostAndPort) {
         dnsResolutionStartedNanos = System.nanoTime();
 
-        httpConnectTiming.setBlockedTimeNanos(dnsResolutionStartedNanos - connectionQueuedNanos);
+        if (connectionQueuedNanos > 0L) {
+            httpConnectTiming.setBlockedTimeNanos(dnsResolutionStartedNanos - connectionQueuedNanos);
+        } else {
+            httpConnectTiming.setBlockedTimeNanos(0L);
+        }
 
         return null;
     }
@@ -231,7 +244,11 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
     public void proxyToServerResolutionSucceeded(String serverHostAndPort, InetSocketAddress resolvedRemoteAddress) {
         this.dnsResolutionFinishedNanos = System.nanoTime();
 
-        httpConnectTiming.setDnsTimeNanos(dnsResolutionFinishedNanos - dnsResolutionStartedNanos);
+        if (dnsResolutionStartedNanos > 0L) {
+            httpConnectTiming.setDnsTimeNanos(dnsResolutionFinishedNanos - dnsResolutionStartedNanos);
+        } else {
+            httpConnectTiming.setDnsTimeNanos(0L);
+        }
 
         // the address *should* always be resolved at this point
         this.resolvedAddress = resolvedRemoteAddress.getAddress();
@@ -275,19 +292,19 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
         }
 
         if (connectionStartedNanos > 0L && connectionSucceededTimeNanos > 0L) {
-            harEntry.getTimings().setConnect(connectionSucceededTimeNanos - connectionStartedNanos, TimeUnit.NANOSECONDS);
+            timings.setConnect(connectionSucceededTimeNanos - connectionStartedNanos, TimeUnit.NANOSECONDS);
 
             if (sslHandshakeStartedNanos > 0L) {
-                harEntry.getTimings().setSsl(connectionSucceededTimeNanos - this.sslHandshakeStartedNanos, TimeUnit.NANOSECONDS);
+                timings.setSsl(connectionSucceededTimeNanos - this.sslHandshakeStartedNanos, TimeUnit.NANOSECONDS);
             }
         }
 
         if (sendStartedNanos > 0L && sendFinishedNanos >= 0L) {
-            harEntry.getTimings().setSend(sendFinishedNanos - sendStartedNanos, TimeUnit.NANOSECONDS);
+            timings.setSend(sendFinishedNanos - sendStartedNanos, TimeUnit.NANOSECONDS);
         }
 
         if (sendFinishedNanos > 0L && responseReceiveStartedNanos >= 0L) {
-            harEntry.getTimings().setWait(responseReceiveStartedNanos - sendFinishedNanos, TimeUnit.NANOSECONDS);
+            timings.setWait(responseReceiveStartedNanos - sendFinishedNanos, TimeUnit.NANOSECONDS);
         }
 
         // since this method is for HTTP CONNECT failures only, we can't populate a "received" time, since that would
