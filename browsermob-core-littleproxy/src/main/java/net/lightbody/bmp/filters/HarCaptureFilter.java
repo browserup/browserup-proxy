@@ -601,7 +601,11 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         dnsResolutionStartedNanos = System.nanoTime();
 
         // resolution started means the connection is no longer queued, so populate 'blocked' time
-        harEntry.getTimings().setBlocked(dnsResolutionStartedNanos - connectionQueuedNanos, TimeUnit.NANOSECONDS);
+        if (connectionQueuedNanos > 0L) {
+            harEntry.getTimings().setBlocked(dnsResolutionStartedNanos - connectionQueuedNanos, TimeUnit.NANOSECONDS);
+        } else {
+            harEntry.getTimings().setBlocked(0L, TimeUnit.NANOSECONDS);
+        }
 
         return null;
     }
@@ -623,7 +627,11 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
     public void proxyToServerResolutionSucceeded(String serverHostAndPort, InetSocketAddress resolvedRemoteAddress) {
         long dnsResolutionFinishedNanos = System.nanoTime();
 
-        harEntry.getTimings().setDns(dnsResolutionFinishedNanos - dnsResolutionStartedNanos, TimeUnit.NANOSECONDS);
+        if (dnsResolutionStartedNanos > 0L) {
+            harEntry.getTimings().setDns(dnsResolutionFinishedNanos - dnsResolutionStartedNanos, TimeUnit.NANOSECONDS);
+        } else {
+            harEntry.getTimings().setDns(0L, TimeUnit.NANOSECONDS);
+        }
 
         // the address *should* always be resolved at this point
         InetAddress resolvedAddress = resolvedRemoteAddress.getAddress();
@@ -660,7 +668,13 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
     @Override
     public void proxyToServerConnectionSucceeded() {
         long connectionSucceededTimeNanos = System.nanoTime();
-        harEntry.getTimings().setConnect(connectionSucceededTimeNanos - connectionStartedNanos, TimeUnit.NANOSECONDS);
+
+        // make sure the previous timestamp was captured, to avoid setting an absurd value in the har (see serverToProxyResponseReceiving())
+        if (connectionStartedNanos > 0L) {
+            harEntry.getTimings().setConnect(connectionSucceededTimeNanos - connectionStartedNanos, TimeUnit.NANOSECONDS);
+        } else {
+            harEntry.getTimings().setConnect(0L, TimeUnit.NANOSECONDS);
+        }
     }
 
     @Override
@@ -677,21 +691,39 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
     public void proxyToServerRequestSent() {
         this.sendFinishedNanos = System.nanoTime();
 
-        harEntry.getTimings().setSend(sendFinishedNanos - sendStartedNanos, TimeUnit.NANOSECONDS);
+        // make sure the previous timestamp was captured, to avoid setting an absurd value in the har (see serverToProxyResponseReceiving())
+        if (sendStartedNanos > 0L) {
+            harEntry.getTimings().setSend(sendFinishedNanos - sendStartedNanos, TimeUnit.NANOSECONDS);
+        } else {
+            harEntry.getTimings().setSend(0L, TimeUnit.NANOSECONDS);
+        }
     }
 
     @Override
     public void serverToProxyResponseReceiving() {
         this.responseReceiveStartedNanos = System.nanoTime();
 
-        // started to receive response, so populate the 'wait' time
-        harEntry.getTimings().setWait(responseReceiveStartedNanos - sendFinishedNanos, TimeUnit.NANOSECONDS);
+        // started to receive response, so populate the 'wait' time. if we started receiving a response from the server before we finished
+        // sending (for example, the server replied with a 404 while we were uploading a large file), there was no wait time, so
+        // make sure the wait is set to 0.
+        if (sendFinishedNanos > 0L && sendFinishedNanos < responseReceiveStartedNanos) {
+            harEntry.getTimings().setWait(responseReceiveStartedNanos - sendFinishedNanos, TimeUnit.NANOSECONDS);
+        } else {
+            harEntry.getTimings().setWait(0L, TimeUnit.NANOSECONDS);
+        }
     }
 
     @Override
     public void serverToProxyResponseReceived() {
         long responseReceivedNanos = System.nanoTime();
 
-        harEntry.getTimings().setReceive(responseReceivedNanos - responseReceiveStartedNanos, TimeUnit.NANOSECONDS);
+        // like the wait time, the receive time requires that the serverToProxyResponseReceiving() method be called before this method is invoked.
+        // typically that should happen, but it has been reported (https://github.com/lightbody/browsermob-proxy/issues/288) that it
+        // sometimes does not. therefore, to be safe, make sure responseReceiveStartedNanos is populated before setting the receive time.
+        if (responseReceiveStartedNanos > 0L) {
+            harEntry.getTimings().setReceive(responseReceivedNanos - responseReceiveStartedNanos, TimeUnit.NANOSECONDS);
+        } else {
+            harEntry.getTimings().setReceive(0L, TimeUnit.NANOSECONDS);
+        }
     }
 }
