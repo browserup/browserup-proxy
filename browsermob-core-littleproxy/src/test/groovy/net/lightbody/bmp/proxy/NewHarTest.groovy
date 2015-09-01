@@ -172,14 +172,17 @@ class NewHarTest extends MockServerTest {
 
     @Test
     void testCaptureResponseContentInHar() {
+        String expectedResponseBody = "success";
+        String responseContentType = "text/plain; charset=UTF-8";
+
         mockServer.when(request()
                 .withMethod("GET")
                 .withPath("/testCaptureResponseContentInHar"),
                 Times.exactly(1))
                 .respond(response()
                 .withStatusCode(200)
-                .withBody("success")
-                .withHeader(new Header("Content-Type", "text/plain; charset=UTF-8")))
+                .withBody(expectedResponseBody)
+                .withHeader(new Header("Content-Type", responseContentType)))
 
         proxy = new BrowserMobProxyServer();
         proxy.setHarCaptureTypes([CaptureType.RESPONSE_CONTENT] as Set)
@@ -189,7 +192,7 @@ class NewHarTest extends MockServerTest {
 
         ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
             String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testCaptureResponseContentInHar")).getEntity().getContent());
-            assertEquals("Did not receive expected response from mock server", "success", responseBody);
+            assertEquals("Did not receive expected response from mock server", expectedResponseBody, responseBody);
         };
 
         Thread.sleep(500)
@@ -200,7 +203,48 @@ class NewHarTest extends MockServerTest {
         HarContent content = har.getLog().getEntries().first().response.content
         assertNotNull("Expected to find HAR content", content)
 
-        assertEquals("Expected to capture body content in HAR", "success", content.text)
+        assertEquals("Expected to capture response mimeType in HAR", responseContentType, content.mimeType)
+
+        assertEquals("Expected to capture body content in HAR", expectedResponseBody, content.text)
+        assertEquals("Unexpected response content length", expectedResponseBody.getBytes("UTF-8").length, content.size)
+    }
+
+    @Test
+    void testCaptureResponseInfoWhenResponseCaptureDisabled() {
+        String expectedResponseBody = "success";
+        String responseContentType = "text/plain; charset=UTF-8";
+
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/testCaptureResponseContentInHar"),
+                Times.exactly(1))
+                .respond(response()
+                .withStatusCode(200)
+                .withBody(expectedResponseBody)
+                .withHeader(new Header("Content-Type", responseContentType)))
+
+        proxy = new BrowserMobProxyServer();
+        proxy.setHarCaptureTypes([] as Set)
+        proxy.start()
+
+        proxy.newHar()
+
+        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testCaptureResponseContentInHar")).getEntity().getContent());
+            assertEquals("Did not receive expected response from mock server", expectedResponseBody, responseBody);
+        };
+
+        Thread.sleep(500)
+        Har har = proxy.getHar()
+
+        assertThat("Expected to find entries in the HAR", har.getLog().getEntries(), not(empty()))
+
+        HarContent content = har.getLog().getEntries().first().response.content
+        assertNotNull("Expected to find HAR content", content)
+
+        assertEquals("Expected to capture response mimeType in HAR", responseContentType, content.mimeType)
+
+        assertNull("Expected to not capture body content in HAR", content.text)
     }
 
     @Test

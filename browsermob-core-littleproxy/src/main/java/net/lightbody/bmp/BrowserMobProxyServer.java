@@ -515,7 +515,11 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
 
     @Override
     public void setHarCaptureTypes(Set<CaptureType> harCaptureSettings) {
-        harCaptureTypes = EnumSet.copyOf(harCaptureSettings);
+        if (harCaptureSettings == null || harCaptureSettings.isEmpty()) {
+            harCaptureTypes = EnumSet.noneOf(CaptureType.class);
+        } else {
+            harCaptureTypes = EnumSet.copyOf(harCaptureSettings);
+        }
     }
 
     @Override
