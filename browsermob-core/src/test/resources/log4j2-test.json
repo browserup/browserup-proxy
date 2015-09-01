@@ -6,7 +6,7 @@
         "name": "console",
         "target": "SYSTEM_OUT",
         "PatternLayout": {
-          "pattern": "%date %level [%thread] %logger - %msg%n"
+          "pattern": "%-7r %date %level [%thread] %logger - %msg%n"
         }
       }
     },

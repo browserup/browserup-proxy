@@ -22,8 +22,6 @@ import static org.junit.Assume.assumeFalse;
 /**
  * Tests which require a web browser should be placed in this class so they can be properly configured/ignored for CI builds.
  */
-// TODO: temporarily ignoring because firefox is no longer ignoring untrusted certificates, even when instructed to do so
-@Ignore
 public class BrowserTest extends ProxyServerTest {
     @Before
     public void skipForTravisCi() {
