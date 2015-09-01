@@ -455,8 +455,6 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
             contentType = BrowserMobHttpUtil.UNKNOWN_CONTENT_TYPE;
         }
 
-        harEntry.getResponse().getContent().setMimeType(contentType);
-
         if (responseCaptureFilter.isResponseCompressed() && !responseCaptureFilter.isDecompressionSuccessful()) {
             log.warn("Unable to decompress content with encoding: {}. Contents will be encoded as base64 binary data.", responseCaptureFilter.getContentEncoding());
 
@@ -470,6 +468,8 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
             harEntry.getResponse().getContent().setText(DatatypeConverter.printBase64Binary(fullMessage));
             harEntry.getResponse().getContent().setEncoding("base64");
         }
+
+        harEntry.getResponse().getContent().setSize(fullMessage.length);
     }
 
     protected void captureResponse(HttpResponse httpResponse) {
@@ -477,6 +477,8 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         harEntry.setResponse(response);
 
         captureResponseHeaderSize(httpResponse);
+
+        captureResponseMimeType(httpResponse);
 
         if (dataToCapture.contains(CaptureType.RESPONSE_COOKIES)) {
             captureResponseCookies(httpResponse);
@@ -489,6 +491,11 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         if (BrowserMobHttpUtil.isRedirect(httpResponse)) {
             captureRedirectUrl(httpResponse);
         }
+    }
+
+    protected void captureResponseMimeType(HttpResponse httpResponse) {
+        String contentType = HttpHeaders.getHeader(httpResponse, HttpHeaders.Names.CONTENT_TYPE);
+        harEntry.getResponse().getContent().setMimeType(contentType);
     }
 
     protected void captureResponseCookies(HttpResponse httpResponse) {
