@@ -96,7 +96,9 @@ public class LocalServer {
 
     public void stop() {
         try {
-            server.stop();
+            if (server != null) {
+                server.stop();
+            }
         } catch (Exception e) {
             log.error("Could not stop local Jetty server for tests", e);
         }
