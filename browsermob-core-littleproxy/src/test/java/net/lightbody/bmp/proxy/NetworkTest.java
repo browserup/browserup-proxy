@@ -20,7 +20,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
- * Network manipulation tests using the new interface. When the legacy interface is retired, tests in TimeoutTest should be moved to this class.
+ * Network manipulation tests using the new interface.
  */
 public class NetworkTest extends MockServerTest {
     @Test
