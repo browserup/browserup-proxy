@@ -1,6 +1,7 @@
 package net.lightbody.bmp.proxy.dns;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -36,7 +37,14 @@ public abstract class AbstractHostNameRemapper implements AdvancedHostResolver {
     @Override
     public void remapHost(String originalHost, String remappedHost) {
         synchronized (remappedHostNames) {
-            ImmutableMap<String, String> newRemappings = new ImmutableMap.Builder<String, String>().putAll(remappedHostNames.get()).put(originalHost, remappedHost).build();
+            Map<String, String> currentHostRemappings = remappedHostNames.get();
+
+            // use a LinkedHashMap to build the new remapping, to avoid duplicate key issues if the originalHost is already in the map
+            Map<String, String> builderMap = Maps.newLinkedHashMap(currentHostRemappings);
+            builderMap.remove(originalHost);
+            builderMap.put(originalHost, remappedHost);
+
+            ImmutableMap<String, String> newRemappings = ImmutableMap.copyOf(builderMap);
 
             remappedHostNames.set(newRemappings);
         }

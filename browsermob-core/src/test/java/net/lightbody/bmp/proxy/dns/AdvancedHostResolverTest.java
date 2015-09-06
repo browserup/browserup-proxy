@@ -152,6 +152,22 @@ public class AdvancedHostResolverTest {
     }
 
     @Test
+    public void testReplaceRemappedHostWithNewRemapping() {
+        // remap the hostname twice. the second remapping should supercede the first.
+        resolver.remapHost("www.google.com", "www.yahoo.com");
+        resolver.remapHost("www.google.com", "www.bing.com");
+
+        Collection<InetAddress> remappedAddresses = resolver.resolve("www.google.com");
+        assertNotNull("Collection of resolved addresses should never be null", remappedAddresses);
+        assertNotEquals("Expected to find at least one address for www.google.com remapped to www.bing.com", 0, remappedAddresses.size());
+
+        InetAddress firstRemappedAddr = remappedAddresses.iterator().next();
+
+        //TODO: verify this is correct -- should remapping return the remapped hostname, or the original hostname but with an IP address corresponding to the remapped hostname?
+        assertEquals("Expected hostname for returned address to reflect the remapped address.", "www.bing.com", firstRemappedAddr.getHostName());
+    }
+
+    @Test
     public void testRetrieveOriginalHostByRemappedHost() {
         resolver.remapHost("www.google.com", "www.bing.com");
 
