@@ -28,7 +28,7 @@ public abstract class AbstractHostNameRemapper implements AdvancedHostResolver {
     @Override
     public void remapHosts(Map<String, String> hostRemappings) {
         synchronized (remappedHostNames) {
-            ImmutableMap<String, String> newRemappings = new ImmutableMap.Builder<String, String>().putAll(hostRemappings).build();
+            ImmutableMap<String, String> newRemappings = ImmutableMap.copyOf(hostRemappings);
 
             remappedHostNames.set(newRemappings);
         }
@@ -53,14 +53,16 @@ public abstract class AbstractHostNameRemapper implements AdvancedHostResolver {
     @Override
     public void removeHostRemapping(String originalHost) {
         synchronized (remappedHostNames) {
-            ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<String, String>();
-            for (Map.Entry<String, String> entry : remappedHostNames.get().entrySet()) {
-                if (!entry.getKey().equals(originalHost)) {
-                    builder.put(entry);
-                }
-            }
+            Map<String, String> currentHostRemappings = remappedHostNames.get();
+            if (currentHostRemappings.containsKey(originalHost)) {
+                // use a LinkedHashMap to build the new remapping, to take advantage of the remove() method
+                Map<String, String> builderMap = Maps.newLinkedHashMap(currentHostRemappings);
+                builderMap.remove(originalHost);
 
-            remappedHostNames.set(builder.build());
+                ImmutableMap<String, String> newRemappings = ImmutableMap.copyOf(builderMap);
+
+                remappedHostNames.set(newRemappings);
+            }
         }
     }
 
