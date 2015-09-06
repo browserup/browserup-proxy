@@ -111,7 +111,7 @@ class NewHarTest extends MockServerTest {
                 .respond(response()
                 .withStatusCode(200)
                 .withBody("success")
-                .withCookie(new Cookie("mock-cookie", "mock value")))
+                .withCookie(new Cookie("mock-cookie", "mock-value")))
 
         proxy = new BrowserMobProxyServer();
         proxy.setHarCaptureTypes([CaptureType.RESPONSE_COOKIES] as Set)
@@ -132,7 +132,7 @@ class NewHarTest extends MockServerTest {
 
         HarCookie cookie = har.getLog().getEntries().first().response.cookies.first()
         assertEquals("Incorrect cookie name in HAR", "mock-cookie", cookie.name)
-        assertEquals("Incorrect cookie value in HAR", "mock value", cookie.value)
+        assertEquals("Incorrect cookie value in HAR", "mock-value", cookie.value)
     }
 
     @Test

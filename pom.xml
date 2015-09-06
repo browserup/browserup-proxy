@@ -66,7 +66,7 @@
 
         <groovy.version>2.4.3</groovy.version>
 
-        <netty.version>4.0.27.Final</netty.version>
+        <netty.version>4.0.31.Final</netty.version>
     </properties>
 
     <build>
@@ -443,6 +443,13 @@
             </activation>
             <properties>
                 <javadoc.opts>-Xdoclint:none</javadoc.opts>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>netty-4.1</id>
+            <properties>
+                <netty.version>4.1.0.Beta6</netty.version>
             </properties>
         </profile>
     </profiles>
