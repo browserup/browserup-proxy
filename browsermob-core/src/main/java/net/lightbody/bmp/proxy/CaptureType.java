@@ -19,8 +19,7 @@ public enum CaptureType {
 
     /**
      * Non-binary HTTP request content, such as post data or other text-based request payload.
-     * FIXME: link to binary content-types
-     * See ${@link TBD} for a list of Content-Types that
+     * See {@link net.lightbody.bmp.util.BrowserMobHttpUtil#hasTextualContent(String)} for a list of Content-Types that
      * are considered non-binary.
      *
      */
@@ -43,8 +42,7 @@ public enum CaptureType {
 
     /**
      * Non-binary HTTP response content (typically, HTTP body content).
-     * FIXME: link to binary content-types
-     * See ${@link TBD} for a list of Content-Types that
+     * See {@link net.lightbody.bmp.util.BrowserMobHttpUtil#hasTextualContent(String)} for a list of Content-Types that
      * are considered non-binary.
      */
     RESPONSE_CONTENT,

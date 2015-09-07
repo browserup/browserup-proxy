@@ -21,6 +21,7 @@ import net.lightbody.bmp.core.har.HarPostData;
 import net.lightbody.bmp.core.har.HarPostDataParam;
 import net.lightbody.bmp.core.har.HarRequest;
 import net.lightbody.bmp.core.har.HarResponse;
+import net.lightbody.bmp.exception.UnsupportedCharsetException;
 import net.lightbody.bmp.filters.support.HttpConnectTiming;
 import net.lightbody.bmp.filters.util.HarCaptureUtil;
 import net.lightbody.bmp.proxy.CaptureType;
@@ -421,9 +422,22 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
             urlEncoded = false;
         }
 
+        Charset charset;
+        try {
+             charset = BrowserMobHttpUtil.readCharsetInContentTypeHeader(contentType);
+        } catch (UnsupportedCharsetException e) {
+            log.warn("Found unsupported character set in Content-Type header '{}' in HTTP request to {}. Content will not be captured in HAR.", contentType, httpRequest.getUri(), e);
+            return;
+        }
+
+        if (charset == null) {
+            // no charset specified, so use the default -- but log a message since this might not encode the data correctly
+            charset = BrowserMobHttpUtil.DEFAULT_HTTP_CHARSET;
+            log.debug("No charset specified; using charset {} to decode contents to {}", charset, httpRequest.getUri());
+        }
+
         if (urlEncoded) {
-            String textContents = BrowserMobHttpUtil.getContentAsString(fullMessage, contentType, originalRequest);
-            Charset charset = BrowserMobHttpUtil.deriveCharsetFromContentTypeHeader(contentType);
+            String textContents = BrowserMobHttpUtil.getContentAsString(fullMessage, charset);
 
             QueryStringDecoder queryStringDecoder = new QueryStringDecoder(textContents, charset, false);
 
@@ -440,7 +454,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
             //TODO: implement capture of files and multipart form data
 
             // not URL encoded, so let's grab the body of the POST and capture that
-            String postBody = BrowserMobHttpUtil.getContentAsString(fullMessage, contentType, originalRequest);
+            String postBody = BrowserMobHttpUtil.getContentAsString(fullMessage, charset);
             harEntry.getRequest().getPostData().setText(postBody);
         }
     }
@@ -461,8 +475,22 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
             forceBinary = true;
         }
 
+        Charset charset;
+        try {
+            charset = BrowserMobHttpUtil.readCharsetInContentTypeHeader(contentType);
+        } catch (UnsupportedCharsetException e) {
+            log.warn("Found unsupported character set in Content-Type header '{}' in HTTP response from {}. Content will not be captured in HAR.", contentType, originalRequest.getUri(), e);
+            return;
+        }
+
+        if (charset == null) {
+            // no charset specified, so use the default -- but log a message since this might not encode the data correctly
+            charset = BrowserMobHttpUtil.DEFAULT_HTTP_CHARSET;
+            log.debug("No charset specified; using charset {} to decode contents from {}", charset, originalRequest.getUri());
+        }
+
         if (!forceBinary && BrowserMobHttpUtil.hasTextualContent(contentType)) {
-            String text = BrowserMobHttpUtil.getContentAsString(fullMessage, contentType, originalRequest);
+            String text = BrowserMobHttpUtil.getContentAsString(fullMessage, charset);
             harEntry.getResponse().getContent().setText(text);
         } else if (dataToCapture.contains(CaptureType.RESPONSE_BINARY_CONTENT)) {
             harEntry.getResponse().getContent().setText(DatatypeConverter.printBase64Binary(fullMessage));

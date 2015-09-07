@@ -4,6 +4,9 @@ import io.netty.handler.codec.http.FullHttpMessage;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMessage;
+import net.lightbody.bmp.exception.UnsupportedCharsetException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.Charset;
 
@@ -12,19 +15,32 @@ import java.nio.charset.Charset;
  * {@link io.netty.handler.codec.http.HttpMessage} and {@link io.netty.handler.codec.http.HttpContent}.
  */
 public class HttpObjectUtil {
+    private static final Logger log = LoggerFactory.getLogger(HttpObjectUtil.class);
 
     /**
      * Replaces the entity body of the message with the specified contents. Encodes the message contents according to charset in the message's
      * Content-Type header, or uses {@link BrowserMobHttpUtil#DEFAULT_HTTP_CHARSET} if none is specified.
+     * <b>Note:</b> If the charset of the message is not supported on this platform, this will throw an {@link java.nio.charset.UnsupportedCharsetException}.
+     *
      * TODO: Currently this method only works for FullHttpMessages, since it must modify the Content-Length header; determine if this may be applied to chunked messages as well
      *
      * @param message the HTTP message to manipulate
      * @param newContents the new entity body contents
+     * @throws java.nio.charset.UnsupportedCharsetException if the charset in the message is not supported on this platform
      */
     public static void replaceTextHttpEntityBody(FullHttpMessage message, String newContents) {
         // get the content type for this message so we can encode the newContents into a byte stream appropriately
         String contentTypeHeader = message.headers().get(HttpHeaders.Names.CONTENT_TYPE);
-        Charset messageCharset = BrowserMobHttpUtil.deriveCharsetFromContentTypeHeader(contentTypeHeader);
+
+        Charset messageCharset;
+        try {
+            messageCharset = BrowserMobHttpUtil.readCharsetInContentTypeHeader(contentTypeHeader);
+        } catch (UnsupportedCharsetException e) {
+            java.nio.charset.UnsupportedCharsetException cause = e.getUnsupportedCharsetExceptionCause() ;
+            log.error("Found unsupported character set in Content-Type header '{}' while attempting to replace contents of HTTP message.", contentTypeHeader, cause);
+
+            throw cause;
+        }
 
         byte[] contentBytes = newContents.getBytes(messageCharset);
 
@@ -73,24 +89,44 @@ public class HttpObjectUtil {
      *
      * @param httpMessage HTTP message to extract entity body from
      * @return String representation of the entity body
+     * @throws java.nio.charset.UnsupportedCharsetException if there is a charset specified in the content-type header, but it is not supported
      */
     public static String extractHttpEntityBody(FullHttpMessage httpMessage) {
-        Charset charset = getCharsetFromMessage(httpMessage);
+        Charset charset;
+        try {
+            charset = getCharsetFromMessage(httpMessage);
+        } catch (UnsupportedCharsetException e) {
+            // the declared character set is not supported, so it is impossible to decode the contents of the message. log an error and throw an exception
+            // to alert the client code.
+            java.nio.charset.UnsupportedCharsetException cause = e.getUnsupportedCharsetExceptionCause();
+
+            String contentTypeHeader = HttpHeaders.getHeader(httpMessage, HttpHeaders.Names.CONTENT_TYPE);
+            log.error("Cannot retrieve text contents of message because HTTP message declares a character set that is not supported on this platform. Content type header: {}.", contentTypeHeader, cause);
+
+            throw cause;
+        }
 
         return extractHttpEntityBody(httpMessage, charset);
     }
 
     /**
      * Derives the charset from the Content-Type header in the HttpMessage. If the Content-Type header is not present or does not contain
-     * a character set, this method returns the ISO-8859-1 character set. See {@link BrowserMobHttpUtil#deriveCharsetFromContentTypeHeader(String)}
+     * a character set, this method returns the ISO-8859-1 character set. See {@link BrowserMobHttpUtil#readCharsetInContentTypeHeader(String)}
      * for more details.
      *
      * @param httpMessage HTTP message to extract charset from
-     * @return the charset assocaited with the HTTP message, or the default charset if none is present
+     * @return the charset associated with the HTTP message, or the default charset if none is present
+     * @throws UnsupportedCharsetException if there is a charset specified in the content-type header, but it is not supported
      */
-    public static Charset getCharsetFromMessage(HttpMessage httpMessage) {
+    public static Charset getCharsetFromMessage(HttpMessage httpMessage) throws UnsupportedCharsetException {
         String contentTypeHeader = HttpHeaders.getHeader(httpMessage, HttpHeaders.Names.CONTENT_TYPE);
-        return BrowserMobHttpUtil.deriveCharsetFromContentTypeHeader(contentTypeHeader);
+
+        Charset charset = BrowserMobHttpUtil.readCharsetInContentTypeHeader(contentTypeHeader);
+        if (charset == null) {
+            return BrowserMobHttpUtil.DEFAULT_HTTP_CHARSET;
+        }
+
+        return charset;
     }
 
     /**

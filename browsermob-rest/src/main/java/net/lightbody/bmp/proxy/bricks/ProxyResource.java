@@ -17,6 +17,7 @@ import net.lightbody.bmp.BrowserMobProxyServer;
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.exception.ProxyExistsException;
 import net.lightbody.bmp.exception.ProxyPortsExhaustedException;
+import net.lightbody.bmp.exception.UnsupportedCharsetException;
 import net.lightbody.bmp.filters.JavascriptRequestResponseFilter;
 import net.lightbody.bmp.proxy.LegacyProxyServer;
 import net.lightbody.bmp.proxy.ProxyManager;
@@ -713,7 +714,20 @@ public class ProxyResource {
 
     private String getEntityBodyFromRequest(Request<String> request) throws IOException {
         String contentTypeHeader = request.header("Content-Type");
-        Charset charset = BrowserMobHttpUtil.deriveCharsetFromContentTypeHeader(contentTypeHeader);
+        Charset charset = null;
+        try {
+            charset = BrowserMobHttpUtil.readCharsetInContentTypeHeader(contentTypeHeader);
+        } catch (UnsupportedCharsetException e) {
+            java.nio.charset.UnsupportedCharsetException cause = e.getUnsupportedCharsetExceptionCause();
+            LOG.error("Character set declared in Content-Type header is not supported. Content-Type header: {}", contentTypeHeader, cause);
+
+            throw cause;
+        }
+
+        if (charset == null) {
+            charset = BrowserMobHttpUtil.DEFAULT_HTTP_CHARSET;
+        }
+
         ByteArrayOutputStream entityBodyBytes = new ByteArrayOutputStream();
         request.readTo(entityBodyBytes);
 

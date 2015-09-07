@@ -68,6 +68,10 @@
                     <groupId>javax.servlet</groupId>
                     <artifactId>servlet-api</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpmime</artifactId>
+                </exclusion>
                 <!-- Due to usage in LegacyProxyServer and BrowserMobProxyServer, this dependency needs to be given "provided" scope.
                      It is not used by the BMP LittleProxy implementation itself. -->
                 <exclusion>
