@@ -185,7 +185,7 @@ class NewHarTest extends MockServerTest {
                 .withHeader(new Header("Content-Type", responseContentType)))
 
         proxy = new BrowserMobProxyServer();
-        proxy.setHarCaptureTypes([CaptureType.RESPONSE_CONTENT] as Set)
+        proxy.setHarCaptureTypes(CaptureType.RESPONSE_CONTENT)
         proxy.start()
 
         proxy.newHar()
