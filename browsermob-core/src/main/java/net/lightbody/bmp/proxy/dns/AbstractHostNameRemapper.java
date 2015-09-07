@@ -1,6 +1,7 @@
 package net.lightbody.bmp.proxy.dns;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ public abstract class AbstractHostNameRemapper implements AdvancedHostResolver {
     @Override
     public void remapHosts(Map<String, String> hostRemappings) {
         synchronized (remappedHostNames) {
-            ImmutableMap<String, String> newRemappings = new ImmutableMap.Builder<String, String>().putAll(hostRemappings).build();
+            ImmutableMap<String, String> newRemappings = ImmutableMap.copyOf(hostRemappings);
 
             remappedHostNames.set(newRemappings);
         }
@@ -36,7 +37,14 @@ public abstract class AbstractHostNameRemapper implements AdvancedHostResolver {
     @Override
     public void remapHost(String originalHost, String remappedHost) {
         synchronized (remappedHostNames) {
-            ImmutableMap<String, String> newRemappings = new ImmutableMap.Builder<String, String>().putAll(remappedHostNames.get()).put(originalHost, remappedHost).build();
+            Map<String, String> currentHostRemappings = remappedHostNames.get();
+
+            // use a LinkedHashMap to build the new remapping, to avoid duplicate key issues if the originalHost is already in the map
+            Map<String, String> builderMap = Maps.newLinkedHashMap(currentHostRemappings);
+            builderMap.remove(originalHost);
+            builderMap.put(originalHost, remappedHost);
+
+            ImmutableMap<String, String> newRemappings = ImmutableMap.copyOf(builderMap);
 
             remappedHostNames.set(newRemappings);
         }
@@ -45,14 +53,16 @@ public abstract class AbstractHostNameRemapper implements AdvancedHostResolver {
     @Override
     public void removeHostRemapping(String originalHost) {
         synchronized (remappedHostNames) {
-            ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<String, String>();
-            for (Map.Entry<String, String> entry : remappedHostNames.get().entrySet()) {
-                if (!entry.getKey().equals(originalHost)) {
-                    builder.put(entry);
-                }
-            }
+            Map<String, String> currentHostRemappings = remappedHostNames.get();
+            if (currentHostRemappings.containsKey(originalHost)) {
+                // use a LinkedHashMap to build the new remapping, to take advantage of the remove() method
+                Map<String, String> builderMap = Maps.newLinkedHashMap(currentHostRemappings);
+                builderMap.remove(originalHost);
 
-            remappedHostNames.set(builder.build());
+                ImmutableMap<String, String> newRemappings = ImmutableMap.copyOf(builderMap);
+
+                remappedHostNames.set(newRemappings);
+            }
         }
     }
 

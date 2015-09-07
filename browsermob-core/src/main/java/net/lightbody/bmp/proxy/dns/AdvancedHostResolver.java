@@ -22,7 +22,8 @@ public interface AdvancedHostResolver extends HostResolver {
 
     /**
      * Remaps an individual host. If there are any existing remappings, the new remapping will be applied last, after all existing
-     * remappings are applied.
+     * remappings are applied. If there is already a remapping for the specified originalHost, it will be removed before
+     * the new remapping is added to the end of the host remapping list (and will therefore be the last remapping applied).
      *
      * @param originalHost Original host to remap. Must exactly match the requested hostname (not a domain or regular expression match).
      * @param remappedHost hostname that will replace originalHost
