@@ -16,7 +16,6 @@ import net.lightbody.bmp.filters.AddHeadersFilter;
 import net.lightbody.bmp.filters.BlacklistFilter;
 import net.lightbody.bmp.filters.BrowserMobHttpFilterChain;
 import net.lightbody.bmp.filters.HarCaptureFilter;
-import net.lightbody.bmp.filters.ResolvedHostnameCacheFilter;
 import net.lightbody.bmp.filters.HttpConnectHarCaptureFilter;
 import net.lightbody.bmp.filters.HttpsHostCaptureFilter;
 import net.lightbody.bmp.filters.HttpsOriginalHostCaptureFilter;
@@ -24,6 +23,7 @@ import net.lightbody.bmp.filters.LatencyFilter;
 import net.lightbody.bmp.filters.RegisterRequestFilter;
 import net.lightbody.bmp.filters.RequestFilter;
 import net.lightbody.bmp.filters.RequestFilterAdapter;
+import net.lightbody.bmp.filters.ResolvedHostnameCacheFilter;
 import net.lightbody.bmp.filters.ResponseFilter;
 import net.lightbody.bmp.filters.ResponseFilterAdapter;
 import net.lightbody.bmp.filters.RewriteUrlFilter;
@@ -523,6 +523,15 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     }
 
     @Override
+    public void setHarCaptureTypes(CaptureType... captureTypes) {
+        if (captureTypes == null) {
+            setHarCaptureTypes(EnumSet.noneOf(CaptureType.class));
+        } else {
+            setHarCaptureTypes(EnumSet.copyOf(Arrays.asList(captureTypes)));
+        }
+    }
+
+    @Override
     public EnumSet<CaptureType> getHarCaptureTypes() {
         return EnumSet.copyOf(harCaptureTypes);
     }
@@ -533,9 +542,27 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     }
 
     @Override
+    public void enableHarCaptureTypes(CaptureType... captureTypes) {
+        if (captureTypes == null) {
+            enableHarCaptureTypes(EnumSet.noneOf(CaptureType.class));
+        } else {
+            enableHarCaptureTypes(EnumSet.copyOf(Arrays.asList(captureTypes)));
+        }
+    }
+
+    @Override
     public void disableHarCaptureTypes(Set<CaptureType> captureTypes) {
         harCaptureTypes.removeAll(captureTypes);
 
+    }
+
+    @Override
+    public void disableHarCaptureTypes(CaptureType... captureTypes) {
+        if (captureTypes == null) {
+            disableHarCaptureTypes(EnumSet.noneOf(CaptureType.class));
+        } else {
+            disableHarCaptureTypes(EnumSet.copyOf(Arrays.asList(captureTypes)));
+        }
     }
 
     @Override

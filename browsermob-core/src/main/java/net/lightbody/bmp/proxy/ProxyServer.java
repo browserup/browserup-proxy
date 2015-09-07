@@ -39,6 +39,7 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -348,6 +349,15 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
     }
 
     @Override
+    public void setHarCaptureTypes(CaptureType... captureTypes) {
+        if (captureTypes == null) {
+            setHarCaptureTypes(EnumSet.noneOf(CaptureType.class));
+        } else {
+            setHarCaptureTypes(EnumSet.copyOf(Arrays.asList(captureTypes)));
+        }
+    }
+
+    @Override
     public EnumSet<CaptureType> getHarCaptureTypes() {
         // cookie capture types are always enabled in the legacy ProxyServer
         EnumSet<CaptureType> captureTypes = CaptureType.getCookieCaptureTypes();
@@ -383,6 +393,15 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
     }
 
     @Override
+    public void enableHarCaptureTypes(CaptureType... captureTypes) {
+        if (captureTypes == null) {
+            enableHarCaptureTypes(EnumSet.noneOf(CaptureType.class));
+        } else {
+            enableHarCaptureTypes(EnumSet.copyOf(Arrays.asList(captureTypes)));
+        }
+    }
+
+    @Override
     public void disableHarCaptureTypes(Set<CaptureType> captureTypes) {
         if (captureTypes.contains(CaptureType.REQUEST_BINARY_CONTENT) || captureTypes.contains(CaptureType.RESPONSE_BINARY_CONTENT)) {
             setCaptureBinaryContent(false);
@@ -394,6 +413,15 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
 
         if (captureTypes.contains(CaptureType.REQUEST_HEADERS) || captureTypes.contains(CaptureType.RESPONSE_HEADERS)) {
             setCaptureHeaders(false);
+        }
+    }
+
+    @Override
+    public void disableHarCaptureTypes(CaptureType... captureTypes) {
+        if (captureTypes == null) {
+            disableHarCaptureTypes(EnumSet.noneOf(CaptureType.class));
+        } else {
+            disableHarCaptureTypes(EnumSet.copyOf(Arrays.asList(captureTypes)));
         }
     }
 

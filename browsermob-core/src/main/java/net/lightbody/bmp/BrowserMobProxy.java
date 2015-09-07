@@ -143,6 +143,19 @@ public interface BrowserMobProxy {
     void setHarCaptureTypes(Set<CaptureType> captureTypes);
 
     /**
+     * Sets the data types that will be captured in the HAR file for future requests. Replaces any existing capture types with the specified
+     * capture types. A null or empty set will not disable HAR capture, but will disable collection of
+     * additional {@link net.lightbody.bmp.proxy.CaptureType} data types. {@link net.lightbody.bmp.proxy.CaptureType} provides several
+     * convenience methods to retrieve commonly-used capture settings.
+     * <p/>
+     * <b>Note:</b> HAR capture must still be explicitly enabled via {@link #newHar()} or {@link #newHar(String)} to begin capturing
+     * any request and response contents.
+     *
+     * @param captureTypes HAR data types to capture
+     */
+    void setHarCaptureTypes(CaptureType... captureTypes);
+
+    /**
      * @return A copy of HAR capture types currently in effect. The EnumSet cannot be used to modify the HAR capture types currently in effect.
      */
     EnumSet<CaptureType> getHarCaptureTypes();
@@ -155,11 +168,25 @@ public interface BrowserMobProxy {
     void enableHarCaptureTypes(Set<CaptureType> captureTypes);
 
     /**
+     * Enables the specified HAR capture types. Does not replace or disable any other capture types that may already be enabled.
+     *
+     * @param captureTypes capture types to enable
+     */
+    void enableHarCaptureTypes(CaptureType... captureTypes);
+
+    /**
      * Disables the specified HAR capture types. Does not replace or disable any other capture types that may already be enabled.
      *
      * @param captureTypes capture types to disable
      */
     void disableHarCaptureTypes(Set<CaptureType> captureTypes);
+
+    /**
+     * Disables the specified HAR capture types. Does not replace or disable any other capture types that may already be enabled.
+     *
+     * @param captureTypes capture types to disable
+     */
+    void disableHarCaptureTypes(CaptureType... captureTypes);
 
     /**
      * Starts a new HAR page using the default page naming convention. The default page naming convention is "Page #", where "#" resets to 1
