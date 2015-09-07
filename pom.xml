@@ -65,6 +65,7 @@
         <log4j.version>2.3</log4j.version>
 
         <groovy.version>2.4.3</groovy.version>
+        <groovy-eclipse-batch.version>${groovy.version}-01</groovy-eclipse-batch.version>
 
         <netty.version>4.0.31.Final</netty.version>
     </properties>
@@ -101,7 +102,7 @@
                         <dependency>
                             <groupId>org.codehaus.groovy</groupId>
                             <artifactId>groovy-eclipse-batch</artifactId>
-                            <version>${groovy.version}-01</version>
+                            <version>${groovy-eclipse-batch.version}</version>
                         </dependency>
                     </dependencies>
                 </plugin>
@@ -269,7 +270,7 @@
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-netty</artifactId>
-                <version>3.9.15</version>
+                <version>3.9.17</version>
                 <exclusions>
                     <exclusion>
                         <groupId>ch.qos.logback</groupId>
@@ -311,13 +312,13 @@
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
-                <version>4.3.4</version>
+                <version>4.5</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpmime</artifactId>
-                <version>4.3.4</version>
+                <version>4.5</version>
             </dependency>
 
             <dependency>
