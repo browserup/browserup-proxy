@@ -42,6 +42,11 @@ public class HttpObjectUtil {
             throw cause;
         }
 
+        if (messageCharset == null) {
+            messageCharset = BrowserMobHttpUtil.DEFAULT_HTTP_CHARSET;
+            log.warn("No character set declared in HTTP message. Replacing text using default charset {}.", messageCharset);
+        }
+
         byte[] contentBytes = newContents.getBytes(messageCharset);
 
         replaceBinaryHttpEntityBody(message, contentBytes);

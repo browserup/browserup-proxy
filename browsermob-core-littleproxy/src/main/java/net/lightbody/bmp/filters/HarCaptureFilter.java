@@ -465,7 +465,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
         String contentType = HttpHeaders.getHeader(httpResponse, HttpHeaders.Names.CONTENT_TYPE);
         if (contentType == null) {
-            log.warn("No content type specified in response. Content will be treated as {}", BrowserMobHttpUtil.UNKNOWN_CONTENT_TYPE);
+            log.warn("No content type specified in response from {}. Content will be treated as {}", originalRequest.getUri(), BrowserMobHttpUtil.UNKNOWN_CONTENT_TYPE);
             contentType = BrowserMobHttpUtil.UNKNOWN_CONTENT_TYPE;
         }
 
