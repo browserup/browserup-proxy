@@ -40,11 +40,7 @@ import java.net.URLConnection;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /* ------------------------------------------------------------ */
 
@@ -76,7 +72,7 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
       private final boolean proxyInjectionMode;
       private final boolean forceProxyChain;
       private boolean fakeCertsGenerated;
-      private DeleteDirectoryTask deleteDirectoryTask;
+      private List<DeleteDirectoryTask> deleteDirectoryTasks = new ArrayList<DeleteDirectoryTask>();
 
       // see docs for the lock object on SeleniumServer for information on this and why it is IMPORTANT!
       private Object shutdownLock;
@@ -609,7 +605,8 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
               final File root = tempDir.toFile();
 
               // delete the temp directory when the VM stops or aborts
-              deleteDirectoryTask = new DeleteDirectoryTask(tempDir);
+              DeleteDirectoryTask deleteDirectoryTask = new DeleteDirectoryTask(tempDir);
+              deleteDirectoryTasks.add(deleteDirectoryTask);
               Runtime.getRuntime().addShutdownHook(new Thread(deleteDirectoryTask));
 
               // copy the cybervillains cert files to the temp directory from the classpath
@@ -637,8 +634,10 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
       }
 
       public void cleanSslWithCyberVilliansCA(){
-          if(deleteDirectoryTask != null) {
-              deleteDirectoryTask.run();
+          if(!deleteDirectoryTasks.isEmpty()) {
+              for(DeleteDirectoryTask task : deleteDirectoryTasks) {
+                  task.run();
+              }
           }
       }
 
