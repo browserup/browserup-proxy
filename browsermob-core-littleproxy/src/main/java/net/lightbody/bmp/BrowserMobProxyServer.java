@@ -90,6 +90,11 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     private static final HarNameVersion HAR_CREATOR_VERSION = new HarNameVersion("BrowserMob Proxy", "2.1.0-beta-3-littleproxy");
 
     /**
+     * The default pseudonym to use when adding the Via header to proxied requests.
+     */
+    public static final String VIA_HEADER_ALIAS = "browsermobproxy";
+
+    /**
      * True only after the proxy has been successfully started.
      */
     private final AtomicBoolean started = new AtomicBoolean(false);
@@ -320,7 +325,8 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
                 .withServerResolver(delegatingResolver)
                 .withAddress(clientBindSocket)
                 .withConnectTimeout(connectTimeoutMs)
-                .withIdleConnectionTimeout(idleConnectionTimeoutSec);
+                .withIdleConnectionTimeout(idleConnectionTimeoutSec)
+                .withProxyAlias(VIA_HEADER_ALIAS);
 
         if (serverBindAddress != null) {
             bootstrap.withNetworkInterface(new InetSocketAddress(serverBindAddress, 0));
