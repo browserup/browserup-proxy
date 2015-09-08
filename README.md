@@ -88,11 +88,11 @@ The proxy is programmatically controlled via a REST interface or by being embedd
 
 ### REST API
 
-**New in 2.1:** The REST API now supports LittleProxy. When running browsermob-proxy, specify `--use-littleproxy true` to enable LittleProxy support.
+**New in 2.1:** The REST API now supports LittleProxy. As of 2.1.0-beta-3, LittleProxy is the default implementation. (You may specify `--use-littleproxy false` to disable LittleProxy in favor of the legacy Jetty 5-based implementation.)
 
 To get started, first start the proxy by running `browsermob-proxy` or `browsermob-proxy.bat` in the bin directory:
 
-    $ sh browsermob-proxy -port 9090 --use-littleproxy true
+    $ sh browsermob-proxy -port 9090
     INFO 05/31 03:12:48 o.b.p.Main           - Starting up...
     2011-05-30 20:12:49.517:INFO::jetty-7.3.0.v20110203
     2011-05-30 20:12:49.689:INFO::started o.e.j.s.ServletContextHandler{/,null}
