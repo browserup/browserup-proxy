@@ -2,7 +2,12 @@ package net.lightbody.bmp.util
 
 import org.junit.Test
 
+import java.nio.charset.Charset
+
 import static org.junit.Assert.assertEquals
+import static org.junit.Assert.assertFalse
+import static org.junit.Assert.assertNull
+import static org.junit.Assert.assertTrue
 
 class BrowserMobHttpUtilTest {
     @Test
@@ -22,7 +27,7 @@ class BrowserMobHttpUtilTest {
 
         uriToResource.each {uri, expectedResource ->
             String parsedResource = BrowserMobHttpUtil.getPathFromUri(uri)
-            assertEquals("Parsed resource from URL did not match expected resource", expectedResource, parsedResource)
+            assertEquals("Parsed resource from URL did not match expected resource for URL: " + uri, expectedResource, parsedResource)
         }
     }
 
@@ -41,7 +46,63 @@ class BrowserMobHttpUtilTest {
 
         uriToHostAndPort.each {uri, expectedHostAndPort ->
             String parsedHostAndPort = BrowserMobHttpUtil.getHostAndPortFromUri(uri)
-            assertEquals("Parsed host and port from URL did not match expected host and port", expectedHostAndPort, parsedHostAndPort)
+            assertEquals("Parsed host and port from URL did not match expected host and port for URL: " + uri, expectedHostAndPort, parsedHostAndPort)
         }
+    }
+
+    @Test
+    void testReadCharsetInContentTypeHeader() {
+        Map<String, Charset> contentTypeHeaderAndCharset = [
+                'text/html; charset=UTF-8' : Charset.forName('UTF-8'),
+                'text/html; charset=US-ASCII' : Charset.forName('US-ASCII'),
+                'text/html' : null,
+                'application/json;charset=utf-8' : Charset.forName('UTF-8'),
+                'text/*; charset=US-ASCII' : Charset.forName('US-ASCII'),
+                'unknown-type/something-incredible' : null,
+                'unknown-type/something-incredible;charset=UTF-8' : Charset.forName('UTF-8'),
+                '1234 & extremely malformed!' : null,
+                '1234 & extremely malformed!;charset=UTF-8' : null, // malformed content-types result in unparseable charsets
+                '' : null,
+        ]
+
+        contentTypeHeaderAndCharset.each {contentTypeHeader, expectedCharset ->
+            Charset derivedCharset = BrowserMobHttpUtil.readCharsetInContentTypeHeader(contentTypeHeader)
+            assertEquals("Charset derived from parsed content type header did not match expected charset for content type header: " + contentTypeHeader, expectedCharset, derivedCharset)
+        }
+
+        Charset derivedCharset = BrowserMobHttpUtil.readCharsetInContentTypeHeader(null)
+        assertNull("Expected null Content-Type header to return a null charset", derivedCharset)
+
+        boolean threwException = false
+        try {
+            BrowserMobHttpUtil.readCharsetInContentTypeHeader('text/html; charset=FUTURE_CHARSET')
+        } catch (UnsupportedCharsetException) {
+            threwException = true
+        }
+
+        assertTrue('Expected an UnsupportedCharsetException to occur when parsing the content type header text/html; charset=FUTURE_CHARSET', threwException)
+    }
+
+    @Test
+    void testHasTextualContent() {
+        Map<String, Boolean> contentTypeHeaderAndTextFlag = [
+                'text/html' : true,
+                'text/*' : true,
+                'application/x-javascript' : true,
+                'application/javascript' : true,
+                'application/xml' : true,
+                'application/xhtml+xml' : true,
+                'application/xhtml+xml; charset=UTF-8' : true,
+                'application/octet-stream' : false,
+                '': false,
+        ]
+
+        contentTypeHeaderAndTextFlag.each {contentTypeHeader, expectedIsText ->
+            boolean isTextualContent = BrowserMobHttpUtil.hasTextualContent(contentTypeHeader)
+            assertEquals("hasTextualContent did not return expected value for content type header: " + contentTypeHeader, expectedIsText, isTextualContent)
+        }
+
+        boolean isTextualContent = BrowserMobHttpUtil.hasTextualContent(null)
+        assertFalse("Expected hasTextualContent to return false for null content type", isTextualContent)
     }
 }

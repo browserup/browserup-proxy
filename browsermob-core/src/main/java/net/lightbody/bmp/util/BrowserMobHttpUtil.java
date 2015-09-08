@@ -1,12 +1,13 @@
 package net.lightbody.bmp.util;
 
 import com.google.common.net.HostAndPort;
+import com.google.common.net.MediaType;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import net.lightbody.bmp.exception.DecompressionException;
-import org.apache.http.entity.ContentType;
+import net.lightbody.bmp.exception.UnsupportedCharsetException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +19,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
@@ -149,62 +151,47 @@ public class BrowserMobHttpUtil {
     }
 
     /**
-     * Converts the byte array into a String based on the charset specified in the contentTypeHeader. If no
-     * charset is specified in the contentTypeHeader, this method uses default (see {@link #DEFAULT_HTTP_CHARSET}). The httpRequest is used
-     * only for logging purposes if the contentTypeHeader does not contain a charset.
+     * Converts the byte array into a String based on the specified charset. The charset cannot be null.
      *
      * @param content bytes to convert to a String
-     * @param contentTypeHeader request's content type header
-     * @param httpRequest HTTP request responsible for this content (used for logging purposes only)
+     * @param charset the character set of the content
      * @return String containing the converted content
+     * @throws IllegalArgumentException if charset is null
      */
-    public static String getContentAsString(byte[] content, String contentTypeHeader, HttpRequest httpRequest) {
-        Charset charset = readCharsetInContentTypeHeader(contentTypeHeader);
+    public static String getContentAsString(byte[] content, Charset charset) {
         if (charset == null) {
-            // no charset specified, so use the default -- but log a message since this might not encode the data correctly
-            charset = DEFAULT_HTTP_CHARSET;
-            if (httpRequest != null) {
-                log.debug("No charset specified; using charset {} to decode contents to/from {}", charset, httpRequest.getUri());
-            } else {
-                log.debug("No charset specified; using charset {} to decode contents", charset);
-            }
+            throw new IllegalArgumentException("Charset cannot be null");
         }
 
         return new String(content, charset);
     }
 
     /**
-     * Derives the charset from the Content-Type header. Unlike {@link #readCharsetInContentTypeHeader}, if contentTypeHeader is null or
-     * does not specify a charset, this method will return the ISO-8859-1 charset.
+     * Reads the charset directly from the Content-Type header string. If the Content-Type header does not contain a charset,
+     * is malformed or unparsable, or if the header is null or empty, this method returns null.
      *
      * @param contentTypeHeader the Content-Type header string; can be null or empty
-     * @return the character set indicated in the contentTypeHeader, or ISO-8859-1 if none is specified or no contentTypeHeader is specified
+     * @return the character set indicated in the contentTypeHeader, or null if the charset is not present or is not parsable
+     * @throws UnsupportedCharsetException if there is a charset specified in the content-type header, but it is not supported on this platform
      */
-    public static Charset deriveCharsetFromContentTypeHeader(String contentTypeHeader) {
-        Charset charset = readCharsetInContentTypeHeader(contentTypeHeader);
-        if (charset == null) {
-            return DEFAULT_HTTP_CHARSET;
-        }
-
-        return charset;
-    }
-
-    /**
-     * Reads the charset directly from the Content-Type header string. If the Content-Type header does not contain a charset, or if the header
-     * is null or empty, this method returns null. See also {@link #deriveCharsetFromContentTypeHeader(String)}.
-     *
-     * @param contentTypeHeader the Content-Type header string; can be null or empty
-     * @return the character set indicated in the contentTypeHeader, or null if the charset is not present
-     */
-    public static Charset readCharsetInContentTypeHeader(String contentTypeHeader) {
+    public static Charset readCharsetInContentTypeHeader(String contentTypeHeader) throws UnsupportedCharsetException {
         if (contentTypeHeader == null || contentTypeHeader.isEmpty()) {
-            return DEFAULT_HTTP_CHARSET;
+            return null;
         }
 
-        //FIXME: remove dependency on HttpCore's ContentType
-        ContentType contentTypeCharset = ContentType.parse(contentTypeHeader);
+        MediaType mediaType;
+        try {
+             mediaType = MediaType.parse(contentTypeHeader);
+        } catch (IllegalArgumentException e) {
+            log.info("Unable to parse Content-Type header: {}. Content-Type header will be ignored.", contentTypeHeader, e);
+            return null;
+        }
 
-        return contentTypeCharset.getCharset();
+        try {
+            return mediaType.charset().orNull();
+        } catch (java.nio.charset.UnsupportedCharsetException e) {
+            throw new UnsupportedCharsetException(e);
+        }
     }
 
     /**
@@ -284,11 +271,15 @@ public class BrowserMobHttpUtil {
             return false;
         }
 
-        if (uri.startsWith("http://") || uri.startsWith("https://")) {
-            return true;
-        } else {
-            return false;
-        }
+        // the scheme is case insensitive, according to RFC 7230, section 2.7.3:
+        /*
+            The scheme and host
+            are case-insensitive and normally provided in lowercase; all other
+            components are compared in a case-sensitive manner.
+        */
+        String lowercaseUri = uri.toLowerCase(Locale.US);
+
+        return lowercaseUri.startsWith("http://") || lowercaseUri.startsWith("https://");
     }
 
     /**
