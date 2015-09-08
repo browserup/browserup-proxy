@@ -636,7 +636,7 @@ public class InterceptorTest extends MockServerTest {
     }
 
     @Test
-    public void testCanBypassFilterForRequest() throws IOException {
+    public void testCanBypassFilterForRequest() throws IOException, InterruptedException {
         mockServer.when(request()
                         .withMethod("GET")
                         .withPath("/bypassfilter"),
@@ -677,6 +677,8 @@ public class InterceptorTest extends MockServerTest {
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         }
 
+        Thread.sleep(500);
+
         assertEquals("Expected filters source to be invoked on first request", 1, filtersSourceHitCount.get());
         assertEquals("Expected filter instance to be bypassed on first request", 0, filterHitCount.get());
 
@@ -688,6 +690,8 @@ public class InterceptorTest extends MockServerTest {
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         }
+
+        Thread.sleep(500);
 
         assertEquals("Expected filters source to be invoked again on second request", 2, filtersSourceHitCount.get());
         assertEquals("Expected filter instance to be invoked on second request (only)", 1, filterHitCount.get());
