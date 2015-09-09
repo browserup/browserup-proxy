@@ -40,7 +40,14 @@ import java.net.URLConnection;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
 
 /* ------------------------------------------------------------ */
 
@@ -72,7 +79,7 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
       private final boolean proxyInjectionMode;
       private final boolean forceProxyChain;
       private boolean fakeCertsGenerated;
-      private List<DeleteDirectoryTask> deleteDirectoryTasks = new ArrayList<DeleteDirectoryTask>();
+      private final List<DeleteDirectoryTask> deleteDirectoryTasks = Collections.synchronizedList(new ArrayList<DeleteDirectoryTask>());
 
       // see docs for the lock object on SeleniumServer for information on this and why it is IMPORTANT!
       private Object shutdownLock;
@@ -634,9 +641,11 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
       }
 
       public void cleanSslWithCyberVilliansCA(){
-          if(!deleteDirectoryTasks.isEmpty()) {
-              for(DeleteDirectoryTask task : deleteDirectoryTasks) {
-                  task.run();
+          synchronized (deleteDirectoryTasks) {
+              if (!deleteDirectoryTasks.isEmpty()) {
+                  for (DeleteDirectoryTask task : deleteDirectoryTasks) {
+                      task.run();
+                  }
               }
           }
       }
