@@ -55,6 +55,7 @@ import org.littleshoot.proxy.HttpProxyServer;
 import org.littleshoot.proxy.HttpProxyServerBootstrap;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
 import org.littleshoot.proxy.impl.ProxyUtils;
+import org.littleshoot.proxy.impl.ThreadPoolConfiguration;
 import org.openqa.selenium.Proxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -199,6 +200,11 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     private volatile InetSocketAddress upstreamProxyAddress;
 
     /**
+     * The chained proxy manager that manages upstream proxies.
+     */
+    private volatile ChainedProxyManager chainedProxyManager;
+
+    /**
      * The address and socket on which the proxy will listen for client requests.
      */
     private volatile InetSocketAddress clientBindSocket;
@@ -231,6 +237,11 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     private final DelegatingHostResolver delegatingResolver = new DelegatingHostResolver(ClientUtil.createNativeCacheManipulatingResolver());
 
     private final ActivityMonitor activityMonitor = new ActivityMonitor();
+
+    /**
+     * The acceptor and worker thread configuration for the Netty thread pools.
+     */
+    private volatile ThreadPoolConfiguration threadPoolConfiguration;
 
     /**
      * Adapter to enable clients to switch to a LittleProxy implementation of BrowserMobProxy but maintain compatibility with
@@ -341,18 +352,27 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
             bootstrap.withThrottling(readBandwidthLimitBps, writeBandwidthLimitBps);
         }
 
-        if (upstreamProxyAddress != null) {
+        if (chainedProxyManager != null) {
+            bootstrap.withChainProxyManager(chainedProxyManager);
+        } else if (upstreamProxyAddress != null) {
             bootstrap.withChainProxyManager(new ChainedProxyManager() {
                 @Override
                 public void lookupChainedProxies(HttpRequest httpRequest, Queue<ChainedProxy> chainedProxies) {
-                    chainedProxies.add(new ChainedProxyAdapter() {
-                        @Override
-                        public InetSocketAddress getChainedProxyAddress() {
-                            return upstreamProxyAddress;
-                        }
-                    });
+                    final InetSocketAddress upstreamProxy = upstreamProxyAddress;
+                    if (upstreamProxy != null) {
+                        chainedProxies.add(new ChainedProxyAdapter() {
+                            @Override
+                            public InetSocketAddress getChainedProxyAddress() {
+                                return upstreamProxy;
+                            }
+                        });
+                    }
                 }
             });
+        }
+
+        if (threadPoolConfiguration != null) {
+            bootstrap.withThreadPoolConfiguration(threadPoolConfiguration);
         }
 
         proxyServer = bootstrap.start();
@@ -1128,6 +1148,8 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     /**
      * Instructs this proxy to route traffic through an upstream proxy. Proxy chaining is not compatible with man-in-the-middle
      * SSL, so HAR capture will be disabled for HTTPS traffic when using an upstream proxy.
+     * <p/>
+     * <b>Note:</b> Using {@link #setChainedProxyManager(ChainedProxyManager)} will supersede any value set by this method.
      *
      * @param chainedProxyAddress address of the upstream proxy
      */
@@ -1139,6 +1161,34 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     @Override
     public InetSocketAddress getChainedProxy() {
         return upstreamProxyAddress;
+    }
+
+    /**
+     * Allows access to the LittleProxy {@link ChainedProxyManager} for fine-grained control of the chained proxies. To enable a single
+     * chained proxy, {@link BrowserMobProxy#setChainedProxy(InetSocketAddress)} is generally more convenient.
+     *
+     * @param chainedProxyManager chained proxy manager to enable
+     */
+    public void setChainedProxyManager(ChainedProxyManager chainedProxyManager) {
+        if (isStarted()) {
+            throw new IllegalStateException("Cannot configure chained proxy manager after proxy has started.");
+        }
+
+        this.chainedProxyManager = chainedProxyManager;
+    }
+
+    /**
+     * Configures the Netty thread pool used by the LittleProxy back-end. See {@link ThreadPoolConfiguration} for details.
+     *
+     * @param threadPoolConfiguration thread pool configuration to use
+     *
+     */
+    public void setThreadPoolConfiguration(ThreadPoolConfiguration threadPoolConfiguration) {
+        if (isStarted()) {
+            throw new IllegalStateException("Cannot configure thread pool after proxy has started.");
+        }
+
+        this.threadPoolConfiguration = threadPoolConfiguration;
     }
 
     @Override
