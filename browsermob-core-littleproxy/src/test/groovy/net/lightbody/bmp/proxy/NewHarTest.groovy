@@ -667,7 +667,7 @@ class NewHarTest extends MockServerTest {
 
         // make sure request data is still captured despite the failure
         String capturedUrl = har.log.entries[0].request.url
-        assertEquals("URL captured in HAR did not match expected HTTP CONNECT URL", "https://www.doesnotexist.address:443", capturedUrl)
+        assertEquals("URL captured in HAR did not match expected HTTP CONNECT URL", "https://www.doesnotexist.address", capturedUrl)
 
         HarResponse harResponse = har.log.entries[0].response
         assertNotNull("No HAR response found", harResponse)

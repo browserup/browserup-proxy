@@ -105,4 +105,34 @@ class BrowserMobHttpUtilTest {
         boolean isTextualContent = BrowserMobHttpUtil.hasTextualContent(null)
         assertFalse("Expected hasTextualContent to return false for null content type", isTextualContent)
     }
+
+    @Test
+    void testRemoveMatchingPort() {
+        def portRemoved = BrowserMobHttpUtil.removeMatchingPort("www.example.com:443", 443)
+        assertEquals("www.example.com", portRemoved)
+
+        def hostnameWithNonMatchingPort = BrowserMobHttpUtil.removeMatchingPort("www.example.com:443", 1234)
+        assertEquals("www.example.com:443", hostnameWithNonMatchingPort)
+
+        def hostnameNoPort = BrowserMobHttpUtil.removeMatchingPort("www.example.com", 443)
+        assertEquals("www.example.com", hostnameNoPort)
+
+        def ipv4WithoutPort = BrowserMobHttpUtil.removeMatchingPort("127.0.0.1:443", 443)
+        assertEquals("127.0.0.1", ipv4WithoutPort)
+
+        def ipv4WithNonMatchingPort = BrowserMobHttpUtil.removeMatchingPort("127.0.0.1:443", 1234)
+        assertEquals("127.0.0.1:443", ipv4WithNonMatchingPort);
+
+        def ipv4NoPort = BrowserMobHttpUtil.removeMatchingPort("127.0.0.1", 443)
+        assertEquals("127.0.0.1", ipv4NoPort);
+
+        def ipv6WithoutPort = BrowserMobHttpUtil.removeMatchingPort("[::1]:443", 443)
+        assertEquals("[::1]", ipv6WithoutPort)
+
+        def ipv6WithNonMatchingPort = BrowserMobHttpUtil.removeMatchingPort("[::1]:443", 1234)
+        assertEquals("[::1]:443", ipv6WithNonMatchingPort);
+
+        def ipv6NoPort = BrowserMobHttpUtil.removeMatchingPort("[::1]", 443)
+        assertEquals("[::1]", ipv6NoPort);
+    }
 }
