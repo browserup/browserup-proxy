@@ -55,19 +55,19 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <slf4j.version>1.7.12</slf4j.version>
-        <selenium.version>2.47.2</selenium.version>
+        <slf4j.version>1.7.13</slf4j.version>
+        <selenium.version>2.48.2</selenium.version>
 
-        <jackson.version>2.4.4</jackson.version>
+        <jackson.version>2.6.3</jackson.version>
 
         <maven-jar-plugin.version>2.6</maven-jar-plugin.version>
 
-        <log4j.version>2.4</log4j.version>
+        <log4j.version>2.4.1</log4j.version>
 
         <groovy.version>2.4.5</groovy.version>
         <groovy-eclipse-batch.version>2.4.3-01</groovy-eclipse-batch.version>
 
-        <netty.version>4.0.32.Final</netty.version>
+        <netty.version>4.0.33.Final</netty.version>
     </properties>
 
     <build>
@@ -270,7 +270,7 @@
             <dependency>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-netty</artifactId>
-                <version>3.9.17</version>
+                <version>3.10.2</version>
                 <exclusions>
                     <exclusion>
                         <groupId>ch.qos.logback</groupId>
