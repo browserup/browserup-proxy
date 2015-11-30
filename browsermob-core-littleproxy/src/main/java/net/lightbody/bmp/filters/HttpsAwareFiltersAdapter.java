@@ -83,7 +83,9 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
     public String getFullUrl(HttpRequest modifiedRequest) {
         // special case: for HTTPS requests, the full URL is scheme (https://) + the URI of this request
         if (ProxyUtils.isCONNECT(modifiedRequest)) {
-            return "https://" + modifiedRequest.getUri();
+            // CONNECT requests contain the default port, even if it isn't specified on the request.
+            String hostNoDefaultPort = BrowserMobHttpUtil.removeMatchingPort(modifiedRequest.getUri(), 443);
+            return "https://" + hostNoDefaultPort;
         }
 
         // To get the full URL, we need to retrieve the Scheme, Host + Port, Path, and Query Params from the request.

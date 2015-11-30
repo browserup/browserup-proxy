@@ -147,4 +147,30 @@ class BlacklistTest extends MockServerTest {
             assertThat("Expected blacklisted response to contain 0-length body", blacklistedResponseBody, isEmptyOrNullString())
         }
     }
+
+    @Test
+    void testCanBlacklistConnectExplicitly() {
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/blacklistconnect"),
+                Times.unlimited())
+                .respond(response()
+                .withStatusCode(500)
+                .withBody("this URL should never be called"))
+
+        proxy = new BrowserMobProxyServer()
+        proxy.start()
+        int proxyPort = proxy.getPort()
+
+        // CONNECT requests don't contain the path to the resource, only the server and port
+        proxy.blacklistRequests("https://localhost:${mockServerPort}", 405, "CONNECT")
+
+        ProxyServerTest.getNewHttpClient(proxyPort).withCloseable {
+            CloseableHttpResponse blacklistedResourceResponse = it.execute(new HttpGet("https://localhost:${mockServerPort}/blacklistconnect"))
+            assertEquals("Did not receive blacklisted status code in response", 405, blacklistedResourceResponse.getStatusLine().getStatusCode())
+
+            String blacklistedResponseBody = IOUtils.toStringAndClose(blacklistedResourceResponse.getEntity().getContent())
+            assertThat("Expected blacklisted response to contain 0-length body", blacklistedResponseBody, isEmptyOrNullString())
+        }
+    }
 }

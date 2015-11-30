@@ -336,6 +336,29 @@ public class BrowserMobHttpUtil {
     }
 
     /**
+     * Removes a port from a host+port if the string contains the specified port. If the host+port does not contain
+     * a port, or contains another port, the string is returned unaltered. For example, if hostWithPort is the
+     * string {@code www.website.com:443}, this method will return {@code www.website.com}.
+     *
+     * <b>Note:</b> The hostWithPort string is not a URI and should not contain a scheme or resource. This method does
+     * not attempt to validate the specified host; it <i>might</i> throw IllegalArgumentException if there was a problem
+     * parsing the hostname, but makes no guarantees. In general, it should be validated externally, if necessary.
+     *
+     * @param hostWithPort string containing a hostname and optional port
+     * @param portNumber port to remove from the string
+     * @return string with the specified port removed, or the original string if it did not contain the portNumber
+     */
+    public static String removeMatchingPort(String hostWithPort, int portNumber) {
+        HostAndPort parsedHostAndPort = HostAndPort.fromString(hostWithPort);
+        if (parsedHostAndPort.hasPort() && parsedHostAndPort.getPort() == portNumber) {
+            // HostAndPort.getHostText() strips brackets from ipv6 addresses, so reparse using fromHost
+            return HostAndPort.fromHost(parsedHostAndPort.getHostText()).toString();
+        } else {
+            return hostWithPort;
+        }
+    }
+
+    /**
      * Retrieves the host and, optionally, the port from the specified request's Host header.
      *
      * @param httpRequest HTTP request
