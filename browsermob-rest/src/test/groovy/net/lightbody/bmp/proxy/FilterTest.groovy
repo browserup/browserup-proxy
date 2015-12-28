@@ -14,9 +14,12 @@ import org.mockserver.matchers.Times
 import org.mockserver.model.Header
 
 import static org.hamcrest.Matchers.endsWith
+import static org.hamcrest.Matchers.greaterThanOrEqualTo
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertThat
 import static org.junit.Assert.assertTrue
+import static org.junit.Assert.fail
+import static org.junit.Assume.assumeThat
 import static org.mockito.Matchers.any
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.never
@@ -235,6 +238,49 @@ class FilterTest extends ProxyResourceTest {
         assertTrue("Expected javascript to fail to compile", javascriptExceptionOccurred)
 
         verify(mockProxy, never()).addResponseFilter(any(ResponseFilter))
+    }
+
+    @Test
+    void testCanShortCircuitRequestWithJavascript() {
+        def javaVersion = System.getProperty("java.specification.version") as double
+        assumeThat("Skipping Nashorn-dependent test on Java 1.7", javaVersion, greaterThanOrEqualTo(1.8d))
+
+        final String requestFilterJavaScript =
+                '''
+                // "import" classes
+                var DefaultFullHttpResponse = Java.type('io.netty.handler.codec.http.DefaultFullHttpResponse');
+                var HttpResponseStatus = Java.type('io.netty.handler.codec.http.HttpResponseStatus');
+                var HttpObjectUtil = Java.type('net.lightbody.bmp.util.HttpObjectUtil');
+
+                // create a new DefaultFullHttpResponse that will short-circuit the request
+                var shortCircuitRequest = new DefaultFullHttpResponse(request.getProtocolVersion(), HttpResponseStatus.PAYMENT_REQUIRED);
+
+                // use the convenient HttpObjectUtil.replaceTextHttpEntityBody() method to set the entity body
+                var responseBody = 'You have to pay the troll toll to get into this Proxy\\'s soul';
+                HttpObjectUtil.replaceTextHttpEntityBody(shortCircuitRequest, responseBody);
+
+                // return the short-circuit FullHttpResponse
+                shortCircuitRequest;
+                '''
+
+        Request<String> mockRestRequest = createMockRestRequestWithEntity(requestFilterJavaScript)
+
+        proxyResource.addRequestFilter(proxyPort, mockRestRequest)
+
+        HTTPBuilder http = getHttpBuilder()
+
+        http.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+            uri.path = "/testShortCircuit"
+
+            response.success = { resp, reader ->
+                fail("Expected short-circuit response to return an HTTP 402 Payment Required")
+            }
+
+            response.failure = { resp, reader ->
+                assertEquals("Expected short-circuit response to return an HTTP 402 Payment Required", 402, resp.status)
+                assertEquals("Expected short-circuit response to contain body text set in Javascript", "You have to pay the troll toll to get into this Proxy's soul", reader.text)
+            }
+        }
     }
 
     @Override
