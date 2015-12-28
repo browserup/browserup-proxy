@@ -1,12 +1,11 @@
 package net.lightbody.bmp.filters;
 
-import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 
 /**
  * Indicates that a filter wishes to capture the final HttpRequest that is sent to the server, reflecting all
- * modifications from request filters. {@link BrowserMobHttpFilterChain#clientToProxyRequest(HttpObject)} will invoke
- * the {@link #setModifiedHttpRequest(HttpRequest)} method <b>after</b> all filters have processed the initial
+ * modifications from request filters. {@link BrowserMobHttpFilterChain#clientToProxyRequest(io.netty.handler.codec.http.HttpObject)}
+ * will invoke the {@link #setModifiedHttpRequest(HttpRequest)} method <b>after</b> all filters have processed the initial
  * {@link HttpRequest} object.
  */
 public interface ModifiedRequestAwareFilter {

@@ -77,7 +77,7 @@ public class SslListener extends SocketListener
     private boolean _wantClientAuth = false; // Set to true if we would like client certificate authentication.
     private String _protocol= "TLS";
     private String _algorithm = (Security.getProperty("ssl.KeyManagerFactory.algorithm")==null?"SunX509":Security.getProperty("ssl.KeyManagerFactory.algorithm")); // cert algorithm
-    private String _keystoreType = "JKS"; // type of the key store
+    private String _keystoreType = "PKCS12"; // type of the key store
     private String _provider = null;
 
 
@@ -256,7 +256,7 @@ public class SslListener extends SocketListener
 		}
 
         KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(_algorithm);        
-        KeyStore keyStore = KeyStore.getInstance(_keystoreType);
+        KeyStore keyStore = KeyStore.getInstance(_keystoreType, "SunJSSE");
         keyStore.load(Resource.newResource(_keystore).getInputStream(), _password.toString().toCharArray());
         keyManagerFactory.init(keyStore,_keypassword.toString().toCharArray());
         

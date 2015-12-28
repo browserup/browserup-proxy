@@ -266,6 +266,22 @@
             <artifactId>netty-all</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.lightbody.bmp</groupId>
+            <artifactId>mitm</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Due to usage in LegacyProxyServer and BrowserMobProxyServer, this dependency needs to be given "provided" scope.
                      It is not used by the BMP LittleProxy implementation itself. -->
         <dependency>

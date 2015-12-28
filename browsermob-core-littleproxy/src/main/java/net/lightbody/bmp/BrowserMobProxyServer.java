@@ -29,6 +29,9 @@ import net.lightbody.bmp.filters.ResponseFilterAdapter;
 import net.lightbody.bmp.filters.RewriteUrlFilter;
 import net.lightbody.bmp.filters.UnregisterRequestFilter;
 import net.lightbody.bmp.filters.WhitelistFilter;
+import net.lightbody.bmp.mitm.KeyStoreFileCertificateSource;
+import net.lightbody.bmp.mitm.keys.RSAKeyGenerator;
+import net.lightbody.bmp.mitm.manager.ImpersonatingMitmManager;
 import net.lightbody.bmp.proxy.ActivityMonitor;
 import net.lightbody.bmp.proxy.BlacklistEntry;
 import net.lightbody.bmp.proxy.CaptureType;
@@ -41,7 +44,6 @@ import net.lightbody.bmp.proxy.dns.DelegatingHostResolver;
 import net.lightbody.bmp.proxy.http.RequestInterceptor;
 import net.lightbody.bmp.proxy.http.ResponseInterceptor;
 import net.lightbody.bmp.proxy.util.BrowserMobProxyUtil;
-import net.lightbody.bmp.ssl.BrowserMobProxyMitmManager;
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponseInterceptor;
 import org.java_bandwidthlimiter.StreamManager;
@@ -53,6 +55,7 @@ import org.littleshoot.proxy.HttpFiltersSource;
 import org.littleshoot.proxy.HttpFiltersSourceAdapter;
 import org.littleshoot.proxy.HttpProxyServer;
 import org.littleshoot.proxy.HttpProxyServerBootstrap;
+import org.littleshoot.proxy.MitmManager;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
 import org.littleshoot.proxy.impl.ProxyUtils;
 import org.littleshoot.proxy.impl.ThreadPoolConfiguration;
@@ -88,7 +91,13 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     private static final Logger log = LoggerFactory.getLogger(BrowserMobProxyServer.class);
 
     //TODO: extract the version string into a more suitable location
-    private static final HarNameVersion HAR_CREATOR_VERSION = new HarNameVersion("BrowserMob Proxy", "2.1.0-beta-3-littleproxy");
+    private static final HarNameVersion HAR_CREATOR_VERSION = new HarNameVersion("BrowserMob Proxy", "2.1.0-beta-4-littleproxy");
+
+    /* Default MITM resources */
+    private static final String KEYSTORE_RESOURCE = "/sslSupport/ca-keystore-rsa.p12";
+    private static final String KEYSTORE_TYPE = "PKCS12";
+    private static final String KEYSTORE_PRIVATE_KEY_ALIAS = "key";
+    private static final String KEYSTORE_PASSWORD = "password";
 
     /**
      * The default pseudonym to use when adding the Via header to proxied requests.
@@ -114,6 +123,11 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
      * When true, MITM will be disabled. The proxy will no longer intercept HTTPS requests, but they will still be proxied.
      */
     private volatile boolean mitmDisabled = false;
+
+    /**
+     * The MITM manager that will be used for HTTPS requests.
+     */
+    private volatile MitmManager mitmManager;
 
     /**
      * The list of filterFactories that will generate the filters that implement browsermob-proxy behavior.
@@ -225,6 +239,11 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
      * implementation of the BrowserMobProxy interface. Once all operations are implemented and the legacy interface is retired, this will be removed.
      */
     private volatile boolean errorOnUnsupportedOperation = false;
+
+    /**
+     * When true, will not validate upstream servers' certificates. Currently only applicable when MITMing.
+     */
+    private volatile boolean trustAllServers = true;
 
     /**
      * Resolver to use when resolving hostnames to IP addresses. This is a bridge between {@link org.littleshoot.proxy.HostResolver} and
@@ -345,7 +364,15 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
 
 
         if (!mitmDisabled) {
-            bootstrap.withManInTheMiddle(new BrowserMobProxyMitmManager());
+            if (mitmManager == null) {
+                mitmManager = ImpersonatingMitmManager.builder()
+                        .rootCertificateSource(new KeyStoreFileCertificateSource(KEYSTORE_TYPE, KEYSTORE_RESOURCE, KEYSTORE_PRIVATE_KEY_ALIAS, KEYSTORE_PASSWORD))
+                        .serverKeyGenerator(new RSAKeyGenerator())
+                        .trustAllServers(trustAllServers)
+                        .build();
+            }
+
+            bootstrap.withManInTheMiddle(mitmManager);
         }
 
         if (readBandwidthLimitBps > 0 || writeBandwidthLimitBps > 0) {
@@ -868,7 +895,7 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     public void setRequestTimeout(int requestTimeout, TimeUnit timeUnit) {
         //TODO: implement Request Timeouts using LittleProxy. currently this only sets an idle connection timeout, if the idle connection
         // timeout is higher than the specified requestTimeout.
-        if (idleConnectionTimeoutSec == 0 || idleConnectionTimeoutSec >  TimeUnit.SECONDS.convert(requestTimeout, timeUnit)) {
+        if (idleConnectionTimeoutSec == 0 || idleConnectionTimeoutSec > TimeUnit.SECONDS.convert(requestTimeout, timeUnit)) {
             setIdleConnectionTimeout(requestTimeout, timeUnit);
         }
     }
@@ -1148,7 +1175,7 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     /**
      * Instructs this proxy to route traffic through an upstream proxy. Proxy chaining is not compatible with man-in-the-middle
      * SSL, so HAR capture will be disabled for HTTPS traffic when using an upstream proxy.
-     * <p/>
+     * <p>
      * <b>Note:</b> Using {@link #setChainedProxyManager(ChainedProxyManager)} will supersede any value set by this method.
      *
      * @param chainedProxyAddress address of the upstream proxy
@@ -1181,7 +1208,6 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
      * Configures the Netty thread pool used by the LittleProxy back-end. See {@link ThreadPoolConfiguration} for details.
      *
      * @param threadPoolConfiguration thread pool configuration to use
-     *
      */
     public void setThreadPoolConfiguration(ThreadPoolConfiguration threadPoolConfiguration) {
         if (isStarted()) {
@@ -1362,6 +1388,20 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         this.mitmDisabled = mitmDisabled;
     }
 
+    @Override
+    public void setMitmManager(MitmManager mitmManager) {
+        this.mitmManager = mitmManager;
+    }
+
+    @Override
+    public void setTrustAllServers(boolean trustAllServers) {
+        if (isStarted()) {
+            throw new IllegalStateException("Cannot disable upstream server verification after the proxy has been started");
+        }
+
+        this.trustAllServers = trustAllServers;
+    }
+
     public boolean isMitmDisabled() {
         return this.mitmDisabled;
     }
@@ -1501,4 +1541,5 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
             });
         }
     }
+
 }

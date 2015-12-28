@@ -10,7 +10,7 @@ import java.security.cert.*;
 import java.util.HashMap;
 
 /**
- * This is the main entry point into the Cybervillains CA.
+ * This is the main entry point into the impersonated CA.
  *
  * This class handles generation, storage and the persistent
  * mapping of input to duplicated certificates and mapped public
@@ -37,13 +37,10 @@ public class KeyStoreManager {
 	private final String CERTMAP_SER_FILE = "certmap.ser";
 	private final String SUBJMAP_SER_FILE = "subjmap.ser";
 
-	private final String EXPORTED_CERT_NAME = "cybervillainsCA.cer";
-
 	private final char[] _keypassword = "password".toCharArray();
 	private final char[] _keystorepass = "password".toCharArray();
-	private final String _caPrivateKeystore = "cybervillainsCA.jks";
-	private final String _caCertAlias = "signingCert";
-	public static final String _caPrivKeyAlias = "signingCertPrivKey";
+	private final String _caPrivateKeystore = "ca-keystore-rsa.p12";
+	public static final String _caPrivKeyAlias = "key";
 
 	X509Certificate _caCert;
 	PrivateKey _caPrivKey;
@@ -143,7 +140,7 @@ public class KeyStoreManager {
 
 		try
 		{
-			_ks = KeyStore.getInstance("JKS");
+			_ks = KeyStore.getInstance("PKCS12", "SunJSSE");
 
 			reloadKeystore();
 		}
@@ -226,14 +223,14 @@ public class KeyStoreManager {
 
 	}
 
-	private void reloadKeystore() throws FileNotFoundException, IOException, NoSuchAlgorithmException, CertificateException, KeyStoreException, UnrecoverableKeyException {
+	private void reloadKeystore() throws FileNotFoundException, IOException, NoSuchAlgorithmException, CertificateException, KeyStoreException, UnrecoverableEntryException {
 		InputStream is = new FileInputStream(new File(root, _caPrivateKeystore));
 
-		if (is != null)	{
-			_ks.load(is, _keystorepass);
-			_caCert = (X509Certificate)_ks.getCertificate(_caCertAlias);
-			_caPrivKey = (PrivateKey)_ks.getKey(_caPrivKeyAlias, _keypassword);
-		}
+		_ks.load(is, _keystorepass);
+
+		KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry) _ks.getEntry(_caPrivKeyAlias, new KeyStore.PasswordProtection(_keypassword));
+		_caCert = (X509Certificate) privateKeyEntry.getCertificate();
+		_caPrivKey = privateKeyEntry.getPrivateKey();
 	}
 
 	/**
@@ -259,7 +256,6 @@ public class KeyStoreManager {
 
 				_ks.load(null, _keystorepass);
 
-				_ks.setCertificateEntry(_caCertAlias, signingCert);
 				_ks.setKeyEntry(_caPrivKeyAlias, caPrivKey, _keypassword, new java.security.cert.Certificate[] {signingCert});
 
 				File caKsFile = new File(root, _caPrivateKeystore);
@@ -267,23 +263,8 @@ public class KeyStoreManager {
 				OutputStream os = new FileOutputStream(caKsFile);
 				_ks.store(os, _keystorepass);
 
-				log.debug("Wrote JKS keystore to: " +
+				log.debug("Wrote keystore to: " +
 						caKsFile.getAbsolutePath());
-
-				// also export a .cer that can be imported as a trusted root
-				// to disable all warning dialogs for interception
-
-				File signingCertFile = new File(root, EXPORTED_CERT_NAME);
-
-				FileOutputStream cerOut = new FileOutputStream(signingCertFile);
-
-				byte[] buf = signingCert.getEncoded();
-
-				log.debug("Wrote signing cert to: " + signingCertFile.getAbsolutePath());
-
-				cerOut.write(buf);
-				cerOut.flush();
-				cerOut.close();
 
 				_caCert = (X509Certificate)signingCert;
 				_caPrivKey  = caPrivKey;
@@ -314,12 +295,13 @@ public class KeyStoreManager {
 	public synchronized void addCertAndPrivateKey(String hostname, final X509Certificate cert, final PrivateKey privKey)
 	throws KeyStoreException, CertificateException, NoSuchAlgorithmException
 	{
-//		String alias = ThumbprintUtil.getThumbprint(cert);
+		try {
+			_ks.deleteEntry(hostname);
+		} catch (KeyStoreException e) {
+			// ignore errors deleting the existing entry
+		}
 
-		_ks.deleteEntry(hostname);
-
-        _ks.setCertificateEntry(hostname, cert);
-		_ks.setKeyEntry(hostname, privKey, _keypassword, new java.security.cert.Certificate[] {cert});
+		_ks.setKeyEntry(hostname, privKey, _keypassword, new java.security.cert.Certificate[] {cert, getSigningCert()});
 
 		if(persistImmediately)
 		{
@@ -573,8 +555,7 @@ public class KeyStoreManager {
 	}
 
 	private String getSubjectForHostname(String hostname) {
-		//String subject = "C=USA, ST=WA, L=Seattle, O=Cybervillains, OU=CertificationAutority, CN=" + hostname + ", EmailAddress=evilRoot@cybervillains.com";
-		String subject = "CN=" + hostname + ", OU=Test, O=CyberVillainsCA, L=Seattle, S=Washington, C=US";
+		String subject = "CN=" + hostname + ", OU=BrowserMob Proxy, O=Impersonated Certificate, L=Seattle, S=Washington, C=US";
 		return subject;
 	}
 

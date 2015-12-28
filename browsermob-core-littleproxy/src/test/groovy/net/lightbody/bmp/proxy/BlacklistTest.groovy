@@ -56,6 +56,7 @@ class BlacklistTest extends MockServerTest {
                 .withBody("this URL should never be called"))
 
         proxy = new BrowserMobProxyServer()
+        proxy.setTrustAllServers(true)
         proxy.start()
         int proxyPort = proxy.getPort()
 
@@ -128,6 +129,7 @@ class BlacklistTest extends MockServerTest {
                 .withBody("not blacklisted"))
 
         proxy = new BrowserMobProxyServer()
+        proxy.setTrustAllServers(true)
         proxy.start()
         int proxyPort = proxy.getPort()
 

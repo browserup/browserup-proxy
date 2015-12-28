@@ -40,14 +40,14 @@ import java.net.URLConnection;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
 
 /* ------------------------------------------------------------ */
 
@@ -72,7 +72,7 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
       private final Map<String,SslRelay> _sslMap = new LinkedHashMap<String, SslRelay>();
       @SuppressWarnings("unused")
       private String sslKeystorePath;
-      private boolean useCyberVillains = true;
+      private boolean useImpersonatingCA = true;
       private boolean trustAllSSLCertificates = false;
       private final String dontInjectRegex;
       private final String debugURL;
@@ -547,8 +547,8 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
 
                   listener = new SslRelay(addrPort);
 
-                  if (useCyberVillains) {
-                      wireUpSslWithCyberVilliansCA(host, listener);
+                  if (useImpersonatingCA) {
+                      wireUpSslWithImpersonationCA(host, listener);
                   } else {
                       wireUpSslWithRemoteService(host, listener);
                   }
@@ -603,7 +603,7 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
           listener.setNukeDirOrFile(keystore);
       }
 
-      protected void wireUpSslWithCyberVilliansCA(String host, SslRelay listener) {
+      protected void wireUpSslWithImpersonationCA(String host, SslRelay listener) {
           try {
               // see https://github.com/webmetrics/browsermob-proxy/issues/105
               String escapedHost = host.replace('*', '_');
@@ -616,23 +616,17 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
               deleteDirectoryTasks.add(deleteDirectoryTask);
               Runtime.getRuntime().addShutdownHook(new Thread(deleteDirectoryTask));
 
-              // copy the cybervillains cert files to the temp directory from the classpath
-              Path cybervillainsCer = tempDir.resolve("cybervillainsCA.cer");
-              Path cybervillainsJks = tempDir.resolve("cybervillainsCA.jks");
-              Path blankDec = tempDir.resolve("blank_crl.dec");
-              Path blankPem = tempDir.resolve("blank_crl.pem");
+              // copy the CA keystore to the temp directory from the classpath
+              Path rsaKeystorePath = tempDir.resolve("ca-keystore-rsa.p12");
 
-              Files.copy(getClass().getResourceAsStream("/sslSupport/cybervillainsCA.cer"), cybervillainsCer);
-              Files.copy(getClass().getResourceAsStream("/sslSupport/cybervillainsCA.jks"), cybervillainsJks);
-              Files.copy(getClass().getResourceAsStream("/sslSupport/blank_crl.dec"), blankDec);
-              Files.copy(getClass().getResourceAsStream("/sslSupport/blank_crl.pem"), blankPem);
+              Files.copy(getClass().getResourceAsStream("/sslSupport/ca-keystore-rsa.p12"), rsaKeystorePath);
 
               KeyStoreManager mgr = new KeyStoreManager(root);
               mgr.getCertificateByHostname(host);
               mgr.getKeyStore().deleteEntry(KeyStoreManager._caPrivKeyAlias);
               mgr.persist();
 
-              listener.setKeystore(new File(root, "cybervillainsCA.jks").getAbsolutePath());
+              listener.setKeystore(rsaKeystorePath.toFile().getAbsolutePath());
               listener.setNukeDirOrFile(root);
           } catch (Exception e) {
               log.error("Error occurred wiring CA", e);

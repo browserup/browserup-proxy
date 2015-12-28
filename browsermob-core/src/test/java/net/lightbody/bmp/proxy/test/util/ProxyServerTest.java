@@ -20,6 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
@@ -79,9 +81,13 @@ public abstract class ProxyServerTest {
                 Class<LegacyProxyServer> littleProxyImplClass = (Class<LegacyProxyServer>) Class.forName("net.lightbody.bmp.BrowserMobProxyServer");
                 LegacyProxyServer littleProxyImpl = littleProxyImplClass.newInstance();
 
+                // set the trustAllServers option on the LP implementation to "true", to avoid certificate verification issues with MITM
+                Method setTrustAllServersMethod = littleProxyImplClass.getMethod("setTrustAllServers", Boolean.TYPE);
+                setTrustAllServersMethod.invoke(littleProxyImpl, true);
+
                 log.info("Using LittleProxy implementation to execute test for class: " + getClass().getSimpleName());
                 return littleProxyImpl;
-            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
                 throw new RuntimeException("The System property bmp.use.littleproxy was true, but the LittleProxy implementation could not be loaded.", e);
             }
         } else {

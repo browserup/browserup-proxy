@@ -367,9 +367,11 @@ Consult the Java API docs for more info.
 
 ### SSL Support
 
-**LittleProxy support for MITM:** In the current beta release, the `browsermob-core-littleproxy` module supports MITM but does not support dynamic certificate spoofing. In most cases this will not affect your tests, but browsers accessing HTTPS websites through BrowserMob Proxy will be notified that the certificates cannot be verified.
+**BrowserMob with LittleProxy now supports full MITM:** For most users, MITM will work out-of-the-box with default settings. Install the [ca-certificate-rsa.cer](/sslSupport/ca-certificate-rsa.cer) file in your browser or HTTP client to avoid untrusted certificate warnings. Generally, it is safer to generate your own private key, rather than using the .cer files distributed with BrowserMob Proxy. See the [README file in the `mitm` module](/mitm/README.md) for instructions on generating or using your own root certificate and private key with MITM.
 
-**Legacy Jetty-based support for MITM:** The legacy `ProxyServer` implementation using the `browsermob-core` module supports MITM and dynamic certificate spoofing. To avoid browser certificate warnings, a Certificate Authority must be installed in the browser. This allows the browser to trust all the SSL traffic coming from the proxy, which will be proxied using a classic man-in-the1-middle technique. IT IS CRITICAL THAT YOU NOT INSTALL THIS CERTIFICATE AUTHORITY ON A BROWSER THAT IS USED FOR ANYTHING OTHER THAN TESTING.
+**Legacy Jetty-based ProxyServer support for MITM:** As of version 2.1.0-beta-4, the legacy `ProxyServer` implementation uses the same `ca-certificate-rsa.cer` root certificate as the LittleProxy implementation. The previous cybervillainsCA.cer certificate has been removed.
+
+**Note: DO NOT** permanently install the .cer files distributed with BrowserMob Proxy in users' browsers. They should be used for testing only and must not be used with general web browsing.
 
 If you're doing testing with Selenium, you'll want to make sure that the browser profile that gets set up by Selenium not only has the proxy configured, but also has the CA installed. Unfortuantely, there is no API for doing this in Selenium, so you'll have to solve it uniquely for each browser type. We hope to make this easier in upcoming releases.
 

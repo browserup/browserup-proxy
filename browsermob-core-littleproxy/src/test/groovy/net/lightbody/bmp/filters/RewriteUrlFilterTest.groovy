@@ -156,6 +156,7 @@ class RewriteUrlFilterTest extends MockServerTest {
                 .withBody("success"))
 
         proxy = new BrowserMobProxyServer()
+        proxy.setTrustAllServers(true)
         proxy.rewriteUrl('https://localhost:(\\d+)/badresource', 'https://localhost:$1/rewrittenresource')
 
         proxy.start()

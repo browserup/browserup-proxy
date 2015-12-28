@@ -97,7 +97,7 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
     }
 
     @Override
-    protected void wireUpSslWithCyberVilliansCA(String host, SeleniumProxyHandler.SslRelay listener) {
+    protected void wireUpSslWithImpersonationCA(String host, SeleniumProxyHandler.SslRelay listener) {
         List<String> originalHosts = httpClient.originalHosts(host);
         if (originalHosts != null && !originalHosts.isEmpty()) {
             if (originalHosts.size() == 1) {
@@ -109,7 +109,7 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
                 host = "*" + first.substring(first.indexOf('.'));
             }
         }
-        super.wireUpSslWithCyberVilliansCA(host, listener);
+        super.wireUpSslWithImpersonationCA(host, listener);
     }
 
     @Override
