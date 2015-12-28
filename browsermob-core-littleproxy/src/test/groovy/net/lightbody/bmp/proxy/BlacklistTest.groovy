@@ -175,4 +175,31 @@ class BlacklistTest extends MockServerTest {
             assertThat("Expected blacklisted response to contain 0-length body", blacklistedResponseBody, isEmptyOrNullString())
         }
     }
+
+    @Test
+    void testBlacklistDoesNotApplyToCONNECT() {
+        mockServer.when(request()
+                .withMethod("GET")
+                .withPath("/connectNotBlacklisted"),
+                Times.unlimited())
+                .respond(response()
+                .withStatusCode(200)
+                .withBody("success"))
+
+        proxy = new BrowserMobProxyServer()
+        proxy.setTrustAllServers(true)
+        proxy.start()
+        int proxyPort = proxy.getPort()
+
+        // HTTP CONNECTs should not be blacklisted unless the method is explicitly specified
+        proxy.blacklistRequests("https://localhost:${mockServerPort}", 405)
+
+        ProxyServerTest.getNewHttpClient(proxyPort).withCloseable {
+            CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerPort}/connectNotBlacklisted"))
+            assertEquals("Expected to receive response from mock server after successful CONNECT", 200, response.getStatusLine().getStatusCode())
+
+            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent())
+            assertEquals("Expected to receive HTTP 200 and success message from server", "success", responseBody)
+        }
+    }
 }
