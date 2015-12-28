@@ -3,11 +3,13 @@ package net.lightbody.bmp;
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.filters.RequestFilter;
 import net.lightbody.bmp.filters.ResponseFilter;
+import net.lightbody.bmp.mitm.manager.ImpersonatingMitmManager;
 import net.lightbody.bmp.proxy.BlacklistEntry;
 import net.lightbody.bmp.proxy.CaptureType;
 import net.lightbody.bmp.proxy.auth.AuthType;
 import net.lightbody.bmp.proxy.dns.AdvancedHostResolver;
 import org.littleshoot.proxy.HttpFiltersSource;
+import org.littleshoot.proxy.MitmManager;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -597,4 +599,23 @@ public interface BrowserMobProxy {
      * @throws java.lang.IllegalStateException if the proxy is already started
      */
     void setMitmDisabled(boolean mitmDisabled);
+
+    /**
+     * Sets the MITM manager, which is responsible for generating forged SSL certificates to present to clients. By default,
+     * BrowserMob Proxy uses the ca-certificate-rsa.cer root certificate for impersonation. See the documentation at
+     * {@link ImpersonatingMitmManager} and {@link ImpersonatingMitmManager.Builder}
+     * for details on customizing the root and server certificate generation.
+     *
+     * @param mitmManager MITM manager to use
+     */
+    void setMitmManager(MitmManager mitmManager);
+
+    /**
+     * Disables verification of all upstream servers' SSL certificates. All upstream servers will be trusted, even if they
+     * do not present valid certificates signed by certification authorities in the JDK's trust store. <b>This option
+     * exposes the proxy to MITM attacks and should only be used when testing in trusted environments.</b>
+     *
+     * @param trustAllServers when true, disables upstream server certificate verification
+     */
+    void setTrustAllServers(boolean trustAllServers);
 }

@@ -77,6 +77,7 @@ class WhitelistTest extends MockServerTest {
                 .withBody("should never be returned"))
 
         proxy = new BrowserMobProxyServer()
+        proxy.setTrustAllServers(true)
         proxy.start()
         int proxyPort = proxy.getPort()
 
@@ -127,6 +128,7 @@ class WhitelistTest extends MockServerTest {
                 .withBody("whitelisted"))
 
         proxy = new BrowserMobProxyServer()
+        proxy.setTrustAllServers(true)
         proxy.start()
         int proxyPort = proxy.getPort()
 
@@ -199,6 +201,7 @@ class WhitelistTest extends MockServerTest {
                 .withBody("should never be returned"))
 
         proxy = new BrowserMobProxyServer()
+        proxy.setTrustAllServers(true)
         proxy.start()
         int proxyPort = proxy.getPort()
 

@@ -115,6 +115,7 @@ class NewHarTest extends MockServerTest {
 
         proxy = new BrowserMobProxyServer();
         proxy.setHarCaptureTypes([CaptureType.RESPONSE_COOKIES] as Set)
+        proxy.setTrustAllServers(true)
         proxy.start()
 
         proxy.newHar()
@@ -457,7 +458,8 @@ class NewHarTest extends MockServerTest {
                 .withStatusCode(200)
                 .withBody("success"))
 
-        proxy = new BrowserMobProxyServer();
+        proxy = new BrowserMobProxyServer()
+        proxy.setTrustAllServers(true)
         proxy.start()
 
         proxy.newHar()
@@ -497,6 +499,7 @@ class NewHarTest extends MockServerTest {
 
         proxy = new BrowserMobProxyServer();
         proxy.rewriteUrl("https://localhost:${mockServerPort}/originalurl(.*)", "https://localhost:${mockServerPort}/httpsrewrittenurlcaptured\$1")
+        proxy.setTrustAllServers(true)
         proxy.start()
 
         proxy.newHar()
@@ -855,6 +858,7 @@ class NewHarTest extends MockServerTest {
                 .withBody("success"))
 
         proxy = new BrowserMobProxyServer();
+        proxy.setTrustAllServers(true)
         proxy.setIdleConnectionTimeout(3, TimeUnit.SECONDS)
         proxy.start()
 

@@ -249,6 +249,7 @@ public class InterceptorTest extends MockServerTest {
                         .withBody("success"));
 
         proxy = new BrowserMobProxyServer();
+        proxy.setTrustAllServers(true);
         proxy.start();
 
         proxy.addRequestFilter(new RequestFilter() {
@@ -367,6 +368,7 @@ public class InterceptorTest extends MockServerTest {
                         .withBody(originalText));
 
         proxy = new BrowserMobProxyServer();
+        proxy.setTrustAllServers(true);
         proxy.start();
 
         proxy.addResponseFilter(new ResponseFilter() {
@@ -839,6 +841,7 @@ public class InterceptorTest extends MockServerTest {
                         .withBody("success"));
 
         proxy = new BrowserMobProxyServer();
+        proxy.setTrustAllServers(true);
         proxy.start();
 
         final AtomicReference<String> requestFilterOriginalUrl = new AtomicReference<>();
@@ -903,6 +906,7 @@ public class InterceptorTest extends MockServerTest {
                         .withBody("success"));
 
         proxy = new BrowserMobProxyServer();
+        proxy.setTrustAllServers(true);
         proxy.start();
 
         final AtomicReference<ChannelHandlerContext> requestCtx = new AtomicReference<>();

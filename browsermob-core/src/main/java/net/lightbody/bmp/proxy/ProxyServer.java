@@ -29,6 +29,7 @@ import org.apache.http.HttpResponseInterceptor;
 import org.java_bandwidthlimiter.BandwidthLimiter;
 import org.java_bandwidthlimiter.StreamManager;
 import org.littleshoot.proxy.HttpFiltersSource;
+import org.littleshoot.proxy.MitmManager;
 import org.openqa.selenium.Proxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -920,6 +921,16 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
     @Override
     public void setMitmDisabled(boolean mitmDisabled) {
         LOG.warn("The legacy ProxyServer implementation does not support disabling MITM.");
+    }
+
+    @Override
+    public void setMitmManager(MitmManager mitmManager) {
+        LOG.warn("The legacy ProxyServer implementation does not support custom MITM managers.");
+    }
+
+    @Override
+    public void setTrustAllServers(boolean trustAllServers) {
+        LOG.warn("The legacy ProxyServer implementation does not support the trustAllServers option.");
     }
 
     public void cleanSslCertificates() {
