@@ -3,12 +3,14 @@ package net.lightbody.bmp.mitm.util;
 import net.lightbody.bmp.mitm.exception.ExportException;
 import net.lightbody.bmp.mitm.exception.ImportException;
 
+import javax.crypto.Cipher;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.Key;
+import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.DSAKey;
 import java.security.interfaces.ECKey;
 import java.security.interfaces.RSAKey;
@@ -106,5 +108,20 @@ public class EncryptionUtil {
         } catch (IOException e) {
             throw new ImportException("Unable to read PEM-encoded data from file: " + file.getName());
         }
+    }
+
+    /**
+     * Determines if unlimited-strength cryptography is allowed, i.e. if this JRE has then the unlimited strength policy
+     * files installed.
+     *
+     * @return true if unlimited strength cryptography is allowed, otherwise false
+     */
+    public static boolean isUnlimitedStrengthAllowed() {
+        try {
+            return Cipher.getMaxAllowedKeyLength("AES") >= 256;
+        } catch (NoSuchAlgorithmException e) {
+            return false;
+        }
+
     }
 }

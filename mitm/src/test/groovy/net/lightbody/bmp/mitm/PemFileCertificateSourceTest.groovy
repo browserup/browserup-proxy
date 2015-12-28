@@ -2,6 +2,7 @@ package net.lightbody.bmp.mitm
 
 import net.lightbody.bmp.mitm.exception.ImportException
 import net.lightbody.bmp.mitm.test.util.CertificateTestUtil
+import net.lightbody.bmp.mitm.util.EncryptionUtil
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -11,6 +12,7 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
 import static org.junit.Assert.assertNotNull
+import static org.junit.Assume.assumeTrue
 
 class PemFileCertificateSourceTest {
 
@@ -34,6 +36,8 @@ class PemFileCertificateSourceTest {
 
     @Test
     void testCanLoadCertificateAndPasswordProtectedKey() {
+        assumeTrue("Skipping test because unlimited strength cryptography is not available", EncryptionUtil.isUnlimitedStrengthAllowed())
+
         PemFileCertificateSource pemFileCertificateSource = new PemFileCertificateSource(certificateFile, encryptedPrivateKeyFile, "password")
 
         CertificateAndKey certificateAndKey = pemFileCertificateSource.load()
