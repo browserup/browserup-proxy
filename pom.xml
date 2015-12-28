@@ -70,7 +70,7 @@
 
         <netty.version>4.0.33.Final</netty.version>
 
-        <bouncycastle.version>1.52</bouncycastle.version>
+        <bouncycastle.version>1.53</bouncycastle.version>
     </properties>
 
     <build>
