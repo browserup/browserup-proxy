@@ -12,6 +12,7 @@ import net.lightbody.bmp.mitm.HostnameCertificateInfoGenerator;
 import net.lightbody.bmp.mitm.RootCertificateGenerator;
 import net.lightbody.bmp.mitm.exception.MitmException;
 import net.lightbody.bmp.mitm.exception.SslContextInitializationException;
+import net.lightbody.bmp.mitm.keys.ECKeyGenerator;
 import net.lightbody.bmp.mitm.keys.KeyGenerator;
 import net.lightbody.bmp.mitm.keys.RSAKeyGenerator;
 import net.lightbody.bmp.mitm.stats.CertificateGenerationStatistics;
@@ -300,10 +301,23 @@ public class ImpersonatingMitmManager implements MitmManager {
     }
 
     /**
-     * Convenience method to return a new {@link Builder} instance.
+     * Convenience method to return a new {@link Builder} instance default default values: a {@link RootCertificateGenerator}
+     * that dynamically generates an RSA root certificate and RSA server certificates.
      */
     public static Builder builder() {
         return new Builder();
+    }
+
+    /**
+     * Convenience method to return a new {@link Builder} instance that will dynamically create EC root certificates and
+     * EC server certificates, but otherwise uses default values.
+     */
+    public static Builder builderWithECC() {
+        return new Builder()
+                .serverKeyGenerator(new ECKeyGenerator())
+                .rootCertificateSource(RootCertificateGenerator.builder()
+                        .keyGenerator(new ECKeyGenerator())
+                        .build());
     }
 
     /**
