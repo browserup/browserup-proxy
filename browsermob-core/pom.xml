@@ -145,12 +145,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
-            <version>1.47</version>
-        </dependency>
-
-        <dependency>
             <groupId>dnsjava</groupId>
             <artifactId>dnsjava</artifactId>
             <version>2.1.7</version>
@@ -183,20 +177,6 @@
             <groupId>net.lightbody.bmp</groupId>
             <artifactId>mitm</artifactId>
             <version>${project.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>net.lightbody.bmp</groupId>
-                    <artifactId>littleproxy</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bouncycastle</groupId>
-                    <artifactId>bcprov-jdk15on</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bouncycastle</groupId>
-                    <artifactId>bcpkix-jdk15on</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>

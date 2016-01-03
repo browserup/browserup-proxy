@@ -2,9 +2,9 @@ package net.lightbody.bmp.mitm;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import net.lightbody.bmp.mitm.tools.DefaultSecurityProviderTool;
 import net.lightbody.bmp.mitm.keys.KeyGenerator;
 import net.lightbody.bmp.mitm.keys.RSAKeyGenerator;
+import net.lightbody.bmp.mitm.tools.DefaultSecurityProviderTool;
 import net.lightbody.bmp.mitm.tools.SecurityProviderTool;
 import net.lightbody.bmp.mitm.util.EncryptionUtil;
 import net.lightbody.bmp.mitm.util.MitmConstants;
