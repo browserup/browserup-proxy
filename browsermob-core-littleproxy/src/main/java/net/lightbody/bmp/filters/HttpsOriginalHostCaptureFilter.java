@@ -9,10 +9,13 @@ import org.littleshoot.proxy.impl.ProxyUtils;
 
 /**
  * Captures the original host for HTTPS requests and stores the value in the ChannelHandlerContext for use by {@link HttpsAwareFiltersAdapter}
- * filters. This filter sets the isHttps attribute on the ChannelHandlerContext during the HTTP CONNECT and therefore MUST be invoked before
+ * filters. This filter sets the isHttps attribute on the ChannelHandlerContext during the HTTP CONNECT and therefore MUST be invoked <b>before</b>
  * any other filters calling any of the methods in {@link HttpsAwareFiltersAdapter}.
+ * This filter extends {@link HttpsHostCaptureFilter} and so also sets the host attribute on the channel for use by filters
+ * that modify the original host during the CONNECT. If the hostname is modified by filters, it will be overwritten when the {@link HttpsHostCaptureFilter}
+ * is processed later in the filter chain.
  */
-public class HttpsOriginalHostCaptureFilter extends HttpFiltersAdapter {
+public class HttpsOriginalHostCaptureFilter extends HttpsHostCaptureFilter {
     public HttpsOriginalHostCaptureFilter(HttpRequest originalRequest, ChannelHandlerContext ctx) {
         super(originalRequest, ctx);
 

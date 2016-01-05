@@ -620,7 +620,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
      * @param httpRequest HTTP request to take the hostname from
      */
     protected void populateAddressFromCache(HttpRequest httpRequest) {
-        String serverHost = getHostAndPort(httpRequest);
+        String serverHost = getHost(httpRequest);
 
         if (serverHost != null && !serverHost.isEmpty()) {
             String resolvedAddress = ResolvedHostnameCacheFilter.getPreviouslyResolvedAddressForHost(serverHost);
