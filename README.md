@@ -367,7 +367,7 @@ Consult the Java API docs for more info.
 
 ### SSL Support
 
-**BrowserMob with LittleProxy now supports full MITM:** For most users, MITM will work out-of-the-box with default settings. Install the [ca-certificate-rsa.cer](/sslSupport/ca-certificate-rsa.cer) file in your browser or HTTP client to avoid untrusted certificate warnings. Generally, it is safer to generate your own private key, rather than using the .cer files distributed with BrowserMob Proxy. See the [README file in the `mitm` module](/mitm/README.md) for instructions on generating or using your own root certificate and private key with MITM.
+**BrowserMob with LittleProxy now supports full MITM:** For most users, MITM will work out-of-the-box with default settings. Install the [ca-certificate-rsa.cer](/browsermob-core/src/main/resources/sslSupport/ca-certificate-rsa.cer) file in your browser or HTTP client to avoid untrusted certificate warnings. Generally, it is safer to generate your own private key, rather than using the .cer files distributed with BrowserMob Proxy. See the [README file in the `mitm` module](/mitm/README.md) for instructions on generating or using your own root certificate and private key with MITM.
 
 **Legacy Jetty-based ProxyServer support for MITM:** As of version 2.1.0-beta-4, the legacy `ProxyServer` implementation uses the same `ca-certificate-rsa.cer` root certificate as the LittleProxy implementation. The previous cybervillainsCA.cer certificate has been removed.
 
