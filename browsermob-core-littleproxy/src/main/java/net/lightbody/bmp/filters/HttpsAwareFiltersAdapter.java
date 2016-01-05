@@ -42,37 +42,6 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
     }
 
     /**
-     * Returns the host and port of this HTTPS request, including any modifications by other filters.
-     *
-     * @return host and port of this HTTPS request
-     * @throws IllegalStateException if this is not an HTTPS request
-     */
-    public String getHttpsRequestHostAndPort() throws IllegalStateException {
-        if (!isHttps()) {
-            throw new IllegalStateException("Request is not HTTPS. Cannot get host and port on non-HTTPS request using this method.");
-        }
-
-        Attribute<String> hostnameAttr = ctx.attr(AttributeKey.<String>valueOf(HOST_ATTRIBUTE_NAME));
-        return hostnameAttr.get();
-    }
-
-    /**
-     * Returns the original host and port of this HTTPS request, as sent by the client. Does not reflect any modifications
-     * by other filters.
-     *
-     * @return host and port of this HTTPS request
-     * @throws IllegalStateException if this is not an HTTPS request
-     */
-    public String getHttpsOriginalRequestHostAndPort() throws IllegalStateException {
-        if (!isHttps()) {
-            throw new IllegalStateException("Request is not HTTPS. Cannot get original host and port on non-HTTPS request using this method.");
-        }
-
-        Attribute<String> hostnameAttr = ctx.attr(AttributeKey.<String>valueOf(ORIGINAL_HOST_ATTRIBUTE_NAME));
-        return hostnameAttr.get();
-    }
-
-    /**
      * Returns the full, absolute URL of the specified request for both HTTP and HTTPS URLs. The request may reflect
      * modifications from this or other filters. This filter instance must be currently handling the specified request;
      * otherwise the results are undefined.
@@ -91,19 +60,14 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
         // To get the full URL, we need to retrieve the Scheme, Host + Port, Path, and Query Params from the request.
         // Scheme: the scheme (HTTP/HTTPS) may or may not be part of the request, and so must be generated based on the
         //   type of connection.
-        // Host and Port: for HTTP requests, the host and port can be read from the request itself using the URI and/or
-        //   Host header. for HTTPS requests, the host and port are not available in the request. by using the
-        //   getHttpsRequestHostAndPort() helper method in HttpsAwareFiltersAdapter, we can capture the host and port for
-        //   HTTPS requests.
-        // Path + Query Params + Fragment: these elements are contained in the HTTP request
+        // Host and Port: available for HTTP and HTTPS requests using the getHostAndPort() helper method.
+        // Path + Query Params + Fragment: these elements are contained in the HTTP request for both HTTP and HTTPS
+        String hostAndPort = getHostAndPort(modifiedRequest);
+        String path = BrowserMobHttpUtil.getPathFromRequest(modifiedRequest);
         String url;
         if (isHttps()) {
-            String hostAndPort = getHttpsRequestHostAndPort();
-            String path = BrowserMobHttpUtil.getPathFromRequest(modifiedRequest);
             url = "https://" + hostAndPort + path;
         } else {
-            String hostAndPort = BrowserMobHttpUtil.getHostAndPortFromRequest(modifiedRequest);
-            String path = BrowserMobHttpUtil.getPathFromRequest(modifiedRequest);
             url = "http://" + hostAndPort + path;
         }
         return url;
@@ -120,14 +84,14 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
     }
 
     /**
-     * Returns the host and port of the specified request for both HTTP and HTTPS requests.  The request may reflect
+     * Returns the hostname (but not the port) the specified request for both HTTP and HTTPS requests.  The request may reflect
      * modifications from this or other filters. This filter instance must be currently handling the specified request;
      * otherwise the results are undefined.
      *
      * @param modifiedRequest a possibly-modified version of the request currently being processed
-     * @return host and port of the specified request
+     * @return hostname of the specified request, without the port
      */
-    public String getHostAndPort(HttpRequest modifiedRequest) {
+    public String getHost(HttpRequest modifiedRequest) {
         String serverHost;
         if (isHttps()) {
             HostAndPort hostAndPort = HostAndPort.fromString(getHttpsRequestHostAndPort());
@@ -136,5 +100,56 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
             serverHost = BrowserMobHttpUtil.getHostFromRequest(modifiedRequest);
         }
         return serverHost;
+    }
+
+    /**
+     * Returns the host and port of the specified request for both HTTP and HTTPS requests.  The request may reflect
+     * modifications from this or other filters. This filter instance must be currently handling the specified request;
+     * otherwise the results are undefined.
+     *
+     * @param modifiedRequest a possibly-modified version of the request currently being processed
+     * @return host and port of the specified request
+     */
+    public String getHostAndPort(HttpRequest modifiedRequest) {
+        // For HTTP requests, the host and port can be read from the request itself using the URI and/or
+        //   Host header. for HTTPS requests, the host and port are not available in the request. by using the
+        //   getHttpsRequestHostAndPort() helper method, we can retrieve the host and port for HTTPS requests.
+        if (isHttps()) {
+            return getHttpsRequestHostAndPort();
+        } else {
+            return BrowserMobHttpUtil.getHostAndPortFromRequest(modifiedRequest);
+        }
+    }
+
+    /**
+     * Returns the host and port of this HTTPS request, including any modifications by other filters.
+     *
+     * @return host and port of this HTTPS request
+     * @throws IllegalStateException if this is not an HTTPS request
+     */
+    private String getHttpsRequestHostAndPort() throws IllegalStateException {
+        if (!isHttps()) {
+            throw new IllegalStateException("Request is not HTTPS. Cannot get host and port on non-HTTPS request using this method.");
+        }
+
+        Attribute<String> hostnameAttr = ctx.attr(AttributeKey.<String>valueOf(HOST_ATTRIBUTE_NAME));
+        return hostnameAttr.get();
+    }
+
+    /**
+     * Returns the original host and port of this HTTPS request, as sent by the client. Does not reflect any modifications
+     * by other filters.
+     * TODO: evaluate this (unused) method and its capture mechanism in HttpsOriginalHostCaptureFilter; remove if not useful.
+     *
+     * @return host and port of this HTTPS request
+     * @throws IllegalStateException if this is not an HTTPS request
+     */
+    private String getHttpsOriginalRequestHostAndPort() throws IllegalStateException {
+        if (!isHttps()) {
+            throw new IllegalStateException("Request is not HTTPS. Cannot get original host and port on non-HTTPS request using this method.");
+        }
+
+        Attribute<String> hostnameAttr = ctx.attr(AttributeKey.<String>valueOf(ORIGINAL_HOST_ATTRIBUTE_NAME));
+        return hostnameAttr.get();
     }
 }

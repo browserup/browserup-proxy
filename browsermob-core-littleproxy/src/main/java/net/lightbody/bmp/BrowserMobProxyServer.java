@@ -13,6 +13,7 @@ import net.lightbody.bmp.core.har.HarNameVersion;
 import net.lightbody.bmp.core.har.HarPage;
 import net.lightbody.bmp.exception.NameResolutionException;
 import net.lightbody.bmp.filters.AddHeadersFilter;
+import net.lightbody.bmp.filters.AutoBasicAuthFilter;
 import net.lightbody.bmp.filters.BlacklistFilter;
 import net.lightbody.bmp.filters.BrowserMobHttpFilterChain;
 import net.lightbody.bmp.filters.HarCaptureFilter;
@@ -63,9 +64,11 @@ import org.openqa.selenium.Proxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.bind.DatatypeConverter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -303,6 +306,14 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
      * LittleProxy-compatible methods.
      */
     private final StreamManagerLegacyAdapter streamManagerAdapter = new StreamManagerLegacyAdapter();
+
+    /**
+     * A mapping of hostnames to base64-encoded Basic auth credentials that will be added to the Authorization header for
+     * matching requests.
+     */
+    private final ConcurrentMap<String, String> basicAuthCredentials = new MapMaker()
+            .concurrencyLevel(1)
+            .makeMap();
 
     public BrowserMobProxyServer() {
         this(0);
@@ -832,20 +843,24 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
 
     @Override
     public void autoAuthorization(String domain, String username, String password, AuthType authType) {
-        if (errorOnUnsupportedOperation) {
-            throw new UnsupportedOperationException("No LittleProxy implementation for operation: " + new Throwable().getStackTrace()[0].getMethodName());
-        } else {
-            log.warn("No LittleProxy implementation for operation: " + new Throwable().getStackTrace()[0].getMethodName());
+        switch (authType) {
+            case BASIC:
+                // base64 encode the "username:password" string
+                String credentialsToEncode = username + ':' + password;
+                byte[] credentialsAsUsAscii = credentialsToEncode.getBytes(StandardCharsets.US_ASCII);
+                String base64EncodedCredentials = DatatypeConverter.printBase64Binary(credentialsAsUsAscii);
+
+                basicAuthCredentials.put(domain, base64EncodedCredentials);
+                break;
+
+            default:
+                throw new UnsupportedOperationException("AuthType " + authType + " is not supported");
         }
     }
 
     @Override
     public void stopAutoAuthorization(String domain) {
-        if (errorOnUnsupportedOperation) {
-            throw new UnsupportedOperationException("No LittleProxy implementation for operation: " + new Throwable().getStackTrace()[0].getMethodName());
-        } else {
-            log.warn("No LittleProxy implementation for operation: " + new Throwable().getStackTrace()[0].getMethodName());
-        }
+        basicAuthCredentials.remove(domain);
     }
 
     /**
@@ -931,7 +946,7 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
      * @deprecated use {@link #autoAuthorization(String, String, String, net.lightbody.bmp.proxy.auth.AuthType)}
      */
     @Deprecated
-//    @Override
+    @Override
     public void autoBasicAuthorization(String domain, String username, String password) {
         autoAuthorization(domain, username, password, AuthType.BASIC);
     }
@@ -1443,6 +1458,13 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
             public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
                 Whitelist currentWhitelist = whitelist.get();
                 return new WhitelistFilter(originalRequest, ctx, isWhitelistEnabled(), currentWhitelist.getStatusCode(), currentWhitelist.getPatterns());
+            }
+        });
+
+        addHttpFilterFactory(new HttpFiltersSourceAdapter() {
+            @Override
+            public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
+                return new AutoBasicAuthFilter(originalRequest, ctx, basicAuthCredentials);
             }
         });
 

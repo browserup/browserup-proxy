@@ -73,6 +73,7 @@ public class LittleProxyIntegrationTest {
         ImpersonatingMitmManager mitmManager = ImpersonatingMitmManager.builder().build();
 
         HttpProxyServer proxyServer = DefaultHttpProxyServer.bootstrap()
+                .withPort(0)
                 .withManInTheMiddle(mitmManager)
                 .withFiltersSource(filtersSource)
                 .start();

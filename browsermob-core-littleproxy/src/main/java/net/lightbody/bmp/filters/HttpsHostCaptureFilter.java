@@ -13,7 +13,7 @@ import org.littleshoot.proxy.impl.ProxyUtils;
 /**
  * Captures the host for HTTPS requests and stores the value in the ChannelHandlerContext for use by {@link HttpsAwareFiltersAdapter}
  * filters. This filter reads the host from the HttpRequest during the HTTP CONNECT call, and therefore MUST be invoked
- * after any other filters which modify the host.
+ * <b>after</b> any other filters which modify the host.
  * Note: If the request uses the default HTTPS port (443), it will be removed from the hostname captured by this filter.
  */
 public class HttpsHostCaptureFilter extends HttpFiltersAdapter {
