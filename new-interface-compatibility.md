@@ -31,8 +31,8 @@ the new interface. The following table lists the current level of support for th
 `setConnectTimeout` | X | [Must be enabled before start()](#timeouts)
 `setIdleConnectionTimeout` | X | [Must be enabled before start()](#timeouts)
 `setRequestTimeout` | X | Planned
-`autoAuthorization` | X | Planned
-`stopAutoAuthorization` | [Will not support](#auto-authorization) | Planned
+`autoAuthorization` | X | X
+`stopAutoAuthorization` | [Will not support](#auto-authorization) | X
 `rewriteUrl` | X | X
 `rewriteUrls` | X | X
 `removeRewriteRule` | X | X
