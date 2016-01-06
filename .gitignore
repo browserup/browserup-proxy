@@ -5,6 +5,9 @@ target
 /.classpath
 /.settings
 /.project
+*/.classpath
+*/.settings
+*/.project
 /.idea
 atlassian-ide-plugin.xml
 .DS_Store
