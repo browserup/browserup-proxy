@@ -1,17 +1,15 @@
 package net.lightbody.bmp.mitm.util;
 
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import net.lightbody.bmp.mitm.exception.SslContextInitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
@@ -22,53 +20,29 @@ public class SslUtil {
     private static final Logger log = LoggerFactory.getLogger(SslUtil.class);
 
     /**
-     * Creates an SSLContext for use when connecting to upstream servers. When trustAllServers is true, no upstream certificate
+     * Creates a netty SslContext for use when connecting to upstream servers. When trustAllServers is true, no upstream certificate
      * verification will be performed. <b>This will make it possible for attackers to MITM communications with the upstream
      * server</b>, so use trustAllServers only when testing.
      *
      * @param trustAllServers when true, no upstream server certificate validation will be performed
      * @return an SSLContext to connect to upstream servers with
      */
-    public static SSLContext getUpstreamServerSslContext(boolean trustAllServers) {
+    public static SslContext getUpstreamServerSslContext(boolean trustAllServers) {
         //TODO: add the ability to specify an explicit additional trust source, so clients don't need to import trust into the JDK trust source or forgo trust entirely
 
+        SslContextBuilder sslContextBuilder = SslContextBuilder.forClient();
+
+        if (trustAllServers) {
+            log.warn("Disabling upstream server certificate verification. This will allow attackers to intercept communications with upstream servers.");
+
+            sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
+        }
+
         try {
-            if (trustAllServers) {
-                log.warn("Disabling upstream server certificate verification. This will allow attackers to intercept communications with upstream servers.");
-
-                TrustManager[] trustManagers = InsecureTrustManagerFactory.INSTANCE.getTrustManagers();
-
-                // start with the default SSL context, but override the default TrustManager with the "always trust everything" TrustManager
-                SSLContext newSslContext = SSLContext.getInstance("TLS");
-                newSslContext.init(null, trustManagers, null);
-
-                return newSslContext;
-            } else {
-                return SSLContext.getDefault();
-            }
-        } catch (NoSuchAlgorithmException | KeyManagementException e) {
+            return sslContextBuilder.build();
+        } catch (SSLException e) {
             throw new SslContextInitializationException("Error creating new SSL context for connection to upstream server", e);
         }
-    }
-
-    /**
-     * Creates an SSLContext for use with clients' connections to this server. The specified keyManagers should contain
-     * the impersonated server certificate and private key used to encrypt communications with the client.
-     *
-     * @param keyManagers keyManagers that will be used to encrypt communications with the client; should contain the impersonated upstream server certificate
-     * @return SSLContext for use with clients' connections to this server
-     */
-    public static SSLContext getClientSslContext(KeyManager[] keyManagers) {
-        try {
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(keyManagers, null, null);
-
-            return sslContext;
-        } catch (NoSuchAlgorithmException | KeyManagementException e) {
-            throw new SslContextInitializationException("Error creating new SSL context for connection to client", e);
-        }
-
-
     }
 
     /**
