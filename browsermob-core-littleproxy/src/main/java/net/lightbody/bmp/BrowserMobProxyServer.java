@@ -31,6 +31,7 @@ import net.lightbody.bmp.filters.RewriteUrlFilter;
 import net.lightbody.bmp.filters.UnregisterRequestFilter;
 import net.lightbody.bmp.filters.WhitelistFilter;
 import net.lightbody.bmp.mitm.KeyStoreFileCertificateSource;
+import net.lightbody.bmp.mitm.keys.ECKeyGenerator;
 import net.lightbody.bmp.mitm.keys.RSAKeyGenerator;
 import net.lightbody.bmp.mitm.manager.ImpersonatingMitmManager;
 import net.lightbody.bmp.proxy.ActivityMonitor;
@@ -97,7 +98,8 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     private static final HarNameVersion HAR_CREATOR_VERSION = new HarNameVersion("BrowserMob Proxy", "2.1.0-beta-4-littleproxy");
 
     /* Default MITM resources */
-    private static final String KEYSTORE_RESOURCE = "/sslSupport/ca-keystore-rsa.p12";
+    private static final String RSA_KEYSTORE_RESOURCE = "/sslSupport/ca-keystore-rsa.p12";
+    private static final String EC_KEYSTORE_RESOURCE = "/sslSupport/ca-keystore-ec.p12";
     private static final String KEYSTORE_TYPE = "PKCS12";
     private static final String KEYSTORE_PRIVATE_KEY_ALIAS = "key";
     private static final String KEYSTORE_PASSWORD = "password";
@@ -249,6 +251,11 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     private volatile boolean trustAllServers = true;
 
     /**
+     * When true, use Elliptic Curve keys and certificates when impersonating upstream servers.
+     */
+    private volatile boolean useEcc = false;
+
+    /**
      * Resolver to use when resolving hostnames to IP addresses. This is a bridge between {@link org.littleshoot.proxy.HostResolver} and
      * {@link net.lightbody.bmp.proxy.dns.AdvancedHostResolver}. It allows the resolvers to be changed on-the-fly without re-bootstrapping the
      * littleproxy server. The default resolver (native JDK resolver) can be changed using {@link #setHostNameResolver(net.lightbody.bmp.proxy.dns.AdvancedHostResolver)} and
@@ -377,8 +384,12 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         if (!mitmDisabled) {
             if (mitmManager == null) {
                 mitmManager = ImpersonatingMitmManager.builder()
-                        .rootCertificateSource(new KeyStoreFileCertificateSource(KEYSTORE_TYPE, KEYSTORE_RESOURCE, KEYSTORE_PRIVATE_KEY_ALIAS, KEYSTORE_PASSWORD))
-                        .serverKeyGenerator(new RSAKeyGenerator())
+                        .rootCertificateSource(new KeyStoreFileCertificateSource(
+                                KEYSTORE_TYPE,
+                                useEcc ? EC_KEYSTORE_RESOURCE : RSA_KEYSTORE_RESOURCE,
+                                KEYSTORE_PRIVATE_KEY_ALIAS,
+                                KEYSTORE_PASSWORD))
+                        .serverKeyGenerator(useEcc ? new ECKeyGenerator() : new RSAKeyGenerator())
                         .trustAllServers(trustAllServers)
                         .build();
             }
@@ -1421,6 +1432,10 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         return this.mitmDisabled;
     }
 
+    public void setUseEcc(boolean useEcc) {
+        this.useEcc = useEcc;
+    }
+
     /**
      * Adds the basic browsermob-proxy filters, except for the relatively-expensive HAR capture filter.
      */
@@ -1563,5 +1578,4 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
             });
         }
     }
-
 }

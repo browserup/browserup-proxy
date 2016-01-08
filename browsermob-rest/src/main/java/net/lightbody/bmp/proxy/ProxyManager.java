@@ -129,38 +129,48 @@ public class ProxyManager {
         }
     }
 
-    public LegacyProxyServer create(Map<String, String> options, Integer port, String bindAddr) {
+    public LegacyProxyServer create(Map<String, String> options, Integer port, String bindAddr, boolean useEcc) {
         LOG.debug("Instantiate ProxyServer...");
         LegacyProxyServer proxy = proxyServerProvider.get();
+
+        if (useEcc) {
+            if (proxy instanceof BrowserMobProxyServer) {
+                LOG.info("Using Elliptic Curve Cryptography for certificate impersonation");
+
+                ((BrowserMobProxyServer)proxy).setUseEcc(true);
+            } else {
+                LOG.warn("Cannot use Eliiptic Curve Cryptography with legacy ProxyServer implementation. Using default RSA certificates.");
+            }
+        }
 
         if (options != null) {
             LOG.debug("Apply options `{}` to new ProxyServer...", options);
             proxy.setOptions(options);
         }
-        
-        if (bindAddr != null) {            
+
+        if (bindAddr != null) {
             LOG.debug("Bind ProxyServer to `{}`...", bindAddr);
             InetAddress inetAddress;
             try {
             	inetAddress = InetAddress.getByName(bindAddr);
             } catch (UnknownHostException e) {
             	LOG.error("Unable to bind proxy to address: " + bindAddr + "; proxy will not be created.", e);
-            	
+
             	throw new RuntimeException("Unable to bind proxy to address: ", e);
             }
-            
+
             proxy.setLocalHost(inetAddress);
         }
-        
-        if (port != null) {                        
-            return startProxy(proxy, port);            
-        }                
-        
+
+        if (port != null) {
+            return startProxy(proxy, port);
+        }
+
         while(proxies.size() <= maxPort-minPort){
             LOG.debug("Use next available port for new ProxyServer...");
-            port = nextPort();                        
+            port = nextPort();
             try{
-                return startProxy(proxy, port);                
+                return startProxy(proxy, port);
             }catch(ProxyExistsException ex){
                 LOG.debug("Proxy already exists at port {}", port);
             }
@@ -169,19 +179,19 @@ public class ProxyManager {
     }
 
     public LegacyProxyServer create(Map<String, String> options, Integer port) {
-        return create(options, port, null);
+        return create(options, port, null, false);
     }
 
     public LegacyProxyServer create(Map<String, String> options) {
-        return create(options, null, null);
+        return create(options, null, null, false);
     }
 
     public LegacyProxyServer create() {
-        return create(null, null, null);
+        return create(null, null, null, false);
     }
 
     public LegacyProxyServer create(int port) {
-        return create(null, port, null);
+        return create(null, port, null, false);
     }
 
     public LegacyProxyServer get(int port) {
