@@ -411,6 +411,12 @@
                 <version>${bouncycastle.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.javassist</groupId>
+                <artifactId>javassist</artifactId>
+                <version>3.20.0-GA</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
