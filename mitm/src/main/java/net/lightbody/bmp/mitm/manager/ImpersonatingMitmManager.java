@@ -4,9 +4,11 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ImmutableList;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.SupportedCipherSuiteFilter;
 import net.lightbody.bmp.mitm.CertificateAndKey;
 import net.lightbody.bmp.mitm.CertificateAndKeySource;
 import net.lightbody.bmp.mitm.CertificateInfo;
@@ -35,7 +37,9 @@ import javax.net.ssl.SSLSession;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -49,12 +53,22 @@ public class ImpersonatingMitmManager implements MitmManager {
     private static final Logger log = LoggerFactory.getLogger(ImpersonatingMitmManager.class);
 
     /**
+     * Cipher suites allowed on proxy connections to upstream servers.
+     */
+    private final List<String> serverCipherSuites;
+
+    /**
+     * Cipher suites allowed on client connections to the proxy.
+     */
+    private final List<String> clientCipherSuites;
+
+    /**
      * The SSLContext that will be used for communications with all upstream servers. This can be reused, so store it as a lazily-loaded singleton.
      */
     private final Supplier<SslContext> upstreamServerSslContext = Suppliers.memoize(new Supplier<SslContext>() {
         @Override
         public SslContext get() {
-            return SslUtil.getUpstreamServerSslContext(trustAllUpstreamServers);
+            return SslUtil.getUpstreamServerSslContext(trustAllUpstreamServers, serverCipherSuites);
         }
     });
 
@@ -123,7 +137,9 @@ public class ImpersonatingMitmManager implements MitmManager {
                                     int sslContextCacheConcurrencyLevel,
                                     long cacheExpirationIntervalMs,
                                     SecurityProviderTool securityProviderTool,
-                                    CertificateInfoGenerator certificateInfoGenerator) {
+                                    CertificateInfoGenerator certificateInfoGenerator,
+                                    Collection<String> serverCipherSuites,
+                                    Collection<String> clientCipherSuites) {
         if (rootCertificateSource == null) {
             throw new IllegalArgumentException("CA root certificate source cannot be null");
         }
@@ -160,6 +176,12 @@ public class ImpersonatingMitmManager implements MitmManager {
         this.securityProviderTool = securityProviderTool;
 
         this.certificateInfoGenerator = certificateInfoGenerator;
+
+        this.serverCipherSuites = ImmutableList.copyOf(serverCipherSuites);
+        log.debug("Allowed ciphers for proxy connections to upstream servers (some ciphers may not be available): {}", serverCipherSuites);
+
+        this.clientCipherSuites = ImmutableList.copyOf(clientCipherSuites);
+        log.debug("Allowed ciphers for client connections to proxy (some ciphers may not be available): {}", clientCipherSuites);
     }
 
     @Override
@@ -265,7 +287,10 @@ public class ImpersonatingMitmManager implements MitmManager {
         X509Certificate[] certChain = {impersonatedCertificateAndKey.getCertificate(), caRootCertificate};
         SslContext sslContext;
         try {
-            sslContext = SslContextBuilder.forServer(impersonatedCertificateAndKey.getPrivateKey(), certChain).build();
+            sslContext = SslContextBuilder.forServer(impersonatedCertificateAndKey.getPrivateKey(), certChain)
+                    .ciphers(clientCipherSuites, SupportedCipherSuiteFilter.INSTANCE)
+                    .build();
+
         } catch (SSLException e) {
             throw new MitmException("Error creating SslContext for connection to client using impersonated certificate and private key", e);
         }
@@ -324,6 +349,10 @@ public class ImpersonatingMitmManager implements MitmManager {
         private SecurityProviderTool securityProviderTool = new DefaultSecurityProviderTool();
 
         private CertificateInfoGenerator certificateInfoGenerator = new HostnameCertificateInfoGenerator();
+
+        private Collection<String> serverCiphers;
+
+        private Collection<String> clientCiphers;
 
         /**
          * The source of the CA root certificate that will be used to sign the impersonated server certificates. Custom
@@ -389,6 +418,26 @@ public class ImpersonatingMitmManager implements MitmManager {
         }
 
         /**
+         * The cipher suites allowed on connections to upstream servers. Cipher suite names should be specified in Java
+         * format, rather than OpenSSL format (e.g., TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384), even when using OpenSSL.
+         * Ciphers will be preferred in the order they are returned by the collection's iterator.
+         */
+        public Builder serverCiphers(Collection<String> serverCiphers) {
+            this.serverCiphers = serverCiphers;
+            return this;
+        }
+
+        /**
+         * The cipher suites allowed on client connections to the proxy. Cipher suite names should be specified in Java
+         * format, rather than OpenSSL format (e.g., TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384), even when using OpenSSL.
+         * Ciphers will be preferred in the order they are returned by the collection's iterator.
+         */
+        public Builder clientCiphers(Collection<String> clientCiphers) {
+            this.clientCiphers = clientCiphers;
+            return this;
+        }
+
+        /**
          * The {@link SecurityProviderTool} implementation that will be used to generate certificates.
          */
         public Builder certificateTool(SecurityProviderTool securityProviderTool) {
@@ -397,6 +446,14 @@ public class ImpersonatingMitmManager implements MitmManager {
         }
 
         public ImpersonatingMitmManager build() {
+            if (clientCiphers == null) {
+                clientCiphers = SslUtil.getDefaultCipherList();
+            }
+
+            if (serverCiphers == null) {
+                serverCiphers = SslUtil.getDefaultCipherList();
+            }
+
             return new ImpersonatingMitmManager(
                     rootCertificateSource,
                     serverKeyGenerator,
@@ -405,7 +462,9 @@ public class ImpersonatingMitmManager implements MitmManager {
                     cacheConcurrencyLevel,
                     cacheExpirationIntervalMs,
                     securityProviderTool,
-                    certificateInfoGenerator
+                    certificateInfoGenerator,
+                    serverCiphers,
+                    clientCiphers
             );
         }
     }
