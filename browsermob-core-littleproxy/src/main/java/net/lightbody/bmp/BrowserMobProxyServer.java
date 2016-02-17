@@ -905,7 +905,7 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
      */
     @Override
     public void setIdleConnectionTimeout(int idleConnectionTimeout, TimeUnit timeUnit) {
-        long timeout = TimeUnit.SECONDS.convert(idleConnectionTimeout, TimeUnit.MILLISECONDS);
+        long timeout = TimeUnit.SECONDS.convert(idleConnectionTimeout, timeUnit);
         if (timeout == 0 && idleConnectionTimeout > 0) {
             this.idleConnectionTimeoutSec = 1;
         } else {
