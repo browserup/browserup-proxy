@@ -63,7 +63,7 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
         // Host and Port: available for HTTP and HTTPS requests using the getHostAndPort() helper method.
         // Path + Query Params + Fragment: these elements are contained in the HTTP request for both HTTP and HTTPS
         String hostAndPort = getHostAndPort(modifiedRequest);
-        String path = BrowserMobHttpUtil.getPathFromRequest(modifiedRequest);
+        String path = BrowserMobHttpUtil.getRawPathAndParamsFromRequest(modifiedRequest);
         String url;
         if (isHttps()) {
             url = "https://" + hostAndPort + path;
