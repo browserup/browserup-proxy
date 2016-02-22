@@ -26,7 +26,7 @@ class BrowserMobHttpUtilTest {
         ]
 
         uriToResource.each {uri, expectedResource ->
-            String parsedResource = BrowserMobHttpUtil.getPathFromUri(uri)
+            String parsedResource = BrowserMobHttpUtil.getRawPathAndParamsFromUri(uri)
             assertEquals("Parsed resource from URL did not match expected resource for URL: " + uri, expectedResource, parsedResource)
         }
     }
@@ -104,6 +104,20 @@ class BrowserMobHttpUtilTest {
 
         boolean isTextualContent = BrowserMobHttpUtil.hasTextualContent(null)
         assertFalse("Expected hasTextualContent to return false for null content type", isTextualContent)
+    }
+
+    @Test
+    void testGetRawPathWithQueryParams() {
+        String path = "/some%20resource?param%20name=value"
+
+        assertEquals(path, BrowserMobHttpUtil.getRawPathAndParamsFromUri("https://www.example.com" + path))
+    }
+
+    @Test
+    void testGetRawPathWithoutQueryParams() {
+        String path = "/some%20resource"
+
+        assertEquals(path, BrowserMobHttpUtil.getRawPathAndParamsFromUri("https://www.example.com" + path))
     }
 
     @Test
