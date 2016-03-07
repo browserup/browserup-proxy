@@ -7,9 +7,10 @@ public class MitmConstants {
     /**
      * The default message digest to use when signing certificates (CA or server). On 64-bit systems this is set to
      * SHA512, on 32-bit systems this is SHA256. On 64-bit systems, SHA512 generally performs better than SHA256; see
-     * this question for details: http://crypto.stackexchange.com/questions/26336/sha512-faster-than-sha256
+     * this question for details: http://crypto.stackexchange.com/questions/26336/sha512-faster-than-sha256. SHA384 is
+     * SHA512 with a smaller output size.
      */
-    public static final String DEFAULT_MESSAGE_DIGEST = is32BitJvm() ? "SHA256": "SHA512";
+    public static final String DEFAULT_MESSAGE_DIGEST = is32BitJvm() ? "SHA256": "SHA384";
 
     /**
      * The default {@link java.security.KeyStore} type to use when creating KeyStores (e.g. for impersonated server
