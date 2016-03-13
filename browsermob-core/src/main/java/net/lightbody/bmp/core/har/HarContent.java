@@ -6,7 +6,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 public class HarContent {
     private volatile long size;
     private volatile Long compression;
+
+    // mimeType is required; though it shouldn't be set to null, if it is, it still needs to be included to comply with the HAR spec
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private volatile String mimeType = "";
+
     private volatile String text;
     private volatile String encoding;
     private volatile String comment = "";

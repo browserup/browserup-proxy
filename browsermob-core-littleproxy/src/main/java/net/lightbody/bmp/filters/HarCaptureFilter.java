@@ -523,7 +523,10 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
     protected void captureResponseMimeType(HttpResponse httpResponse) {
         String contentType = HttpHeaders.getHeader(httpResponse, HttpHeaders.Names.CONTENT_TYPE);
-        harEntry.getResponse().getContent().setMimeType(contentType);
+        // don't set the mimeType to null, since mimeType is a required field
+        if (contentType != null) {
+            harEntry.getResponse().getContent().setMimeType(contentType);
+        }
     }
 
     protected void captureResponseCookies(HttpResponse httpResponse) {
