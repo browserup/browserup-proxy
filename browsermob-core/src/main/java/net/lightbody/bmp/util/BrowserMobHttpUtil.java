@@ -246,18 +246,19 @@ public class BrowserMobHttpUtil {
      *
      * @param httpRequest HTTP request
      * @return the unescaped path + query string from the HTTP request
+     * @throws URISyntaxException if the path could not be parsed (due to invalid characters in the URI, etc.)
      */
-    public static String getRawPathAndParamsFromRequest(HttpRequest httpRequest) {
+    public static String getRawPathAndParamsFromRequest(HttpRequest httpRequest) throws URISyntaxException {
         // if this request's URI contains a full URI (including scheme, host, etc.), strip away the non-path components
         if (startsWithHttpOrHttps(httpRequest.getUri())) {
-            try {
-                return getRawPathAndParamsFromUri(httpRequest.getUri());
-            } catch (URISyntaxException e) {
-                // could not parse the URI, so fall through and return the URI as-is
-            }
-        }
+            return getRawPathAndParamsFromUri(httpRequest.getUri());
+        } else {
+            // to provide consistent validation behavior for URIs that contain a scheme and those that don't, attempt to parse
+            // the URI, even though we discard the parsed URI object
+            new URI(httpRequest.getUri());
 
-        return httpRequest.getUri();
+            return httpRequest.getUri();
+        }
     }
 
     /**

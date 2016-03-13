@@ -58,12 +58,18 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
         }
 
         // To get the full URL, we need to retrieve the Scheme, Host + Port, Path, and Query Params from the request.
-        // Scheme: the scheme (HTTP/HTTPS) may or may not be part of the request, and so must be generated based on the
-        //   type of connection.
+        // If the request URI starts with http:// or https://, it is already a full URL and can be returned directly.
+        if (BrowserMobHttpUtil.startsWithHttpOrHttps(modifiedRequest.getUri())) {
+            return modifiedRequest.getUri();
+        }
+
+        // The URI did not include the scheme and host, so examine the request to obtain them:
+        // Scheme: the scheme (HTTP/HTTPS) are based on the type of connection, obtained from isHttps()
         // Host and Port: available for HTTP and HTTPS requests using the getHostAndPort() helper method.
-        // Path + Query Params + Fragment: these elements are contained in the HTTP request for both HTTP and HTTPS
+        // Path + Query Params: since the request URI doesn't start with the scheme, we can safely assume that the URI
+        //    contains only the path and query params.
         String hostAndPort = getHostAndPort(modifiedRequest);
-        String path = BrowserMobHttpUtil.getRawPathAndParamsFromRequest(modifiedRequest);
+        String path = modifiedRequest.getUri();
         String url;
         if (isHttps()) {
             url = "https://" + hostAndPort + path;
