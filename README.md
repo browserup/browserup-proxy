@@ -2,7 +2,7 @@
 
 BrowserMob Proxy is a simple utility that makes it easy to capture performance data from browsers, typically written using automation toolkits such as Selenium and Watir.
 
-The latest version of BrowserMobProxy is 2.1.0-beta-4. It is the second release that supports the [new BrowserMobProxy interface](#new-browsermobproxy-api), and the second release [powered by LittleProxy](#littleproxy-support). We highly recommend that you use  2.1.0-beta-4 instead of the [previous 2.0.0 release](https://github.com/lightbody/browsermob-proxy/tree/2.0).
+The latest version of BrowserMobProxy is 2.1.0-beta-5. It is the latest release that supports the [new BrowserMobProxy interface](#new-browsermobproxy-api), and the second release [powered by LittleProxy](#littleproxy-support). We highly recommend that you use  2.1.0-beta-5 instead of the [previous 2.0.0 release](https://github.com/lightbody/browsermob-proxy/tree/2.0).
 
 To use BrowserMob Proxy in your tests, add the `browsermob-core-littleproxy` dependency to your pom:
 ```xml
@@ -11,7 +11,7 @@ To use BrowserMob Proxy in your tests, add the `browsermob-core-littleproxy` dep
         <!-- To use the legacy, Jetty-based implementation, 
              change the artifactId to browsermob-core -->
         <artifactId>browsermob-core-littleproxy</artifactId>
-        <version>2.1.0-beta-4</version>
+        <version>2.1.0-beta-5</version>
         <scope>test</scope>
     </dependency>
 ```
@@ -62,7 +62,7 @@ BrowserMob Proxy now supports using LittleProxy instead of Jetty 5 + Apache HTTP
     <dependency>
         <groupId>net.lightbody.bmp</groupId>
         <artifactId>browsermob-core-littleproxy</artifactId>
-        <version>2.1.0-beta-4</version>
+        <version>2.1.0-beta-5</version>
         <scope>test</scope>
     </dependency>
 ```
@@ -218,7 +218,7 @@ If you're using Java and Selenium, the easiest way to get started is to embed th
         <groupId>net.lightbody.bmp</groupId>
         <!-- To use the legacy, Jetty-based implementation, change the artifactId to browsermob-core -->
         <artifactId>browsermob-core-littleproxy</artifactId>
-        <version>2.1.0-beta-4</version>
+        <version>2.1.0-beta-5</version>
         <scope>test</scope>
     </dependency>
 ```
@@ -418,14 +418,14 @@ You'll need maven (`brew install maven` if you're on OS X); use the `release` pr
 
     [~]$ mvn -DskipTests -P release
     
-You'll find the standalone BrowserMob Proxy distributable zip at `browsermob-dist/target/browsermob-proxy-2.1.0-beta-4-SNAPSHOT-bin.zip`. Unzip the contents and run the `browsermob-proxy` or `browsermob-proxy.bat` files in the `bin` directory.
+You'll find the standalone BrowserMob Proxy distributable zip at `browsermob-dist/target/browsermob-proxy-2.1.0-beta-6-SNAPSHOT-bin.zip`. Unzip the contents and run the `browsermob-proxy` or `browsermob-proxy.bat` files in the `bin` directory.
 
 When you build the latest code from source, you'll have access to the latest snapshot release. To use the SNAPSHOT version in your code, modify the version in your pom:
 ```xml
     <dependency>
         <groupId>net.lightbody.bmp</groupId>
         <artifactId>browsermob-core-littleproxy</artifactId>
-        <version>2.1.0-beta-5-SNAPSHOT</version>
+        <version>2.1.0-beta-6-SNAPSHOT</version>
         <scope>test</scope>
     </dependency>
 ```
