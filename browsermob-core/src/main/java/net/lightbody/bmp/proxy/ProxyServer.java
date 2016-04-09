@@ -24,6 +24,7 @@ import net.lightbody.bmp.proxy.jetty.http.HttpListener;
 import net.lightbody.bmp.proxy.jetty.http.SocketListener;
 import net.lightbody.bmp.proxy.jetty.jetty.Server;
 import net.lightbody.bmp.proxy.jetty.util.InetAddrPort;
+import net.lightbody.bmp.proxy.util.BrowserMobProxyUtil;
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponseInterceptor;
 import org.java_bandwidthlimiter.BandwidthLimiter;
@@ -68,7 +69,7 @@ import java.util.regex.Pattern;
  */
 @Deprecated
 public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
-    private static final HarNameVersion CREATOR = new HarNameVersion("BrowserMob Proxy", "2.1.0-beta-5-legacy");
+    private static final HarNameVersion CREATOR = new HarNameVersion("BrowserMob Proxy", BrowserMobProxyUtil.getVersionString() + "-legacy");
     private static final Logger LOG = LoggerFactory.getLogger(ProxyServer.class);
 
     /**

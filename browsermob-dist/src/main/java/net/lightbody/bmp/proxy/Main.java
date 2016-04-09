@@ -8,6 +8,7 @@ import net.lightbody.bmp.exception.JettyException;
 import net.lightbody.bmp.proxy.bricks.ProxyResource;
 import net.lightbody.bmp.proxy.guice.ConfigModule;
 import net.lightbody.bmp.proxy.guice.JettyModule;
+import net.lightbody.bmp.proxy.util.BrowserMobProxyUtil;
 import net.lightbody.bmp.util.DeleteDirectoryTask;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -21,7 +22,6 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Properties;
 
 public class Main {
     // the static final logger is in this static inner class to allow the logging configuration code to execute before the logger is initialized.
@@ -33,11 +33,8 @@ public class Main {
 
     private static final String BMP_LOG_CONFIG_NAME = "bmp-logging.yaml";
     private static final String DEFAULT_LOG_CONFIG_LOCATION = "bin/conf/" + BMP_LOG_CONFIG_NAME;
-    private static final String VERSION_PROP = "/version.prop";
 
     public static final String LOG4J_CONFIGURATION_FILE_PROPERTY = "log4j.configurationFile";
-
-    private static String VERSION = null;
 
     public static void main(String[] args) {
         configureLogging();
@@ -49,7 +46,7 @@ public class Main {
             }
         });
 
-        LogHolder.log.info("Starting BrowserMob Proxy version {}", getVersion());
+        LogHolder.log.info("Starting BrowserMob Proxy version {}", BrowserMobProxyUtil.getVersionString());
 
         Server server = injector.getInstance(Server.class);
         GuiceServletContextListener gscl = new GuiceServletContextListener() {
@@ -74,28 +71,6 @@ public class Main {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-    }
-
-    public static String getVersion() {
-        if (VERSION == null) {
-            String version = "UNKNOWN/DEVELOPMENT";
-            InputStream is = Main.class.getResourceAsStream(VERSION_PROP);
-
-            if (is != null) {
-                Properties props = new Properties();
-                try {
-                    props.load(is);
-                    version = props.getProperty("version");
-                } catch (IOException e) {
-                    LogHolder.log.warn("Unable to load properties file in " + VERSION_PROP + "; version will not be set.", e);
-                }
-
-            }
-
-            VERSION = version;
-        }
-
-        return VERSION;
     }
 
     /**
@@ -138,7 +113,7 @@ public class Main {
                         return;
                     }
 
-                    Path tempDir = null;
+                    Path tempDir;
                     try {
                         tempDir = Files.createTempDirectory("browsermob-proxy");
                     } catch (IOException e) {

@@ -1,12 +1,21 @@
 package net.lightbody.bmp.proxy.util;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import com.google.common.io.CharSource;
+import com.google.common.io.Resources;
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.core.har.HarEntry;
 import net.lightbody.bmp.core.har.HarLog;
 import net.lightbody.bmp.core.har.HarPage;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,10 +23,32 @@ import java.util.Set;
  * General utility class for functionality and classes used mostly internally by BrowserMob Proxy.
  */
 public class BrowserMobProxyUtil {
+    private static final Logger log = LoggerFactory.getLogger(BrowserMobProxyUtil.class);
+
+    /**
+     * Classpath resource containing this build's version string.
+     */
+    private static final String VERSION_CLASSPATH_RESOURCE = "net/lightbody/bmp/version";
+
+    /**
+     * Default value if the version string cannot be read.
+     */
+    private static final String UNKNOWN_VERSION_STRING = "UNKNOWN-VERSION";
+
     /**
      * Singleton User Agent parser.
      */
     private static volatile UserAgentStringParser parser;
+
+    /**
+     * Singleton version string loader.
+     */
+    private static final Supplier<String> version = Suppliers.memoize(new Supplier<String>() {
+        @Override
+        public String get() {
+            return readVersionFileOnClasspath();
+        }
+    });
 
     private static final Object PARSER_INIT_LOCK = new Object();
 
@@ -91,4 +122,43 @@ public class BrowserMobProxyUtil {
         return harCopy;
     }
 
+    /**
+     * Returns the version of BrowserMob Proxy, e.g. "2.1.0".
+     *
+     * @return BMP version string
+     */
+    public static String getVersionString() {
+        return version.get();
+    }
+
+    /**
+     * Reads the version of this build from the classpath resource specified by {@link #VERSION_CLASSPATH_RESOURCE}.
+     *
+     * @return version string from the classpath version resource
+     */
+    private static String readVersionFileOnClasspath() {
+        URL versionFile;
+        try {
+            versionFile = Resources.getResource(VERSION_CLASSPATH_RESOURCE);
+        } catch (IllegalArgumentException e) {
+            log.debug("Unable to load version from classpath resource: {}", VERSION_CLASSPATH_RESOURCE, e);
+            return UNKNOWN_VERSION_STRING;
+        }
+
+        CharSource versionContents = Resources.asCharSource(versionFile, StandardCharsets.UTF_8);
+        try {
+            String versionString = versionContents.readFirstLine();
+            // if the CharSource is empty, or the version file itself is empty, use a default string (rather than
+            // a confusing empty/null string)
+            if (versionString == null || versionString.isEmpty()) {
+                log.debug("Version file on classpath was empty or could not be read. Resource: {}", VERSION_CLASSPATH_RESOURCE);
+                return UNKNOWN_VERSION_STRING;
+            }
+
+            return versionString;
+        } catch (IOException e) {
+            log.debug("Unable to load version from classpath resource: {}", VERSION_CLASSPATH_RESOURCE, e);
+            return UNKNOWN_VERSION_STRING;
+        }
+    }
 }

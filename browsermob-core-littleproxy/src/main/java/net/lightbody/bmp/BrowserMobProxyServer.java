@@ -94,8 +94,7 @@ import java.util.regex.Pattern;
 public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer {
     private static final Logger log = LoggerFactory.getLogger(BrowserMobProxyServer.class);
 
-    //TODO: extract the version string into a more suitable location
-    private static final HarNameVersion HAR_CREATOR_VERSION = new HarNameVersion("BrowserMob Proxy", "2.1.0-beta-5-littleproxy");
+    private static final HarNameVersion HAR_CREATOR_VERSION = new HarNameVersion("BrowserMob Proxy", BrowserMobProxyUtil.getVersionString() + "-littleproxy");
 
     /* Default MITM resources */
     private static final String RSA_KEYSTORE_RESOURCE = "/sslSupport/ca-keystore-rsa.p12";

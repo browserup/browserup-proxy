@@ -20,20 +20,20 @@
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>net/lightbody/bmp/version</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
                 <filtering>false</filtering>
                 <includes>
                     <include>**/**</include>
                 </includes>
                 <excludes>
-                    <exclude>version.prop</exclude>
+                    <exclude>net/lightbody/bmp/version</exclude>
                 </excludes>
-            </resource>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-                <includes>
-                    <include>version.prop</include>
-                </includes>
             </resource>
         </resources>
         <plugins>
