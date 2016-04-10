@@ -129,7 +129,7 @@ public class ProxyManager {
         }
     }
 
-    public LegacyProxyServer create(Map<String, String> options, Integer port, String bindAddr, boolean useEcc) {
+    public LegacyProxyServer create(Map<String, String> options, Integer port, String bindAddr, boolean useEcc, boolean trustAllServers) {
         LOG.debug("Instantiate ProxyServer...");
         LegacyProxyServer proxy = proxyServerProvider.get();
 
@@ -140,6 +140,12 @@ public class ProxyManager {
                 ((BrowserMobProxyServer)proxy).setUseEcc(true);
             } else {
                 LOG.warn("Cannot use Eliiptic Curve Cryptography with legacy ProxyServer implementation. Using default RSA certificates.");
+            }
+        }
+
+        if (trustAllServers) {
+            if (proxy instanceof BrowserMobProxyServer) {
+                ((BrowserMobProxyServer)proxy).setTrustAllServers(true);
             }
         }
 
@@ -179,19 +185,19 @@ public class ProxyManager {
     }
 
     public LegacyProxyServer create(Map<String, String> options, Integer port) {
-        return create(options, port, null, false);
+        return create(options, port, null, false, false);
     }
 
     public LegacyProxyServer create(Map<String, String> options) {
-        return create(options, null, null, false);
+        return create(options, null, null, false, false);
     }
 
     public LegacyProxyServer create() {
-        return create(null, null, null, false);
+        return create(null, null, null, false, false);
     }
 
     public LegacyProxyServer create(int port) {
-        return create(null, port, null, false);
+        return create(null, port, null, false, false);
     }
 
     public LegacyProxyServer get(int port) {
