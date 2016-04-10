@@ -8,6 +8,7 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SupportedCipherSuiteFilter;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import net.lightbody.bmp.mitm.TrustSource;
 import net.lightbody.bmp.mitm.exception.SslContextInitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,23 +68,25 @@ public class SslUtil {
     });
 
     /**
-     * Creates a netty SslContext for use when connecting to upstream servers. When trustAllServers is true, no upstream certificate
-     * verification will be performed. <b>This will make it possible for attackers to MITM communications with the upstream
-     * server</b>, so use trustAllServers only when testing.
+     * Creates a netty SslContext for use when connecting to upstream servers. Retrieves the list of trusted root CAs
+     * from the trustSource. When trustSource is true, no upstream certificate verification will be performed.
+     * <b>This will make it possible for attackers to MITM communications with the upstream server</b>, so always
+     * supply an appropriate trustSource except in extraordinary circumstances (e.g. testing with dynamically-generated
+     * certificates).
      *
-     * @param trustAllServers when true, no upstream server certificate validation will be performed
      * @param cipherSuites    cipher suites to allow when connecting to the upstream server
+     * @param trustSource     the trust store that will be used to validate upstream servers' certificates, or null to accept all upstream server certificates
      * @return an SSLContext to connect to upstream servers with
      */
-    public static SslContext getUpstreamServerSslContext(boolean trustAllServers, Collection<String> cipherSuites) {
-        //TODO: add the ability to specify an explicit additional trust source, so clients don't need to import trust into the JDK trust source or forgo trust entirely
-
+    public static SslContext getUpstreamServerSslContext(Collection<String> cipherSuites, TrustSource trustSource) {
         SslContextBuilder sslContextBuilder = SslContextBuilder.forClient();
 
-        if (trustAllServers) {
+        if (trustSource == null) {
             log.warn("Disabling upstream server certificate verification. This will allow attackers to intercept communications with upstream servers.");
 
             sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
+        } else {
+            sslContextBuilder.trustManager(trustSource.getTrustedCAs());
         }
 
         sslContextBuilder.ciphers(cipherSuites, SupportedCipherSuiteFilter.INSTANCE);
@@ -173,4 +176,5 @@ public class SslUtil {
             return Collections.emptyList();
         }
     }
+
 }

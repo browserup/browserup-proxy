@@ -31,6 +31,7 @@ import net.lightbody.bmp.filters.RewriteUrlFilter;
 import net.lightbody.bmp.filters.UnregisterRequestFilter;
 import net.lightbody.bmp.filters.WhitelistFilter;
 import net.lightbody.bmp.mitm.KeyStoreFileCertificateSource;
+import net.lightbody.bmp.mitm.TrustSource;
 import net.lightbody.bmp.mitm.keys.ECKeyGenerator;
 import net.lightbody.bmp.mitm.keys.RSAKeyGenerator;
 import net.lightbody.bmp.mitm.manager.ImpersonatingMitmManager;
@@ -245,9 +246,9 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     private volatile boolean errorOnUnsupportedOperation = false;
 
     /**
-     * When true, will not validate upstream servers' certificates. Currently only applicable when MITMing.
+     * The TrustSource that will be used to validate servers' certificates. If null, will not validate server certificates.
      */
-    private volatile boolean trustAllServers = true;
+    private volatile TrustSource trustSource = TrustSource.defaultTrustSource();
 
     /**
      * When true, use Elliptic Curve keys and certificates when impersonating upstream servers.
@@ -389,7 +390,7 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
                                 KEYSTORE_PRIVATE_KEY_ALIAS,
                                 KEYSTORE_PASSWORD))
                         .serverKeyGenerator(useEcc ? new ECKeyGenerator() : new RSAKeyGenerator())
-                        .trustAllServers(trustAllServers)
+                        .trustSource(trustSource)
                         .build();
             }
 
@@ -1424,7 +1425,22 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
             throw new IllegalStateException("Cannot disable upstream server verification after the proxy has been started");
         }
 
-        this.trustAllServers = trustAllServers;
+        if (trustAllServers) {
+            trustSource = null;
+        } else {
+            if (trustSource == null) {
+                trustSource = TrustSource.defaultTrustSource();
+            }
+        }
+    }
+
+    @Override
+    public void setTrustSource(TrustSource trustSource) {
+        if (isStarted()) {
+            throw new IllegalStateException("Cannot change TrustSource after proxy has been started");
+        }
+
+        this.trustSource = trustSource;
     }
 
     public boolean isMitmDisabled() {
