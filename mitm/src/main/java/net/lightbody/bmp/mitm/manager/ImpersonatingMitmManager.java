@@ -15,6 +15,7 @@ import net.lightbody.bmp.mitm.CertificateInfo;
 import net.lightbody.bmp.mitm.CertificateInfoGenerator;
 import net.lightbody.bmp.mitm.HostnameCertificateInfoGenerator;
 import net.lightbody.bmp.mitm.RootCertificateGenerator;
+import net.lightbody.bmp.mitm.TrustSource;
 import net.lightbody.bmp.mitm.exception.MitmException;
 import net.lightbody.bmp.mitm.exception.SslContextInitializationException;
 import net.lightbody.bmp.mitm.keys.ECKeyGenerator;
@@ -68,7 +69,7 @@ public class ImpersonatingMitmManager implements MitmManager {
     private final Supplier<SslContext> upstreamServerSslContext = Suppliers.memoize(new Supplier<SslContext>() {
         @Override
         public SslContext get() {
-            return SslUtil.getUpstreamServerSslContext(trustAllUpstreamServers, serverCipherSuites);
+            return SslUtil.getUpstreamServerSslContext(serverCipherSuites, trustSource);
         }
     });
 
@@ -96,9 +97,10 @@ public class ImpersonatingMitmManager implements MitmManager {
     private final String serverCertificateMessageDigest;
 
     /**
-     * Disables all upstream certificate validation. Should only be used during testing.
+     * The source of trusted root CAs. May be null, which disables all upstream certificate validation. Disabling upstream
+     * certificate validation allows attackers to intercept communciations and should only be used during testing.
      */
-    private final boolean trustAllUpstreamServers;
+    private final TrustSource trustSource;
 
     /**
      * Utility used to generate {@link CertificateInfo} objects when impersonating an upstream server.
@@ -133,7 +135,7 @@ public class ImpersonatingMitmManager implements MitmManager {
     public ImpersonatingMitmManager(CertificateAndKeySource rootCertificateSource,
                                     KeyGenerator serverKeyGenerator,
                                     String serverMessageDigest,
-                                    boolean trustAllUpstreamServers,
+                                    TrustSource trustSource,
                                     int sslContextCacheConcurrencyLevel,
                                     long cacheExpirationIntervalMs,
                                     SecurityProviderTool securityProviderTool,
@@ -162,7 +164,7 @@ public class ImpersonatingMitmManager implements MitmManager {
 
         this.rootCertificateSource = rootCertificateSource;
 
-        this.trustAllUpstreamServers = trustAllUpstreamServers;
+        this.trustSource = trustSource;
 
         this.serverCertificateMessageDigest = serverMessageDigest;
 
@@ -339,7 +341,7 @@ public class ImpersonatingMitmManager implements MitmManager {
 
         private KeyGenerator serverKeyGenerator = new RSAKeyGenerator();
 
-        private boolean trustAllServers = false;
+        private TrustSource trustSource = TrustSource.defaultTrustSource();
 
         private int cacheConcurrencyLevel = 8;
         private long cacheExpirationIntervalMs = TimeUnit.MILLISECONDS.convert(5, TimeUnit.MINUTES);
@@ -378,9 +380,28 @@ public class ImpersonatingMitmManager implements MitmManager {
         /**
          * When true, no upstream certificate verification will be performed. <b>This will make it possible for
          * attackers to MITM communications with the upstream server</b>, so use trustAllServers only when testing.
+         * Calling this method with 'true' will remove any trustSource set with {@link #trustSource(TrustSource)}.
+         * Calling this method with 'false' has no effect unless trustAllServers was previously called with 'true'.
+         * To set a specific TrustSource, use {@link #trustSource(TrustSource)}.
          */
         public Builder trustAllServers(boolean trustAllServers) {
-            this.trustAllServers = trustAllServers;
+            if (trustAllServers) {
+                this.trustSource = null;
+            } else {
+                // if the TrustSource was previously removed, restore it to the default. otherwise keep the existing TrustSource.
+                if (this.trustSource == null) {
+                    this.trustSource = TrustSource.defaultTrustSource();
+                }
+            }
+
+            return this;
+        }
+
+        /**
+         * The TrustSource that supplies the trusted root CAs used to validate upstream servers' certificates.
+         */
+        public Builder trustSource(TrustSource trustSource) {
+            this.trustSource = trustSource;
             return this;
         }
 
@@ -458,7 +479,7 @@ public class ImpersonatingMitmManager implements MitmManager {
                     rootCertificateSource,
                     serverKeyGenerator,
                     serverMessageDigest,
-                    trustAllServers,
+                    trustSource,
                     cacheConcurrencyLevel,
                     cacheExpirationIntervalMs,
                     securityProviderTool,

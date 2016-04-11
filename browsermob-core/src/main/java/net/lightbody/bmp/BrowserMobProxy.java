@@ -3,6 +3,7 @@ package net.lightbody.bmp;
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.filters.RequestFilter;
 import net.lightbody.bmp.filters.ResponseFilter;
+import net.lightbody.bmp.mitm.TrustSource;
 import net.lightbody.bmp.mitm.manager.ImpersonatingMitmManager;
 import net.lightbody.bmp.proxy.BlacklistEntry;
 import net.lightbody.bmp.proxy.CaptureType;
@@ -618,4 +619,12 @@ public interface BrowserMobProxy {
      * @param trustAllServers when true, disables upstream server certificate verification
      */
     void setTrustAllServers(boolean trustAllServers);
+
+    /**
+     * Sets the {@link TrustSource} that contains trusted root certificate authorities that will be used to validate
+     * upstream servers' certificates. When null, disables certificate validation (see warning at {@link #setTrustAllServers(boolean)}).
+     *
+     * @param trustSource TrustSource containing root CAs, or null to disable upstream server validation
+     */
+    void setTrustSource(TrustSource trustSource);
 }

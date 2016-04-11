@@ -14,6 +14,7 @@ import net.lightbody.bmp.exception.JettyException;
 import net.lightbody.bmp.exception.NameResolutionException;
 import net.lightbody.bmp.filters.RequestFilter;
 import net.lightbody.bmp.filters.ResponseFilter;
+import net.lightbody.bmp.mitm.TrustSource;
 import net.lightbody.bmp.proxy.auth.AuthType;
 import net.lightbody.bmp.proxy.dns.AdvancedHostResolver;
 import net.lightbody.bmp.proxy.http.BrowserMobHttpClient;
@@ -932,6 +933,11 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
     @Override
     public void setTrustAllServers(boolean trustAllServers) {
         LOG.warn("The legacy ProxyServer implementation does not support the trustAllServers option.");
+    }
+
+    @Override
+    public void setTrustSource(TrustSource trustSource) {
+        LOG.warn("The legacy ProxyServer implementation does not support the setTrustSource option.");
     }
 
     public void cleanSslCertificates() {
