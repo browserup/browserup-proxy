@@ -56,7 +56,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <slf4j.version>1.7.19</slf4j.version>
+        <slf4j.version>1.7.21</slf4j.version>
         <selenium.version>2.53.0</selenium.version>
 
         <jackson.version>2.7.3</jackson.version>
@@ -68,7 +68,7 @@
         <groovy.version>2.4.6</groovy.version>
         <groovy-eclipse-batch.version>2.4.3-01</groovy-eclipse-batch.version>
 
-        <netty.version>4.0.35.Final</netty.version>
+        <netty.version>4.0.36.Final</netty.version>
 
         <bouncycastle.version>1.54</bouncycastle.version>
     </properties>
