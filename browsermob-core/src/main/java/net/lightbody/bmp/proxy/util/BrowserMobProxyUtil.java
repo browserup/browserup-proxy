@@ -2,19 +2,17 @@ package net.lightbody.bmp.proxy.util;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.io.CharSource;
-import com.google.common.io.Resources;
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.core.har.HarEntry;
 import net.lightbody.bmp.core.har.HarLog;
 import net.lightbody.bmp.core.har.HarPage;
+import net.lightbody.bmp.mitm.exception.UncheckedIOException;
+import net.lightbody.bmp.util.ClasspathResourceUtil;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
@@ -28,7 +26,7 @@ public class BrowserMobProxyUtil {
     /**
      * Classpath resource containing this build's version string.
      */
-    private static final String VERSION_CLASSPATH_RESOURCE = "net/lightbody/bmp/version";
+    private static final String VERSION_CLASSPATH_RESOURCE = "/net/lightbody/bmp/version";
 
     /**
      * Default value if the version string cannot be read.
@@ -137,28 +135,19 @@ public class BrowserMobProxyUtil {
      * @return version string from the classpath version resource
      */
     private static String readVersionFileOnClasspath() {
-        URL versionFile;
+        String versionString;
         try {
-            versionFile = Resources.getResource(VERSION_CLASSPATH_RESOURCE);
-        } catch (IllegalArgumentException e) {
+            versionString = ClasspathResourceUtil.classpathResourceToString(VERSION_CLASSPATH_RESOURCE, StandardCharsets.UTF_8);
+        } catch (UncheckedIOException e) {
             log.debug("Unable to load version from classpath resource: {}", VERSION_CLASSPATH_RESOURCE, e);
             return UNKNOWN_VERSION_STRING;
         }
 
-        CharSource versionContents = Resources.asCharSource(versionFile, StandardCharsets.UTF_8);
-        try {
-            String versionString = versionContents.readFirstLine();
-            // if the CharSource is empty, or the version file itself is empty, use a default string (rather than
-            // a confusing empty/null string)
-            if (versionString == null || versionString.isEmpty()) {
-                log.debug("Version file on classpath was empty or could not be read. Resource: {}", VERSION_CLASSPATH_RESOURCE);
-                return UNKNOWN_VERSION_STRING;
-            }
-
-            return versionString;
-        } catch (IOException e) {
-            log.debug("Unable to load version from classpath resource: {}", VERSION_CLASSPATH_RESOURCE, e);
+        if (versionString.isEmpty()) {
+            log.debug("Version file on classpath was empty or could not be read. Resource: {}", VERSION_CLASSPATH_RESOURCE);
             return UNKNOWN_VERSION_STRING;
         }
+
+        return versionString;
     }
 }
