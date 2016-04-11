@@ -6,8 +6,6 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 public class IOUtils {
-    private static final int BUFFER = 4096;
-
     /**
      * Copies the input stream to the output stream and closes both streams. Both streams are guaranteed to be closed, even if the copy
      * operation throws an exception. The copy operation may throw IOException, but closing either stream will not throw IOException.
