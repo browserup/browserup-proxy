@@ -136,17 +136,17 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     /**
      * The list of filterFactories that will generate the filters that implement browsermob-proxy behavior.
      */
-    private final List<HttpFiltersSource> filterFactories = new CopyOnWriteArrayList<HttpFiltersSource>();
+    private final List<HttpFiltersSource> filterFactories = new CopyOnWriteArrayList<>();
 
     /**
      * List of rejected URL patterns
      */
-    private volatile Collection<BlacklistEntry> blacklistEntries = new CopyOnWriteArrayList<BlacklistEntry>();
+    private volatile Collection<BlacklistEntry> blacklistEntries = new CopyOnWriteArrayList<>();
 
     /**
      * List of URLs to rewrite
      */
-    private volatile CopyOnWriteArrayList<RewriteRule> rewriteRules = new CopyOnWriteArrayList<RewriteRule>();
+    private volatile CopyOnWriteArrayList<RewriteRule> rewriteRules = new CopyOnWriteArrayList<>();
 
     /**
      * The LittleProxy instance that performs all proxy operations.
@@ -968,13 +968,13 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
 
     @Override
     public void rewriteUrls(Map<String, String> rewriteRules) {
-        List<RewriteRule> newRules = new ArrayList<RewriteRule>(rewriteRules.size());
+        List<RewriteRule> newRules = new ArrayList<>(rewriteRules.size());
         for (Map.Entry<String, String> rewriteRule : rewriteRules.entrySet()) {
             RewriteRule newRule = new RewriteRule(rewriteRule.getKey(), rewriteRule.getValue());
             newRules.add(newRule);
         }
 
-        this.rewriteRules = new CopyOnWriteArrayList<RewriteRule>(newRules);
+        this.rewriteRules = new CopyOnWriteArrayList<>(newRules);
     }
 
     @Override
@@ -994,7 +994,7 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
 
     @Override
     public void setBlacklist(Collection<BlacklistEntry> blacklist) {
-        this.blacklistEntries = new CopyOnWriteArrayList<BlacklistEntry>(blacklist);
+        this.blacklistEntries = new CopyOnWriteArrayList<>(blacklist);
     }
 
     /**
@@ -1080,7 +1080,7 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
             // retrieve the response code and list of patterns from the current whitelist, the construct a new list of patterns that contains
             // all of the old whitelist's patterns + this new pattern
             int statusCode = currentWhitelist.getStatusCode();
-            List<String> newPatterns = new ArrayList<String>(currentWhitelist.getPatterns().size() + 1);
+            List<String> newPatterns = new ArrayList<>(currentWhitelist.getPatterns().size() + 1);
             for (Pattern pattern : currentWhitelist.getPatterns()) {
                 newPatterns.add(pattern.pattern());
             }
