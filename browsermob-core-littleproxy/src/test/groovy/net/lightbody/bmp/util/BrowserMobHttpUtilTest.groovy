@@ -45,7 +45,7 @@ class BrowserMobHttpUtilTest {
         ]
 
         uriToHostAndPort.each {uri, expectedHostAndPort ->
-            String parsedHostAndPort = BrowserMobHttpUtil.getHostAndPortFromUri(uri)
+            String parsedHostAndPort = HttpUtil.getHostAndPortFromUri(uri)
             assertEquals("Parsed host and port from URL did not match expected host and port for URL: " + uri, expectedHostAndPort, parsedHostAndPort)
         }
     }

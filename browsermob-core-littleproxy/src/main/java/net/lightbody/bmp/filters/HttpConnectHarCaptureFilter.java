@@ -12,7 +12,7 @@ import net.lightbody.bmp.core.har.HarResponse;
 import net.lightbody.bmp.core.har.HarTimings;
 import net.lightbody.bmp.filters.support.HttpConnectTiming;
 import net.lightbody.bmp.filters.util.HarCaptureUtil;
-import net.lightbody.bmp.util.BrowserMobHttpUtil;
+import net.lightbody.bmp.util.HttpUtil;
 import org.littleshoot.proxy.impl.ProxyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -346,7 +346,7 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
         if (resolvedAddress != null) {
             harEntry.setServerIPAddress(resolvedAddress.getHostAddress());
         } else {
-            String serverHost = BrowserMobHttpUtil.getHostFromRequest(modifiedHttpRequest);
+            String serverHost = HttpUtil.getHostFromRequest(modifiedHttpRequest);
             if (serverHost != null && !serverHost.isEmpty()) {
                 String resolvedAddress = ResolvedHostnameCacheFilter.getPreviouslyResolvedAddressForHost(serverHost);
                 if (resolvedAddress != null) {

@@ -5,6 +5,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
+import net.lightbody.bmp.util.HttpUtil;
 import net.lightbody.bmp.util.BrowserMobHttpUtil;
 import org.littleshoot.proxy.HttpFiltersAdapter;
 import org.littleshoot.proxy.impl.ProxyUtils;
@@ -59,7 +60,7 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
 
         // To get the full URL, we need to retrieve the Scheme, Host + Port, Path, and Query Params from the request.
         // If the request URI starts with http:// or https://, it is already a full URL and can be returned directly.
-        if (BrowserMobHttpUtil.startsWithHttpOrHttps(modifiedRequest.getUri())) {
+        if (HttpUtil.startsWithHttpOrHttps(modifiedRequest.getUri())) {
             return modifiedRequest.getUri();
         }
 
@@ -103,7 +104,7 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
             HostAndPort hostAndPort = HostAndPort.fromString(getHttpsRequestHostAndPort());
             serverHost = hostAndPort.getHostText();
         } else {
-            serverHost = BrowserMobHttpUtil.getHostFromRequest(modifiedRequest);
+            serverHost = HttpUtil.getHostFromRequest(modifiedRequest);
         }
         return serverHost;
     }
@@ -123,7 +124,7 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
         if (isHttps()) {
             return getHttpsRequestHostAndPort();
         } else {
-            return BrowserMobHttpUtil.getHostAndPortFromRequest(modifiedRequest);
+            return HttpUtil.getHostAndPortFromRequest(modifiedRequest);
         }
     }
 
