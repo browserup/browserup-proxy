@@ -1,5 +1,8 @@
 package net.lightbody.bmp.mitm
 
+import io.netty.handler.codec.http.DefaultFullHttpRequest
+import io.netty.handler.codec.http.HttpMethod
+import io.netty.handler.codec.http.HttpVersion
 import net.lightbody.bmp.mitm.keys.ECKeyGenerator
 import net.lightbody.bmp.mitm.keys.RSAKeyGenerator
 import net.lightbody.bmp.mitm.manager.ImpersonatingMitmManager
@@ -29,7 +32,8 @@ class ImpersonatingMitmManagerTest {
 
         when(mockSession.getPeerHost()).thenReturn("hostname")
 
-        SSLEngine clientSslEngine = mitmManager.clientSslEngineFor(mockSession)
+        def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.CONNECT, "https://test.connection")
+        SSLEngine clientSslEngine = mitmManager.clientSslEngineFor(request, mockSession)
         assertNotNull(clientSslEngine)
     }
 
@@ -42,7 +46,8 @@ class ImpersonatingMitmManagerTest {
 
         when(mockSession.getPeerHost()).thenReturn("hostname")
 
-        SSLEngine clientSslEngine = mitmManager.clientSslEngineFor(mockSession)
+        def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.CONNECT, "https://test.connection")
+        SSLEngine clientSslEngine = mitmManager.clientSslEngineFor(request, mockSession)
         assertNotNull(clientSslEngine)
     }
 }

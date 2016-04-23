@@ -1,5 +1,9 @@
 package net.lightbody.bmp.mitm;
 
+import io.netty.handler.codec.http.DefaultFullHttpRequest;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpVersion;
 import net.lightbody.bmp.mitm.keys.ECKeyGenerator;
 import net.lightbody.bmp.mitm.keys.KeyGenerator;
 import net.lightbody.bmp.mitm.keys.RSAKeyGenerator;
@@ -13,8 +17,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,12 +36,12 @@ public class ImpersonationPerformanceTests {
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][]{
-                {new RSAKeyGenerator(), "SHA512", new RSAKeyGenerator(), "SHA512"},
-                {new RSAKeyGenerator(), "SHA512", new RSAKeyGenerator(1024), "SHA512"},
-                {new RSAKeyGenerator(1024), "SHA512", new RSAKeyGenerator(1024), "SHA512"},
-                {new RSAKeyGenerator(), "SHA512", new ECKeyGenerator(), "SHA512"},
-                {new ECKeyGenerator(), "SHA512", new ECKeyGenerator(), "SHA512"},
-                {new ECKeyGenerator(), "SHA512", new RSAKeyGenerator(), "SHA512"}
+                {new RSAKeyGenerator(), "SHA384", new RSAKeyGenerator(), "SHA384"},
+                {new RSAKeyGenerator(), "SHA384", new RSAKeyGenerator(1024), "SHA384"},
+                {new RSAKeyGenerator(1024), "SHA384", new RSAKeyGenerator(1024), "SHA384"},
+                {new RSAKeyGenerator(), "SHA384", new ECKeyGenerator(), "SHA384"},
+                {new ECKeyGenerator(), "SHA384", new ECKeyGenerator(), "SHA384"},
+                {new ECKeyGenerator(), "SHA384", new RSAKeyGenerator(), "SHA384"}
         });
     }
 
@@ -73,12 +75,6 @@ public class ImpersonationPerformanceTests {
         final AtomicInteger iteration = new AtomicInteger();
 
         SSLSession mockSession = Mockito.mock(SSLSession.class);
-        Mockito.when(mockSession.getPeerHost()).thenAnswer(new Answer<String>() {
-            @Override
-            public String answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return String.valueOf(iteration.get() + ".com");
-            }
-        });
 
         log.info("Test parameters:\n\tRoot Cert Key Gen: {}\n\tRoot Cert Digest: {}\n\tServer Cert Key Gen: {}\n\tServer Cert Digest: {}",
                 rootCertKeyGen, rootCertDigest, serverCertKeyGen, serverCertDigest);
@@ -86,8 +82,8 @@ public class ImpersonationPerformanceTests {
         // warm up, init root cert, etc.
         log.info("Executing {} warm up iterations", WARM_UP_ITERATIONS);
         for (iteration.set(0); iteration.get() < WARM_UP_ITERATIONS; iteration.incrementAndGet()) {
-
-            mitmManager.clientSslEngineFor(mockSession);
+            HttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.CONNECT, "https://warmup-" + iteration.get() + ".com");
+            mitmManager.clientSslEngineFor(request, mockSession);
         }
 
         log.info("Executing {} performance test iterations", ITERATIONS);
@@ -95,7 +91,8 @@ public class ImpersonationPerformanceTests {
         long start = System.currentTimeMillis();
 
         for (iteration.set(0); iteration.get() < ITERATIONS; iteration.incrementAndGet()) {
-            mitmManager.clientSslEngineFor(mockSession);
+            HttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.CONNECT, "https://" + iteration.get() + ".com");
+            mitmManager.clientSslEngineFor(request, mockSession);
         }
 
         long finish = System.currentTimeMillis();
@@ -120,7 +117,7 @@ public class ImpersonationPerformanceTests {
         for (int i = 0; i < WARM_UP_ITERATIONS; i++) {
             KeyPair serverCertKeyPair = serverCertKeyGen.generate();
             CertificateAndKey serverCert = new BouncyCastleSecurityProviderTool().createServerCertificate(
-                    createCertificateInfo(i + ".com"),
+                    createCertificateInfo("warnmup-" + i + ".com"),
                     rootCert.getCertificate(),
                     rootCert.getPrivateKey(),
                     serverCertKeyPair,

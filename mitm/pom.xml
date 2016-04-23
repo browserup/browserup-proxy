@@ -12,10 +12,18 @@
     <artifactId>mitm</artifactId>
 
     <dependencies>
+        <!-- TODO: Depending on the BMP build of littleproxy due to a breaking change to MitmManager after
+             TODO: littleproxy 1.1.0-beta-2 was released to Central. After littleproxy 1.1.0-beta-3 is released,
+             TODO: restore this dependency to the stock littleproxy version. -->
+        <!--<dependency>-->
+            <!--<groupId>org.littleshoot</groupId>-->
+            <!--<artifactId>littleproxy</artifactId>-->
+            <!--<version>1.1.0-beta2</version>-->
+            <!--<optional>true</optional>-->
+        <!--</dependency>-->
         <dependency>
-            <groupId>org.littleshoot</groupId>
+            <groupId>net.lightbody.bmp</groupId>
             <artifactId>littleproxy</artifactId>
-            <version>1.1.0-beta2</version>
             <optional>true</optional>
         </dependency>
 

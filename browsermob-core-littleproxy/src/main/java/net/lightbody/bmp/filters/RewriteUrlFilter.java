@@ -5,6 +5,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import net.lightbody.bmp.util.HttpUtil;
 import net.lightbody.bmp.proxy.RewriteRule;
 import net.lightbody.bmp.util.BrowserMobHttpUtil;
 import org.littleshoot.proxy.impl.ProxyUtils;
@@ -64,7 +65,7 @@ public class RewriteUrlFilter extends HttpsAwareFiltersAdapter {
                 // with the rewritten URI. if not (for example, on HTTPS requests), strip the scheme, host, and port from
                 // the rewritten URL before replacing the URI on the request.
                 String uriFromRequest = httpRequest.getUri();
-                if (BrowserMobHttpUtil.startsWithHttpOrHttps(uriFromRequest)) {
+                if (HttpUtil.startsWithHttpOrHttps(uriFromRequest)) {
                     httpRequest.setUri(rewrittenUrl);
                 } else {
                     try {
@@ -88,7 +89,7 @@ public class RewriteUrlFilter extends HttpsAwareFiltersAdapter {
 
                 String originalHostAndPort = null;
                 try {
-                    originalHostAndPort = BrowserMobHttpUtil.getHostAndPortFromUri(originalUrl);
+                    originalHostAndPort = HttpUtil.getHostAndPortFromUri(originalUrl);
                 } catch (URISyntaxException e) {
                     // for some reason we couldn't determine the original host and port from the original URL. log a warning,
                     // and allow the Host header to be forcibly updated to the rewritten host and port.
@@ -100,7 +101,7 @@ public class RewriteUrlFilter extends HttpsAwareFiltersAdapter {
 
                 String modifiedHostAndPort = null;
                 try {
-                    modifiedHostAndPort = BrowserMobHttpUtil.getHostAndPortFromUri(rewrittenUrl);
+                    modifiedHostAndPort = HttpUtil.getHostAndPortFromUri(rewrittenUrl);
                 } catch (URISyntaxException e) {
                     log.warn("Unable to determine host and port from rewritten URL. Host header will not be updated.\n\tOriginal URL: {}\n\tRewritten URL: {}",
                             originalUrl,
