@@ -892,11 +892,11 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
 
     @Override
     public void setConnectTimeout(int connectTimeout, TimeUnit timeUnit) {
-        if (isStarted()) {
-            throw new IllegalStateException("LittleProxy implementation does not allow changes to connect timeout after proxy has been started");
-        }
-
         this.connectTimeoutMs = (int) TimeUnit.MILLISECONDS.convert(connectTimeout, timeUnit);
+
+        if (isStarted()) {
+            proxyServer.setConnectTimeout((int) TimeUnit.MILLISECONDS.convert(connectTimeout, timeUnit));
+        }
     }
 
     /**
