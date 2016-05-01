@@ -1,5 +1,6 @@
 package net.lightbody.bmp.mitm.tools;
 
+import com.google.common.net.InetAddresses;
 import net.lightbody.bmp.mitm.CertificateAndKey;
 import net.lightbody.bmp.mitm.CertificateInfo;
 import net.lightbody.bmp.mitm.exception.CertificateCreationException;
@@ -311,7 +312,9 @@ public class BouncyCastleSecurityProviderTool implements SecurityProviderTool {
     private static GeneralNames getDomainNameSANsAsASN1Encodable(List<String> subjectAlternativeNames) {
         List<GeneralName> encodedSANs = new ArrayList<>(subjectAlternativeNames.size());
         for (String subjectAlternativeName : subjectAlternativeNames) {
-            GeneralName generalName = new GeneralName(GeneralName.dNSName, subjectAlternativeName);
+            // IP addresses use the IP Address tag instead of the DNS Name tag in the SAN list
+            boolean isIpAddress = InetAddresses.isInetAddress(subjectAlternativeName);
+            GeneralName generalName = new GeneralName(isIpAddress ? GeneralName.iPAddress : GeneralName.dNSName, subjectAlternativeName);
             encodedSANs.add(generalName);
         }
 
