@@ -7,7 +7,7 @@ import io.netty.handler.ssl.OpenSsl;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SupportedCipherSuiteFilter;
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import net.lightbody.bmp.mitm.trustmanager.InsecureTrustManagerFactory;
 import net.lightbody.bmp.mitm.TrustSource;
 import net.lightbody.bmp.mitm.exception.SslContextInitializationException;
 import org.slf4j.Logger;
