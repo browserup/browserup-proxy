@@ -124,7 +124,7 @@ Once that is done, a new proxy will be available on the port returned. All you h
   - pageRef - the string name of the first page ref that should be used in the HAR. Defaults to "Page N" where N is the next page number.
   - pageTitle - the title of new har page. Defaults to pageRef.
  - DELETE /proxy/[port] - shuts down the proxy and closes the port
- - GET /proxy/[port]/har - returns the JSON/HAR content representing all the HTTP traffic passed through the proxy
+ - GET /proxy/[port]/har - returns the JSON/HAR content representing all the HTTP traffic passed through the proxy (provided you have already created the HAR with PUT /proxy/[port]/har)
  - GET /proxy/[port]/whitelist - Displays whitelisted items
  - PUT /proxy/[port]/whitelist - Sets a list of URL patterns to whitelist. Takes the following parameters:
   - regex - a comma separated list of regular expressions
@@ -176,7 +176,7 @@ Now when traffic goes through port 9091 it will be attached to a page reference 
 
     [~]$ curl -X PUT -d 'pageRef=Bar' http://localhost:8080/proxy/9091/har/pageRef
 
-That will ensure no more HTTP requests get attached to the old pageRef (Foo) and start getting attached to the new pageRef (Bar). You can also get the HAR content at any time like so:
+That will ensure no more HTTP requests get attached to the old pageRef (Foo) and start getting attached to the new pageRef (Bar). After creating the HAR, you can get its content at any time like so:
 
     [~]$ curl http://localhost:8080/proxy/9091/har
 
