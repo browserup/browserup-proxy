@@ -43,8 +43,6 @@ class AutoAuthTest extends MockServerTest {
         proxy.setTrustAllServers(true)
         proxy.start()
 
-        proxy.newHar()
-
         ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
             String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/basicAuthHttp")).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);

@@ -304,6 +304,16 @@ public interface BrowserMobProxy {
     void stopAutoAuthorization(String domain);
 
     /**
+     * Enables chained proxy authorization using the Proxy-Authorization header described in RFC 7235, section 4.4 (https://tools.ietf.org/html/rfc7235#section-4.4).
+     * Currently, only {@link AuthType#BASIC} authentication is supported.
+     *
+     * @param username the username to use to authenticate with the chained proxy
+     * @param password the password to use to authenticate with the chained proxy
+     * @param authType the auth type to use (currently, must be BASIC)
+     */
+    void chainedProxyAuthorization(String username, String password, AuthType authType);
+
+    /**
      * Adds a rewrite rule for the specified URL-matching regular expression. If there are any existing rewrite rules, the new rewrite
      * rule will be applied last, after all other rewrite rules are applied. The specified urlPattern will be replaced with the specified
      * replacement expression. The urlPattern is treated as a Java regular expression and must be properly escaped (see {@link java.util.regex.Pattern}).

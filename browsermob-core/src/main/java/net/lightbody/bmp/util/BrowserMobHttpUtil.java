@@ -11,6 +11,7 @@ import net.lightbody.bmp.exception.UnsupportedCharsetException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -277,4 +278,19 @@ public class BrowserMobHttpUtil {
         }
     }
 
+    /**
+     * Base64-encodes the specified username and password for Basic Authorization for HTTP requests or upstream proxy
+     * authorization. The format of Basic auth is "username:password" as a base64 string.
+     *
+     * @param username username to encode
+     * @param password password to encode
+     * @return a base-64 encoded string containing <code>username:password</code>
+     */
+    public static String base64EncodeBasicCredentials(String username, String password) {
+        String credentialsToEncode = username + ':' + password;
+        // using UTF-8, which is the modern de facto standard, and which retains compatibility with US_ASCII for ASCII characters,
+        // as required by RFC 7616, section 3: http://tools.ietf.org/html/rfc7617#section-3
+        byte[] credentialsAsUtf8Bytes = credentialsToEncode.getBytes(StandardCharsets.UTF_8);
+        return DatatypeConverter.printBase64Binary(credentialsAsUtf8Bytes);
+    }
 }

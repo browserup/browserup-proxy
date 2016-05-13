@@ -507,6 +507,11 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
         LOG.warn("Legacy ProxyServer implementation does not support stopping auto authorization");
     }
 
+    @Override
+    public void chainedProxyAuthorization(String username, String password, AuthType authType) {
+        LOG.warn("Legacy ProxyServer implementation does not support chained proxy authorization");
+    }
+
     public void endPage() {
         if (currentPage == null) {
             return;
