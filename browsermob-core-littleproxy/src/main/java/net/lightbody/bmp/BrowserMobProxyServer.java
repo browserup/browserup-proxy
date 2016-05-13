@@ -5,6 +5,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MapMaker;
 import com.google.common.net.HostAndPort;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import net.lightbody.bmp.client.ClientUtil;
 import net.lightbody.bmp.core.har.Har;
@@ -47,6 +49,7 @@ import net.lightbody.bmp.proxy.dns.DelegatingHostResolver;
 import net.lightbody.bmp.proxy.http.RequestInterceptor;
 import net.lightbody.bmp.proxy.http.ResponseInterceptor;
 import net.lightbody.bmp.proxy.util.BrowserMobProxyUtil;
+import net.lightbody.bmp.util.BrowserMobHttpUtil;
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponseInterceptor;
 import org.java_bandwidthlimiter.StreamManager;
@@ -66,11 +69,9 @@ import org.openqa.selenium.Proxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.DatatypeConverter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -322,6 +323,11 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
             .concurrencyLevel(1)
             .makeMap();
 
+    /**
+     * Base64-encoded credentials to use to authenticate with the upstream proxy.
+     */
+    private volatile String chainedProxyCredentials;
+
     public BrowserMobProxyServer() {
         this(0);
     }
@@ -413,6 +419,16 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
                             @Override
                             public InetSocketAddress getChainedProxyAddress() {
                                 return upstreamProxy;
+                            }
+
+                            @Override
+                            public void filterRequest(HttpObject httpObject) {
+                                String chainedProxyAuth = chainedProxyCredentials;
+                                if (chainedProxyAuth != null) {
+                                    if (httpObject instanceof HttpRequest) {
+                                        HttpHeaders.addHeader((HttpRequest)httpObject, HttpHeaders.Names.PROXY_AUTHORIZATION, "Basic " + chainedProxyAuth);
+                                    }
+                                }
                             }
                         });
                     }
@@ -857,21 +873,31 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         switch (authType) {
             case BASIC:
                 // base64 encode the "username:password" string
-                String credentialsToEncode = username + ':' + password;
-                byte[] credentialsAsUsAscii = credentialsToEncode.getBytes(StandardCharsets.US_ASCII);
-                String base64EncodedCredentials = DatatypeConverter.printBase64Binary(credentialsAsUsAscii);
+                String base64EncodedCredentials = BrowserMobHttpUtil.base64EncodeBasicCredentials(username, password);
 
                 basicAuthCredentials.put(domain, base64EncodedCredentials);
                 break;
 
             default:
-                throw new UnsupportedOperationException("AuthType " + authType + " is not supported");
+                throw new UnsupportedOperationException("AuthType " + authType + " is not supported for HTTP Authorization");
         }
     }
 
     @Override
     public void stopAutoAuthorization(String domain) {
         basicAuthCredentials.remove(domain);
+    }
+
+    @Override
+    public void chainedProxyAuthorization(String username, String password, AuthType authType) {
+        switch (authType) {
+            case BASIC:
+                chainedProxyCredentials = BrowserMobHttpUtil.base64EncodeBasicCredentials(username, password);
+                break;
+
+            default:
+                throw new UnsupportedOperationException("AuthType " + authType + " is not supported for Proxy Authorization");
+        }
     }
 
     /**
