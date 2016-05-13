@@ -74,6 +74,9 @@ public class ProxyResource {
         String systemProxyHost = System.getProperty("http.proxyHost");
         String systemProxyPort = System.getProperty("http.proxyPort");
         String httpProxy = request.param("httpProxy");
+        String proxyUsername = request.param("proxyUsername");
+        String proxyPassword = request.param("proxyPassword");
+
         Hashtable<String, String> options = new Hashtable<String, String>();
 
         // If the upstream proxy is specified via query params that should override any default system level proxy.
@@ -81,6 +84,12 @@ public class ProxyResource {
             options.put("httpProxy", httpProxy);
         } else if ((systemProxyHost != null) && (systemProxyPort != null)) {
             options.put("httpProxy", String.format("%s:%s", systemProxyHost, systemProxyPort));
+        }
+
+        // this is a short-term work-around for Proxy Auth in the REST API until the upcoming REST API refactor
+        if (proxyUsername != null && proxyPassword != null) {
+            options.put("proxyUsername", proxyUsername);
+            options.put("proxyPassword", proxyPassword);
         }
 
         String paramBindAddr = request.param("bindAddress");

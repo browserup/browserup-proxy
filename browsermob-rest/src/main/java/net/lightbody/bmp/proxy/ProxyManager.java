@@ -8,9 +8,11 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import net.lightbody.bmp.BrowserMobProxy;
 import net.lightbody.bmp.BrowserMobProxyServer;
 import net.lightbody.bmp.exception.ProxyExistsException;
 import net.lightbody.bmp.exception.ProxyPortsExhaustedException;
+import net.lightbody.bmp.proxy.auth.AuthType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -150,6 +152,13 @@ public class ProxyManager {
         }
 
         if (options != null) {
+            // this is a short-term work-around for Proxy Auth in the REST API until the upcoming REST API refactor
+            String proxyUsername = options.remove("proxyUsername");
+            String proxyPassword = options.remove("proxyPassword");
+            if (proxyUsername != null && proxyPassword != null) {
+                ((BrowserMobProxy)proxy).chainedProxyAuthorization(proxyUsername, proxyPassword, AuthType.BASIC);
+            }
+
             LOG.debug("Apply options `{}` to new ProxyServer...", options);
             proxy.setOptions(options);
         }
