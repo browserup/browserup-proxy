@@ -59,7 +59,7 @@
         <slf4j.version>1.7.21</slf4j.version>
         <selenium.version>2.53.0</selenium.version>
 
-        <jackson.version>2.7.3</jackson.version>
+        <jackson.version>2.7.4</jackson.version>
 
         <maven-jar-plugin.version>2.6</maven-jar-plugin.version>
 
