@@ -78,7 +78,7 @@ public abstract class ProxyServerTest {
         if (Boolean.getBoolean("bmp.use.littleproxy")) {
             // HACK! since browsermob-core has no knowledge of littleproxy, we have to use reflection to grab the LP implementation
             try {
-                Class<LegacyProxyServer> littleProxyImplClass = (Class<LegacyProxyServer>) Class.forName("net.lightbody.bmp.BrowserMobProxyServer");
+                Class<LegacyProxyServer> littleProxyImplClass = (Class<LegacyProxyServer>) Class.forName("net.lightbody.bmp.BrowserMobProxyServerLegacyAdapter");
                 LegacyProxyServer littleProxyImpl = littleProxyImplClass.newInstance();
 
                 // set the trustAllServers option on the LP implementation to "true", to avoid certificate verification issues with MITM

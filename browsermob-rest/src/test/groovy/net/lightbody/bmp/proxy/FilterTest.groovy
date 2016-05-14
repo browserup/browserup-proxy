@@ -3,7 +3,7 @@ package net.lightbody.bmp.proxy
 import com.google.sitebricks.headless.Request
 import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.Method
-import net.lightbody.bmp.BrowserMobProxyServer
+import net.lightbody.bmp.BrowserMobProxyServerLegacyAdapter
 import net.lightbody.bmp.filters.RequestFilter
 import net.lightbody.bmp.filters.ResponseFilter
 import net.lightbody.bmp.proxy.bricks.ProxyResource
@@ -186,7 +186,7 @@ class FilterTest extends ProxyResourceTest {
         Request<String> mockRestAddReqFilterRequest = createMockRestRequestWithEntity(requestFilterJavaScript)
 
         // mock the proxy so we can verify the addRequestFilter() method is never called
-        BrowserMobProxyServer mockProxy = mock(BrowserMobProxyServer)
+        def mockProxy = mock(BrowserMobProxyServerLegacyAdapter)
 
         // mock the ProxyManager to return the mocked proxy
         ProxyManager mockProxyManager = mock(ProxyManager)
@@ -218,7 +218,7 @@ class FilterTest extends ProxyResourceTest {
         Request<String> mockRestAddRespFilterRequest = createMockRestRequestWithEntity(responseFilterJavaScript)
 
         // mock the proxy so we can verify the addResponseFilter() method is never called
-        BrowserMobProxyServer mockProxy = mock(BrowserMobProxyServer)
+        def mockProxy = mock(BrowserMobProxyServerLegacyAdapter)
 
         // mock the ProxyManager to return the mocked proxy
         ProxyManager mockProxyManager = mock(ProxyManager)
