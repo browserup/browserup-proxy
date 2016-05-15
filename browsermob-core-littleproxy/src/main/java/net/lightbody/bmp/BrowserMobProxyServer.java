@@ -3,7 +3,6 @@ package net.lightbody.bmp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MapMaker;
-import com.google.common.net.HostAndPort;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpObject;
@@ -13,7 +12,6 @@ import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.core.har.HarLog;
 import net.lightbody.bmp.core.har.HarNameVersion;
 import net.lightbody.bmp.core.har.HarPage;
-import net.lightbody.bmp.exception.NameResolutionException;
 import net.lightbody.bmp.filters.AddHeadersFilter;
 import net.lightbody.bmp.filters.AutoBasicAuthFilter;
 import net.lightbody.bmp.filters.BlacklistFilter;
@@ -40,19 +38,13 @@ import net.lightbody.bmp.mitm.manager.ImpersonatingMitmManager;
 import net.lightbody.bmp.proxy.ActivityMonitor;
 import net.lightbody.bmp.proxy.BlacklistEntry;
 import net.lightbody.bmp.proxy.CaptureType;
-import net.lightbody.bmp.proxy.LegacyProxyServer;
 import net.lightbody.bmp.proxy.RewriteRule;
 import net.lightbody.bmp.proxy.Whitelist;
 import net.lightbody.bmp.proxy.auth.AuthType;
 import net.lightbody.bmp.proxy.dns.AdvancedHostResolver;
 import net.lightbody.bmp.proxy.dns.DelegatingHostResolver;
-import net.lightbody.bmp.proxy.http.RequestInterceptor;
-import net.lightbody.bmp.proxy.http.ResponseInterceptor;
 import net.lightbody.bmp.proxy.util.BrowserMobProxyUtil;
 import net.lightbody.bmp.util.BrowserMobHttpUtil;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.HttpResponseInterceptor;
-import org.java_bandwidthlimiter.StreamManager;
 import org.littleshoot.proxy.ChainedProxy;
 import org.littleshoot.proxy.ChainedProxyAdapter;
 import org.littleshoot.proxy.ChainedProxyManager;
@@ -65,13 +57,11 @@ import org.littleshoot.proxy.MitmManager;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
 import org.littleshoot.proxy.impl.ProxyUtils;
 import org.littleshoot.proxy.impl.ThreadPoolConfiguration;
-import org.openqa.selenium.Proxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -93,7 +83,7 @@ import java.util.regex.Pattern;
 /**
  * A LittleProxy-based implementation of {@link net.lightbody.bmp.BrowserMobProxy}.
  */
-public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer {
+public class BrowserMobProxyServer implements BrowserMobProxy {
     private static final Logger log = LoggerFactory.getLogger(BrowserMobProxyServer.class);
 
     private static final HarNameVersion HAR_CREATOR_VERSION = new HarNameVersion("BrowserMob Proxy", BrowserMobProxyUtil.getVersionString() + "-littleproxy");
@@ -156,15 +146,9 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     private volatile HttpProxyServer proxyServer;
 
     /**
-     * The proxy port set using the legacy {@link #setPort(int)} method.
+     * No capture types are enabled by default.
      */
-    private volatile int port = 0;
-
-    /**
-     * Cookie capture is on by default, if HAR capture is enabled.
-     * TODO: determine if this is the behavior we want in the future
-     */
-    private volatile EnumSet<CaptureType> harCaptureTypes = CaptureType.getCookieCaptureTypes();
+    private volatile EnumSet<CaptureType> harCaptureTypes = EnumSet.noneOf(CaptureType.class);
 
     /**
      * The current HAR being captured.
@@ -225,26 +209,9 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     private volatile ChainedProxyManager chainedProxyManager;
 
     /**
-     * The address and socket on which the proxy will listen for client requests.
-     */
-    private volatile InetSocketAddress clientBindSocket;
-
-    /**
      * The address of the network interface from which the proxy will initiate connections.
      */
     private volatile InetAddress serverBindAddress;
-
-    /**
-     * Indicates that the legacy setLocalHost() method was used, so start() should use this.clientBindSocket.
-     * Will be removed in a future release.
-     */
-    private volatile boolean legacyClientBindSocketSet;
-
-    /**
-     * When true, throw an UnsupportedOperationException instead of logging a warning when an operation is not supported by the LittleProxy-based
-     * implementation of the BrowserMobProxy interface. Once all operations are implemented and the legacy interface is retired, this will be removed.
-     */
-    private volatile boolean errorOnUnsupportedOperation = false;
 
     /**
      * The TrustSource that will be used to validate servers' certificates. If null, will not validate server certificates.
@@ -274,48 +241,6 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     private volatile ThreadPoolConfiguration threadPoolConfiguration;
 
     /**
-     * Adapter to enable clients to switch to a LittleProxy implementation of BrowserMobProxy but maintain compatibility with
-     * the 2.0.0 interface.
-     */
-    @Deprecated
-    private class StreamManagerLegacyAdapter extends StreamManager {
-        private StreamManagerLegacyAdapter() {
-            super(0);
-        }
-
-        @Override
-        public void setDownstreamKbps(long downstreamKbps) {
-            BrowserMobProxyServer.this.setDownstreamKbps(downstreamKbps);
-        }
-
-        @Override
-        public void setUpstreamKbps(long upstreamKbps) {
-            BrowserMobProxyServer.this.setUpstreamKbps(upstreamKbps);
-        }
-
-        @Override
-        public void setLatency(long latency) {
-            BrowserMobProxyServer.this.setLatency(latency);
-        }
-
-        @Override
-        public void setDownstreamMaxKB(long downstreamMaxKB) {
-            BrowserMobProxyServer.this.setWriteLimitKbps(downstreamMaxKB);
-        }
-
-        @Override
-        public void setUpstreamMaxKB(long upstreamMaxKB) {
-            BrowserMobProxyServer.this.setReadLimitKbps(upstreamMaxKB);
-        }
-    }
-
-    /**
-     * StreamManagerLegacyAdapter bound to this BrowserMob Proxy instance, to route the bandwidth control calls to the appropriate
-     * LittleProxy-compatible methods.
-     */
-    private final StreamManagerLegacyAdapter streamManagerAdapter = new StreamManagerLegacyAdapter();
-
-    /**
      * A mapping of hostnames to base64-encoded Basic auth credentials that will be added to the Authorization header for
      * matching requests.
      */
@@ -329,11 +254,6 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     private volatile String chainedProxyCredentials;
 
     public BrowserMobProxyServer() {
-        this(0);
-    }
-
-    public BrowserMobProxyServer(int port) {
-        this.port = port;
     }
 
     @Override
@@ -343,15 +263,12 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
             throw new IllegalStateException("Proxy server is already started. Not restarting.");
         }
 
-        if (legacyClientBindSocketSet) {
-            clientBindSocket = new InetSocketAddress(clientBindSocket.getAddress(), port);
+        InetSocketAddress clientBindSocket;
+        if (clientBindAddress == null) {
+            // if no client bind address was specified, bind to the wildcard address
+            clientBindSocket = new InetSocketAddress(port);
         } else {
-            if (clientBindAddress == null) {
-                // if no client bind address was specified, bind to the wildcard address
-                clientBindSocket = new InetSocketAddress(port);
-            } else {
-                clientBindSocket = new InetSocketAddress(clientBindAddress, port);
-            }
+            clientBindSocket = new InetSocketAddress(clientBindAddress, port);
         }
 
         this.serverBindAddress = serverBindAddress;
@@ -461,16 +378,7 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
 
     @Override
     public void start() {
-        this.start(port);
-    }
-
-    /**
-     * @deprecated use {@link net.lightbody.bmp.client.ClientUtil#createSeleniumProxy(BrowserMobProxy)}
-     */
-    @Override
-    @Deprecated
-    public Proxy seleniumProxy() throws NameResolutionException {
-        return ClientUtil.createSeleniumProxy(this);
+        this.start(0);
     }
 
     @Override
@@ -505,19 +413,11 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
 
     @Override
     public InetAddress getClientBindAddress() {
-        if (clientBindSocket == null) {
+        if (started.get()) {
+            return proxyServer.getListenAddress().getAddress();
+        } else {
             return null;
         }
-
-        return clientBindSocket.getAddress();
-    }
-
-    /**
-     * @deprecated this method has no effect and will be removed from a future version
-     */
-    @Deprecated
-    public void cleanup() {
-        //TODO: log warning when calling deprecated code?
     }
 
     @Override
@@ -525,45 +425,8 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         if (started.get()) {
             return proxyServer.getListenAddress().getPort();
         } else {
-            return this.port;
+            return 0;
         }
-    }
-
-    /**
-     * @deprecated specify the port using {@link #start(int)} or other start() methods with port parameters
-     */
-    @Override
-    @Deprecated
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    /**
-     * @deprecated use {@link #getClientBindAddress()}
-     */
-    @Override
-    @Deprecated
-    public InetAddress getLocalHost() {
-        return this.getClientBindAddress();
-    }
-
-    /**
-     * @deprecated use {@link net.lightbody.bmp.client.ClientUtil#getConnectableAddress()}
-     */
-    @Override
-    @Deprecated
-    public InetAddress getConnectableLocalHost() throws UnknownHostException {
-        return ClientUtil.getConnectableAddress();
-    }
-
-    /**
-     * @deprecated use {@link #start(int, java.net.InetAddress)} or {@link #start(int, java.net.InetAddress, java.net.InetAddress)}
-     */
-    @Override
-    @Deprecated
-    public void setLocalHost(InetAddress localHost) {
-        legacyClientBindSocketSet = true;
-        this.clientBindSocket = new InetSocketAddress(localHost, 0);
     }
 
     @Override
@@ -731,7 +594,6 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         }
     }
 
-    @Override
     public void endPage() {
         if (har == null) {
             throw new IllegalStateException("No HAR exists for this proxy. Use newHar() to create a new HAR.");
@@ -748,119 +610,11 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     }
 
     @Override
-    public void setRetryCount(int count) {
-        if (errorOnUnsupportedOperation) {
-            throw new UnsupportedOperationException("No LittleProxy implementation for operation: " + new Throwable().getStackTrace()[0].getMethodName());
-        } else {
-            log.warn("No LittleProxy implementation for operation: " + new Throwable().getStackTrace()[0].getMethodName());
-        }
-    }
-
-    @Override
     public void addHeaders(Map<String, String> headers) {
         ConcurrentMap<String, String> newHeaders = new MapMaker().concurrencyLevel(1).makeMap();
         newHeaders.putAll(headers);
 
         this.additionalHeaders = newHeaders;
-    }
-
-    /**
-     * @deprecated Remap hosts directly using {@link net.lightbody.bmp.proxy.dns.AdvancedHostResolver#remapHost(String, String)}.
-     * See {@link #getHostNameResolver()} and the default implementation in {@link net.lightbody.bmp.proxy.dns.ChainedHostResolver}.
-     */
-    @Override
-    @Deprecated
-    public void remapHost(String source, String target) {
-        AdvancedHostResolver advancedResolver = delegatingResolver.getResolver();
-        advancedResolver.remapHost(source, target);
-    }
-
-    /**
-     * @deprecated
-     */
-    @Override
-    @Deprecated
-    public void addRequestInterceptor(HttpRequestInterceptor i) {
-        if (errorOnUnsupportedOperation) {
-            throw new UnsupportedOperationException("No LittleProxy implementation for operation: " + new Throwable().getStackTrace()[0].getMethodName());
-        } else {
-            log.warn("No LittleProxy implementation for operation: " + new Throwable().getStackTrace()[0].getMethodName());
-        }
-    }
-
-    /**
-     * @deprecated
-     */
-    @Override
-    @Deprecated
-    public void addRequestInterceptor(RequestInterceptor interceptor) {
-        if (errorOnUnsupportedOperation) {
-            throw new UnsupportedOperationException("No LittleProxy implementation for operation: " + new Throwable().getStackTrace()[0].getMethodName());
-        } else {
-            log.warn("No LittleProxy implementation for operation: " + new Throwable().getStackTrace()[0].getMethodName());
-        }
-    }
-
-    /**
-     * @deprecated
-     */
-    @Override
-    @Deprecated
-    public void addResponseInterceptor(HttpResponseInterceptor i) {
-        if (errorOnUnsupportedOperation) {
-            throw new UnsupportedOperationException("No LittleProxy implementation for operation: " + new Throwable().getStackTrace()[0].getMethodName());
-        } else {
-            log.warn("No LittleProxy implementation for operation: " + new Throwable().getStackTrace()[0].getMethodName());
-        }
-    }
-
-    /**
-     * @deprecated
-     */
-    @Override
-    @Deprecated
-    public void addResponseInterceptor(ResponseInterceptor interceptor) {
-        if (errorOnUnsupportedOperation) {
-            throw new UnsupportedOperationException("No LittleProxy implementation for operation: " + new Throwable().getStackTrace()[0].getMethodName());
-        } else {
-            log.warn("No LittleProxy implementation for operation: " + new Throwable().getStackTrace()[0].getMethodName());
-        }
-    }
-
-    /**
-     * This method returns a "fake" StreamManager whose setter methods will wrap LittleProxy-compatible bandwidth control methods. No other methods
-     * in the returned StreamManager should be used; they will have no effect.
-     *
-     * @return fake StreamManager object that wraps LitteProxy-compatible bandwidth control methods
-     * @deprecated use bandwidth control methods from the {@link net.lightbody.bmp.BrowserMobProxy}
-     */
-    @Deprecated
-    public StreamManager getStreamManager() {
-        return streamManagerAdapter;
-    }
-
-    /**
-     * @deprecated use {@link #setWriteBandwidthLimit(long)}
-     */
-    @Deprecated
-    public void setDownstreamKbps(long downstreamKbps) {
-        this.setWriteBandwidthLimit(downstreamKbps * 1024);
-    }
-
-    /**
-     * @deprecated use {@link #setReadBandwidthLimit(long)}
-     */
-    @Deprecated
-    public void setUpstreamKbps(long upstreamKbps) {
-        this.setReadBandwidthLimit(upstreamKbps * 1024);
-    }
-
-    /**
-     * @deprecated use {@link #setLatency(long, java.util.concurrent.TimeUnit)}
-     */
-    @Deprecated
-    public void setLatency(long latencyMs) {
-        setLatency(latencyMs, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -900,22 +654,6 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         }
     }
 
-    /**
-     * @deprecated use {@link #setReadBandwidthLimit(long)}
-     */
-    @Deprecated
-    public void setReadLimitKbps(long readLimitKbps) {
-        setReadBandwidthLimit(readLimitKbps * 1024);
-    }
-
-    /**
-     * @deprecated use {@link #setWriteBandwidthLimit(long)}
-     */
-    @Deprecated
-    public void setWriteLimitKbps(long writeLimitKbps) {
-        setWriteBandwidthLimit(writeLimitKbps * 1024);
-    }
-
     @Override
     public void setConnectTimeout(int connectTimeout, TimeUnit timeUnit) {
         this.connectTimeoutMs = (int) TimeUnit.MILLISECONDS.convert(connectTimeout, timeUnit);
@@ -950,42 +688,6 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         if (idleConnectionTimeoutSec == 0 || idleConnectionTimeoutSec > TimeUnit.SECONDS.convert(requestTimeout, timeUnit)) {
             setIdleConnectionTimeout(requestTimeout, timeUnit);
         }
-    }
-
-    /**
-     * @deprecated use {@link #setConnectTimeout(int, java.util.concurrent.TimeUnit)}
-     */
-    @Deprecated
-    @Override
-    public void setConnectionTimeout(int connectionTimeoutMs) {
-        setConnectTimeout(connectionTimeoutMs, TimeUnit.MILLISECONDS);
-    }
-
-    /**
-     * @deprecated use {@link #setIdleConnectionTimeout(int, java.util.concurrent.TimeUnit)}
-     */
-    @Deprecated
-    @Override
-    public void setSocketOperationTimeout(int readTimeoutMs) {
-        setIdleConnectionTimeout(readTimeoutMs, TimeUnit.MILLISECONDS);
-    }
-
-    /**
-     * @deprecated use {@link #setRequestTimeout(int, java.util.concurrent.TimeUnit)}
-     */
-    @Deprecated
-    @Override
-    public void setRequestTimeout(int requestTimeoutMs) {
-        setRequestTimeout(requestTimeoutMs, TimeUnit.MILLISECONDS);
-    }
-
-    /**
-     * @deprecated use {@link #autoAuthorization(String, String, String, net.lightbody.bmp.proxy.auth.AuthType)}
-     */
-    @Deprecated
-    @Override
-    public void autoBasicAuthorization(String domain, String username, String password) {
-        autoAuthorization(domain, username, password, AuthType.BASIC);
     }
 
     @Override
@@ -1024,23 +726,6 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         this.blacklistEntries = new CopyOnWriteArrayList<>(blacklist);
     }
 
-    /**
-     * @deprecated use getBlacklist()
-     */
-    @Deprecated
-    public List<BlacklistEntry> getBlacklistedRequests() {
-        return ImmutableList.copyOf(blacklistEntries);
-    }
-
-    /**
-     * @deprecated use {@link #getBlacklist()}
-     */
-    @Override
-    @Deprecated
-    public Collection<BlacklistEntry> getBlacklistedUrls() {
-        return getBlacklist();
-    }
-
     @Override
     public Collection<BlacklistEntry> getBlacklist() {
         return Collections.unmodifiableCollection(blacklistEntries);
@@ -1051,14 +736,6 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         return whitelist.get().isEnabled();
     }
 
-    /**
-     * @deprecated use {@link #getWhitelistUrls()}
-     */
-    @Deprecated
-    public List<Pattern> getWhitelistRequests() {
-        return ImmutableList.copyOf(whitelist.get().getPatterns());
-    }
-
     @Override
     public Collection<String> getWhitelistUrls() {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
@@ -1067,15 +744,6 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         }
 
         return builder.build();
-    }
-
-    /**
-     * @deprecated use {@link #getWhitelistStatusCode()}
-     */
-    @Override
-    @Deprecated
-    public int getWhitelistResponseCode() {
-        return getWhitelistStatusCode();
     }
 
     @Override
@@ -1142,15 +810,6 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         whitelist.set(new Whitelist(statusCode));
     }
 
-    /**
-     * @deprecated use {@link #disableWhitelist()}
-     */
-    @Override
-    @Deprecated
-    public void clearWhitelist() {
-        this.disableWhitelist();
-    }
-
     @Override
     public void disableWhitelist() {
         whitelist.set(Whitelist.WHITELIST_DISABLED);
@@ -1184,39 +843,6 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
     @Override
     public AdvancedHostResolver getHostNameResolver() {
         return delegatingResolver.getResolver();
-    }
-
-    /**
-     * @deprecated Manipulate the DNS cache directly using {@link net.lightbody.bmp.proxy.dns.AdvancedHostResolver#clearDNSCache()}.
-     * See {@link #getHostNameResolver()} and the default implementation in {@link net.lightbody.bmp.proxy.dns.ChainedHostResolver}.
-     */
-    @Override
-    @Deprecated
-    public void clearDNSCache() {
-        AdvancedHostResolver resolver = delegatingResolver.getResolver();
-        resolver.clearDNSCache();
-    }
-
-    /**
-     * @deprecated Manipulate the DNS cache directly using {@link net.lightbody.bmp.proxy.dns.AdvancedHostResolver#setNegativeDNSCacheTimeout(int, java.util.concurrent.TimeUnit)}
-     * and {@link net.lightbody.bmp.proxy.dns.AdvancedHostResolver#setPositiveDNSCacheTimeout(int, java.util.concurrent.TimeUnit)}.
-     * See {@link #getHostNameResolver()} and the default implementation in {@link net.lightbody.bmp.proxy.dns.ChainedHostResolver}.
-     */
-    @Override
-    @Deprecated
-    public void setDNSCacheTimeout(int timeout) {
-        AdvancedHostResolver resolver = delegatingResolver.getResolver();
-        resolver.setPositiveDNSCacheTimeout(timeout, TimeUnit.SECONDS);
-        resolver.setNegativeDNSCacheTimeout(timeout, TimeUnit.SECONDS);
-    }
-
-    /**
-     * @deprecated use {@link #waitForQuiescence(long, long, java.util.concurrent.TimeUnit)}
-     */
-    @Override
-    @Deprecated
-    public void waitForNetworkTrafficToStop(long quietPeriodInMs, long timeoutInMs) {
-        waitForQuiescence(quietPeriodInMs, timeoutInMs, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -1299,30 +925,6 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
         addFirstHttpFilterFactory(new RequestFilterAdapter.FilterSource(filter));
     }
 
-    /**
-     * @deprecated use {@link #setChainedProxy(java.net.InetSocketAddress)} to set an upstream proxy
-     */
-    @Deprecated
-    public void setOptions(Map<String, String> options) {
-        if (options == null || options.isEmpty()) {
-            return;
-        }
-
-        String httpProxy = options.get("httpProxy");
-        if (httpProxy != null) {
-            log.warn("Chained proxy support through setOptions is deprecated. Use setUpstreamProxy() to enable chained proxy support.");
-
-            HostAndPort hostAndPort = HostAndPort.fromString(httpProxy);
-            this.setChainedProxy(new InetSocketAddress(hostAndPort.getHostText(), hostAndPort.getPortOrDefault(80)));
-        } else {
-            if (errorOnUnsupportedOperation) {
-                throw new UnsupportedOperationException("The LittleProxy-based implementation of BrowserMob Proxy does not support the setOptions method. Use the methods defined in the BrowserMobProxy interface to set connection parameters.");
-            } else {
-                log.warn("The LittleProxy-based implementation of BrowserMob Proxy does not support the setOptions method. Use the methods defined in the BrowserMobProxy interface to set connection parameters.");
-            }
-        }
-    }
-
     @Override
     public Map<String, String> getRewriteRules() {
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
@@ -1342,77 +944,6 @@ public class BrowserMobProxyServer implements BrowserMobProxy, LegacyProxyServer
                 rewriteRules.remove(rewriteRule);
             }
         }
-    }
-
-    /**
-     * @deprecated use {@link #getHarCaptureTypes()} to check for relevant {@link net.lightbody.bmp.proxy.CaptureType}
-     */
-    @Deprecated
-    public boolean isCaptureHeaders() {
-        return harCaptureTypes.containsAll(CaptureType.getHeaderCaptureTypes());
-    }
-
-    /**
-     * @deprecated use {@link #setHarCaptureTypes(java.util.Set)} to set the appropriate {@link net.lightbody.bmp.proxy.CaptureType}
-     */
-    @Deprecated
-    public void setCaptureHeaders(boolean captureHeaders) {
-        if (captureHeaders) {
-            harCaptureTypes.addAll(CaptureType.getHeaderCaptureTypes());
-        } else {
-            harCaptureTypes.removeAll(CaptureType.getHeaderCaptureTypes());
-        }
-    }
-
-    /**
-     * @deprecated use {@link #getHarCaptureTypes()} to check for relevant {@link net.lightbody.bmp.proxy.CaptureType}
-     */
-    @Deprecated
-    public boolean isCaptureContent() {
-        return harCaptureTypes.containsAll(CaptureType.getNonBinaryContentCaptureTypes());
-    }
-
-    /**
-     * @deprecated use {@link #setHarCaptureTypes(java.util.Set)} to set the appropriate {@link net.lightbody.bmp.proxy.CaptureType}
-     */
-    @Deprecated
-    public void setCaptureContent(boolean captureContent) {
-        if (captureContent) {
-            harCaptureTypes.addAll(CaptureType.getAllContentCaptureTypes());
-        } else {
-            harCaptureTypes.removeAll(CaptureType.getAllContentCaptureTypes());
-        }
-    }
-
-    /**
-     * @deprecated use {@link #getHarCaptureTypes()} to check for relevant {@link net.lightbody.bmp.proxy.CaptureType}
-     */
-    @Deprecated
-    public boolean isCaptureBinaryContent() {
-        return harCaptureTypes.containsAll(CaptureType.getBinaryContentCaptureTypes());
-    }
-
-    /**
-     * @deprecated use {@link #setHarCaptureTypes(java.util.Set)} to set the appropriate {@link net.lightbody.bmp.proxy.CaptureType}
-     */
-    @Deprecated
-    public void setCaptureBinaryContent(boolean captureBinaryContent) {
-        if (captureBinaryContent) {
-            harCaptureTypes.addAll(CaptureType.getBinaryContentCaptureTypes());
-        } else {
-            harCaptureTypes.removeAll(CaptureType.getBinaryContentCaptureTypes());
-        }
-    }
-
-    /**
-     * When true, this implementation of BrowserMobProxy will throw an UnsupportedOperationException when a method is not supported. This
-     * helps identify functionality that is not supported by the LittleProxy-based implementation. By default, this implementation will
-     * log a warning rather than throw an UnsupportedOperationException.
-     *
-     * @param errorOnUnsupportedOperation when true, throws an exception when an operation is not supported
-     */
-    public void setErrorOnUnsupportedOperation(boolean errorOnUnsupportedOperation) {
-        this.errorOnUnsupportedOperation = errorOnUnsupportedOperation;
     }
 
     public boolean isStopped() {

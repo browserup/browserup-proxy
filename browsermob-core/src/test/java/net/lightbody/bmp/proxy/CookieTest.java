@@ -8,16 +8,18 @@ import net.lightbody.bmp.proxy.util.IOUtils;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
 
-import static org.junit.Assume.assumeTrue;
+import static org.junit.Assume.assumeFalse;
 
 public class CookieTest extends LocalServerTest {
     @Test
     public void testNoDoubleCookies() throws IOException {
+        // this test only works with the legacy implementation, since cookie capture is disabled by default in the littleproxy implementation
+        assumeFalse(Boolean.getBoolean("bmp.use.littleproxy"));
+
         proxy.setCaptureContent(true);
         proxy.newHar("Test");
 
@@ -32,25 +34,10 @@ public class CookieTest extends LocalServerTest {
     }
 
     @Test
-    public void testCookiesAreCapturedWhenSet() throws IOException {
-        // this test only works with the littleproxy implementation (new feature)
-        assumeTrue(Boolean.getBoolean("bmp.use.littleproxy"));
-
-        proxy.setCaptureContent(true);
-        proxy.newHar("Test");
-
-        // set the cookie on the server side
-        IOUtils.toStringAndClose(client.execute(new HttpGet(getLocalServerHostnameAndPort() + "/cookie")).getEntity().getContent());
-
-        Har har = proxy.getHar();
-        HarEntry entry = har.getLog().getEntries().get(0);
-        HarCookie cookie = entry.getResponse().getCookies().get(0);
-        Assert.assertEquals("foo", cookie.getName());
-        Assert.assertEquals("bar", cookie.getValue());
-    }
-
-    @Test
     public void testCookiesAreCapturedWhenRequested() throws IOException {
+        // this test only works with the legacy implementation, since cookie capture is disabled by default in the littleproxy implementation
+        assumeFalse(Boolean.getBoolean("bmp.use.littleproxy"));
+
         proxy.setCaptureContent(true);
         proxy.newHar("Test");
 
