@@ -86,7 +86,7 @@ import java.util.regex.Pattern;
 public class BrowserMobProxyServer implements BrowserMobProxy {
     private static final Logger log = LoggerFactory.getLogger(BrowserMobProxyServer.class);
 
-    private static final HarNameVersion HAR_CREATOR_VERSION = new HarNameVersion("BrowserMob Proxy", BrowserMobProxyUtil.getVersionString() + "-littleproxy");
+    private static final HarNameVersion HAR_CREATOR_VERSION = new HarNameVersion("BrowserMob Proxy", BrowserMobProxyUtil.getVersionString());
 
     /* Default MITM resources */
     private static final String RSA_KEYSTORE_RESOURCE = "/sslSupport/ca-keystore-rsa.p12";
