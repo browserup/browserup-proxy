@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>browsermob-core-littleproxy</artifactId>
+    <artifactId>browsermob-core</artifactId>
     <name>BrowserMob Proxy Core (LittleProxy) Module</name>
 
     <properties>

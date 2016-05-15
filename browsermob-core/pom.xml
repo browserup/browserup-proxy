@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>browsermob-core</artifactId>
+    <artifactId>browsermob-legacy</artifactId>
     <name>BrowserMob Proxy Legacy (Jetty) Module</name>
 
     <properties>
@@ -36,7 +36,7 @@
     <dependencies>
         <dependency>
             <groupId>net.lightbody.bmp</groupId>
-            <artifactId>browsermob-core-littleproxy</artifactId>
+            <artifactId>browsermob-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 

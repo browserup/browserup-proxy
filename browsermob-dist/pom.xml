@@ -30,7 +30,7 @@
 
         <dependency>
             <groupId>net.lightbody.bmp</groupId>
-            <artifactId>browsermob-core-littleproxy</artifactId>
+            <artifactId>browsermob-legacy</artifactId>
             <version>${project.version}</version>
         </dependency>
 
