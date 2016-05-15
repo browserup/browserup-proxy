@@ -98,23 +98,6 @@
 
     <profiles>
         <profile>
-            <id>include-littleproxy</id>
-            <activation>
-                <property>
-                    <name>include.littleproxy</name>
-                    <value>true</value>
-                </property>
-            </activation>
-
-            <dependencies>
-                <dependency>
-                    <groupId>net.lightbody.bmp</groupId>
-                    <artifactId>browsermob-core-littleproxy</artifactId>
-                    <version>${project.version}</version>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
             <id>release</id>
             <build>
                 <plugins>
