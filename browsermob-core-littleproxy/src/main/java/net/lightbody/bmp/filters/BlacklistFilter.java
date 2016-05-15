@@ -38,7 +38,7 @@ public class BlacklistFilter extends HttpsAwareFiltersAdapter {
             String url = getFullUrl(httpRequest);
 
             for (BlacklistEntry entry : blacklistedUrls) {
-                if (HttpMethod.CONNECT.equals(httpRequest.getMethod()) && entry.getHttpMethodPatern() == null) {
+                if (HttpMethod.CONNECT.equals(httpRequest.getMethod()) && entry.getHttpMethodPattern() == null) {
                     // do not allow CONNECTs to be blacklisted unless a method pattern is explicitly specified
                     continue;
                 }

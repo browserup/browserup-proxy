@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 public class BlacklistEntry {
     private final Pattern urlPattern;
 	private final int statusCode;
-	private final Pattern httpMethodPatern;
+	private final Pattern httpMethodPattern;
 
 	/**
 	 * Creates a new BlacklistEntry with no HTTP method matching (i.e. all methods will match).
@@ -32,9 +32,9 @@ public class BlacklistEntry {
 		this.urlPattern = Pattern.compile(urlPattern);
 		this.statusCode = statusCode;
 		if (httpMethodPattern == null || httpMethodPattern.isEmpty()) {
-			this.httpMethodPatern = null;
+			this.httpMethodPattern = null;
 		} else {
-			this.httpMethodPatern = Pattern.compile(httpMethodPattern);
+			this.httpMethodPattern = Pattern.compile(httpMethodPattern);
 		}
 	}
 	
@@ -47,8 +47,8 @@ public class BlacklistEntry {
 	 * @return true if the URL matches this BlacklistEntry
 	 */
 	public boolean matches(String url, String httpMethod) {
-		if (httpMethodPatern != null) {
-			return urlPattern.matcher(url).matches() && httpMethodPatern.matcher(httpMethod).matches();
+		if (httpMethodPattern != null) {
+			return urlPattern.matcher(url).matches() && httpMethodPattern.matcher(httpMethod).matches();
 		} else {
 			return urlPattern.matcher(url).matches();
 		}
@@ -62,8 +62,8 @@ public class BlacklistEntry {
         return statusCode;
     }
 
-    public Pattern getHttpMethodPatern() {
-        return httpMethodPatern;
+    public Pattern getHttpMethodPattern() {
+        return httpMethodPattern;
     }
 
     @Deprecated
@@ -84,9 +84,9 @@ public class BlacklistEntry {
 
     @Deprecated
     /**
-     * @deprecated use {@link #getHttpMethodPatern()}
+     * @deprecated use {@link #getHttpMethodPattern()}
      */
 	public Pattern getMethod() {
-		return getHttpMethodPatern();
+		return getHttpMethodPattern();
 	}
 }

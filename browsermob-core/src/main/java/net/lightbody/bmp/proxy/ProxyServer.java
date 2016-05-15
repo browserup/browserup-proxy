@@ -659,10 +659,10 @@ public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {
     @Override
     public void setBlacklist(Collection<BlacklistEntry> blacklist) {
         for (BlacklistEntry entry : blacklist) {
-            if (entry.getHttpMethodPatern() == null) {
+            if (entry.getHttpMethodPattern() == null) {
                 blacklistRequests(entry.getUrlPattern().pattern(), entry.getStatusCode());
             } else {
-                blacklistRequests(entry.getUrlPattern().pattern(), entry.getStatusCode(), entry.getHttpMethodPatern().pattern());
+                blacklistRequests(entry.getUrlPattern().pattern(), entry.getStatusCode(), entry.getHttpMethodPattern().pattern());
             }
         }
     }
