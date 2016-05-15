@@ -2,7 +2,6 @@ package net.lightbody.bmp.proxy;
 
 import com.google.common.collect.ImmutableList;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,27 +28,27 @@ public class Whitelist {
      * Creates an empty, disabled Whitelist.
      */
     public Whitelist() {
-    	this.patterns = Collections.emptyList();
-		this.statusCode = -1;
-    	this.enabled = false;
+        this.patterns = Collections.emptyList();
+        this.statusCode = -1;
+        this.enabled = false;
     }
-    
-	/**
-	 * Creates an empty, enabled whitelist with the specified response code.
-	 * 
-	 * @param statusCode the response code that the (enabled) Whitelist will return for all URLs.
-	 */
-	public Whitelist(int statusCode) {
-		this.patterns = Collections.emptyList();
-		this.statusCode = statusCode;
-		this.enabled = true;
-	}
-	
-	/**
-	 * @deprecated use {@link #Whitelist(java.util.Collection, int)}
-	 */
+
+    /**
+     * Creates an empty, enabled whitelist with the specified response code.
+     *
+     * @param statusCode the response code that the (enabled) Whitelist will return for all URLs.
+     */
+    public Whitelist(int statusCode) {
+        this.patterns = Collections.emptyList();
+        this.statusCode = statusCode;
+        this.enabled = true;
+    }
+
+    /**
+     * @deprecated use {@link #Whitelist(java.util.Collection, int)}
+     */
     @Deprecated
-	public Whitelist(String[] patterns, int statusCode) {
+    public Whitelist(String[] patterns, int statusCode) {
         this(patterns == null ? null : Arrays.asList(patterns), statusCode);
     }
 
@@ -81,8 +80,8 @@ public class Whitelist {
      * @return true if this whitelist is enabled, otherwise false
      */
     public boolean isEnabled() {
-		return enabled;
-	}
+        return enabled;
+    }
 
     /**
      * @return regular expression patterns describing the URLs that should be whitelisted, or an empty collection if the whitelist is disabled

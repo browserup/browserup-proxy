@@ -276,7 +276,7 @@ There are four new methods to support request and response interception in Littl
 
 For most use cases, including inspecting and modifying requests/responses, `addRequestFilter` and `addResponseFilter` will be sufficient. The request and response filters are easy to use:
 ```java
-	proxy.addRequestFilter(new RequestFilter() {
+    proxy.addRequestFilter(new RequestFilter() {
             @Override
             public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
                 if (messageInfo.getOriginalUri().endsWith("/some-endpoint-to-intercept")) {

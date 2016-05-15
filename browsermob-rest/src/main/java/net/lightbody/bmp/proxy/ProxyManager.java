@@ -33,7 +33,7 @@ public class ProxyManager {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyManager.class);
 
     private int lastPort;
-    private final int minPort; 
+    private final int minPort;
     private final int maxPort;
     private final Provider<LegacyProxyServer> proxyServerProvider;
     // retain a reference to the Cache to allow the ProxyCleanupTask to .cleanUp(), since asMap() is just a view into the cache.
@@ -100,7 +100,7 @@ public class ProxyManager {
         this.lastPort = maxPort;
         if (ttl > 0) {
             // proxies should be evicted after the specified ttl, so set up an evicting cache and a listener to stop the proxies when they're evicted
-            RemovalListener<Integer, LegacyProxyServer> removalListener = new RemovalListener<Integer, LegacyProxyServer> () {
+            RemovalListener<Integer, LegacyProxyServer> removalListener = new RemovalListener<Integer, LegacyProxyServer>() {
                 public void onRemoval(RemovalNotification<Integer, LegacyProxyServer> removal) {
                     try {
                         LegacyProxyServer proxy = removal.getValue();
@@ -139,7 +139,7 @@ public class ProxyManager {
             if (proxy instanceof BrowserMobProxyServer) {
                 LOG.info("Using Elliptic Curve Cryptography for certificate impersonation");
 
-                ((BrowserMobProxyServer)proxy).setUseEcc(true);
+                ((BrowserMobProxyServer) proxy).setUseEcc(true);
             } else {
                 LOG.warn("Cannot use Eliiptic Curve Cryptography with legacy ProxyServer implementation. Using default RSA certificates.");
             }
@@ -147,7 +147,7 @@ public class ProxyManager {
 
         if (trustAllServers) {
             if (proxy instanceof BrowserMobProxyServer) {
-                ((BrowserMobProxyServer)proxy).setTrustAllServers(true);
+                ((BrowserMobProxyServer) proxy).setTrustAllServers(true);
             }
         }
 
@@ -156,7 +156,7 @@ public class ProxyManager {
             String proxyUsername = options.remove("proxyUsername");
             String proxyPassword = options.remove("proxyPassword");
             if (proxyUsername != null && proxyPassword != null) {
-                ((BrowserMobProxy)proxy).chainedProxyAuthorization(proxyUsername, proxyPassword, AuthType.BASIC);
+                ((BrowserMobProxy) proxy).chainedProxyAuthorization(proxyUsername, proxyPassword, AuthType.BASIC);
             }
 
             LOG.debug("Apply options `{}` to new ProxyServer...", options);
@@ -167,11 +167,11 @@ public class ProxyManager {
             LOG.debug("Bind ProxyServer to `{}`...", bindAddr);
             InetAddress inetAddress;
             try {
-            	inetAddress = InetAddress.getByName(bindAddr);
+                inetAddress = InetAddress.getByName(bindAddr);
             } catch (UnknownHostException e) {
-            	LOG.error("Unable to bind proxy to address: " + bindAddr + "; proxy will not be created.", e);
+                LOG.error("Unable to bind proxy to address: " + bindAddr + "; proxy will not be created.", e);
 
-            	throw new RuntimeException("Unable to bind proxy to address: ", e);
+                throw new RuntimeException("Unable to bind proxy to address: ", e);
             }
 
             proxy.setLocalHost(inetAddress);
@@ -181,12 +181,12 @@ public class ProxyManager {
             return startProxy(proxy, port);
         }
 
-        while(proxies.size() <= maxPort-minPort){
+        while (proxies.size() <= maxPort - minPort) {
             LOG.debug("Use next available port for new ProxyServer...");
             port = nextPort();
-            try{
+            try {
                 return startProxy(proxy, port);
-            }catch(ProxyExistsException ex){
+            } catch (ProxyExistsException ex) {
                 LOG.debug("Proxy already exists at port {}", port);
             }
         }
@@ -212,7 +212,7 @@ public class ProxyManager {
     public LegacyProxyServer get(int port) {
         return proxies.get(port);
     }
-    
+
     private LegacyProxyServer startProxy(LegacyProxyServer proxy, int port) {
         if (port != 0) {
             proxy.setPort(port);
@@ -223,7 +223,7 @@ public class ProxyManager {
             }
         }
 
-        try{
+        try {
             proxy.start();
             if (port == 0) {
                 int realPort = proxy.getPort();
@@ -231,21 +231,21 @@ public class ProxyManager {
             }
 
             return proxy;
-        }catch(Exception ex){
+        } catch (Exception ex) {
             if (port != 0) {
                 proxies.remove(port);
             }
-            try{
+            try {
                 proxy.stop();
-            }catch(Exception ex2){
+            } catch (Exception ex2) {
                 ex.addSuppressed(ex2);
-            }                
+            }
             throw ex;
         }
     }
-    
-    private synchronized int nextPort(){
-        return lastPort < maxPort? ++lastPort : (lastPort = minPort); 
+
+    private synchronized int nextPort() {
+        return lastPort < maxPort ? ++lastPort : (lastPort = minPort);
     }
 
     public Collection<LegacyProxyServer> get() {
@@ -263,5 +263,5 @@ public class ProxyManager {
             proxy.stop();
         }
     }
-    
+
 }
