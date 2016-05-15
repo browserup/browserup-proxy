@@ -1,9 +1,9 @@
 package net.lightbody.bmp.proxy;
 
-import net.lightbody.bmp.BrowserMobProxyServer;
 import net.lightbody.bmp.BrowserMobProxy;
+import net.lightbody.bmp.BrowserMobProxyServer;
 import net.lightbody.bmp.proxy.test.util.MockServerTest;
-import net.lightbody.bmp.proxy.test.util.ProxyServerTest;
+import net.lightbody.bmp.proxy.test.util.NewProxyServerTestUtil;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -29,7 +29,7 @@ public class NetworkTest extends MockServerTest {
         proxy.setConnectTimeout(1, TimeUnit.SECONDS);
         proxy.start();
 
-        try (CloseableHttpClient client = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient client = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             long start = System.nanoTime();
             HttpResponse response = client.execute(new HttpGet("http://1.2.3.4:53540/connecttimeout"));
             long stop = System.nanoTime();
@@ -54,7 +54,7 @@ public class NetworkTest extends MockServerTest {
         proxy.setIdleConnectionTimeout(1, TimeUnit.SECONDS);
         proxy.start();
 
-        try (CloseableHttpClient client = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient client = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             long start = System.nanoTime();
             HttpResponse response = client.execute(new HttpGet("http://127.0.0.1:" + mockServerPort + "/idleconnectiontimeout"));
             long stop = System.nanoTime();
@@ -79,7 +79,7 @@ public class NetworkTest extends MockServerTest {
         proxy.setLatency(2, TimeUnit.SECONDS);
         proxy.start();
 
-        try (CloseableHttpClient client = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient client = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             long start = System.nanoTime();
             HttpResponse response = client.execute(new HttpGet("http://127.0.0.1:" + mockServerPort + "/latency"));
             long stop = System.nanoTime();

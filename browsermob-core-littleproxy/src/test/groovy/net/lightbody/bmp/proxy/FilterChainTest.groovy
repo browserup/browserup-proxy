@@ -7,8 +7,7 @@ import io.netty.handler.codec.http.HttpResponse
 import net.lightbody.bmp.BrowserMobProxy
 import net.lightbody.bmp.BrowserMobProxyServer
 import net.lightbody.bmp.proxy.test.util.MockServerTest
-import net.lightbody.bmp.proxy.test.util.ProxyServerTest
-import net.lightbody.bmp.proxy.util.IOUtils
+import net.lightbody.bmp.proxy.test.util.NewProxyServerTestUtil
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.junit.After
@@ -64,11 +63,11 @@ class FilterChainTest extends MockServerTest {
 
         String requestUrl = "http://localhost:${mockServerPort}/testfilterexceptionpreservesrequest"
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
             assertEquals("Did not receive HTTP 200 from mock server", 200, response.getStatusLine().getStatusCode())
 
-            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
     }
@@ -129,11 +128,11 @@ class FilterChainTest extends MockServerTest {
 
         String requestUrl = "http://localhost:${mockServerPort}/testfilterexceptionpreserveschain"
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
             assertEquals("Did not receive HTTP 200 from mock server", 200, response.getStatusLine().getStatusCode())
 
-            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
 
@@ -167,11 +166,11 @@ class FilterChainTest extends MockServerTest {
 
         String requestUrl = "http://localhost:${mockServerPort}/testrequestresponsefilterpreservesrequest"
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
             assertEquals("Did not receive HTTP 200 from mock server", 200, response.getStatusLine().getStatusCode())
 
-            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
     }
@@ -215,11 +214,11 @@ class FilterChainTest extends MockServerTest {
 
         String requestUrl = "http://localhost:${mockServerPort}/testrequestresponsefilterpreserveschain"
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
             assertEquals("Did not receive HTTP 200 from mock server", 200, response.getStatusLine().getStatusCode())
 
-            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
 

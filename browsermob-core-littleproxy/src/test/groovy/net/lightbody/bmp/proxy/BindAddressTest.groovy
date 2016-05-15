@@ -3,7 +3,7 @@ package net.lightbody.bmp.proxy
 import net.lightbody.bmp.BrowserMobProxy
 import net.lightbody.bmp.BrowserMobProxyServer
 import net.lightbody.bmp.proxy.test.util.MockServerTest
-import net.lightbody.bmp.proxy.test.util.ProxyServerTest
+import net.lightbody.bmp.proxy.test.util.NewProxyServerTestUtil
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.conn.HttpHostConnectException
 import org.junit.After
@@ -42,7 +42,7 @@ class BindAddressTest extends MockServerTest {
         proxy = new BrowserMobProxyServer()
         proxy.start(0, InetAddress.getLoopbackAddress())
 
-        ProxyServerTest.getNewHttpClient(proxy.getPort()).withCloseable {
+        NewProxyServerTestUtil.getNewHttpClient(proxy.getPort()).withCloseable {
             def response = it.execute(new HttpGet("http://127.0.0.1:${mockServerPort}/clientbind"))
             assertEquals(200, response.statusLine.statusCode)
         }
@@ -69,7 +69,7 @@ class BindAddressTest extends MockServerTest {
         proxy = new BrowserMobProxyServer()
         proxy.start(0, localHostAddr)
 
-        ProxyServerTest.getNewHttpClient(proxy.getPort()).withCloseable {
+        NewProxyServerTestUtil.getNewHttpClient(proxy.getPort()).withCloseable {
             it.execute(new HttpGet("http://127.0.0.1:${mockServerPort}/clientbind"))
         }
     }
@@ -86,7 +86,7 @@ class BindAddressTest extends MockServerTest {
         proxy = new BrowserMobProxyServer()
         proxy.start(0, null, InetAddress.getLoopbackAddress())
 
-        ProxyServerTest.getNewHttpClient(proxy.getPort()).withCloseable {
+        NewProxyServerTestUtil.getNewHttpClient(proxy.getPort()).withCloseable {
             def response = it.execute(new HttpGet("http://127.0.0.1:${mockServerPort}/serverbind"))
             assertEquals(200, response.statusLine.statusCode)
         }
@@ -98,7 +98,7 @@ class BindAddressTest extends MockServerTest {
         proxy = new BrowserMobProxyServer()
         proxy.start(0, null, InetAddress.getLoopbackAddress())
 
-        ProxyServerTest.getNewHttpClient(proxy.getPort()).withCloseable {
+        NewProxyServerTestUtil.getNewHttpClient(proxy.getPort()).withCloseable {
             def response = it.execute(new HttpGet("http://www.google.com"))
             assertEquals("Expected a 502 Bad Gateway when connecting to an external address after binding to loopback", 502, response.statusLine.statusCode)
         }

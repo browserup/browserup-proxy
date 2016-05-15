@@ -169,7 +169,7 @@ public class BrowserMobProxyServerLegacyAdapter extends BrowserMobProxyServer im
      * in the returned StreamManager should be used; they will have no effect.
      *
      * @return fake StreamManager object that wraps LitteProxy-compatible bandwidth control methods
-     * @deprecated use bandwidth control methods from the {@link net.lightbody.bmp.BrowserMobProxy}
+     * @deprecated use bandwidth control methods from the {@link BrowserMobProxy}
      */
     @Deprecated
     public StreamManager getStreamManager() {

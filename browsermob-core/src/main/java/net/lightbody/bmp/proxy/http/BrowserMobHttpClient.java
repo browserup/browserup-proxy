@@ -18,7 +18,7 @@ import net.lightbody.bmp.proxy.Whitelist;
 import net.lightbody.bmp.proxy.dns.AdvancedHostResolver;
 import net.lightbody.bmp.proxy.jetty.util.MultiMap;
 import net.lightbody.bmp.proxy.jetty.util.UrlEncoded;
-import net.lightbody.bmp.proxy.util.BrowserMobProxyUtil;
+import net.lightbody.bmp.util.BrowserMobProxyUtil;
 import net.lightbody.bmp.proxy.util.CappedByteArrayOutputStream;
 import net.lightbody.bmp.proxy.util.ClonedOutputStream;
 import net.lightbody.bmp.proxy.util.IOUtils;

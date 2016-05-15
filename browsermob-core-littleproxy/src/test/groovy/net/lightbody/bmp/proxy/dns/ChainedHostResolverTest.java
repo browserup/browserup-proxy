@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import net.lightbody.bmp.proxy.test.util.TestConstants;
+import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -66,7 +67,7 @@ public class ChainedHostResolverTest {
         Collection<InetAddress> results = chainResolver.resolve("1.1.1.1");
         assertNotNull("Resolver should not return null results", results);
         assertThat("Expected resolver to return a result", results, not(empty()));
-        assertEquals("Resolver returned unexpected result", TestConstants.addressOnes, Iterables.get(results, 0));
+        Assert.assertEquals("Resolver returned unexpected result", TestConstants.addressOnes, Iterables.get(results, 0));
 
         verify(secondResolver, never()).resolve("1.1.1.1");
 
@@ -79,7 +80,7 @@ public class ChainedHostResolverTest {
         results = chainResolver.resolve("2.2.2.2");
         assertNotNull("Resolver should not return null results", results);
         assertThat("Expected resolver to return a result", results, not(empty()));
-        assertEquals("Resolver returned unexpected result", TestConstants.addressTwos, Iterables.get(results, 0));
+        Assert.assertEquals("Resolver returned unexpected result", TestConstants.addressTwos, Iterables.get(results, 0));
 
         verify(firstResolver).resolve("2.2.2.2");
         verify(secondResolver).resolve("2.2.2.2");
@@ -158,7 +159,7 @@ public class ChainedHostResolverTest {
 
         assertNotNull("Resolver should not return null results", results);
         assertThat("Expected resolver to return a result", results, not(empty()));
-        assertEquals("Resolver returned unexpected result", TestConstants.addressOnes, Iterables.get(results, 0));
+        Assert.assertEquals("Resolver returned unexpected result", TestConstants.addressOnes, Iterables.get(results, 0));
 
         assertThat("Expected resolver to be finished clearing DNS cache", secondResolverCacheClearFinishedTime.get(), greaterThan(0L));
 

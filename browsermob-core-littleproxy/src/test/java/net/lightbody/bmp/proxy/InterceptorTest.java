@@ -16,8 +16,7 @@ import net.lightbody.bmp.filters.RequestFilterAdapter;
 import net.lightbody.bmp.filters.ResponseFilter;
 import net.lightbody.bmp.filters.ResponseFilterAdapter;
 import net.lightbody.bmp.proxy.test.util.MockServerTest;
-import net.lightbody.bmp.proxy.test.util.ProxyServerTest;
-import net.lightbody.bmp.proxy.util.IOUtils;
+import net.lightbody.bmp.proxy.test.util.NewProxyServerTestUtil;
 import net.lightbody.bmp.util.HttpMessageContents;
 import net.lightbody.bmp.util.HttpMessageInfo;
 import net.lightbody.bmp.util.HttpObjectUtil;
@@ -113,9 +112,9 @@ public class InterceptorTest extends MockServerTest {
             }
         });
 
-        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             CloseableHttpResponse response = httpClient.execute(new HttpGet("http://localhost:" + mockServerPort + "/regular200"));
-            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
 
             assertTrue("Expected interceptor to fire", interceptorFired.get());
             assertFalse("Did not expected short circuit interceptor code to execute", shortCircuitFired.get());
@@ -126,7 +125,7 @@ public class InterceptorTest extends MockServerTest {
 
         interceptorFired.set(false);
 
-        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             CloseableHttpResponse response = httpClient.execute(new HttpGet("http://localhost:" + mockServerPort + "/shortcircuit204"));
 
             assertTrue("Expected interceptor to fire", interceptorFired.get());
@@ -184,9 +183,9 @@ public class InterceptorTest extends MockServerTest {
             }
         });
 
-        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             CloseableHttpResponse response = httpClient.execute(new HttpGet("http://localhost:" + mockServerPort + "/originalrequest"));
-            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
@@ -223,11 +222,11 @@ public class InterceptorTest extends MockServerTest {
             }
         });
 
-        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             HttpPut request = new HttpPut("http://localhost:" + mockServerPort + "/modifyrequest");
             request.setEntity(new StringEntity(originalText));
             CloseableHttpResponse response = httpClient.execute(request);
-            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
@@ -265,11 +264,11 @@ public class InterceptorTest extends MockServerTest {
             }
         });
 
-        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             HttpPut request = new HttpPut("https://localhost:" + mockServerPort + "/modifyrequest");
             request.setEntity(new StringEntity(originalText));
             CloseableHttpResponse response = httpClient.execute(request);
-            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
@@ -304,7 +303,7 @@ public class InterceptorTest extends MockServerTest {
             }
         });
 
-        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             HttpGet request = new HttpGet("http://localhost:" + mockServerPort + "/modifyresponse");
             CloseableHttpResponse response = httpClient.execute(request);
             byte[] responseBytes = org.apache.commons.io.IOUtils.toByteArray(response.getEntity().getContent());
@@ -342,11 +341,11 @@ public class InterceptorTest extends MockServerTest {
             }
         });
 
-        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             HttpGet request = new HttpGet("http://localhost:" + mockServerPort + "/modifyresponse");
             request.addHeader("Accept-Encoding", "gzip");
             CloseableHttpResponse response = httpClient.execute(request);
-            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertEquals("Did not receive expected response from mock server", newText, responseBody);
@@ -382,11 +381,11 @@ public class InterceptorTest extends MockServerTest {
             }
         });
 
-        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             HttpGet request = new HttpGet("https://localhost:" + mockServerPort + "/modifyresponse");
             request.addHeader("Accept-Encoding", "gzip");
             CloseableHttpResponse response = httpClient.execute(request);
-            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertEquals("Did not receive expected response from mock server", newText, responseBody);
@@ -415,7 +414,7 @@ public class InterceptorTest extends MockServerTest {
             }
         });
 
-        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             CloseableHttpResponse response = httpClient.execute(new HttpHead("http://localhost:" + mockServerPort + "/interceptortest"));
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
@@ -456,7 +455,7 @@ public class InterceptorTest extends MockServerTest {
             }
         });
 
-        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             CloseableHttpResponse response = httpClient.execute(new HttpGet("http://localhost:" + mockServerPort + "/originalendpoint"));
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
@@ -500,7 +499,7 @@ public class InterceptorTest extends MockServerTest {
             }
         }, 0));
 
-        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             CloseableHttpResponse response = httpClient.execute(new HttpGet("http://localhost:" + mockServerPort + "/endpoint"));
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
@@ -539,7 +538,7 @@ public class InterceptorTest extends MockServerTest {
             }
         });
 
-        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             CloseableHttpResponse response = httpClient.execute(new HttpGet("https://localhost:" + mockServerPort + "/mitmdisabled"));
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
@@ -577,7 +576,7 @@ public class InterceptorTest extends MockServerTest {
             }
         });
 
-        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             CloseableHttpResponse response = httpClient.execute(new HttpGet("https://localhost:" + mockServerPort + "/mitmdisabled"));
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
@@ -628,9 +627,9 @@ public class InterceptorTest extends MockServerTest {
             }
         });
 
-        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             CloseableHttpResponse response = httpClient.execute(new HttpGet("http://localhost:" + mockServerPort + "/modifyresponse"));
-            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertEquals("Did not receive expected response from mock server", newText, responseBody);
@@ -671,9 +670,9 @@ public class InterceptorTest extends MockServerTest {
 
         // during the first request, the filterRequest(...) method should return null, which will prevent the filter instance from
         // being added to the filter chain
-        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             CloseableHttpResponse response = httpClient.execute(new HttpGet("http://localhost:" + mockServerPort + "/bypassfilter"));
-            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
@@ -685,9 +684,9 @@ public class InterceptorTest extends MockServerTest {
         assertEquals("Expected filter instance to be bypassed on first request", 0, filterHitCount.get());
 
         // during the second request, the filterRequest(...) method will return a filter instance, which should be invoked during processing
-        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             CloseableHttpResponse response = httpClient.execute(new HttpGet("http://localhost:" + mockServerPort + "/bypassfilter"));
-            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
@@ -748,7 +747,7 @@ public class InterceptorTest extends MockServerTest {
             }
         });
 
-        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             String requestUrl = "http://localhost:" + mockServerPort + "/httpmessageinfopopulated?param1=value1";
             CloseableHttpResponse response = httpClient.execute(new HttpGet(requestUrl));
 
@@ -816,7 +815,7 @@ public class InterceptorTest extends MockServerTest {
             }
         });
 
-        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             String originalRequestUrl = "http://localhost:" + mockServerPort + "/originalurl";
             String modifiedRequestUrl = "http://localhost:" + mockServerPort + "/urlreflectsmodifications";
             CloseableHttpResponse response = httpClient.execute(new HttpGet(originalRequestUrl));
@@ -880,7 +879,7 @@ public class InterceptorTest extends MockServerTest {
             }
         });
 
-        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             String originalRequestUrl = "https://localhost:" + mockServerPort + "/originalurl";
             String modifiedRequestUrl = "https://localhost:" + mockServerPort + "/urlreflectsmodifications";
             CloseableHttpResponse response = httpClient.execute(new HttpGet(originalRequestUrl));
@@ -940,7 +939,7 @@ public class InterceptorTest extends MockServerTest {
             }
         });
 
-        try (CloseableHttpClient httpClient = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             String requestUrl = "https://localhost:" + mockServerPort + "/httpmessageinfopopulated?param1=value1";
             CloseableHttpResponse response = httpClient.execute(new HttpGet(requestUrl));
 

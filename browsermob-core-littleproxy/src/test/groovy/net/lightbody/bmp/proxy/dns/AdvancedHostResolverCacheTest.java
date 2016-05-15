@@ -1,7 +1,7 @@
 package net.lightbody.bmp.proxy.dns;
 
 import com.google.common.collect.ImmutableList;
-import net.lightbody.bmp.proxy.test.util.ProxyServerTest;
+import net.lightbody.bmp.proxy.test.util.NewProxyServerTestUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,7 +40,7 @@ public class AdvancedHostResolverCacheTest {
         if (resolverClass.equals(ChainedHostResolver.class)) {
             // don't use the NativecacheManipulatingResolver on Windows, since it is unsupported
             this.resolver = new ChainedHostResolver(
-                    ProxyServerTest.isWindows() ? ImmutableList.of(new DnsJavaResolver())
+                    NewProxyServerTestUtil.isWindows() ? ImmutableList.of(new DnsJavaResolver())
                                                 : ImmutableList.of(new NativeCacheManipulatingResolver(), new DnsJavaResolver()));
         } else {
             this.resolver = resolverClass.newInstance();
@@ -57,7 +57,7 @@ public class AdvancedHostResolverCacheTest {
     public void skipForNativeDnsCacheOnWindows() {
         // the NativecacheManipulatingResolver does not work on Windows because Java seems to use to the OS-level cache
         assumeFalse("NativeCacheManipulatingResolver does not support cache manipulation on Windows",
-                ProxyServerTest.isWindows() && this.resolver instanceof NativeCacheManipulatingResolver);
+                NewProxyServerTestUtil.isWindows() && this.resolver instanceof NativeCacheManipulatingResolver);
     }
 
     @Test

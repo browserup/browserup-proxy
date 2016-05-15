@@ -1,4 +1,4 @@
-package net.lightbody.bmp.proxy.util;
+package net.lightbody.bmp.util;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -7,7 +7,6 @@ import net.lightbody.bmp.core.har.HarEntry;
 import net.lightbody.bmp.core.har.HarLog;
 import net.lightbody.bmp.core.har.HarPage;
 import net.lightbody.bmp.mitm.exception.UncheckedIOException;
-import net.lightbody.bmp.util.ClasspathResourceUtil;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
 import org.slf4j.Logger;

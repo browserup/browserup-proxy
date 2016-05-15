@@ -1,5 +1,6 @@
 package net.lightbody.bmp.proxy;
 
+import net.lightbody.bmp.BrowserMobProxy;
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.exception.NameResolutionException;
 import net.lightbody.bmp.proxy.http.RequestInterceptor;
@@ -18,7 +19,7 @@ import java.util.regex.Pattern;
 /**
  * Describes the legacy BrowserMob Proxy 2.0 interface. Clients <b>should not</b> implement or use this interface.
  *
- * Use {@link net.lightbody.bmp.BrowserMobProxy}.
+ * Use {@link BrowserMobProxy}.
  */
 public interface LegacyProxyServer {
     void start();

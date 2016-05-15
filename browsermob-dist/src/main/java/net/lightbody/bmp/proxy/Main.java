@@ -8,7 +8,7 @@ import net.lightbody.bmp.exception.JettyException;
 import net.lightbody.bmp.proxy.bricks.ProxyResource;
 import net.lightbody.bmp.proxy.guice.ConfigModule;
 import net.lightbody.bmp.proxy.guice.JettyModule;
-import net.lightbody.bmp.proxy.util.BrowserMobProxyUtil;
+import net.lightbody.bmp.util.BrowserMobProxyUtil;
 import net.lightbody.bmp.util.DeleteDirectoryTask;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;

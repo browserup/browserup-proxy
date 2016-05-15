@@ -43,7 +43,7 @@ import net.lightbody.bmp.proxy.Whitelist;
 import net.lightbody.bmp.proxy.auth.AuthType;
 import net.lightbody.bmp.proxy.dns.AdvancedHostResolver;
 import net.lightbody.bmp.proxy.dns.DelegatingHostResolver;
-import net.lightbody.bmp.proxy.util.BrowserMobProxyUtil;
+import net.lightbody.bmp.util.BrowserMobProxyUtil;
 import net.lightbody.bmp.util.BrowserMobHttpUtil;
 import org.littleshoot.proxy.ChainedProxy;
 import org.littleshoot.proxy.ChainedProxyAdapter;

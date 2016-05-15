@@ -10,8 +10,7 @@ import net.lightbody.bmp.BrowserMobProxy
 import net.lightbody.bmp.BrowserMobProxyServer
 import net.lightbody.bmp.proxy.RewriteRule
 import net.lightbody.bmp.proxy.test.util.MockServerTest
-import net.lightbody.bmp.proxy.test.util.ProxyServerTest
-import net.lightbody.bmp.proxy.util.IOUtils
+import net.lightbody.bmp.proxy.test.util.NewProxyServerTestUtil
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.junit.After
@@ -105,17 +104,17 @@ class RewriteUrlFilterTest extends MockServerTest {
         proxy.start()
 
         String url = "http://www.someotherhost.com:${mockServerPort}/testRewriteHttpHost"
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
             CloseableHttpResponse firstResponse = it.execute(new HttpGet(url))
             assertEquals("Did not receive HTTP 200 from mock server", 200, firstResponse.getStatusLine().getStatusCode())
 
-            String firstResponseBody = IOUtils.toStringAndClose(firstResponse.getEntity().getContent());
+            String firstResponseBody = NewProxyServerTestUtil.toStringAndClose(firstResponse.getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", firstResponseBody);
 
             CloseableHttpResponse secondResponse = it.execute(new HttpGet(url))
             assertEquals("Did not receive HTTP 200 from mock server", 200, secondResponse.getStatusLine().getStatusCode())
 
-            String secondResponseBody = IOUtils.toStringAndClose(secondResponse.getEntity().getContent());
+            String secondResponseBody = NewProxyServerTestUtil.toStringAndClose(secondResponse.getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", secondResponseBody);
         };
     }
@@ -136,11 +135,11 @@ class RewriteUrlFilterTest extends MockServerTest {
         proxy.start()
 
         String url = "http://badhost:${mockServerPort}/badresource"
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-            String firstResponseBody = IOUtils.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent());
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            String firstResponseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", firstResponseBody);
 
-            String secondResponseBody = IOUtils.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent());
+            String secondResponseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", secondResponseBody);
         };
     }
@@ -162,11 +161,11 @@ class RewriteUrlFilterTest extends MockServerTest {
         proxy.start()
 
         String url = "https://localhost:${mockServerPort}/badresource"
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-            String firstResponseBody = IOUtils.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent());
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            String firstResponseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", firstResponseBody);
 
-            String secondResponseBody = IOUtils.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent());
+            String secondResponseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", secondResponseBody);
         };
     }

@@ -4,8 +4,7 @@ import net.lightbody.bmp.BrowserMobProxy
 import net.lightbody.bmp.BrowserMobProxyServer
 import net.lightbody.bmp.proxy.auth.AuthType
 import net.lightbody.bmp.proxy.test.util.MockServerTest
-import net.lightbody.bmp.proxy.test.util.ProxyServerTest
-import net.lightbody.bmp.proxy.util.IOUtils
+import net.lightbody.bmp.proxy.test.util.NewProxyServerTestUtil
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.junit.After
@@ -67,8 +66,8 @@ class ChainedProxyAuthTest extends MockServerTest {
         proxy.setTrustAllServers(true)
         proxy.start()
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("https://localhost:${mockServerPort}/proxyauth")).getEntity().getContent());
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://localhost:${mockServerPort}/proxyauth")).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
     }
@@ -107,7 +106,7 @@ class ChainedProxyAuthTest extends MockServerTest {
         proxy.setTrustAllServers(true)
         proxy.start()
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
             CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerPort}/proxyauth"))
             assertEquals("Expected to receive a Bad Gateway due to incorrect proxy authentication credentials", 502, response.getStatusLine().statusCode)
         };

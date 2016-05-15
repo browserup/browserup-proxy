@@ -10,67 +10,40 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>browsermob-core</artifactId>
-    <name>BrowserMob Proxy Core Module</name>
+    <name>BrowserMob Proxy Legacy (Jetty) Module</name>
 
     <properties>
         <unit-test-jetty.version>7.6.16.v20140903</unit-test-jetty.version>
+        <use.littleproxy>true</use.littleproxy>
     </properties>
 
     <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-                <includes>
-                    <include>net/lightbody/bmp/version</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>false</filtering>
-                <includes>
-                    <include>**/**</include>
-                </includes>
-                <excludes>
-                    <exclude>net/lightbody/bmp/version</exclude>
-                </excludes>
-            </resource>
-        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>test-jar</id>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-Xmx1g -XX:MaxPermSize=256m</argLine>
+                    <systemProperties>
+                        <!-- Execute tests against the LP version unless the legacy profile is explicitly specified. -->
+                        <bmp.use.littleproxy>${use.littleproxy}</bmp.use.littleproxy>
+                    </systemProperties>
+                </configuration>
             </plugin>
         </plugins>
     </build>
 
     <dependencies>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
+            <groupId>net.lightbody.bmp</groupId>
+            <artifactId>browsermob-core-littleproxy</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
+            <groupId>net.lightbody.bmp</groupId>
+            <artifactId>mitm</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -87,11 +60,6 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
             <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jcl-over-slf4j</artifactId>
         </dependency>
 
         <dependency>
@@ -116,8 +84,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.5</version>
         </dependency>
 
         <dependency>
@@ -130,53 +99,6 @@
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-firefox-driver</artifactId>
             <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>net.sf.uadetector</groupId>
-            <artifactId>uadetector-resources</artifactId>
-            <version>2014.10</version>
-        </dependency>
-
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>2.5</version>
-        </dependency>
-
-        <dependency>
-            <groupId>dnsjava</groupId>
-            <artifactId>dnsjava</artifactId>
-            <version>2.1.7</version>
-        </dependency>
-
-        <!-- Including littleproxy (compile time only) because the BrowserMobProxy interface requires access to the HttpFiltersSource class.
-             Only the LittleProxy implementation can utilize the method, and the browsermob-core-littleproxy module includes the littleproxy
-             dependency at compile scope already. -->
-        <dependency>
-            <groupId>net.lightbody.bmp</groupId>
-            <artifactId>littleproxy</artifactId>
-            <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>log4j</artifactId>
-                    <groupId>log4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>slf4j-log4j12</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.barchart.udt</groupId>
-                    <artifactId>barchart-udt-bundle</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>net.lightbody.bmp</groupId>
-            <artifactId>mitm</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -239,5 +161,15 @@
         </dependency>
 
     </dependencies>
+
+    <profiles>
+        <!-- When activating the legacy profile, this module's tests will be run using the legacy ProxyServer implementation -->
+        <profile>
+            <id>legacy</id>
+            <properties>
+                <use.littleproxy>false</use.littleproxy>
+            </properties>
+        </profile>
+    </profiles>
 
 </project>

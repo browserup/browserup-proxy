@@ -13,8 +13,7 @@ import net.lightbody.bmp.core.har.HarTimings
 import net.lightbody.bmp.filters.util.HarCaptureUtil
 import net.lightbody.bmp.proxy.dns.AdvancedHostResolver
 import net.lightbody.bmp.proxy.test.util.MockServerTest
-import net.lightbody.bmp.proxy.test.util.ProxyServerTest
-import net.lightbody.bmp.proxy.util.IOUtils
+import net.lightbody.bmp.proxy.test.util.NewProxyServerTestUtil
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
@@ -85,8 +84,8 @@ class NewHarTest extends MockServerTest {
 
         proxy.newHar();
 
-        ProxyServerTest.getNewHttpClient(proxyPort).withCloseable {
-            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testDnsTimingPopulated")).getEntity().getContent());
+        NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testDnsTimingPopulated")).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
 
@@ -120,8 +119,8 @@ class NewHarTest extends MockServerTest {
 
         proxy.newHar()
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("https://localhost:${mockServerPort}/testCaptureResponseCookiesInHar")).getEntity().getContent());
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://localhost:${mockServerPort}/testCaptureResponseCookiesInHar")).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
 
@@ -153,8 +152,8 @@ class NewHarTest extends MockServerTest {
 
         proxy.newHar()
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testCaptureResponseHeaderInHar")).getEntity().getContent());
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testCaptureResponseHeaderInHar")).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
 
@@ -191,8 +190,8 @@ class NewHarTest extends MockServerTest {
 
         proxy.newHar()
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testCaptureResponseContentInHar")).getEntity().getContent());
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testCaptureResponseContentInHar")).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", expectedResponseBody, responseBody);
         };
 
@@ -230,8 +229,8 @@ class NewHarTest extends MockServerTest {
 
         proxy.newHar()
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testCaptureResponseContentInHar")).getEntity().getContent());
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testCaptureResponseContentInHar")).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", expectedResponseBody, responseBody);
         };
 
@@ -267,8 +266,8 @@ class NewHarTest extends MockServerTest {
 
         // putting tests in code blocks to avoid variable name collisions
         regularHarCanCapture: {
-            ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-                String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testEndHar")).getEntity().getContent());
+            NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+                String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testEndHar")).getEntity().getContent());
                 assertEquals("Did not receive expected response from mock server", "success", responseBody);
             };
 
@@ -292,8 +291,8 @@ class NewHarTest extends MockServerTest {
         }
 
         harStillEmptyAfterRequest: {
-            ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-                String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testEndHar")).getEntity().getContent());
+            NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+                String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testEndHar")).getEntity().getContent());
                 assertEquals("Did not receive expected response from mock server", "success", responseBody);
             };
 
@@ -310,8 +309,8 @@ class NewHarTest extends MockServerTest {
         }
 
         newHarCanCapture: {
-            ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-                String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testEndHar")).getEntity().getContent());
+            NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+                String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testEndHar")).getEntity().getContent());
                 assertEquals("Did not receive expected response from mock server", "success", responseBody);
             };
 
@@ -344,8 +343,8 @@ class NewHarTest extends MockServerTest {
 
         proxy.newHar("first-page")
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testEndHar")).getEntity().getContent());
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testEndHar")).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
 
@@ -364,8 +363,8 @@ class NewHarTest extends MockServerTest {
 
         Har harWithFirstPageOnly = proxy.newPage("second-page")
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testEndHar")).getEntity().getContent());
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testEndHar")).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
 
@@ -396,8 +395,8 @@ class NewHarTest extends MockServerTest {
 
         String requestUrl = "http://localhost:${mockServerPort}/httprequesturlcaptured"
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet(requestUrl)).getEntity().getContent());
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(requestUrl)).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
 
@@ -428,8 +427,8 @@ class NewHarTest extends MockServerTest {
 
         String requestUrl = "http://localhost:${mockServerPort}/httprequesturlcaptured?param1=value1"
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet(requestUrl)).getEntity().getContent());
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(requestUrl)).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
 
@@ -467,8 +466,8 @@ class NewHarTest extends MockServerTest {
         // use HTTPS to force a CONNECT. subsequent requests through the tunnel will only contain the resource path, not the full hostname.
         String requestUrl = "https://localhost:${mockServerPort}/httpsrequesturlcaptured?param1=value1"
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet(requestUrl)).getEntity().getContent());
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(requestUrl)).getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
 
@@ -507,11 +506,11 @@ class NewHarTest extends MockServerTest {
         String requestUrl = "https://localhost:${mockServerPort}/originalurl?param1=value1"
         String expectedRewrittenUrl = "https://localhost:${mockServerPort}/httpsrewrittenurlcaptured?param1=value1"
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
             assertEquals("Did not receive HTTP 200 from mock server", 200, response.getStatusLine().getStatusCode())
 
-            String responseBody = IOUtils.toStringAndClose(response.getEntity().getContent());
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
         };
 
@@ -555,8 +554,8 @@ class NewHarTest extends MockServerTest {
 
         httpsRequest: {
             String httpsUrl = "https://localhost:${mockServerPort}/httpsmitmdisabled"
-            ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-                String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet(httpsUrl)).getEntity().getContent());
+            NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+                String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(httpsUrl)).getEntity().getContent());
                 assertEquals("Did not receive expected response from mock server", "Response over HTTPS", responseBody);
             };
 
@@ -568,8 +567,8 @@ class NewHarTest extends MockServerTest {
 
         httpRequest: {
             String httpUrl = "http://localhost:${mockServerPort}/httpmitmdisabled"
-            ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-                String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet(httpUrl)).getEntity().getContent());
+            NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+                String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(httpUrl)).getEntity().getContent());
                 assertEquals("Did not receive expected response from mock server", "Response over HTTP", responseBody);
             };
 
@@ -584,8 +583,8 @@ class NewHarTest extends MockServerTest {
 
         secondHttpsRequest: {
             String httpsUrl = "https://localhost:${mockServerPort}/httpsmitmdisabled"
-            ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
-                String responseBody = IOUtils.toStringAndClose(it.execute(new HttpGet(httpsUrl)).getEntity().getContent());
+            NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+                String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(httpsUrl)).getEntity().getContent());
                 assertEquals("Did not receive expected response from mock server", "Response over HTTPS", responseBody);
             };
 
@@ -610,7 +609,7 @@ class NewHarTest extends MockServerTest {
 
         String requestUrl = "http://www.doesnotexist.address/some-resource"
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
             assertEquals("Did not receive HTTP 502 from proxy", 502, response.getStatusLine().getStatusCode())
         };
@@ -658,7 +657,7 @@ class NewHarTest extends MockServerTest {
 
         String requestUrl = "https://www.doesnotexist.address/some-resource"
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
             assertEquals("Did not receive HTTP 502 from proxy", 502, response.getStatusLine().getStatusCode())
         };
@@ -704,7 +703,7 @@ class NewHarTest extends MockServerTest {
         // to port 2 will fail.
         String requestUrl = "http://localhost:2/some-resource"
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
             assertEquals("Did not receive HTTP 502 from proxy", 502, response.getStatusLine().getStatusCode())
         };
@@ -751,7 +750,7 @@ class NewHarTest extends MockServerTest {
         // to port 2 will fail.
         String requestUrl = "https://localhost:2/some-resource"
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
             assertEquals("Did not receive HTTP 502 from proxy", 502, response.getStatusLine().getStatusCode())
         };
@@ -806,7 +805,7 @@ class NewHarTest extends MockServerTest {
 
         String requestUrl = "http://localhost:${mockServerPort}/testResponseTimeoutCapturedInHar"
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
             assertEquals("Did not receive HTTP 504 from proxy", 504, response.getStatusLine().getStatusCode())
         };
@@ -866,7 +865,7 @@ class NewHarTest extends MockServerTest {
 
         String requestUrl = "https://localhost:${mockServerPort}/testResponseTimeoutCapturedInHar"
 
-        ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
             assertEquals("Did not receive HTTP 504 from proxy", 504, response.getStatusLine().getStatusCode())
         };
@@ -961,7 +960,7 @@ class NewHarTest extends MockServerTest {
         proxy.newHar()
 
         def verifyRedirect = { String requestUrl, expectedStatusCode, expectedLocationValue ->
-            ProxyServerTest.getNewHttpClient(proxy.port).withCloseable {
+            NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
                 // for some reason, even when the HTTP client is built with .disableRedirectHandling(), it still tries to follow
                 // the 301. so explicitly disable following redirects at the request level.
                 def request = new HttpGet(requestUrl)

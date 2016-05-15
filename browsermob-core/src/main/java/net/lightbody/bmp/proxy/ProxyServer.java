@@ -25,7 +25,7 @@ import net.lightbody.bmp.proxy.jetty.http.HttpListener;
 import net.lightbody.bmp.proxy.jetty.http.SocketListener;
 import net.lightbody.bmp.proxy.jetty.jetty.Server;
 import net.lightbody.bmp.proxy.jetty.util.InetAddrPort;
-import net.lightbody.bmp.proxy.util.BrowserMobProxyUtil;
+import net.lightbody.bmp.util.BrowserMobProxyUtil;
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponseInterceptor;
 import org.java_bandwidthlimiter.BandwidthLimiter;
@@ -56,17 +56,17 @@ import java.util.regex.Pattern;
 
 /**
  * The legacy, Jetty 5-based implementation of BrowserMobProxy. This class implements the {@link net.lightbody.bmp.proxy.LegacyProxyServer}
- * interface that defines the BMP 2.0 contact, as well as the 2.1+ {@link net.lightbody.bmp.BrowserMobProxy} interface. <b>Important:</b> if
- * you are implementing new code, use the {@link net.lightbody.bmp.BrowserMobProxy} interface. The
+ * interface that defines the BMP 2.0 contact, as well as the 2.1+ {@link BrowserMobProxy} interface. <b>Important:</b> if
+ * you are implementing new code, use the {@link BrowserMobProxy} interface. The
  * {@link net.lightbody.bmp.proxy.LegacyProxyServer} interface is deprecated and will be removed in a future release.
  * <h1>Unsupported operations</h1>
- * The following {@link net.lightbody.bmp.BrowserMobProxy} operations are not supported and will be ignored:
+ * The following {@link BrowserMobProxy} operations are not supported and will be ignored:
  * <ul>
- *     <li>{@link net.lightbody.bmp.BrowserMobProxy#getServerBindAddress()} and {@link #start(int, java.net.InetAddress, java.net.InetAddress)} - server bind addresses are not supported</li>
- *     <li>{@link net.lightbody.bmp.BrowserMobProxy#stopAutoAuthorization(String)}</li>
+ *     <li>{@link BrowserMobProxy#getServerBindAddress()} and {@link #start(int, java.net.InetAddress, java.net.InetAddress)} - server bind addresses are not supported</li>
+ *     <li>{@link BrowserMobProxy#stopAutoAuthorization(String)}</li>
  * </ul>
  *
- * @deprecated Use the {@link net.lightbody.bmp.BrowserMobProxy} interface to preserve compatibility with future BrowserMob Proxy versions.
+ * @deprecated Use the {@link BrowserMobProxy} interface to preserve compatibility with future BrowserMob Proxy versions.
  */
 @Deprecated
 public class ProxyServer implements LegacyProxyServer, BrowserMobProxy {

@@ -25,7 +25,7 @@ import net.lightbody.bmp.exception.UnsupportedCharsetException;
 import net.lightbody.bmp.filters.support.HttpConnectTiming;
 import net.lightbody.bmp.filters.util.HarCaptureUtil;
 import net.lightbody.bmp.proxy.CaptureType;
-import net.lightbody.bmp.proxy.util.BrowserMobProxyUtil;
+import net.lightbody.bmp.util.BrowserMobProxyUtil;
 import net.lightbody.bmp.util.BrowserMobHttpUtil;
 import net.sf.uadetector.ReadableUserAgent;
 import org.littleshoot.proxy.impl.ProxyUtils;

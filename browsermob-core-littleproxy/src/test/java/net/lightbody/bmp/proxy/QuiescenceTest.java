@@ -1,7 +1,7 @@
 package net.lightbody.bmp.proxy;
 
 import net.lightbody.bmp.proxy.test.util.NewProxyServerTest;
-import net.lightbody.bmp.proxy.test.util.ProxyServerTest;
+import net.lightbody.bmp.proxy.test.util.NewProxyServerTestUtil;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -42,7 +42,7 @@ public class QuiescenceTest extends NewProxyServerTest {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try (CloseableHttpClient client = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+                try (CloseableHttpClient client = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
                     HttpResponse response = client.execute(new HttpGet("http://127.0.0.1:" + mockServerPort + "/quiescencesuccessful"));
                     EntityUtils.consumeQuietly(response.getEntity());
 
@@ -85,7 +85,7 @@ public class QuiescenceTest extends NewProxyServerTest {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try (CloseableHttpClient client = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+                try (CloseableHttpClient client = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
                     client.execute(new HttpGet("http://127.0.0.1:" + mockServerPort + "/quiescenceunsuccessful"));
 
                     requestCompleted.set(true);
@@ -113,7 +113,7 @@ public class QuiescenceTest extends NewProxyServerTest {
                 Times.exactly(1)
         ).respond(response().withStatusCode(200));
 
-        try (CloseableHttpClient client = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient client = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             HttpResponse response = client.execute(new HttpGet("http://127.0.0.1:" + mockServerPort + "/quiescencecompleted"));
             EntityUtils.consumeQuietly(response.getEntity());
 
@@ -139,7 +139,7 @@ public class QuiescenceTest extends NewProxyServerTest {
                 Times.exactly(1)
         ).respond(response().withStatusCode(200));
 
-        try (CloseableHttpClient client = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient client = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             HttpResponse response = client.execute(new HttpGet("http://127.0.0.1:" + mockServerPort + "/quiescencesatisfied"));
             EntityUtils.consumeQuietly(response.getEntity());
 
@@ -167,7 +167,7 @@ public class QuiescenceTest extends NewProxyServerTest {
                 Times.exactly(1)
         ).respond(response().withStatusCode(200));
 
-        try (CloseableHttpClient client = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient client = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             HttpResponse response = client.execute(new HttpGet("http://127.0.0.1:" + mockServerPort + "/quiescencesmalltimeoutsuccess"));
             EntityUtils.consumeQuietly(response.getEntity());
 
@@ -196,7 +196,7 @@ public class QuiescenceTest extends NewProxyServerTest {
                 Times.exactly(1)
         ).respond(response().withStatusCode(200));
 
-        try (CloseableHttpClient client = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+        try (CloseableHttpClient client = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             HttpResponse response = client.execute(new HttpGet("http://127.0.0.1:" + mockServerPort + "/quiescencesmalltimeoutunsuccessful"));
             EntityUtils.consumeQuietly(response.getEntity());
 
@@ -238,7 +238,7 @@ public class QuiescenceTest extends NewProxyServerTest {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try (CloseableHttpClient client = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+                try (CloseableHttpClient client = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
                     HttpResponse response = client.execute(new HttpGet("http://127.0.0.1:" + mockServerPort + "/successquiesence2s"));
                     EntityUtils.consumeQuietly(response.getEntity());
                     firstRequestStatusCode.set(response.getStatusLine().getStatusCode());
@@ -302,7 +302,7 @@ public class QuiescenceTest extends NewProxyServerTest {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try (CloseableHttpClient client = ProxyServerTest.getNewHttpClient(proxy.getPort())) {
+                try (CloseableHttpClient client = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
                     HttpResponse response = client.execute(new HttpGet("http://127.0.0.1:" + mockServerPort + "/quiesence2s"));
                     EntityUtils.consumeQuietly(response.getEntity());
 
