@@ -1,14 +1,7 @@
-New BrowserMobProxy Interface
-=============================
-The 2.1 beta releases of BrowserMob Proxy contain the new `BrowserMobProxy` interface. This interface specifies the methods that will be available in BrowserMob Proxy 3.0 and beyond.
-Both the legacy `ProxyServer` class and the new LittleProxy-based `BrowserMobProxyServer` class implement the `BrowserMobProxy` interface, so all users can begin using the new
-interface, even when using the legacy `ProxyServer` implementation.
+# New BrowserMobProxy interface
+The `BrowserMobProxyServer` class, powered by LitleProxy, implements the ``BrowserMobProxy` interface. The following table lists the current level of support for the new interface in the modern and legacy BMP implementations:
 
-# New Interface Support
-The LittleProxy-based implementation will support the entire `BrowserMobProxy` interface. The Jetty-based implementation in `ProxyServer` will support most, but not all, features of
-the new interface. The following table lists the current level of support for the new interface:
-
-`BrowserMobProxy` method | `ProxyServer` (Jetty 5) | `BrowserMobProxyServer` (LittleProxy)
+`BrowserMobProxy` method | Legacy `ProxyServer` (Jetty 5) | `BrowserMobProxyServer` (LittleProxy)
 :----------------------- | :---------------------: | :-----------------------------------:
 `start` (and related) | X | X
 `stop` | X | X

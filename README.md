@@ -2,37 +2,56 @@
 
 BrowserMob Proxy is a simple utility that makes it easy to capture performance data from browsers, typically written using automation toolkits such as Selenium and Watir.
 
-The latest version of BrowserMobProxy is 2.1.0-beta-6. It is the latest release that supports the [new BrowserMobProxy interface](#new-browsermobproxy-api), with the `BrowserMobProxyServer` implementation [powered by LittleProxy](#littleproxy-support). We highly recommend that you use  2.1.0-beta-6 instead of the [previous 2.0.0 release](https://github.com/lightbody/browsermob-proxy/tree/2.0).
+The latest version of BrowserMobProxy is 2.1.0, powered by [LittleProxy](https://github.com/adamfisk/LittleProxy).
 
-To use BrowserMob Proxy in your tests, add the `browsermob-core-littleproxy` dependency to your pom:
+To use BrowserMob Proxy in your tests or application, add the `browsermob-core` dependency to your pom:
 ```xml
     <dependency>
         <groupId>net.lightbody.bmp</groupId>
-        <artifactId>browsermob-core-littleproxy</artifactId>
-        <version>2.1.0-beta-6</version>
+        <artifactId>browsermob-core</artifactId>
+        <version>2.1.0</version>
         <scope>test</scope>
     </dependency>
 ```
 
 To run in standalone mode from the command line, download the latest release from the [releases page](https://github.com/lightbody/browsermob-proxy/releases), or [build the latest from source](#building-the-latest-from-source).
 
-## Important Changes since 2.0.0
+For more information on using BrowserMob Proxy with Selenium, see the [Using with Selenium](#using-with-selenium) section.
 
-Since the 2.1 release is still in beta, some features and functionality (including the BrowserMobProxy interface) may change, although the new interface is largely stable. The most important changes from 2.0 are:
+## Changes since the 2.1-beta series
+
+**The `browsermob-core-littleproxy` module is now `browsermob-core`**
+
+After six beta releases, the LittleProxy implementation now supports more features and is more stable than the legacy implementation. To reflect that level of maturity and long-term support, the `browsermob-core` module now uses LittleProxy by default.
+
+**Note about Legacy support**: In the 2.1-betas, if you were using the `ProxyServer` or `LegacyProxyServer` classes, use the `browsermob-core-legacy` module in 2.1.0.
+
+*LittleProxy support for `LegacyProxyServer` has moved to `BrowserMobProxyServerLegacyAdapter`*. Using the LittleProxy implementation with the `LegacyProxyServer` interface is still fully supported as a means to help you transition from 2.0.0. Unlike the 2.1-beta series, the `BrowserMobProxyServer` class
+no longer implements `LegacyProxyServer`; however, the `BrowserMobProxyServerLegacyAdapter` can be used to integrate legacy code with the new LittleProxy interface. You must still use the `browsermob-core-legacy` module when using the LegacyAdapter.
+
+```java
+   LegacyProxyServer proxy = new BrowserMobProxyServerLegacyAdapter();
+   proxy.setPort(8081); // method only supported by the legacy interface
+   proxy.start();
+```
+
+## Changes since 2.0.0
+
+The new [BrowserMobProxyServer class](browsermob-core/src/main/java/net/lightbody/bmp/BrowserMobProxyServer.java) has replaced the legacy ProxyServer implementation. The legacy implementation is no longer actively supported; all new code should use `BrowserMobProxyServer`. We highly recommend that existing code migrate to the new implementation.
+
+The most important changes from 2.0 are:
 
 - [Separate REST API and Embedded Mode modules](#embedded-mode). Include only the functionality you need.
-- [New BrowserMobProxy interface](https://github.com/lightbody/browsermob-proxy/blob/master/browsermob-core/src/main/java/net/lightbody/bmp/BrowserMobProxy.java). The new interface will completely replace the legacy 2.0 ProxyServer contract in version 3.0 and higher.
-- [LittleProxy support](#littleproxy-support). More powerful than the legacy Jetty back-end. For 2.1 releases, LittleProxy support will be provided through the `browsermob-core-littleproxy` module.
-
-See the [New Interface Compatibility Guide](new-interface-compatibility.md) for information on using the new BrowserMobProxy interface with the legacy ProxyServer implementation.
+- [New BrowserMobProxy interface](browsermob-core/src/main/java/net/lightbody/bmp/BrowserMobProxy.java). The new interface will completely replace the legacy 2.0 ProxyServer contract in version 3.0 and higher.
+- [LittleProxy support](#littleproxy-support). More stable and more powerful than the legacy Jetty back-end.
 
 ### New BrowserMobProxy API
 
-BrowserMob Proxy 2.1 includes a [new BrowserMobProxy interface](https://github.com/lightbody/browsermob-proxy/blob/master/browsermob-core/src/main/java/net/lightbody/bmp/BrowserMobProxy.java) to interact with BrowserMob Proxy programmatically. The new interface defines the functionality that BrowserMob Proxy will support in future releases (including 3.0+). Both the legacy (Jetty-based) ProxyServer class and the new, LittleProxy-powered BrowserMobProxy class support the new BrowserMobProxy interface.
+BrowserMob Proxy 2.1 includes a [new BrowserMobProxy interface](browsermob-core/src/main/java/net/lightbody/bmp/BrowserMobProxy.java) to interact with BrowserMob Proxy programmatically. The new interface defines the functionality that BrowserMob Proxy will support in future releases (including 3.0+). To ease migration, both the legacy (Jetty-based) ProxyServer class and the new, LittleProxy-powered BrowserMobProxy class support the new BrowserMobProxy interface.
 
-To ease the upgrade path to 3.0 and beyond, we _highly_ recommend using the BrowserMobProxy interface, even if you continue to use the legacy ProxyServer implementation.
+We _highly_ recommend migrating existing code to the BrowserMobProxy interface using the `BrowserMobProxyServer` class.
 
-### Using the LittleProxy implementation with existing code
+### Using the LittleProxy implementation with 2.0.0 code
 
 The legacy interface, implicitly defined by the ProxyServer class, has been extracted into `net.lightbody.bmp.proxy.LegacyProxyServer` and is now officially deprecated. The new LittleProxy-based implementation will implement LegacyProxyServer for all 2.1.x releases. This means you can switch to the LittleProxy-powered implementation with minimal change to existing code ([with the exception of interceptors](#http-request-manipulation)):
 
@@ -43,35 +62,18 @@ The legacy interface, implicitly defined by the ProxyServer class, has been extr
     // [...]
 
     // To use the LittleProxy-powered 2.1.0 release, simply change to 
-    // the LegacyProxyServer interface and the new LittleProxy-based implementation:
-    LegacyProxyServer proxyServer = new BrowserMobProxyServer();
+    // the LegacyProxyServer interface and the adapter for the new
+    // LittleProxy-based implementation:
+    LegacyProxyServer proxyServer = new BrowserMobProxyServerLegacyAdapter();
     proxyServer.start();
     // Almost all deprecated 2.0.0 methods are supported by the 
-    // new BrowserMobProxyServer implementation, so in most cases, 
+    // new BrowserMobProxyServerLegacyAdapter implementation, so in most cases,
     // no further code changes are necessary
 ```
 
 LegacyProxyServer will not be supported after 3.0 is released, so we recommend migrating to the `BrowserMobProxy` interface as soon as possible. The new interface provides additional functionality and is compatible with both the legacy Jetty-based ProxyServer implementation [(with some exceptions)](new-interface-compatibility.md) and the new LittleProxy implementation.
 
-### LittleProxy Support
-
-BrowserMob Proxy now supports using LittleProxy instead of Jetty 5 + Apache HTTP Client. To enable LittleProxy support, include the `browsermob-core-littleproxy` artifact:
-```xml
-    <dependency>
-        <groupId>net.lightbody.bmp</groupId>
-        <artifactId>browsermob-core-littleproxy</artifactId>
-        <version>2.1.0-beta-6</version>
-        <scope>test</scope>
-    </dependency>
-```
-
-Instead of creating a `ProxyServer` instance, create a `BrowserMobProxyServer` instance:
-```java
-    BrowserMobProxy proxy = new BrowserMobProxyServer();
-    proxy.start();
-```
-
-To continue using the legacy Jetty-based implementation, include the `browsermob-core` artifact.
+If you must continue using the legacy Jetty-based implementation, include the `browsermob-core-legacy` artifact instead of `browsermob-core`.
 
 ## Features and Usage
 
@@ -208,15 +210,14 @@ system properties will be used to specify the upstream proxy.
 
 **New in 2.1:** New [BrowserMobProxy interface](#new-browsermobproxy-api) for Embedded Mode
 
-BrowserMob Proxy 2.1 separates the Embedded Mode and REST API into two modules. If you only need Embedded Mode functionality, add the `browsermob-core-littleproxy` artifact as a dependency. The REST API artifact is `browsermob-rest`.
+BrowserMob Proxy 2.1 separates the Embedded Mode and REST API into two modules. If you only need Embedded Mode functionality, add the `browsermob-core` artifact as a dependency. The REST API artifact is `browsermob-rest`.
 
 If you're using Java and Selenium, the easiest way to get started is to embed the project directly in your test. First, you'll need to make sure that all the dependencies are imported in to the project. You can find them in the *lib* directory. Or, if you're using Maven, you can add this to your pom:
 ```xml
     <dependency>
         <groupId>net.lightbody.bmp</groupId>
-        <!-- To use the legacy, Jetty-based implementation, change the artifactId to browsermob-core -->
-        <artifactId>browsermob-core-littleproxy</artifactId>
-        <version>2.1.0-beta-6</version>
+        <artifactId>browsermob-core</artifactId>
+        <version>2.1.0</version>
         <scope>test</scope>
     </dependency>
 ```
@@ -251,6 +252,9 @@ You can use the REST API with Selenium however you want. But if you're writing y
     // start the browser up
     WebDriver driver = new FirefoxDriver(capabilities);
 
+    // enable more detailed HAR capture, if desired (see CaptureType for the complete list)
+    proxy.enableHarCaptureTypes(CaptureType.REQUEST_CONTENT, CaptureType.RESPONSE_CONTENT);
+
     // create a new HAR with the label "yahoo.com"
     proxy.newHar("yahoo.com");
 
@@ -263,9 +267,9 @@ You can use the REST API with Selenium however you want. But if you're writing y
 
 ### HTTP Request Manipulation
 
-**HTTP request manipulation is changing with LittleProxy.** The LittleProxy-based interceptors are easier to use and more reliable. The legacy ProxyServer implementation **will not** support the new interceptor methods.
+**HTTP request manipulation has changed in 2.1.0 with LittleProxy.** The LittleProxy-based interceptors are easier to use and more reliable. The legacy ProxyServer implementation **will not** support the new interceptor methods.
 
-#### LittleProxy interceptors
+#### 2.1.0 (LittleProxy) interceptors
 
 There are four new methods to support request and response interception in LittleProxy:
 
@@ -365,13 +369,13 @@ Consult the Java API docs for more info.
 
 ### SSL Support
 
-**BrowserMob with LittleProxy now supports full MITM:** For most users, MITM will work out-of-the-box with default settings. Install the [ca-certificate-rsa.cer](/browsermob-core/src/main/resources/sslSupport/ca-certificate-rsa.cer) file in your browser or HTTP client to avoid untrusted certificate warnings. Generally, it is safer to generate your own private key, rather than using the .cer files distributed with BrowserMob Proxy. See the [README file in the `mitm` module](/mitm/README.md) for instructions on generating or using your own root certificate and private key with MITM.
+**BrowserMob Proxy 2.1.0 now supports full MITM:** For most users, MITM will work out-of-the-box with default settings. Install the [ca-certificate-rsa.cer](/browsermob-core/src/main/resources/sslSupport/ca-certificate-rsa.cer) file in your browser or HTTP client to avoid untrusted certificate warnings. Generally, it is safer to generate your own private key, rather than using the .cer files distributed with BrowserMob Proxy. See the [README file in the `mitm` module](/mitm/README.md) for instructions on generating or using your own root certificate and private key with MITM.
 
-**Legacy Jetty-based ProxyServer support for MITM:** As of version 2.1.0-beta-4, the legacy `ProxyServer` implementation uses the same `ca-certificate-rsa.cer` root certificate as the LittleProxy implementation. The previous cybervillainsCA.cer certificate has been removed.
+**Legacy Jetty-based ProxyServer support for MITM:** The legacy `ProxyServer` implementation uses the same `ca-certificate-rsa.cer` root certificate as the default BrowserMobProxyServer implementation. The previous cybervillainsCA.cer certificate has been removed.
 
 **Note: DO NOT** permanently install the .cer files distributed with BrowserMob Proxy in users' browsers. They should be used for testing only and must not be used with general web browsing.
 
-If you're doing testing with Selenium, you'll want to make sure that the browser profile that gets set up by Selenium not only has the proxy configured, but also has the CA installed. Unfortuantely, there is no API for doing this in Selenium, so you'll have to solve it uniquely for each browser type. We hope to make this easier in upcoming releases.
+If you're doing testing with Selenium, you'll want to make sure that the browser profile that gets set up by Selenium not only has the proxy configured, but also has the CA installed. Unfortunately, there is no API for doing this in Selenium; it must be done manually for each browser and environment.
 
 ### NodeJS Support
 
@@ -381,34 +385,9 @@ NodeJS bindings for browswermob-proxy are available [here](https://github.com/zz
 
 When running in stand-alone mode, the proxy loads the default logging configuration from the conf/bmp-logging.yaml file. To increase/decrease the logging level, change the logging entry for net.lightbody.bmp.
 
-**New in 2.1:** Neither Embedded Mode nor the REST API include an slf4j static binding, so you no longer need to exclude the slf4j-jdk14 dependency when including `browsermob-core`, `browsermob-core-littleproxy` or `browsermob-rest`.
-
 ### DNS Resolution
 
-**New in 2.1:** BrowserMob Proxy enables native DNS resolution by default.
-
-The legacy Jetty-based ProxyServer implementation uses XBill (dnsjava) resolution, but automatically falls back to the default JVM DNS resolution if XBill cannot resolve the address. To disable native DNS fallback, set the `bmp.allowNativeDnsFallback` JVM property to `false`. You can also use the `BrowserMobProxy.setHostNameResolver()` method to disable native DNS fallback and/or dnsjava resolution itself.
-
-When running from the command line:
-
-    $ JAVA_OPTS="-Dbmp.allowNativeDnsFallback=false" sh browsermob-proxy
-
-or in Windows:
-
-    C:\browsermob-proxy\bin> set JAVA_OPTS="-Dbmp.allowNativeDnsFallback=false"
-    C:\browsermob-proxy\bin> browsermob-proxy.bat
-
-If you are running in Embedded Mode (for example, within a Selenium test) you can disable native fallback or dnsjava by setting the implementation directly:
-
-```java
-    BrowserMobProxy proxyServer = new BrowserMobProxyServer();
-    // use only dnsjava
-    proxyServer.setHostNameResolver(ClientUtil.createDnsJavaResolver());
-    // or use only native resolution
-    proxyServer.setHostNameResolver(ClientUtil.createNativeCacheManipulatingResolver());
-    //...
-    proxyServer.start(0);
-```
+The BrowserMobProxyServer implementation uses native DNS resolution by default, but supports custom DNS resolution and advanced DNS manipulation. See the [ClientUtil](browsermob-proxy/browsermob-core/src/main/java/net/lightbody/bmp/client/ClientUtil.java) class for information on DNS manipulation using the dnsjava resolver.
 
 ## Building the latest from source
 
@@ -416,14 +395,14 @@ You'll need maven (`brew install maven` if you're on OS X); use the `release` pr
 
     [~]$ mvn -DskipTests -P release
     
-You'll find the standalone BrowserMob Proxy distributable zip at `browsermob-dist/target/browsermob-proxy-2.1.0-beta-6-SNAPSHOT-bin.zip`. Unzip the contents and run the `browsermob-proxy` or `browsermob-proxy.bat` files in the `bin` directory.
+You'll find the standalone BrowserMob Proxy distributable zip at `browsermob-dist/target/browsermob-proxy-2.1.1-SNAPSHOT-bin.zip`. Unzip the contents and run the `browsermob-proxy` or `browsermob-proxy.bat` files in the `bin` directory.
 
 When you build the latest code from source, you'll have access to the latest snapshot release. To use the SNAPSHOT version in your code, modify the version in your pom:
 ```xml
     <dependency>
         <groupId>net.lightbody.bmp</groupId>
-        <artifactId>browsermob-core-littleproxy</artifactId>
-        <version>2.1.0-beta-7-SNAPSHOT</version>
+        <artifactId>browsermob-core</artifactId>
+        <version>2.1.1-SNAPSHOT</version>
         <scope>test</scope>
     </dependency>
 ```
