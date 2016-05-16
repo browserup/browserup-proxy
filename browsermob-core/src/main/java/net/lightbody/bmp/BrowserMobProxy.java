@@ -4,7 +4,6 @@ import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.filters.RequestFilter;
 import net.lightbody.bmp.filters.ResponseFilter;
 import net.lightbody.bmp.mitm.TrustSource;
-import net.lightbody.bmp.mitm.manager.ImpersonatingMitmManager;
 import net.lightbody.bmp.proxy.BlacklistEntry;
 import net.lightbody.bmp.proxy.CaptureType;
 import net.lightbody.bmp.proxy.auth.AuthType;
@@ -563,10 +562,6 @@ public interface BrowserMobProxy {
      * {@link HttpFiltersSource#filterRequest(io.netty.handler.codec.http.HttpRequest, io.netty.channel.ChannelHandlerContext)} method and returning an
      * {@link org.littleshoot.proxy.HttpFilters} instance (typically, a subclass of {@link org.littleshoot.proxy.HttpFiltersAdapter}).
      * To disable or bypass a filter on a per-request basis, the filterRequest() method may return null.
-     * <p/>
-     * <b>Note:</b> This method is only available in the LittleProxy-based implementation of BrowserMob Proxy. The legacy {@link net.lightbody.bmp.proxy.ProxyServer}
-     * implementation will not use the HTTP filters. You <b>must</b> use the addRequestInterceptor() and addResponseInterceptor() methods in
-     * {@link net.lightbody.bmp.proxy.LegacyProxyServer} when using the legacy ProxyServer implementation.
      *
      * @param filterFactory factory to generate HttpFilters
      */
@@ -579,12 +574,8 @@ public interface BrowserMobProxy {
      * {@link HttpFiltersSource#filterRequest(io.netty.handler.codec.http.HttpRequest, io.netty.channel.ChannelHandlerContext)} method and returning an
      * {@link org.littleshoot.proxy.HttpFilters} instance (typically, a subclass of {@link org.littleshoot.proxy.HttpFiltersAdapter}).
      * To disable or bypass a filter on a per-request basis, the filterRequest() method may return null.
-     * <p/>
-     * <b>Note:</b> This method is only available in the LittleProxy-based implementation of BrowserMob Proxy. The legacy {@link net.lightbody.bmp.proxy.ProxyServer}
-     * implementation will not use the HTTP filters. You <b>must</b> use the addRequestInterceptor() and addResponseInterceptor() methods in
-     * {@link net.lightbody.bmp.proxy.LegacyProxyServer} when using the legacy ProxyServer implementation.
      *
-     * @param filterFactory factory to generate HttpFilters
+     *  @param filterFactory factory to generate HttpFilters
      */
     void addLastHttpFilterFactory(HttpFiltersSource filterFactory);
 
@@ -614,7 +605,7 @@ public interface BrowserMobProxy {
     /**
      * Sets the MITM manager, which is responsible for generating forged SSL certificates to present to clients. By default,
      * BrowserMob Proxy uses the ca-certificate-rsa.cer root certificate for impersonation. See the documentation at
-     * {@link ImpersonatingMitmManager} and {@link ImpersonatingMitmManager.Builder}
+     * {@link net.lightbody.bmp.mitm.manager.ImpersonatingMitmManager} and {@link net.lightbody.bmp.mitm.manager.ImpersonatingMitmManager.Builder}
      * for details on customizing the root and server certificate generation.
      *
      * @param mitmManager MITM manager to use
