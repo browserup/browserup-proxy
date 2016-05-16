@@ -47,7 +47,7 @@ public class TrustSource {
      * Creates a TrustSource that contains no trusted certificates. For public use, see {@link #empty()}.
      */
     protected TrustSource() {
-        this(new X509Certificate[0]);
+        this(TrustUtil.EMPTY_CERTIFICATE_ARRAY);
     }
 
     /**
@@ -58,10 +58,10 @@ public class TrustSource {
      */
     protected TrustSource(X509Certificate... trustedCAs) {
         if (trustedCAs == null) {
-            throw new IllegalArgumentException("Trusted CAs cannot be null");
+            this.trustedCAs = TrustUtil.EMPTY_CERTIFICATE_ARRAY;
+        } else {
+            this.trustedCAs = trustedCAs;
         }
-
-        this.trustedCAs = trustedCAs;
     }
 
     /**
