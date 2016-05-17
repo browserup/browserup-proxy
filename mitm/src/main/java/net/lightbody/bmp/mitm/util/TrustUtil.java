@@ -45,6 +45,11 @@ public class TrustUtil {
     private static final String DEFAULT_TRUSTED_CA_RESOURCE = "/cacerts.pem";
 
     /**
+     * Empty X509 certificate array, useful for indicating an empty root CA trust store.
+     */
+    public static final X509Certificate[] EMPTY_CERTIFICATE_ARRAY = new X509Certificate[0];
+
+    /**
      * Security provider used to transform PEM files into Certificates.
      * TODO: Modify the architecture of TrustUtil and TrustSource so that they do not need a hard-coded SecurityProviderTool.
      */
@@ -58,7 +63,13 @@ public class TrustUtil {
         public X509Certificate[] get() {
             X509TrustManager defaultTrustManager = getDefaultJavaTrustManager();
 
-            return defaultTrustManager.getAcceptedIssuers();
+            X509Certificate[] defaultJavaTrustedCerts = defaultTrustManager.getAcceptedIssuers();
+
+            if (defaultJavaTrustedCerts != null) {
+                return defaultJavaTrustedCerts;
+            } else {
+                return EMPTY_CERTIFICATE_ARRAY;
+            }
         }
     });
 
