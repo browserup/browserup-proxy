@@ -2,14 +2,14 @@
 
 BrowserMob Proxy is a simple utility that makes it easy to capture performance data from browsers, typically written using automation toolkits such as Selenium and Watir.
 
-The latest version of BrowserMobProxy is 2.1.0, powered by [LittleProxy](https://github.com/adamfisk/LittleProxy).
+The latest version of BrowserMobProxy is 2.1.1, powered by [LittleProxy](https://github.com/adamfisk/LittleProxy).
 
 To use BrowserMob Proxy in your tests or application, add the `browsermob-core` dependency to your pom:
 ```xml
     <dependency>
         <groupId>net.lightbody.bmp</groupId>
         <artifactId>browsermob-core</artifactId>
-        <version>2.1.0</version>
+        <version>2.1.1</version>
         <scope>test</scope>
     </dependency>
 ```
@@ -24,7 +24,7 @@ For more information on using BrowserMob Proxy with Selenium, see the [Using wit
 
 After six beta releases, the LittleProxy implementation now supports more features and is more stable than the legacy implementation. To reflect that level of maturity and long-term support, the `browsermob-core` module now uses LittleProxy by default.
 
-**Note about Legacy support**: In the 2.1-betas, if you were using the `ProxyServer` or `LegacyProxyServer` classes, use the `browsermob-core-legacy` module in 2.1.0.
+**Note about Legacy support**: In the 2.1-betas, if you were using the `ProxyServer` or `LegacyProxyServer` classes, use the `browsermob-core-legacy` module in 2.1.0 and higher.
 
 *LittleProxy support for `LegacyProxyServer` has moved to `BrowserMobProxyServerLegacyAdapter`*. Using the LittleProxy implementation with the `LegacyProxyServer` interface is still fully supported as a means to help you transition from 2.0.0. Unlike the 2.1-beta series, the `BrowserMobProxyServer` class
 no longer implements `LegacyProxyServer`; however, the `BrowserMobProxyServerLegacyAdapter` can be used to integrate legacy code with the new LittleProxy interface. You must still use the `browsermob-core-legacy` module when using the LegacyAdapter.
@@ -61,7 +61,7 @@ The legacy interface, implicitly defined by the ProxyServer class, has been extr
     proxyServer.start();
     // [...]
 
-    // To use the LittleProxy-powered 2.1.0 release, simply change to 
+    // To use the LittleProxy-powered 2.1.1 release, simply change to
     // the LegacyProxyServer interface and the adapter for the new
     // LittleProxy-based implementation:
     LegacyProxyServer proxyServer = new BrowserMobProxyServerLegacyAdapter();
@@ -193,7 +193,7 @@ If you're using Java and Selenium, the easiest way to get started is to embed th
     <dependency>
         <groupId>net.lightbody.bmp</groupId>
         <artifactId>browsermob-core</artifactId>
-        <version>2.1.0</version>
+        <version>2.1.1</version>
         <scope>test</scope>
     </dependency>
 ```
@@ -243,9 +243,9 @@ You can use the REST API with Selenium however you want. But if you're writing y
 
 ### HTTP Request Manipulation
 
-**HTTP request manipulation has changed in 2.1.0 with LittleProxy.** The LittleProxy-based interceptors are easier to use and more reliable. The legacy ProxyServer implementation **will not** support the new interceptor methods.
+**HTTP request manipulation has changed in 2.1.0+ with LittleProxy.** The LittleProxy-based interceptors are easier to use and more reliable. The legacy ProxyServer implementation **will not** support the new interceptor methods.
 
-#### 2.1.0 (LittleProxy) interceptors
+#### 2.1.0+ (LittleProxy) interceptors
 
 There are four new methods to support request and response interception in LittleProxy:
 
@@ -345,7 +345,7 @@ Consult the Java API docs for more info.
 
 ### SSL Support
 
-**BrowserMob Proxy 2.1.0 now supports full MITM:** For most users, MITM will work out-of-the-box with default settings. Install the [ca-certificate-rsa.cer](/browsermob-core/src/main/resources/sslSupport/ca-certificate-rsa.cer) file in your browser or HTTP client to avoid untrusted certificate warnings. Generally, it is safer to generate your own private key, rather than using the .cer files distributed with BrowserMob Proxy. See the [README file in the `mitm` module](/mitm/README.md) for instructions on generating or using your own root certificate and private key with MITM.
+**BrowserMob Proxy 2.1.0+ now supports full MITM:** For most users, MITM will work out-of-the-box with default settings. Install the [ca-certificate-rsa.cer](/browsermob-core/src/main/resources/sslSupport/ca-certificate-rsa.cer) file in your browser or HTTP client to avoid untrusted certificate warnings. Generally, it is safer to generate your own private key, rather than using the .cer files distributed with BrowserMob Proxy. See the [README file in the `mitm` module](/mitm/README.md) for instructions on generating or using your own root certificate and private key with MITM.
 
 **Legacy Jetty-based ProxyServer support for MITM:** The legacy `ProxyServer` implementation uses the same `ca-certificate-rsa.cer` root certificate as the default BrowserMobProxyServer implementation. The previous cybervillainsCA.cer certificate has been removed.
 
