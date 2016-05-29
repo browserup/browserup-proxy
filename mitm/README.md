@@ -23,7 +23,7 @@ To use MITM with standalone LittleProxy, add a dependency to the mitm module in 
     <dependency>
         <groupId>net.lightbody.bmp</groupId>
         <artifactId>mitm</artifactId>
-        <version>2.1.0</version>
+        <version>2.1.1</version>
     </dependency>
 ```
 
