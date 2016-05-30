@@ -38,6 +38,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
@@ -552,8 +553,16 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
             harCookie.setPath(cookie.path());
             harCookie.setSecure(cookie.isSecure());
             if (cookie.maxAge() > 0) {
-                // cookie.maxAge() returns the max age of the cookie in seconds; java.util.Date requires milliseconds
-                harCookie.setExpires(new Date(System.currentTimeMillis() + cookie.maxAge() / 1000L));
+                // use a Calendar with the current timestamp + maxAge seconds. the locale of the calendar is irrelevant,
+                // since we are dealing with timestamps.
+                Calendar expires = Calendar.getInstance();
+                // zero out the milliseconds, since maxAge is in seconds
+                expires.set(Calendar.MILLISECOND, 0);
+                // we can't use Calendar.add, since that only takes ints. TimeUnit.convert handles second->millisecond
+                // overflow reasonably well by returning the result as Long.MAX_VALUE.
+                expires.setTimeInMillis(expires.getTimeInMillis() + TimeUnit.MILLISECONDS.convert(cookie.maxAge(), TimeUnit.SECONDS));
+
+                harCookie.setExpires(expires.getTime());
             }
 
             harEntry.getResponse().getCookies().add(harCookie);
