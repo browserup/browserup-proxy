@@ -92,33 +92,33 @@ The proxy is programmatically controlled via a REST interface or by being embedd
 
 To get started, first start the proxy by running `browsermob-proxy` or `browsermob-proxy.bat` in the bin directory:
 
-    $ sh browsermob-proxy -port 9090
+    $ sh browsermob-proxy -port 8080
     INFO 05/31 03:12:48 o.b.p.Main           - Starting up...
     2011-05-30 20:12:49.517:INFO::jetty-7.3.0.v20110203
     2011-05-30 20:12:49.689:INFO::started o.e.j.s.ServletContextHandler{/,null}
-    2011-05-30 20:12:49.820:INFO::Started SelectChannelConnector@0.0.0.0:9090
+    2011-05-30 20:12:49.820:INFO::Started SelectChannelConnector@0.0.0.0:8080
 
 Once started, there won't be an actual proxy running until you create a new proxy. You can do this by POSTing to /proxy:
 
-    [~]$ curl -X POST http://localhost:9090/proxy
-    {"port":9091}
+    [~]$ curl -X POST http://localhost:8080/proxy
+    {"port":8081}
 
 or optionally specify your own port:
 
-    [~]$ curl -X POST -d 'port=9099' http://localhost:9090/proxy
-    {"port":9099}
+    [~]$ curl -X POST -d 'port=8089' http://localhost:8080/proxy
+    {"port":8089}
 
 or if running BrowserMob Proxy in a multi-homed environment, specify a desired bind address (default is `0.0.0.0`):
 
-    [~]$ curl -X POST -d 'bindAddress=192.168.1.222' http://localhost:9090/proxy
-    {"port":9096}
+    [~]$ curl -X POST -d 'bindAddress=192.168.1.222' http://localhost:8080/proxy
+    {"port":8086}
 
 Once that is done, a new proxy will be available on the port returned. All you have to do is point a browser to that proxy on that port and you should be able to browse the internet. The following additional APIs will then be available:
 
 Description |  HTTP method | Request path | Request parameters
 --- | :---: | :---: | ---
 Get a list of ports attached to `ProxyServer` instances managed by `ProxyManager` | GET | */proxy* || 
-<a name="harcreate">Creates a new HAR</a> attached to the proxy and returns the HAR content if there was a previous HAR. *[port]* in request path it is port where your proxy was started | PUT |*/proxy/[port]/har* |<p>*captureHeaders* - Boolean, capture headers or not. Optional, default to "true".</p><p>*captureContent* - Boolean, capture content bodies or not. Optional, default to "false".</p><p>*captureBinaryContent* - Boolean, capture binary content or not. Optional, default to "false".</p><p>*initialPageRef* - The string name of The first page ref that should be used in the HAR. Optional, default to "Page 1".</p><p>*initialPageTitle* - The title of first HAR page. Optional, default to *initialPageRef*.</p>
+<a name="harcreate">Creates a new HAR</a> attached to the proxy and returns the HAR content if there was a previous HAR. *[port]* in request path it is port where your proxy was started | PUT |*/proxy/[port]/har* |<p>*captureHeaders* - Boolean, capture headers or not. Optional, default to "false".</p><p>*captureContent* - Boolean, capture content bodies or not. Optional, default to "false".</p><p>*captureBinaryContent* - Boolean, capture binary content or not. Optional, default to "false".</p><p>*initialPageRef* - The string name of The first page ref that should be used in the HAR. Optional, default to "Page 1".</p><p>*initialPageTitle* - The title of first HAR page. Optional, default to *initialPageRef*.</p>
 Starts a new page on the existing HAR. *[port]* in request path it is port where your proxy was started | PUT | */proxy/[port]/har/pageRef* |<p>*pageRef* - The string name of the first page ref that should be used in the HAR. Optional, default to "Page N" where N is the next page number.</p><p>*pageTitle* - The title of new HAR page. Optional, default to `pageRef`.</p>
 Shuts down the proxy and closes the port. *[port]* in request path it is port where your proxy was started | DELETE | */proxy/[port]* ||
 Returns the JSON/HAR content representing all the HTTP traffic passed through the proxy (provided you have already created the HAR with [this method](#harcreate)) | GET | */proxy/[port]/har* ||
@@ -148,20 +148,20 @@ Empties the DNS cache | DELETE | */proxy/[port]/dns/cache* ||
 
 For example, once you've started the proxy you can create a new HAR to start recording data like so:
 
-    [~]$ curl -X PUT -d 'initialPageRef=Foo' http://localhost:8080/proxy/9091/har
+    [~]$ curl -X PUT -d 'initialPageRef=Foo' http://localhost:8080/proxy/8081/har
 
 Now when traffic goes through port 9091 it will be attached to a page reference named "Foo". Consult the HAR specification for more info on what a "pageRef" is. You can also start a new pageRef like so:
 
-    [~]$ curl -X PUT -d 'pageRef=Bar' http://localhost:8080/proxy/9091/har/pageRef
+    [~]$ curl -X PUT -d 'pageRef=Bar' http://localhost:8080/proxy/8081/har/pageRef
 
 That will ensure no more HTTP requests get attached to the old pageRef (Foo) and start getting attached to the new pageRef (Bar). After creating the HAR, you can get its content at any time like so:
 
-    [~]$ curl http://localhost:8080/proxy/9091/har
+    [~]$ curl http://localhost:8080/proxy/8081/har
 
 Sometimes you will want to route requests through an upstream proxy server. In this case specify your proxy server by adding the httpProxy parameter to your create proxy request:
 
-    [~]$ curl -X POST http://localhost:9090/proxy?httpProxy=yourproxyserver.com:8080
-    {"port":9091}
+    [~]$ curl -X POST http://localhost:8080/proxy?httpProxy=yourproxyserver.com:8080
+    {"port":8081}
 
 Alternatively, you can specify the upstream proxy config for all proxies created using the standard JVM [system properties for HTTP proxies](http://docs.oracle.com/javase/6/docs/technotes/guides/net/proxies.html).
 Note that you can still override the default upstream proxy via the POST payload, but if you omit the payload the JVM
@@ -339,7 +339,7 @@ If you are using the legacy ProxyServer implementation, you can manipulate the r
 ```
 <a name="interceptorsRESTapiLegacy"></a>You can also POST a JavaScript payload to `/:port/interceptor/request` and `/:port/interceptor/response` using the REST interface. The functions will have a `request`/`response` variable, respectively, and a `har` variable (which may be null if a HAR isn't set up yet). The JavaScript code will be run by [Rhino](https://github.com/mozilla/rhino) and have access to the same Java API in the example above:
 
-    [~]$ curl -X POST -H 'Content-Type: text/plain' -d 'request.getMethod().removeHeaders("User-Agent");' http://localhost:9090/proxy/9091/interceptor/request
+    [~]$ curl -X POST -H 'Content-Type: text/plain' -d 'request.getMethod().removeHeaders("User-Agent");' http://localhost:8080/proxy/8081/interceptor/request
     
 Consult the Java API docs for more info.
 
