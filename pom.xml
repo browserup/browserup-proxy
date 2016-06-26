@@ -59,16 +59,16 @@
         <slf4j.version>1.7.21</slf4j.version>
         <selenium.version>2.53.0</selenium.version>
 
-        <jackson.version>2.7.4</jackson.version>
+        <jackson.version>2.7.5</jackson.version>
 
         <maven-jar-plugin.version>2.6</maven-jar-plugin.version>
 
-        <log4j.version>2.6</log4j.version>
+        <log4j.version>2.6.1</log4j.version>
 
-        <groovy.version>2.4.6</groovy.version>
+        <groovy.version>2.4.7</groovy.version>
         <groovy-eclipse-batch.version>2.4.3-01</groovy-eclipse-batch.version>
 
-        <netty.version>4.0.36.Final</netty.version>
+        <netty.version>4.0.37.Final</netty.version>
 
         <bouncycastle.version>1.54</bouncycastle.version>
     </properties>
@@ -243,7 +243,7 @@
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
-                <version>2.0.54-beta</version>
+                <version>2.0.72-beta</version>
             </dependency>
 
             <dependency>
@@ -474,7 +474,7 @@
         <profile>
             <id>netty-4.1</id>
             <properties>
-                <netty.version>4.1.0.CR7</netty.version>
+                <netty.version>4.1.1.Final</netty.version>
             </properties>
         </profile>
     </profiles>
