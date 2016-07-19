@@ -1,9 +1,14 @@
 # BrowserMob Proxy
 
-BrowserMob Proxy is a simple utility that makes it easy to capture performance data from browsers, typically written using automation toolkits such as Selenium and Watir.
+BrowserMob Proxy allows you to manipulate HTTP requests and responses, capture HTTP content, and export performance data as a [HAR file](http://www.softwareishard.com/blog/har-12-spec/).
+BMP works well as a standalone proxy server, but it is especially useful when embedded in Selenium tests.
 
-The latest version of BrowserMobProxy is 2.1.1, powered by [LittleProxy](https://github.com/adamfisk/LittleProxy).
+The latest version of BrowserMob Proxy is 2.1.1, powered by [LittleProxy](https://github.com/adamfisk/LittleProxy).
 
+If you're running BrowserMob Proxy within a Java application or Selenium test, get started with [Embedded Mode](#getting-started-embedded-mode). If you want to run BMP from the
+command line as a standalone proxy, start with [Standalone](#getting-started-standalone).
+
+### Getting started: Embedded Mode
 To use BrowserMob Proxy in your tests or application, add the `browsermob-core` dependency to your pom:
 ```xml
     <dependency>
@@ -14,9 +19,34 @@ To use BrowserMob Proxy in your tests or application, add the `browsermob-core` 
     </dependency>
 ```
 
-To run in standalone mode from the command line, download the latest release from the [releases page](https://github.com/lightbody/browsermob-proxy/releases), or [build the latest from source](#building-the-latest-from-source).
+Start the proxy:
+```java
+    BrowserMobProxy proxy = new BrowserMobProxyServer();
+    proxy.start(0);
+    int port = proxy.getPort(); // get the JVM-assigned port
+    // Selenium or HTTP client configuration goes here
+```
 
-For more information on using BrowserMob Proxy with Selenium, see the [Using with Selenium](#using-with-selenium) section.
+Then configure your HTTP client to use a proxy running at the specified port.
+
+**Using with Selenium?** See the [Using with Selenium](#using-with-selenium) section.
+
+### Getting started: Standalone
+To run in standalone mode from the command line, first download the latest release from the [releases page](https://github.com/lightbody/browsermob-proxy/releases), or [build the latest from source](#building-the-latest-from-source).
+
+Start the REST API:
+```sh
+    ./browsermob-proxy -port 8080
+```
+
+Then create a proxy server instance:
+```sh
+    curl -X POST http://localhost:8080/proxy
+    {"port":8081}
+```
+
+The "port" is the port of the newly-created proxy instance, so configure your HTTP client or web browser to use a proxy on the returned port.
+For more information on the features available in the REST API, see [the REST API documentation](#rest-api).
 
 ## Changes since the 2.1-beta series
 
@@ -167,8 +197,6 @@ Alternatively, you can specify the upstream proxy config for all proxies created
 Note that you can still override the default upstream proxy via the POST payload, but if you omit the payload the JVM
 system properties will be used to specify the upstream proxy.
 
-*TODO*: Other REST APIs supporting all the BrowserMob Proxy features will be added soon.
-
 ### Command-line Arguments
 
  - -port \<port\>
@@ -205,14 +233,13 @@ Once done, you can start a proxy using `net.lightbody.bmp.BrowserMobProxy`:
     // get the JVM-assigned port and get to work!
     int port = proxy.getPort();
     //...
-    
 ```
 
 Consult the Javadocs on the `net.lightbody.bmp.BrowserMobProxy` class for the full API.
 
 ### Using With Selenium
 
-You can use the REST API with Selenium however you want. But if you're writing your tests in Java and using Selenium 2, this is the easiest way to use it:
+BrowserMob Proxy makes it easy to use a proxy in Selenium tests:
 ```java
     // start the proxy
     BrowserMobProxy proxy = new BrowserMobProxyServer();
@@ -240,6 +267,10 @@ You can use the REST API with Selenium however you want. But if you're writing y
     // get the HAR data
     Har har = proxy.getHar();
 ```
+
+**Note**: If you're running running tests on a Selenium grid, you will need to customize the Selenium Proxy object
+created by `createSeleniumProxy()` to point to the hostname of the machine that your test is running on. You can also run a standalone
+BrowserMob Proxy instance on a separate machine and configure the Selenium Proxy object to use that proxy.
 
 ### HTTP Request Manipulation
 
