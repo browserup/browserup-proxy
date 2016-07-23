@@ -3,7 +3,7 @@
 BrowserMob Proxy allows you to manipulate HTTP requests and responses, capture HTTP content, and export performance data as a [HAR file](http://www.softwareishard.com/blog/har-12-spec/).
 BMP works well as a standalone proxy server, but it is especially useful when embedded in Selenium tests.
 
-The latest version of BrowserMob Proxy is 2.1.1, powered by [LittleProxy](https://github.com/adamfisk/LittleProxy).
+The latest version of BrowserMob Proxy is 2.1.2, powered by [LittleProxy](https://github.com/adamfisk/LittleProxy).
 
 If you're running BrowserMob Proxy within a Java application or Selenium test, get started with [Embedded Mode](#getting-started-embedded-mode). If you want to run BMP from the
 command line as a standalone proxy, start with [Standalone](#getting-started-standalone).
@@ -14,7 +14,7 @@ To use BrowserMob Proxy in your tests or application, add the `browsermob-core` 
     <dependency>
         <groupId>net.lightbody.bmp</groupId>
         <artifactId>browsermob-core</artifactId>
-        <version>2.1.1</version>
+        <version>2.1.2</version>
         <scope>test</scope>
     </dependency>
 ```
@@ -91,7 +91,7 @@ The legacy interface, implicitly defined by the ProxyServer class, has been extr
     proxyServer.start();
     // [...]
 
-    // To use the LittleProxy-powered 2.1.1 release, simply change to
+    // To use the LittleProxy-powered 2.1.2 release, simply change to
     // the LegacyProxyServer interface and the adapter for the new
     // LittleProxy-based implementation:
     LegacyProxyServer proxyServer = new BrowserMobProxyServerLegacyAdapter();
@@ -221,7 +221,7 @@ If you're using Java and Selenium, the easiest way to get started is to embed th
     <dependency>
         <groupId>net.lightbody.bmp</groupId>
         <artifactId>browsermob-core</artifactId>
-        <version>2.1.1</version>
+        <version>2.1.2</version>
         <scope>test</scope>
     </dependency>
 ```
@@ -402,14 +402,14 @@ You'll need maven (`brew install maven` if you're on OS X); use the `release` pr
 
     [~]$ mvn -DskipTests -P release
     
-You'll find the standalone BrowserMob Proxy distributable zip at `browsermob-dist/target/browsermob-proxy-2.1.1-SNAPSHOT-bin.zip`. Unzip the contents and run the `browsermob-proxy` or `browsermob-proxy.bat` files in the `bin` directory.
+You'll find the standalone BrowserMob Proxy distributable zip at `browsermob-dist/target/browsermob-proxy-2.1.3-SNAPSHOT-bin.zip`. Unzip the contents and run the `browsermob-proxy` or `browsermob-proxy.bat` files in the `bin` directory.
 
 When you build the latest code from source, you'll have access to the latest snapshot release. To use the SNAPSHOT version in your code, modify the version in your pom:
 ```xml
     <dependency>
         <groupId>net.lightbody.bmp</groupId>
         <artifactId>browsermob-core</artifactId>
-        <version>2.1.1-SNAPSHOT</version>
+        <version>2.1.3-SNAPSHOT</version>
         <scope>test</scope>
     </dependency>
 ```
