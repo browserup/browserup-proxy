@@ -104,7 +104,7 @@ public class ProxyResource {
         boolean trustAllServers = Boolean.parseBoolean(trustAllServersString);
 
         LOG.debug("POST proxy instance on bindAddress `{}` & port `{}` & serverBindAddress `{}`",
-                paramBindAddr, paramPort), serverBindAddress;
+                paramBindAddr, paramPort, paramServerBindAddr);
         LegacyProxyServer proxy;
         try {
             proxy = proxyManager.create(options, paramPort, paramBindAddr, paramServerBindAddr, useEcc, trustAllServers);
