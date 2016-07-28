@@ -94,6 +94,7 @@ public class ProxyResource {
         }
 
         String paramBindAddr = request.param("bindAddress");
+        String paramServerBindAddr = request.param("serverBindAddress");
         Integer paramPort = request.param("port") == null ? null : Integer.parseInt(request.param("port"));
 
         String useEccString = request.param("useEcc");
@@ -102,11 +103,11 @@ public class ProxyResource {
         String trustAllServersString = request.param("trustAllServers");
         boolean trustAllServers = Boolean.parseBoolean(trustAllServersString);
 
-        LOG.debug("POST proxy instance on bindAddress `{}` & port `{}`",
-                paramBindAddr, paramPort);
+        LOG.debug("POST proxy instance on bindAddress `{}` & port `{}` & serverBindAddress `{}`",
+                paramBindAddr, paramPort), serverBindAddress;
         LegacyProxyServer proxy;
         try {
-            proxy = proxyManager.create(options, paramPort, paramBindAddr, useEcc, trustAllServers);
+            proxy = proxyManager.create(options, paramPort, paramBindAddr, paramServerBindAddr, useEcc, trustAllServers);
         } catch (ProxyExistsException ex) {
             return Reply.with(new ProxyDescriptor(ex.getPort())).status(455).as(Json.class);
         } catch (ProxyPortsExhaustedException ex) {
