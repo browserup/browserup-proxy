@@ -131,7 +131,7 @@ public class ProxyManager {
         }
     }
 
-    public LegacyProxyServer create(Map<String, String> options, Integer port, String bindAddr, boolean useEcc, boolean trustAllServers) {
+    public LegacyProxyServer create(Map<String, String> options, Integer port, String bindAddr, String serverBindAddr, boolean useEcc, boolean trustAllServers) {
         LOG.debug("Instantiate ProxyServer...");
         LegacyProxyServer proxy = proxyServerProvider.get();
 
@@ -177,15 +177,27 @@ public class ProxyManager {
             proxy.setLocalHost(inetAddress);
         }
 
+        InetAddress serverInetAddress = null;
+        if (serverBindAddr != null) {
+            LOG.debug("Bind ProxyServer serverAddress to `{}`...", serverBindAddr);
+            try {
+                serverInetAddress = InetAddress.getByName(serverBindAddr);
+            } catch (UnknownHostException e) {
+                LOG.error("Unable to bind proxy to server address: " + serverBindAddr + "; proxy will not be created.", e);
+
+                throw new RuntimeException("Unable to bind proxy to server address: ", e);
+            }
+        }
+
         if (port != null) {
-            return startProxy(proxy, port);
+            return startProxy(proxy, port, serverInetAddress);
         }
 
         while (proxies.size() <= maxPort - minPort) {
             LOG.debug("Use next available port for new ProxyServer...");
             port = nextPort();
             try {
-                return startProxy(proxy, port);
+                return startProxy(proxy, port, serverInetAddress);
             } catch (ProxyExistsException ex) {
                 LOG.debug("Proxy already exists at port {}", port);
             }
@@ -193,27 +205,31 @@ public class ProxyManager {
         throw new ProxyPortsExhaustedException();
     }
 
+    public LegacyProxyServer create(Map<String, String> options, Integer port, String bindAddr, boolean useEcc, boolean trustAllServers) {
+        return create(options, port, null, null, false, false);
+    }
+
     public LegacyProxyServer create(Map<String, String> options, Integer port) {
-        return create(options, port, null, false, false);
+        return create(options, port, null, null, false, false);
     }
 
     public LegacyProxyServer create(Map<String, String> options) {
-        return create(options, null, null, false, false);
+        return create(options, null, null, null, false, false);
     }
 
     public LegacyProxyServer create() {
-        return create(null, null, null, false, false);
+        return create(null, null, null, null, false, false);
     }
 
     public LegacyProxyServer create(int port) {
-        return create(null, port, null, false, false);
+        return create(null, port, null, null, false, false);
     }
 
     public LegacyProxyServer get(int port) {
         return proxies.get(port);
     }
 
-    private LegacyProxyServer startProxy(LegacyProxyServer proxy, int port) {
+    private LegacyProxyServer startProxy(LegacyProxyServer proxy, int port, InetAddress serverBindAddr) {
         if (port != 0) {
             proxy.setPort(port);
             LegacyProxyServer old = proxies.putIfAbsent(port, proxy);
@@ -224,7 +240,13 @@ public class ProxyManager {
         }
 
         try {
-            proxy.start();
+            if (serverBindAddr != null && proxy instanceof BrowserMobProxyServer) {
+                BrowserMobProxyServer bProxy = (BrowserMobProxyServer) proxy;
+                bProxy.start(port, null, serverBindAddr);
+            } else {
+                proxy.start();
+            }
+
             if (port == 0) {
                 int realPort = proxy.getPort();
                 proxies.put(realPort, proxy);
