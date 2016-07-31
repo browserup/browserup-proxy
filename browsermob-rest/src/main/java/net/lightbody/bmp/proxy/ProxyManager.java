@@ -242,7 +242,7 @@ public class ProxyManager {
         try {
             if (serverBindAddr != null && proxy instanceof BrowserMobProxyServer) {
                 BrowserMobProxyServer bProxy = (BrowserMobProxyServer) proxy;
-                bProxy.start(port, bProxy.getClientBindAddress(), serverBindAddr);
+                bProxy.start(port, null, serverBindAddr);
             } else {
                 proxy.start();
             }
