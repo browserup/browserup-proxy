@@ -199,6 +199,12 @@ public class BrowserMobProxyServer implements BrowserMobProxy {
     private final AtomicBoolean harCaptureFilterEnabled = new AtomicBoolean(false);
 
     /**
+     * Set to true when LittleProxy has been bootstrapped with the default chained proxy. This allows modifying the chained proxy
+     * after the proxy has been started.
+     */
+    private final AtomicBoolean bootstrappedWithDefaultChainedProxy = new AtomicBoolean(false);
+
+    /**
      * The address of an upstream chained proxy to route traffic through.
      */
     private volatile InetSocketAddress upstreamProxyAddress;
@@ -327,6 +333,10 @@ public class BrowserMobProxyServer implements BrowserMobProxy {
         if (chainedProxyManager != null) {
             bootstrap.withChainProxyManager(chainedProxyManager);
         } else if (upstreamProxyAddress != null) {
+            // indicate that the proxy was bootstrapped with the default chained proxy manager, which allows changing the
+            // chained proxy after the proxy is started.
+            bootstrappedWithDefaultChainedProxy.set(true);
+
             bootstrap.withChainProxyManager(new ChainedProxyManager() {
                 @Override
                 public void lookupChainedProxies(HttpRequest httpRequest, Queue<ChainedProxy> chainedProxies) {
@@ -860,15 +870,19 @@ public class BrowserMobProxyServer implements BrowserMobProxy {
     }
 
     /**
-     * Instructs this proxy to route traffic through an upstream proxy. Proxy chaining is not compatible with man-in-the-middle
-     * SSL, so HAR capture will be disabled for HTTPS traffic when using an upstream proxy.
-     * <p>
-     * <b>Note:</b> Using {@link #setChainedProxyManager(ChainedProxyManager)} will supersede any value set by this method.
+     * Instructs this proxy to route traffic through an upstream proxy.
+     *
+     * <b>Note:</b> Using {@link #setChainedProxyManager(ChainedProxyManager)} will supersede any value set by this method. A chained
+     * proxy must be set before the proxy is started, though it can be changed after the proxy is started.
      *
      * @param chainedProxyAddress address of the upstream proxy
      */
     @Override
     public void setChainedProxy(InetSocketAddress chainedProxyAddress) {
+        if (isStarted() && !bootstrappedWithDefaultChainedProxy.get()) {
+            throw new IllegalStateException("Cannot set a chained proxy after the proxy is started if the proxy was started without a chained proxy.");
+        }
+
         upstreamProxyAddress = chainedProxyAddress;
     }
 
@@ -880,6 +894,8 @@ public class BrowserMobProxyServer implements BrowserMobProxy {
     /**
      * Allows access to the LittleProxy {@link ChainedProxyManager} for fine-grained control of the chained proxies. To enable a single
      * chained proxy, {@link BrowserMobProxy#setChainedProxy(InetSocketAddress)} is generally more convenient.
+     *
+     * <b>Note:</b> The chained proxy manager must be enabled before calling {@link #start()}.
      *
      * @param chainedProxyManager chained proxy manager to enable
      */

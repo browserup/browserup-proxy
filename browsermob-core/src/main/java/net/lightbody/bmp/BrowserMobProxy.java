@@ -552,9 +552,11 @@ public interface BrowserMobProxy {
     boolean waitForQuiescence(long quietPeriod, long timeout, TimeUnit timeUnit);
 
     /**
-     * Sets an upstream proxy that this proxy will use to connect to external hosts.
+     * Instructs this proxy to route traffic through an upstream proxy.
      *
-     * @param chainedProxyAddress address and port of the upstream proxy, or null to remove an upstream proxy
+     * <b>Note:</b> A chained proxy must be set before the proxy is started, though it can be changed after the proxy is started.
+     *
+     * @param chainedProxyAddress address of the upstream proxy
      */
     void setChainedProxy(InetSocketAddress chainedProxyAddress);
 
