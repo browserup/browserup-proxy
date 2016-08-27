@@ -59,7 +59,7 @@
         <slf4j.version>1.7.21</slf4j.version>
         <selenium.version>2.53.1</selenium.version>
 
-        <jackson.version>2.7.5</jackson.version>
+        <jackson.version>2.7.6</jackson.version>
 
         <maven-jar-plugin.version>2.6</maven-jar-plugin.version>
 
@@ -72,7 +72,7 @@
         <!-- netty 4.1 version to use for browsermob-dist and when using the netty-4.1 profile -->
         <netty-4.1.version>4.1.4.Final</netty-4.1.version>
 
-        <bouncycastle.version>1.54</bouncycastle.version>
+        <bouncycastle.version>1.55</bouncycastle.version>
     </properties>
 
     <build>
@@ -245,7 +245,7 @@
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
-                <version>2.0.95-beta</version>
+                <version>2.0.111-beta</version>
             </dependency>
 
             <dependency>
