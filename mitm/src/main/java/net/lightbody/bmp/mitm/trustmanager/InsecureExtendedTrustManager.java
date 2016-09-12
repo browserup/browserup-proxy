@@ -24,11 +24,6 @@ public class InsecureExtendedTrustManager extends X509ExtendedTrustManager {
     private static final Logger log = LoggerFactory.getLogger(InsecureExtendedTrustManager.class);
 
     /**
-     * The default extended trust manager, which will be used to determine if certificates would otherwise be trusted.
-     */
-    protected static final X509ExtendedTrustManager DEFAULT_EXTENDED_TRUST_MANAGER = getDefaultExtendedTrustManager();
-
-    /**
      * An {@link X509ExtendedTrustManager} that does no certificate validation whatsoever.
      */
     private static final X509ExtendedTrustManager NOOP_EXTENDED_TRUST_MANAGER = new X509ExtendedTrustManager() {
@@ -61,6 +56,11 @@ public class InsecureExtendedTrustManager extends X509ExtendedTrustManager {
             return EmptyArrays.EMPTY_X509_CERTIFICATES;
         }
     };
+
+    /**
+     * The default extended trust manager, which will be used to determine if certificates would otherwise be trusted.
+     */
+    protected static final X509ExtendedTrustManager DEFAULT_EXTENDED_TRUST_MANAGER = getDefaultExtendedTrustManager();
 
     @Override
     public void checkClientTrusted(X509Certificate[] x509Certificates, String s, Socket socket) throws CertificateException {
