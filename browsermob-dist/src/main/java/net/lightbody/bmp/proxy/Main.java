@@ -39,6 +39,11 @@ public class Main {
     public static void main(String[] args) {
         configureLogging();
 
+        if (args.length > 0 && "--version".equals(args[0])) {
+            System.out.println("BrowserMob Proxy " + BrowserMobProxyUtil.getVersionString());
+            System.exit(0);
+        }
+
         final Injector injector = Guice.createInjector(new ConfigModule(args), new JettyModule(), new SitebricksModule() {
             @Override
             protected void configureSitebricks() {
