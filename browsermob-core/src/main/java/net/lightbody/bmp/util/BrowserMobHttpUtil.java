@@ -42,14 +42,18 @@ public class BrowserMobHttpUtil {
     public static final String UNKNOWN_CONTENT_TYPE = "application/octet-stream";
 
     /**
-     * The default charset when the Content-Type header does not specify a charset. From the HTTP 1.1 spec section 3.7.1:
+     * The default charset when the Content-Type header does not specify a charset. According to RFC 7231 Appendix B:
      * <pre>
-     *     When no explicit charset parameter is provided by the sender, media subtypes of the "text" type are defined to have a default
-     *     charset value of "ISO-8859-1" when received via HTTP. Data in character sets other than "ISO-8859-1" or its subsets MUST be
-     *     labeled with an appropriate charset value.
+     *     The default charset of ISO-8859-1 for text media types has been
+     *     removed; the default is now whatever the media type definition says.
+     *     Likewise, special treatment of ISO-8859-1 has been removed from the
+     *     Accept-Charset header field.
      * </pre>
+     *
+     * Technically, we would have to determine the charset on a per-content-type basis, but generally speaking, UTF-8 is a
+     * pretty safe default. (NOTE: In the previous HTTP/1.1 spec, section 3.7.1, the default charset was defined as ISO-8859-1.)
      */
-    public static final Charset DEFAULT_HTTP_CHARSET = StandardCharsets.ISO_8859_1;
+    public static final Charset DEFAULT_HTTP_CHARSET = StandardCharsets.UTF_8;
 
     /**
      * Buffer size when decompressing content.
