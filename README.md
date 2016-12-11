@@ -398,9 +398,9 @@ The BrowserMobProxyServer implementation uses native DNS resolution by default, 
 
 ## Building the latest from source
 
-You'll need maven (`brew install maven` if you're on OS X); use the `release` profile to generate the batch files from this repository.
+You'll need maven (`brew install maven` if you're on OS X):
 
-    [~]$ mvn -DskipTests -P release
+    [~]$ mvn -DskipTests
     
 You'll find the standalone BrowserMob Proxy distributable zip at `browsermob-dist/target/browsermob-proxy-2.1.3-SNAPSHOT-bin.zip`. Unzip the contents and run the `browsermob-proxy` or `browsermob-proxy.bat` files in the `bin` directory.
 
