@@ -245,7 +245,7 @@
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
-                <version>2.2.22</version>
+                <version>2.3.0</version>
             </dependency>
 
             <dependency>
@@ -272,7 +272,7 @@
             <dependency>
                 <groupId>net.lightbody.bmp</groupId>
                 <artifactId>littleproxy</artifactId>
-                <version>1.1.0-beta-bmp-13</version>
+                <version>1.1.0-beta-bmp-14</version>
             </dependency>
 
             <dependency>
