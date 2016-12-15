@@ -85,27 +85,6 @@ public class HarTest extends LocalServerTest {
     }
 
 	@Test
-	public void testHarContainsUserAgent() throws IOException, InterruptedException {
-		proxy.setCaptureHeaders(true);
-		proxy.newHar("testHarContainsUserAgent");
-
-		HttpGet httpGet = new HttpGet(getLocalServerHostnameAndPort() + "/echo");
-		httpGet.setHeader("User-Agent", "Mozilla/5.0 (X11; Linux i586; rv:31.0) Gecko/20100101 Firefox/31.0");
-		EntityUtils.consumeQuietly(client.execute(httpGet).getEntity());
-
-        Thread.sleep(500);
-		Har har = proxy.getHar();
-		assertNotNull("Har is null", har);
-		HarLog log = har.getLog();
-		assertNotNull("Log is null", log);
-		HarNameVersion harNameVersion = log.getBrowser();
-		assertNotNull("HarNameVersion is null", harNameVersion);
-
-		assertEquals("Expected browser to be Firefox", "Firefox", harNameVersion.getName());
-		assertEquals("Expected browser version to be 31.0", "31.0", harNameVersion.getVersion());
-	}
-
-	@Test
 	public void testThatProxyCanCaptureBodyInHar() throws IOException, InterruptedException {
 		proxy.setCaptureContent(true);
 		proxy.newHar("Test");

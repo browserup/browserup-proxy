@@ -17,7 +17,6 @@ import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.core.har.HarCookie;
 import net.lightbody.bmp.core.har.HarEntry;
 import net.lightbody.bmp.core.har.HarNameValuePair;
-import net.lightbody.bmp.core.har.HarNameVersion;
 import net.lightbody.bmp.core.har.HarPostData;
 import net.lightbody.bmp.core.har.HarPostDataParam;
 import net.lightbody.bmp.core.har.HarRequest;
@@ -27,8 +26,6 @@ import net.lightbody.bmp.filters.support.HttpConnectTiming;
 import net.lightbody.bmp.filters.util.HarCaptureUtil;
 import net.lightbody.bmp.proxy.CaptureType;
 import net.lightbody.bmp.util.BrowserMobHttpUtil;
-import net.lightbody.bmp.util.BrowserMobProxyUtil;
-import net.sf.uadetector.ReadableUserAgent;
 import org.littleshoot.proxy.impl.ProxyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -204,7 +201,9 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
             harEntry.setResponse(defaultHarResponse);
 
             captureQueryParameters(httpRequest);
-            captureUserAgent(httpRequest);
+            // not capturing user agent: in many cases, it doesn't make sense to capture at the HarLog level, since the proxy could be
+            // serving requests from many different clients with various user agents. clients can turn on the REQUEST_HEADERS capture type
+            // in order to capture the User-Agent header, if desired.
             captureRequestHeaderSize(httpRequest);
 
             if (dataToCapture.contains(CaptureType.REQUEST_COOKIES)) {
@@ -334,23 +333,6 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
             // fail by propagating the exception, simply skip the query parameter capture.
             harEntry.setComment("Unable to decode query parameters on URI: " + httpRequest.getUri());
             log.info("Unable to decode query parameters on URI: " + httpRequest.getUri(), e);
-        }
-    }
-
-    protected void captureUserAgent(HttpRequest httpRequest) {
-        // save the browser and version if it's not yet been set
-        if (har.getLog().getBrowser() == null) {
-            String userAgentHeader = HttpHeaders.getHeader(httpRequest, HttpHeaders.Names.USER_AGENT);
-            if (userAgentHeader != null && userAgentHeader.length() > 0) {
-                try {
-                    ReadableUserAgent uai = BrowserMobProxyUtil.getUserAgentStringParser().parse(userAgentHeader);
-                    String browser = uai.getName();
-                    String version = uai.getVersionNumber().toVersionString();
-                    har.getLog().setBrowser(new HarNameVersion(browser, version));
-                } catch (RuntimeException e) {
-                    log.warn("Failed to parse user agent string", e);
-                }
-            }
         }
     }
 

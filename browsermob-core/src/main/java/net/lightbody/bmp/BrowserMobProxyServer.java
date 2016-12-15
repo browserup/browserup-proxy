@@ -43,8 +43,8 @@ import net.lightbody.bmp.proxy.Whitelist;
 import net.lightbody.bmp.proxy.auth.AuthType;
 import net.lightbody.bmp.proxy.dns.AdvancedHostResolver;
 import net.lightbody.bmp.proxy.dns.DelegatingHostResolver;
-import net.lightbody.bmp.util.BrowserMobProxyUtil;
 import net.lightbody.bmp.util.BrowserMobHttpUtil;
+import net.lightbody.bmp.util.BrowserMobProxyUtil;
 import org.littleshoot.proxy.ChainedProxy;
 import org.littleshoot.proxy.ChainedProxyAdapter;
 import org.littleshoot.proxy.ChainedProxyManager;
@@ -461,9 +461,6 @@ public class BrowserMobProxyServer implements BrowserMobProxy {
 
     @Override
     public Har newHar(String initialPageRef, String initialPageTitle) {
-        // eagerly initialize the User Agent String Parser, since it will be needed for the HAR
-        BrowserMobProxyUtil.getUserAgentStringParser();
-
         Har oldHar = getHar();
 
         addHarCaptureFilter();
