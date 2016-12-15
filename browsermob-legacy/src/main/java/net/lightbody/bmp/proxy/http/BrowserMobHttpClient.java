@@ -7,7 +7,6 @@ import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.core.har.HarCookie;
 import net.lightbody.bmp.core.har.HarEntry;
 import net.lightbody.bmp.core.har.HarNameValuePair;
-import net.lightbody.bmp.core.har.HarNameVersion;
 import net.lightbody.bmp.core.har.HarPostData;
 import net.lightbody.bmp.core.har.HarPostDataParam;
 import net.lightbody.bmp.core.har.HarRequest;
@@ -18,11 +17,9 @@ import net.lightbody.bmp.proxy.Whitelist;
 import net.lightbody.bmp.proxy.dns.AdvancedHostResolver;
 import net.lightbody.bmp.proxy.jetty.util.MultiMap;
 import net.lightbody.bmp.proxy.jetty.util.UrlEncoded;
-import net.lightbody.bmp.util.BrowserMobProxyUtil;
 import net.lightbody.bmp.proxy.util.CappedByteArrayOutputStream;
 import net.lightbody.bmp.proxy.util.ClonedOutputStream;
 import net.lightbody.bmp.proxy.util.IOUtils;
-import net.sf.uadetector.ReadableUserAgent;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpClientConnection;
@@ -220,8 +217,8 @@ public class BrowserMobHttpClient {
     
     /**
      * Hostname resolver that wraps a {@link net.lightbody.bmp.proxy.dns.HostResolver}. The wrapped HostResolver can be replaced safely at
-     * runtime using {@link LegacyHostResolverAdapter#setResolver(net.lightbody.bmp.proxy.dns.HostResolver)}.
-     * See {@link #setResolver(net.lightbody.bmp.proxy.dns.HostResolver)}.
+     * runtime using {@link LegacyHostResolverAdapter#setResolver(net.lightbody.bmp.proxy.dns.AdvancedHostResolver)}.
+     * See {@link #setResolver(net.lightbody.bmp.proxy.dns.AdvancedHostResolver)}.
      */
     private final LegacyHostResolverAdapter resolverWrapper = new LegacyHostResolverAdapter(ClientUtil.createDnsJavaWithNativeFallbackResolver());
 
@@ -636,23 +633,6 @@ public class BrowserMobHttpClient {
         HttpRequestBase method = req.getMethod();
         String url = method.getURI().toString();
         
-        // save the browser and version if it's not yet been set
-        if (har != null && har.getLog().getBrowser() == null) {
-            Header[] uaHeaders = method.getHeaders("User-Agent");
-            if (uaHeaders != null && uaHeaders.length > 0) {
-                String userAgent = uaHeaders[0].getValue();
-                try {
-                    // note: this doesn't work for 'Fandango/4.5.1 CFNetwork/548.1.4 Darwin/11.0.0'
-                    ReadableUserAgent uai = BrowserMobProxyUtil.getUserAgentStringParser().parse(userAgent);
-                    String browser = uai.getName();
-                    String version = uai.getVersionNumber().toVersionString();
-                    har.getLog().setBrowser(new HarNameVersion(browser, version));
-                } catch (RuntimeException e) {
-                	LOG.warn("Failed to parse user agent string", e);
-                }
-            }
-        }
-
         // process any rewrite requests
         boolean rewrote = false;
         String newUrl = url;
@@ -1155,9 +1135,6 @@ public class BrowserMobHttpClient {
 
     public void setHar(Har har) {
         this.har = har;
-        
-        // eagerly initialize the User Agent String Parser, since it will be needed for the HAR
-        BrowserMobProxyUtil.getUserAgentStringParser();
     }
 
     public void setHarPageRef(String harPageRef) {
