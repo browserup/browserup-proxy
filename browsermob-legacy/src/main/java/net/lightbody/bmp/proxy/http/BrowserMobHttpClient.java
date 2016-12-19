@@ -2,6 +2,7 @@ package net.lightbody.bmp.proxy.http;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.BaseEncoding;
 import net.lightbody.bmp.client.ClientUtil;
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.core.har.HarCookie;
@@ -89,7 +90,6 @@ import org.java_bandwidthlimiter.StreamManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -1099,7 +1099,7 @@ public class BrowserMobHttpClient {
 	}
 
 	private void setBinaryContentOfEntry(HarEntry entry, ByteArrayOutputStream copy) {
-        entry.getResponse().getContent().setText(DatatypeConverter.printBase64Binary(copy.toByteArray()));
+        entry.getResponse().getContent().setText(BaseEncoding.base64().encode(copy.toByteArray()));
 		entry.getResponse().getContent().setEncoding("base64");
 	}
 

@@ -1,6 +1,7 @@
 package net.lightbody.bmp.filters;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.BaseEncoding;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpContent;
@@ -30,7 +31,6 @@ import org.littleshoot.proxy.impl.ProxyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.DatatypeConverter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
@@ -477,7 +477,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
             String text = BrowserMobHttpUtil.getContentAsString(fullMessage, charset);
             harEntry.getResponse().getContent().setText(text);
         } else if (dataToCapture.contains(CaptureType.RESPONSE_BINARY_CONTENT)) {
-            harEntry.getResponse().getContent().setText(DatatypeConverter.printBase64Binary(fullMessage));
+            harEntry.getResponse().getContent().setText(BaseEncoding.base64().encode(fullMessage));
             harEntry.getResponse().getContent().setEncoding("base64");
         }
 

@@ -1,17 +1,8 @@
 package net.lightbody.bmp.proxy.http;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
-import java.nio.charset.UnsupportedCharsetException;
-import java.util.ArrayList;
-import java.util.List;
-
+import com.google.common.io.BaseEncoding;
 import net.lightbody.bmp.proxy.jetty.http.HttpRequest;
 import net.lightbody.bmp.proxy.util.ClonedInputStream;
-
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
@@ -26,7 +17,14 @@ import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.DatatypeConverter;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnsupportedCharsetException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BrowserMobHttpRequest {
     private static final Logger LOG = LoggerFactory.getLogger(BrowserMobHttpRequest.class);
@@ -89,7 +87,7 @@ public class BrowserMobHttpRequest {
     }
 
     public void setRequestBodyAsBase64EncodedBytes(String bodyBase64Encoded) {
-        byteArrayEntity = new ByteArrayEntity(DatatypeConverter.parseBase64Binary(bodyBase64Encoded));
+        byteArrayEntity = new ByteArrayEntity(BaseEncoding.base64().decode(bodyBase64Encoded));
     }
 
     public void setRequestInputStream(InputStream is, long length) {

@@ -1,5 +1,6 @@
 package net.lightbody.bmp.util;
 
+import com.google.common.io.BaseEncoding;
 import com.google.common.net.HostAndPort;
 import com.google.common.net.MediaType;
 import io.netty.buffer.ByteBuf;
@@ -11,7 +12,6 @@ import net.lightbody.bmp.exception.UnsupportedCharsetException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -295,6 +295,6 @@ public class BrowserMobHttpUtil {
         // using UTF-8, which is the modern de facto standard, and which retains compatibility with US_ASCII for ASCII characters,
         // as required by RFC 7616, section 3: http://tools.ietf.org/html/rfc7617#section-3
         byte[] credentialsAsUtf8Bytes = credentialsToEncode.getBytes(StandardCharsets.UTF_8);
-        return DatatypeConverter.printBase64Binary(credentialsAsUtf8Bytes);
+        return BaseEncoding.base64().encode(credentialsAsUtf8Bytes);
     }
 }
