@@ -272,7 +272,7 @@
             <dependency>
                 <groupId>net.lightbody.bmp</groupId>
                 <artifactId>littleproxy</artifactId>
-                <version>1.1.0-beta-bmp-14</version>
+                <version>1.1.0-beta-bmp-15</version>
             </dependency>
 
             <dependency>
