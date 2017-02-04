@@ -7,8 +7,6 @@ The MITM module uses "sensible" default settings that should work for the vast m
 ### LittleProxy (without BrowserMob Proxy)
 **Note:** The MITM module requires Java 7
 
-**Compatibility note:** The current version of the MITM module is compatible with LittleProxy 1.1.0. If you are using LittleProxy 1.1.0-beta2 or earlier, use MITM 2.1.0-beta-5.
-
 To use MITM with standalone LittleProxy, add a dependency to the mitm module in your pom:
 
 ```xml
@@ -16,7 +14,7 @@ To use MITM with standalone LittleProxy, add a dependency to the mitm module in 
     <dependency>
         <groupId>org.littleshoot</groupId>
         <artifactId>littleproxy</artifactId>
-        <version>1.1.0</version>
+        <version>1.1.1</version>
     </dependency>
     
     <-- new dependency on the MITM module -->
@@ -102,7 +100,7 @@ Whether you are using the MITM module with LittleProxy or BrowserMob Proxy, you 
 You can also load the root certificate and private key from separate PEM-encoded files using the `PemFileCertificateSource` class, or create an implementation of `CertificateAndKeySource` that loads the certificate and private key from another source.
 
 ## Trusted Root Certificates
-As of 2.1.0-beta-6, the MITM module explicitly trusts the Certificate Authorities in the JVM's default trust store, as well as a default list of trusted CAs derived from NSS/Firefox's list of trusted CAs (courtesy of the cURL team: https://curl.haxx.se/ca/cacert.pem).
+The MITM module trusts the Certificate Authorities in the JVM's default trust store, as well as a default list of trusted CAs derived from NSS/Firefox's list of trusted CAs (courtesy of the cURL team: https://curl.haxx.se/ca/cacert.pem).
 
 To add your own CA to the list of root CAs trusted by the MITM module, use the `add()` methods in the `net.lightbody.bmp.mitm.TrustSource` class. Alternatively, it is possible to disable upstream server validation, but this is only recommended when testing. Examples:
 ```java
