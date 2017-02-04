@@ -48,23 +48,6 @@ Then create a proxy server instance:
 The "port" is the port of the newly-created proxy instance, so configure your HTTP client or web browser to use a proxy on the returned port.
 For more information on the features available in the REST API, see [the REST API documentation](#rest-api).
 
-## Changes since the 2.1-beta series
-
-**The `browsermob-core-littleproxy` module is now `browsermob-core`**
-
-After six beta releases, the LittleProxy implementation now supports more features and is more stable than the legacy implementation. To reflect that level of maturity and long-term support, the `browsermob-core` module now uses LittleProxy by default.
-
-**Note about Legacy support**: In the 2.1-betas, if you were using the `ProxyServer` or `LegacyProxyServer` classes, use the `browsermob-core-legacy` module in 2.1.0 and higher.
-
-*LittleProxy support for `LegacyProxyServer` has moved to `BrowserMobProxyServerLegacyAdapter`*. Using the LittleProxy implementation with the `LegacyProxyServer` interface is still fully supported as a means to help you transition from 2.0.0. Unlike the 2.1-beta series, the `BrowserMobProxyServer` class
-no longer implements `LegacyProxyServer`; however, the `BrowserMobProxyServerLegacyAdapter` can be used to integrate legacy code with the new LittleProxy interface. You must still use the `browsermob-core-legacy` module when using the LegacyAdapter.
-
-```java
-   LegacyProxyServer proxy = new BrowserMobProxyServerLegacyAdapter();
-   proxy.setPort(8081); // method only supported by the legacy interface
-   proxy.start();
-```
-
 ## Changes since 2.0.0
 
 The new [BrowserMobProxyServer class](browsermob-core/src/main/java/net/lightbody/bmp/BrowserMobProxyServer.java) has replaced the legacy ProxyServer implementation. The legacy implementation is no longer actively supported; all new code should use `BrowserMobProxyServer`. We highly recommend that existing code migrate to the new implementation.
@@ -118,7 +101,7 @@ The proxy is programmatically controlled via a REST interface or by being embedd
 
 ### REST API
 
-**New in 2.1:** The REST API now supports LittleProxy. As of 2.1.0-beta-3, LittleProxy is the default implementation. (You may specify `--use-littleproxy false` to disable LittleProxy in favor of the legacy Jetty 5-based implementation.)
+**New in 2.1:** LittleProxy is the default implementation of the REST API. You may specify `--use-littleproxy false` to disable LittleProxy in favor of the legacy Jetty 5-based implementation.
 
 To get started, first start the proxy by running `browsermob-proxy` or `browsermob-proxy.bat` in the bin directory:
 
@@ -238,6 +221,8 @@ Once done, you can start a proxy using `net.lightbody.bmp.BrowserMobProxy`:
 Consult the Javadocs on the `net.lightbody.bmp.BrowserMobProxy` class for the full API.
 
 ### Using With Selenium
+
+**Selenium 3 users**: Due to a [geckodriver issue](https://github.com/mozilla/geckodriver/issues/97), Firefox 51 and lower do not properly support proxies with WebDriver's DesiredCapabilities. See [this answer](http://stackoverflow.com/a/41373808/4256475) for a suitable work-around.
 
 BrowserMob Proxy makes it easy to use a proxy in Selenium tests:
 ```java
