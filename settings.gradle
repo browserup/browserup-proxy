@@ -1,0 +1,12 @@
+rootProject.name = 'browsermob-proxy'
+include ':browsermob-core'
+include ':browsermob-legacy'
+include ':browsermob-rest'
+include ':browsermob-dist'
+include ':mitm'
+
+project(':browsermob-core').projectDir = "$rootDir/browsermob-core" as File
+project(':browsermob-legacy').projectDir = "$rootDir/browsermob-legacy" as File
+project(':browsermob-rest').projectDir = "$rootDir/browsermob-rest" as File
+project(':browsermob-dist').projectDir = "$rootDir/browsermob-dist" as File
+project(':mitm').projectDir = "$rootDir/mitm" as File
