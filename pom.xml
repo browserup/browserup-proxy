@@ -75,9 +75,7 @@
         <groovy.version>2.4.12</groovy.version>
         <groovy-eclipse-batch.version>2.4.3-01</groovy-eclipse-batch.version>
 
-        <netty.version>4.0.49.Final</netty.version>
-        <!-- netty 4.1 version to use for browsermob-dist and when using the netty-4.1 profile -->
-        <netty-4.1.version>4.1.13.Final</netty-4.1.version>
+        <netty.version>4.1.13.Final</netty.version>
 
         <bouncycastle.version>1.57</bouncycastle.version>
     </properties>
@@ -535,11 +533,5 @@
             </properties>
         </profile>
 
-        <profile>
-            <id>netty-4.1</id>
-            <properties>
-                <netty.version>${netty-4.1.version}</netty.version>
-            </properties>
-        </profile>
     </profiles>
 </project>
