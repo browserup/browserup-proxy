@@ -19,10 +19,10 @@ public class ExpiringProxyTest {
                 minPort + 100,
                 2);
 
-        LegacyProxyServer proxy = proxyManager.create(Collections.<String, String>emptyMap());
+        BrowserMobProxyServerLegacyAdapter proxy = proxyManager.create(Collections.<String, String>emptyMap());
         int port = proxy.getPort();
 
-        LegacyProxyServer retrievedProxy = proxyManager.get(port);
+        BrowserMobProxyServerLegacyAdapter retrievedProxy = proxyManager.get(port);
 
         assertEquals("ProxyManager did not return the expected proxy instance", proxy, retrievedProxy);
 
@@ -32,7 +32,7 @@ public class ExpiringProxyTest {
         int newPort = proxyManager.create(Collections.<String, String>emptyMap()).getPort();
         proxyManager.delete(newPort);
 
-        LegacyProxyServer expiredProxy = proxyManager.get(port);
+        BrowserMobProxyServerLegacyAdapter expiredProxy = proxyManager.get(port);
 
         assertNull("ProxyManager did not expire proxy as expected", expiredProxy);
     }
@@ -46,10 +46,10 @@ public class ExpiringProxyTest {
                 minPort + 100,
                 0);
 
-        LegacyProxyServer proxy = proxyManager.create(Collections.<String, String>emptyMap());
+        BrowserMobProxyServerLegacyAdapter proxy = proxyManager.create(Collections.<String, String>emptyMap());
         int port = proxy.getPort();
 
-        LegacyProxyServer retrievedProxy = proxyManager.get(port);
+        BrowserMobProxyServerLegacyAdapter retrievedProxy = proxyManager.get(port);
 
         assertEquals("ProxyManager did not return the expected proxy instance", proxy, retrievedProxy);
 
@@ -59,7 +59,7 @@ public class ExpiringProxyTest {
         int newPort = proxyManager.create(Collections.<String, String>emptyMap()).getPort();
         proxyManager.delete(newPort);
 
-        LegacyProxyServer nonExpiredProxy = proxyManager.get(port);
+        BrowserMobProxyServerLegacyAdapter nonExpiredProxy = proxyManager.get(port);
 
         assertEquals("ProxyManager did not return the expected proxy instance", proxy, nonExpiredProxy);
     }

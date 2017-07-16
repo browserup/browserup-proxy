@@ -2,7 +2,7 @@ package net.lightbody.bmp.proxy.test.util
 
 import com.google.sitebricks.headless.Request
 import groovyx.net.http.HTTPBuilder
-import net.lightbody.bmp.proxy.LegacyProxyServer
+import net.lightbody.bmp.proxy.BrowserMobProxyServerLegacyAdapter
 import net.lightbody.bmp.proxy.bricks.ProxyResource
 import org.junit.After
 import org.junit.Before
@@ -37,7 +37,7 @@ abstract class ProxyResourceTest extends ProxyManagerTest {
 
     @Before
     void setUpProxyResource() {
-        LegacyProxyServer proxy = proxyManager.create(0)
+        BrowserMobProxyServerLegacyAdapter proxy = proxyManager.create(0)
         proxyPort = proxy.port
 
         proxyResource = new ProxyResource(proxyManager)

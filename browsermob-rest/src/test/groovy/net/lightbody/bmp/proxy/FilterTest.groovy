@@ -3,7 +3,6 @@ package net.lightbody.bmp.proxy
 import com.google.sitebricks.headless.Request
 import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.Method
-import net.lightbody.bmp.BrowserMobProxyServerLegacyAdapter
 import net.lightbody.bmp.filters.RequestFilter
 import net.lightbody.bmp.filters.ResponseFilter
 import net.lightbody.bmp.proxy.bricks.ProxyResource

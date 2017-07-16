@@ -1,13 +1,14 @@
 package net.lightbody.bmp.proxy;
 
-import java.util.HashMap;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
 import net.lightbody.bmp.exception.ProxyExistsException;
 import net.lightbody.bmp.exception.ProxyPortsExhaustedException;
 import net.lightbody.bmp.proxy.test.util.ProxyManagerTest;
 import org.junit.Test;
+
+import java.util.HashMap;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class ProxyPortAssignmentTest extends ProxyManagerTest {
         
@@ -19,7 +20,7 @@ public class ProxyPortAssignmentTest extends ProxyManagerTest {
     @Test
     public void testAutoAssignment() throws Exception {
         int[] ports = {9091, 9092, 9093};
-        LegacyProxyServer p;
+        BrowserMobProxyServerLegacyAdapter p;
         for(int port : ports){
             p = proxyManager.create(new HashMap<String, String>());
             assertEquals(port, p.getPort());
@@ -44,7 +45,7 @@ public class ProxyPortAssignmentTest extends ProxyManagerTest {
     
     @Test
     public void testManualAssignment() throws Exception {
-        LegacyProxyServer p = proxyManager.create(new HashMap<String, String>(), 9094);
+        BrowserMobProxyServerLegacyAdapter p = proxyManager.create(new HashMap<String, String>(), 9094);
         assertEquals(9094, p.getPort());
         try{            
             proxyManager.create(new HashMap<String, String>(), 9094);            
