@@ -5,13 +5,11 @@ import net.lightbody.bmp.core.har.HarContent;
 import net.lightbody.bmp.core.har.HarEntry;
 import net.lightbody.bmp.core.har.HarLog;
 import net.lightbody.bmp.core.har.HarNameValuePair;
-import net.lightbody.bmp.core.har.HarNameVersion;
 import net.lightbody.bmp.core.har.HarPage;
 import net.lightbody.bmp.core.har.HarPageTimings;
 import net.lightbody.bmp.core.har.HarPostData;
 import net.lightbody.bmp.core.har.HarRequest;
 import net.lightbody.bmp.core.har.HarResponse;
-import net.lightbody.bmp.core.har.HarTimings;
 import net.lightbody.bmp.proxy.test.util.LocalServerTest;
 import net.lightbody.bmp.proxy.util.IOUtils;
 import org.apache.http.HttpEntity;
@@ -20,7 +18,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -30,7 +27,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
 import static org.hamcrest.Matchers.containsString;
@@ -286,82 +282,6 @@ public class HarTest extends LocalServerTest {
 	}
 
 	@Test
-	public void testHarTimingsPopulated() throws IOException, InterruptedException {
-        proxy.setCaptureHeaders(true);
-        proxy.newHar("testHarTimingsPopulated");
-
-        HttpGet httpGet = new HttpGet("https://www.msn.com");
-        EntityUtils.consumeQuietly(client.execute(httpGet).getEntity());
-
-        Thread.sleep(500);
-        Har har = proxy.getHar();
-        assertNotNull("Har is null", har);
-        HarLog log = har.getLog();
-        assertNotNull("Log is null", log);
-
-        assertNotNull("No log entries", log.getEntries());
-        assertThat("No log entries", log.getEntries(), not(empty()));
-
-        HarEntry firstEntry = log.getEntries().get(0);
-        HarTimings timings = firstEntry.getTimings();
-
-        assertNotNull("No har timings", timings);
-        assertThat("blocked timing should be greater than 0", timings.getBlocked(TimeUnit.NANOSECONDS), greaterThan(0L));
-        assertThat("dns timing should be greater than 0", timings.getDns(TimeUnit.NANOSECONDS), greaterThan(0L));
-        assertThat("connect timing should be greater than 0", timings.getConnect(TimeUnit.NANOSECONDS), greaterThan(0L));
-        assertThat("send timing should be greater than 0", timings.getSend(TimeUnit.NANOSECONDS), greaterThan(0L));
-        assertThat("wait timing should be greater than 0", timings.getWait(TimeUnit.NANOSECONDS), greaterThan(0L));
-        assertThat("receive timing should be greater than 0", timings.getReceive(TimeUnit.NANOSECONDS), greaterThan(0L));
-        assertThat("ssl timing should be greater than 0", timings.getSsl(TimeUnit.NANOSECONDS), greaterThan(0L));
-	}
-
-	@Test
-	public void testChunkedRequestSizeAndSendTimingPopulated() throws IOException, InterruptedException {
-		proxy.setCaptureContent(true);
-		proxy.newHar("testChunkedRequestSizeAndSendTimingPopulated");
-
-		// using this POST dumping ground so that we get a "reasonable" send time. using the server at localhost
-		// may not actually take more than 1ms. that would cause the send time to be 0ms, which would be indistinguishable
-		// for testing purposes from a failed-to--populate-send-time error condition.
-		// thanks to Henry Cipolla for creating this POST testing website!
-		HttpPost post = new HttpPost("http://posttestserver.com/");
-
-		// fill the POST data with some random ascii text
-		String lengthyPost = createRandomString(30000);
-
-		HttpEntity entity = new StringEntity(lengthyPost);
-		post.setEntity(entity);
-		post.addHeader("Content-Type", "text/unknown; charset=UTF-8");
-
-		String body = IOUtils.toStringAndClose(client.execute(post).getEntity().getContent());
-
-        Thread.sleep(500);
-		Har har = proxy.getHar();
-		assertNotNull("Har is null", har);
-		HarLog log = har.getLog();
-		assertNotNull("Log is null", log);
-
-		assertNotNull("No log entries", log.getEntries());
-		assertThat("No log entries", log.getEntries(), not(empty()));
-
-		HarEntry firstEntry = log.getEntries().get(0);
-		HarTimings timings = firstEntry.getTimings();
-
-		HarResponse response = firstEntry.getResponse();
-		assertNotNull("Response is null", response);
-		HarRequest request = firstEntry.getRequest();
-		assertNotNull("Request is null", request);
-		HarPostData postdata = request.getPostData();
-		assertNotNull("PostData is null", postdata);
-
-		assertEquals("Expected body size to match POST length", lengthyPost.length(), request.getBodySize());
-
-		assertNotNull("No har timings", timings);
-
-        assertThat("send timing should be greater than 0", timings.getSend(TimeUnit.NANOSECONDS), greaterThan(0L));
-	}
-
-	@Test
 	public void testHarPagesPopulated() throws IOException, InterruptedException {
 		proxy.newHar("testpage1");
 
@@ -437,120 +357,6 @@ public class HarTest extends LocalServerTest {
 
         HarPage page2 = log.getPages().get(1);
         assertEquals("incorrect har page title", "Test Page 2", page2.getTitle());
-    }
-
-    @Test
-    public void testEntryFieldsPopulatedForHttp() throws IOException, InterruptedException {
-        proxy.newHar("testEntryFieldsPopulatedForHttp");
-
-        // not using localhost so we get >0ms timing
-        HttpGet get = new HttpGet("http://www.msn.com");
-        IOUtils.toStringAndClose(client.execute(get).getEntity().getContent());
-
-        proxy.endPage();
-
-        Thread.sleep(500);
-        Har firstPageHar = proxy.getHar();
-        assertNotNull("Har is null", firstPageHar);
-        HarLog firstPageHarLog = firstPageHar.getLog();
-        assertNotNull("Log is null", firstPageHarLog);
-
-        List<HarEntry> firstPageEntries = firstPageHarLog.getEntries();
-        assertNotNull("Entries are null", firstPageEntries);
-        assertThat("Entries are empty", firstPageEntries, not(empty()));
-
-        HarEntry firstPageEntry = firstPageHarLog.getEntries().get(0);
-        assertNotEquals("entry time should be greater than 0 but was " + firstPageEntry.getTime(), firstPageEntry.getTime(), 0L);
-        assertNotNull("entry startedDateTime is null", firstPageEntry.getStartedDateTime());
-
-        assertEquals("entry pageref is incorrect", "testEntryFieldsPopulatedForHttp", firstPageEntry.getPageref());
-
-        assertNotNull("entry ip address is not populated", firstPageEntry.getServerIPAddress());
-
-        // make a second request for the same page, and make sure the address is still populated
-        proxy.newPage("testEntryFieldsPopulatedForHttp - page 2");
-        IOUtils.toStringAndClose(client.execute(get).getEntity().getContent());
-
-        proxy.endPage();
-
-        // this is technically the same HAR, but aliasing for clarity
-        Har secondPageHar = proxy.getHar();
-        assertNotNull("Har is null", secondPageHar);
-        HarLog secondPageHarLog = secondPageHar.getLog();
-        assertNotNull("Log is null", secondPageHarLog);
-
-        List<HarEntry> secondPageEntries = secondPageHarLog.getEntries();
-        assertNotNull("Entries are null", secondPageEntries);
-        assertThat("Entries are empty", secondPageEntries, not(empty()));
-
-        HarEntry secondPageEntry = secondPageHarLog.getEntries().get(1);
-        assertNotEquals("entry time should be greater than 0 but was " + secondPageEntry.getTime(), secondPageEntry.getTime(), 0L);
-        assertNotNull("entry startedDateTime is null", secondPageEntry.getStartedDateTime());
-
-        assertEquals("entry pageref is incorrect", "testEntryFieldsPopulatedForHttp - page 2", secondPageEntry.getPageref());
-
-        // this fails on the jetty implementation, but it shouldn't
-        if (Boolean.getBoolean("bmp.use.littleproxy")) {
-            assertNotNull("entry ip address is not populated", secondPageEntry.getServerIPAddress());
-            assertEquals("expected ip address of first and second request to same host to be equal", firstPageEntry.getServerIPAddress(), secondPageEntry.getServerIPAddress());
-        }
-    }
-
-    @Test
-    public void testEntryFieldsPopulatedForHttps() throws IOException, InterruptedException {
-        proxy.newHar("testEntryFieldsPopulatedForHttps");
-
-        // not using localhost so we get >0ms timing
-        HttpGet get = new HttpGet("https://www.msn.com");
-        IOUtils.toStringAndClose(client.execute(get).getEntity().getContent());
-
-        proxy.endPage();
-
-        Thread.sleep(500);
-        Har firstPageHar = proxy.getHar();
-        assertNotNull("Har is null", firstPageHar);
-        HarLog firstPageHarLog = firstPageHar.getLog();
-        assertNotNull("Log is null", firstPageHarLog);
-
-        List<HarEntry> firstPageEntries = firstPageHarLog.getEntries();
-        assertNotNull("Entries are null", firstPageEntries);
-        assertThat("Entries are empty", firstPageEntries, not(empty()));
-
-        HarEntry firstPageEntry = firstPageHarLog.getEntries().get(0);
-        assertNotEquals("entry time should be greater than 0 but was " + firstPageEntry.getTime(), firstPageEntry.getTime(), 0L);
-        assertNotNull("entry startedDateTime is null", firstPageEntry.getStartedDateTime());
-
-        assertEquals("entry pageref is incorrect", "testEntryFieldsPopulatedForHttps", firstPageEntry.getPageref());
-
-        assertNotNull("entry ip address is not populated", firstPageEntry.getServerIPAddress());
-
-        // make a second request for the same page, and make sure the address is still populated
-        proxy.newPage("testEntryFieldsPopulatedForHttps - page 2");
-        IOUtils.toStringAndClose(client.execute(get).getEntity().getContent());
-
-        proxy.endPage();
-
-        // this is technically the same HAR, but aliasing for clarity
-        Har secondPageHar = proxy.getHar();
-        assertNotNull("Har is null", secondPageHar);
-        HarLog secondPageHarLog = secondPageHar.getLog();
-        assertNotNull("Log is null", secondPageHarLog);
-
-        List<HarEntry> secondPageEntries = secondPageHarLog.getEntries();
-        assertNotNull("Entries are null", secondPageEntries);
-        assertThat("Entries are empty", secondPageEntries, not(empty()));
-
-        HarEntry secondPageEntry = secondPageHarLog.getEntries().get(1);
-        assertNotEquals("entry time should be greater than 0 but was " + secondPageEntry.getTime(), secondPageEntry.getTime(), 0L);
-        assertNotNull("entry startedDateTime is null", secondPageEntry.getStartedDateTime());
-
-        assertEquals("entry pageref is incorrect", "testEntryFieldsPopulatedForHttps - page 2", secondPageEntry.getPageref());
-
-        // this fails on the jetty implementation, but it shouldn't
-        if (Boolean.getBoolean("bmp.use.littleproxy")) {
-            assertNotNull("entry ip address is not populated", secondPageEntry.getServerIPAddress());
-            assertEquals("expected ip address of first and second request to same host to be equal", firstPageEntry.getServerIPAddress(), secondPageEntry.getServerIPAddress());
-        }
     }
 
 	@Test
