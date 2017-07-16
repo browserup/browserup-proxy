@@ -1,5 +1,6 @@
 package net.lightbody.bmp.proxy;
 
+import com.google.common.io.ByteStreams;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
@@ -84,7 +85,7 @@ public class InterceptorTest extends MockServerTest {
         proxy.start();
 
         final AtomicBoolean interceptorFired = new AtomicBoolean(false);
-        final AtomicBoolean shortCircuitFired= new AtomicBoolean(false);
+        final AtomicBoolean shortCircuitFired = new AtomicBoolean(false);
 
         proxy.addFirstHttpFilterFactory(new HttpFiltersSourceAdapter() {
             @Override
@@ -277,8 +278,8 @@ public class InterceptorTest extends MockServerTest {
 
     @Test
     public void testResponseFilterCanModifyBinaryContents() throws IOException {
-        final byte[] originalBytes = new byte[] {1, 2, 3, 4, 5};
-        final byte[] newBytes = new byte[] {20, 30, 40, 50, 60};
+        final byte[] originalBytes = new byte[]{1, 2, 3, 4, 5};
+        final byte[] newBytes = new byte[]{20, 30, 40, 50, 60};
 
         mockServer.when(request()
                         .withMethod("GET")
@@ -306,7 +307,7 @@ public class InterceptorTest extends MockServerTest {
         try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             HttpGet request = new HttpGet("http://localhost:" + mockServerPort + "/modifyresponse");
             CloseableHttpResponse response = httpClient.execute(request);
-            byte[] responseBytes = org.apache.commons.io.IOUtils.toByteArray(response.getEntity().getContent());
+            byte[] responseBytes = ByteStreams.toByteArray(response.getEntity().getContent());
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertThat("Did not receive expected response from mock server", responseBytes, equalTo(newBytes));

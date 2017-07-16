@@ -1,5 +1,7 @@
 package net.lightbody.bmp.proxy.test.util;
 
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Closeables;
 import org.apache.http.HttpHost;
 import org.apache.http.client.CookieStore;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
@@ -31,7 +33,7 @@ public class NewProxyServerTestUtil {
      * Creates an all-trusting CloseableHttpClient (for tests ONLY!) that will connect to a proxy at 127.0.0.1:proxyPort,
      * using the specified cookie store.
      *
-     * @param proxyPort port of the proxy running at 127.0.0.1
+     * @param proxyPort   port of the proxy running at 127.0.0.1
      * @param cookieStore CookieStore for HTTP cookies
      * @return a new CloseableHttpClient
      */
@@ -77,9 +79,9 @@ public class NewProxyServerTestUtil {
      */
     public static String toStringAndClose(InputStream in) throws IOException {
         try {
-            return org.apache.commons.io.IOUtils.toString(in, StandardCharsets.UTF_8);
+            return new String(ByteStreams.toByteArray(in), StandardCharsets.UTF_8);
         } finally {
-            org.apache.commons.io.IOUtils.closeQuietly(in);
+            Closeables.closeQuietly(in);
         }
     }
 
