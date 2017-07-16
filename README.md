@@ -79,7 +79,7 @@ The legacy interface, implicitly defined by the ProxyServer class, has been extr
     // LittleProxy-based implementation:
     LegacyProxyServer proxyServer = new BrowserMobProxyServerLegacyAdapter();
     proxyServer.start();
-    // Almost all deprecated 2.0.0 methods are supported by the 
+    // Almost all deprecated 2.0.0 methods are supported by the
     // new BrowserMobProxyServerLegacyAdapter implementation, so in most cases,
     // no further code changes are necessary
 ```
@@ -130,7 +130,7 @@ Once that is done, a new proxy will be available on the port returned. All you h
 
 Description |  HTTP method | Request path | Request parameters
 --- | :---: | :---: | ---
-Get a list of ports attached to `ProxyServer` instances managed by `ProxyManager` | GET | */proxy* || 
+Get a list of ports attached to `ProxyServer` instances managed by `ProxyManager` | GET | */proxy* ||
 <a name="harcreate">Creates a new HAR</a> attached to the proxy and returns the HAR content if there was a previous HAR. *[port]* in request path it is port where your proxy was started | PUT |*/proxy/[port]/har* |<p>*captureHeaders* - Boolean, capture headers or not. Optional, default to "false".</p><p>*captureContent* - Boolean, capture content bodies or not. Optional, default to "false".</p><p>*captureBinaryContent* - Boolean, capture binary content or not. Optional, default to "false".</p><p>*initialPageRef* - The string name of The first page ref that should be used in the HAR. Optional, default to "Page 1".</p><p>*initialPageTitle* - The title of first HAR page. Optional, default to *initialPageRef*.</p>
 Starts a new page on the existing HAR. *[port]* in request path it is port where your proxy was started | PUT | */proxy/[port]/har/pageRef* |<p>*pageRef* - The string name of the first page ref that should be used in the HAR. Optional, default to "Page N" where N is the next page number.</p><p>*pageTitle* - The title of new HAR page. Optional, default to `pageRef`.</p>
 Shuts down the proxy and closes the port. *[port]* in request path it is port where your proxy was started | DELETE | */proxy/[port]* ||
@@ -153,11 +153,11 @@ Removes all URL redirection rules currently in effect | DELETE | */proxy/[port]/
 Setting the retry count | PUT | */proxy/[port]/retry* |<p>*retrycount* - The number of times a method will be retried.</p>|
 Empties the DNS cache | DELETE | */proxy/[port]/dns/cache* ||
 | [REST API interceptors with LittleProxy](#interceptorsRESTapiLP) |||
-|Describe your own request interception | POST | */proxy/[port]/filter/request* | A string wich determinates interceptor rules. See more [here](#interceptorsRESTapiLPRequestFilter) |
-|Describe your own response interception | POST | */proxy/[port]/filter/response* | A string wich determinates interceptor rules. See more [here](#interceptorsRESTapiLPResponseFilter) |
+|Describe your own request interception | POST | */proxy/[port]/filter/request* | A string which determinates interceptor rules. See more [here](#interceptorsRESTapiLPRequestFilter) |
+|Describe your own response interception | POST | */proxy/[port]/filter/response* | A string which determinates interceptor rules. See more [here](#interceptorsRESTapiLPResponseFilter) |
 | [REST API with Legacy interceptors](#interceptorsRESTapiLegacy) ||||
-|Describe your own request interception | POST | */proxy/[port]/interceptor/request* | A string wich determinates interceptor rules. See more [here](#interceptorsRESTapiLegacy) |
-|Describe your own response interception | POST | */proxy/[port]/interceptor/response* | A string wich determinates interceptor rules. See more [here](#interceptorsRESTapiLegacy) |
+|Describe your own request interception | POST | */proxy/[port]/interceptor/request* | A string which determinates interceptor rules. See more [here](#interceptorsRESTapiLegacy) |
+|Describe your own response interception | POST | */proxy/[port]/interceptor/response* | A string which determinates interceptor rules. See more [here](#interceptorsRESTapiLegacy) |
 
 For example, once you've started the proxy you can create a new HAR to start recording data like so:
 
@@ -291,7 +291,7 @@ For most use cases, including inspecting and modifying requests/responses, `addR
                 return null;
             }
         });
-        
+
         // responses are equally as simple:
         proxy.addResponseFilter(new ResponseFilter() {
             @Override
@@ -356,7 +356,7 @@ If you are using the legacy ProxyServer implementation, you can manipulate the r
 <a name="interceptorsRESTapiLegacy"></a>You can also POST a JavaScript payload to `/:port/interceptor/request` and `/:port/interceptor/response` using the REST interface. The functions will have a `request`/`response` variable, respectively, and a `har` variable (which may be null if a HAR isn't set up yet). The JavaScript code will be run by [Rhino](https://github.com/mozilla/rhino) and have access to the same Java API in the example above:
 
     [~]$ curl -X POST -H 'Content-Type: text/plain' -d 'request.getMethod().removeHeaders("User-Agent");' http://localhost:8080/proxy/8081/interceptor/request
-    
+
 Consult the Java API docs for more info.
 
 ### SSL Support
@@ -386,7 +386,7 @@ The BrowserMobProxyServer implementation uses native DNS resolution by default, 
 You'll need maven (`brew install maven` if you're on OS X):
 
     [~]$ mvn -DskipTests
-    
+
 You'll find the standalone BrowserMob Proxy distributable zip at `browsermob-dist/target/browsermob-proxy-2.1.5-SNAPSHOT-bin.zip`. Unzip the contents and run the `browsermob-proxy` or `browsermob-proxy.bat` files in the `bin` directory.
 
 When you build the latest code from source, you'll have access to the latest snapshot release. To use the SNAPSHOT version in your code, modify the version in your pom:
