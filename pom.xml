@@ -211,8 +211,7 @@
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <!-- Remove the -android when dropping support for Java 7. -->
-                <version>22.0-android</version>
+                <version>22.0</version>
             </dependency>
 
             <dependency>
