@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -29,7 +30,7 @@ public class AdvancedHostResolverCacheTest {
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][]{
                 // skip DNS cache operations for NativeResolver
-                {DnsJavaResolver.class}, {NativeCacheManipulatingResolver.class}, {ChainedHostResolver.class}
+                {NativeCacheManipulatingResolver.class}, {ChainedHostResolver.class}
         });
     }
 
@@ -38,10 +39,7 @@ public class AdvancedHostResolverCacheTest {
     public AdvancedHostResolverCacheTest(Class<AdvancedHostResolver> resolverClass) throws IllegalAccessException, InstantiationException {
         // this is a hacky way to allow us to test the ChainedHostResolver, even though it doesn't have a no-arg constructor
         if (resolverClass.equals(ChainedHostResolver.class)) {
-            // don't use the NativecacheManipulatingResolver on Windows, since it is unsupported
-            this.resolver = new ChainedHostResolver(
-                    NewProxyServerTestUtil.isWindows() ? ImmutableList.of(new DnsJavaResolver())
-                                                : ImmutableList.of(new NativeCacheManipulatingResolver(), new DnsJavaResolver()));
+            this.resolver = new ChainedHostResolver(ImmutableList.of(new NativeCacheManipulatingResolver()));
         } else {
             this.resolver = resolverClass.newInstance();
         }
@@ -54,10 +52,11 @@ public class AdvancedHostResolverCacheTest {
     }
 
     @Before
-    public void skipForNativeDnsCacheOnWindows() {
-        // the NativecacheManipulatingResolver does not work on Windows because Java seems to use to the OS-level cache
+    public void skipOnWindows() {
+        // DNS cache-manipulating features are not available on Windows, because the NativeCacheManipulatingResolver does
+        // not work, since Java seems to use to the OS-level cache.
         assumeFalse("NativeCacheManipulatingResolver does not support cache manipulation on Windows",
-                NewProxyServerTestUtil.isWindows() && this.resolver instanceof NativeCacheManipulatingResolver);
+                NewProxyServerTestUtil.isWindows());
     }
 
     @Test

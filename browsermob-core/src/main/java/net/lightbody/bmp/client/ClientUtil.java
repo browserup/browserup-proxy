@@ -42,6 +42,7 @@ public class ClientUtil {
      * calling {@link net.lightbody.bmp.BrowserMobProxy#setHostNameResolver(net.lightbody.bmp.proxy.dns.AdvancedHostResolver)}.
      *
      * @return a new DnsJavaResolver
+     * @deprecated The dnsjava resolver has been deprecated in favor of the standard JVM resolver and will be removed in BMP >2.1.
      */
     public static AdvancedHostResolver createDnsJavaResolver() {
         return new DnsJavaResolver();
@@ -53,6 +54,7 @@ public class ClientUtil {
      * Can be used when calling {@link net.lightbody.bmp.BrowserMobProxy#setHostNameResolver(net.lightbody.bmp.proxy.dns.AdvancedHostResolver)}.
      *
      * @return a new ChainedHostResolver that resolves addresses first using a DnsJavaResolver, then using a NativeCacheManipulatingResolver
+     * @deprecated The dnsjava resolver has been deprecated in favor of the standard JVM resolver and will be removed in BMP >2.1.
      */
     public static AdvancedHostResolver createDnsJavaWithNativeFallbackResolver() {
         return new ChainedHostResolver(ImmutableList.of(new DnsJavaResolver(), new NativeCacheManipulatingResolver()));
@@ -74,7 +76,7 @@ public class ClientUtil {
      * Creates a Selenium Proxy object from the BrowserMobProxy instance, using the specified connectableAddress as the Selenium Proxy object's
      * proxy address. Determines the port using {@link net.lightbody.bmp.BrowserMobProxy#getPort()}. The BrowserMobProxy must be started.
      *
-     * @param browserMobProxy started BrowserMobProxy instance to read the port from
+     * @param browserMobProxy    started BrowserMobProxy instance to read the port from
      * @param connectableAddress the network address the Selenium Proxy will use to reach this BrowserMobProxy instance
      * @return a Selenium Proxy instance, configured to use the BrowserMobProxy instance as its proxy server
      * @throws java.lang.IllegalStateException if the proxy has not been started.
@@ -105,6 +107,7 @@ public class ClientUtil {
      * Attempts to retrieve a "connectable" address for this device that other devices on the network can use to connect to a local proxy.
      * This is a "reasonable guess" that is suitable in many (but not all) common scenarios.
      * TODO: define the algorithm used to discover a "connectable" local host
+     *
      * @return a "reasonable guess" at an address that can be used by other machines on the network to reach this host
      */
     public static InetAddress getConnectableAddress() {
