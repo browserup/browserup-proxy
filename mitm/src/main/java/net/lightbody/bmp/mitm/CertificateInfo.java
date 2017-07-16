@@ -1,7 +1,7 @@
 package net.lightbody.bmp.mitm;
 
+import java.time.Instant;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -17,8 +17,8 @@ public class CertificateInfo {
     private String state;
     private String countryCode;
 
-    private Date notBefore;
-    private Date notAfter;
+    private Instant notBefore;
+    private Instant notAfter;
 
     private List<String> subjectAlternativeNames = Collections.emptyList();
 
@@ -34,11 +34,11 @@ public class CertificateInfo {
         return organizationalUnit;
     }
 
-    public Date getNotBefore() {
+    public Instant getNotBefore() {
         return notBefore;
     }
 
-    public Date getNotAfter() {
+    public Instant getNotAfter() {
         return notAfter;
     }
 
@@ -77,12 +77,12 @@ public class CertificateInfo {
         return this;
     }
 
-    public CertificateInfo notBefore(Date notBefore) {
+    public CertificateInfo notBefore(Instant notBefore) {
         this.notBefore = notBefore;
         return this;
     }
 
-    public CertificateInfo notAfter(Date notAfter) {
+    public CertificateInfo notAfter(Instant notAfter) {
         this.notAfter = notAfter;
         return this;
     }

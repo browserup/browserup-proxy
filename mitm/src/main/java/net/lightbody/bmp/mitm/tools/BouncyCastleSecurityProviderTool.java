@@ -56,6 +56,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class BouncyCastleSecurityProviderTool implements SecurityProviderTool {
@@ -107,8 +108,8 @@ public class BouncyCastleSecurityProviderTool implements SecurityProviderTool {
         try {
             certificateHolder = new JcaX509v3CertificateBuilder(caRootCertificate,
                     serialNumber,
-                    certificateInfo.getNotBefore(),
-                    certificateInfo.getNotAfter(),
+                    Date.from(certificateInfo.getNotBefore()),
+                    Date.from(certificateInfo.getNotAfter()),
                     serverCertificateSubject,
                     serverKeyPair.getPublic())
                     .addExtension(Extension.subjectAlternativeName, false, getDomainNameSANsAsASN1Encodable(certificateInfo.getSubjectAlternativeNames()))
@@ -169,8 +170,8 @@ public class BouncyCastleSecurityProviderTool implements SecurityProviderTool {
             certificateHolder = new JcaX509v3CertificateBuilder(
                     issuer,
                     serial,
-                    certificateInfo.getNotBefore(),
-                    certificateInfo.getNotAfter(),
+                    Date.from(certificateInfo.getNotBefore()),
+                    Date.from(certificateInfo.getNotAfter()),
                     issuer,
                     rootCertificatePublicKey)
                     .addExtension(Extension.subjectKeyIdentifier, false, createSubjectKeyIdentifier(rootCertificatePublicKey))

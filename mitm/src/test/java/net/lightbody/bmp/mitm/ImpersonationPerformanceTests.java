@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLSession;
 import java.security.KeyPair;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -150,6 +151,6 @@ public class ImpersonationPerformanceTests {
     }
 
     private static CertificateInfo createCertificateInfo(String hostname) {
-        return new CertificateInfo().commonName(hostname).notBefore(new Date()).notAfter(new Date());
+        return new CertificateInfo().commonName(hostname).notBefore(Instant.now()).notAfter(Instant.now());
     }
 }

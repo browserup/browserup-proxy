@@ -1,7 +1,8 @@
 package net.lightbody.bmp.mitm;
 
 import java.security.cert.X509Certificate;
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 /**
@@ -41,14 +42,14 @@ public class HostnameCertificateInfoGenerator implements CertificateInfoGenerato
     /**
      * Returns the default Not Before date for impersonated certificates. Defaults to the current date minus 1 year.
      */
-    protected Date getNotBefore() {
-        return new Date(System.currentTimeMillis() - 365L * 24L * 60L * 60L * 1000L);
+    protected Instant getNotBefore() {
+        return ZonedDateTime.now().minusYears(1).toInstant();
     }
 
     /**
      * Returns the default Not After date for impersonated certificates. Defaults to the current date plus 1 year.
      */
-    protected Date getNotAfter() {
-        return new Date(System.currentTimeMillis() + 365L * 24L * 60L * 60L * 1000L);
+    protected Instant getNotAfter() {
+        return ZonedDateTime.now().plusYears(1).toInstant();
     }
 }
