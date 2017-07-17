@@ -6,6 +6,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
+import java.time.Instant
+
 import static org.hamcrest.Matchers.greaterThan
 import static org.hamcrest.Matchers.isEmptyOrNullString
 import static org.hamcrest.Matchers.not
@@ -19,8 +21,8 @@ class RootCertificateGeneratorTest {
 
     CertificateInfo certificateInfo = new CertificateInfo()
             .commonName("littleproxy-test")
-            .notAfter(new Date())
-            .notBefore(new Date())
+            .notAfter(Instant.now())
+            .notBefore(Instant.now())
 
     @Test
     void testGenerateRootCertificate() {
