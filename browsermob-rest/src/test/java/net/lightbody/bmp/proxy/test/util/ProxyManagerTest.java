@@ -2,7 +2,7 @@ package net.lightbody.bmp.proxy.test.util;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import net.lightbody.bmp.proxy.BrowserMobProxyServerLegacyAdapter;
+import net.lightbody.bmp.BrowserMobProxyServer;
 import net.lightbody.bmp.proxy.ProxyManager;
 import net.lightbody.bmp.proxy.guice.ConfigModule;
 import org.junit.After;
@@ -21,7 +21,7 @@ public abstract class ProxyManagerTest {
 
     @After
     public void tearDown() throws Exception {
-        for(BrowserMobProxyServerLegacyAdapter p : proxyManager.get()){
+        for(BrowserMobProxyServer p : proxyManager.get()){
             try{
                 proxyManager.delete(p.getPort());
             }catch(Exception e){ }

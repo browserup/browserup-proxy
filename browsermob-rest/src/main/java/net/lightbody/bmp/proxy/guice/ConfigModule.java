@@ -8,7 +8,6 @@ import com.google.inject.Provider;
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import net.lightbody.bmp.proxy.BrowserMobProxyServerLegacyAdapter;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -98,8 +97,6 @@ public class ConfigModule implements Module {
         binder.bind(Key.get(Integer.class, new NamedImpl("minPort"))).toInstance(minPort);
         binder.bind(Key.get(Integer.class, new NamedImpl("maxPort"))).toInstance(maxPort);
         binder.bind(Key.get(Integer.class, new NamedImpl("ttl"))).toInstance(ttlSpec.value(options));
-
-        binder.bind(BrowserMobProxyServerLegacyAdapter.class).toProvider(LegacyProxyServerProvider.class);
 
         // bind an ObjectMapper provider that uses the system time zone instead of UTC by default
         binder.bind(ObjectMapper.class).toProvider(new Provider<ObjectMapper>() {

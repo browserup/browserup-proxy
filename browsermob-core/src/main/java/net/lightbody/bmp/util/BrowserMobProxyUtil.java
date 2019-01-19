@@ -2,6 +2,9 @@ package net.lightbody.bmp.util;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import net.lightbody.bmp.core.har.Har;
 import net.lightbody.bmp.core.har.HarEntry;
 import net.lightbody.bmp.core.har.HarLog;
@@ -120,5 +123,22 @@ public class BrowserMobProxyUtil {
         }
 
         return versionString;
+    }
+
+    public static InetSocketAddress inetSocketAddressFromString(String hostAndPort) throws URISyntaxException {
+        // from https://stackoverflow.com/questions/2345063/java-common-way-to-validate-and-convert-hostport-to-inetsocketaddress
+
+        // WORKAROUND: add any scheme to make the resulting URI valid.
+        URI uri = new URI("my://" + hostAndPort); // may throw URISyntaxException
+        String host = uri.getHost();
+        int port = uri.getPort();
+
+        if (uri.getHost() == null || uri.getPort() == -1) {
+            throw new URISyntaxException(uri.toString(),
+                "URI must have host and port parts");
+        }
+
+        // validation succeeded
+        return new InetSocketAddress(host, port);
     }
 }

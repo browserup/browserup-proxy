@@ -5,27 +5,28 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import net.lightbody.bmp.BrowserMobProxyServer;
-import net.lightbody.bmp.exception.ProxyExistsException;
-import net.lightbody.bmp.exception.ProxyPortsExhaustedException;
-import net.lightbody.bmp.proxy.auth.AuthType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.lang.ref.WeakReference;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.Collection;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import net.lightbody.bmp.BrowserMobProxy;
+import net.lightbody.bmp.BrowserMobProxyServer;
+import net.lightbody.bmp.exception.ProxyExistsException;
+import net.lightbody.bmp.exception.ProxyPortsExhaustedException;
+import net.lightbody.bmp.proxy.auth.AuthType;
+import net.lightbody.bmp.util.BrowserMobProxyUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class ProxyManager {
@@ -34,13 +35,12 @@ public class ProxyManager {
     private int lastPort;
     private final int minPort;
     private final int maxPort;
-    private final Provider<BrowserMobProxyServerLegacyAdapter> proxyServerProvider;
     // retain a reference to the Cache to allow the ProxyCleanupTask to .cleanUp(), since asMap() is just a view into the cache.
     // it would seem to make sense to pass the newly-built Cache directly to the ProxyCleanupTask and have it retain a WeakReference to it, and
     // only maintain a reference to the .asMap() result in this class. puzzlingly, however, the Cache can actually get garbage collected
     // before the .asMap() view of it does.
-    private final Cache<Integer, BrowserMobProxyServerLegacyAdapter> proxyCache;
-    private final ConcurrentMap<Integer, BrowserMobProxyServerLegacyAdapter> proxies;
+    private final Cache<Integer, BrowserMobProxyServer> proxyCache;
+    private final ConcurrentMap<Integer, BrowserMobProxyServer> proxies;
 
     /**
      * Interval at which expired proxy checks will actively clean up expired proxies. Proxies may still be cleaned up when accessing the
@@ -66,15 +66,15 @@ public class ProxyManager {
     private static class ProxyCleanupTask implements Runnable {
         // using a WeakReference that will indicate to us when the Cache (and thus its ProxyManager) has been garbage
         // collected, allowing this cleanup task to kill itself
-        private final WeakReference<Cache<Integer, BrowserMobProxyServerLegacyAdapter>> proxyCache;
+        private final WeakReference<Cache<Integer, BrowserMobProxyServer>> proxyCache;
 
-        public ProxyCleanupTask(Cache<Integer, BrowserMobProxyServerLegacyAdapter> cache) {
-            this.proxyCache = new WeakReference<Cache<Integer, BrowserMobProxyServerLegacyAdapter>>(cache);
+        public ProxyCleanupTask(Cache<Integer, BrowserMobProxyServer> cache) {
+            this.proxyCache = new WeakReference<Cache<Integer, BrowserMobProxyServer>>(cache);
         }
 
         @Override
         public void run() {
-            Cache<Integer, BrowserMobProxyServerLegacyAdapter> cache = proxyCache.get();
+            Cache<Integer, BrowserMobProxyServer> cache = proxyCache.get();
             if (cache != null) {
                 try {
                     cache.cleanUp();
@@ -92,17 +92,16 @@ public class ProxyManager {
     }
 
     @Inject
-    public ProxyManager(Provider<BrowserMobProxyServerLegacyAdapter> proxyServerProvider, @Named("minPort") Integer minPort, @Named("maxPort") Integer maxPort, final @Named("ttl") Integer ttl) {
-        this.proxyServerProvider = proxyServerProvider;
+    public ProxyManager(@Named("minPort") Integer minPort, @Named("maxPort") Integer maxPort, final @Named("ttl") Integer ttl) {
         this.minPort = minPort;
         this.maxPort = maxPort;
         this.lastPort = maxPort;
         if (ttl > 0) {
             // proxies should be evicted after the specified ttl, so set up an evicting cache and a listener to stop the proxies when they're evicted
-            RemovalListener<Integer, BrowserMobProxyServerLegacyAdapter> removalListener = new RemovalListener<Integer, BrowserMobProxyServerLegacyAdapter>() {
-                public void onRemoval(RemovalNotification<Integer, BrowserMobProxyServerLegacyAdapter> removal) {
+            RemovalListener<Integer, BrowserMobProxyServer> removalListener = new RemovalListener<Integer, BrowserMobProxyServer>() {
+                public void onRemoval(RemovalNotification<Integer, BrowserMobProxyServer> removal) {
                     try {
-                        BrowserMobProxyServerLegacyAdapter proxy = removal.getValue();
+                        BrowserMobProxyServer proxy = removal.getValue();
                         if (proxy != null) {
                             LOG.info("Expiring ProxyServer on port {} after {} seconds without activity", proxy.getPort(), ttl);
                             proxy.stop();
@@ -124,15 +123,15 @@ public class ProxyManager {
             ScheduledExecutorHolder.expiredProxyCleanupExecutor.scheduleWithFixedDelay(new ProxyCleanupTask(proxyCache),
                     EXPIRED_PROXY_CLEANUP_INTERVAL_SECONDS, EXPIRED_PROXY_CLEANUP_INTERVAL_SECONDS, TimeUnit.SECONDS);
         } else {
-            this.proxies = new ConcurrentHashMap<Integer, BrowserMobProxyServerLegacyAdapter>();
+            this.proxies = new ConcurrentHashMap<Integer, BrowserMobProxyServer>();
             // nothing to timeout, so no Cache
             this.proxyCache = null;
         }
     }
 
-    public BrowserMobProxyServerLegacyAdapter create(Map<String, String> options, Integer port, String bindAddr, String serverBindAddr, boolean useEcc, boolean trustAllServers) {
+    public BrowserMobProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword, Integer port, String bindAddr, String serverBindAddr, boolean useEcc, boolean trustAllServers) {
         LOG.debug("Instantiate ProxyServer...");
-        BrowserMobProxyServerLegacyAdapter proxy = proxyServerProvider.get();
+        BrowserMobProxyServer proxy = new BrowserMobProxyServer();
 
         if (useEcc) {
             LOG.info("Using Elliptic Curve Cryptography for certificate impersonation");
@@ -144,30 +143,32 @@ public class ProxyManager {
             proxy.setTrustAllServers(true);
         }
 
-        if (options != null) {
-            // this is a short-term work-around for Proxy Auth in the REST API until the upcoming REST API refactor
-            String proxyUsername = options.remove("proxyUsername");
-            String proxyPassword = options.remove("proxyPassword");
-            if (proxyUsername != null && proxyPassword != null) {
-                proxy.chainedProxyAuthorization(proxyUsername, proxyPassword, AuthType.BASIC);
-            }
-
-            LOG.debug("Apply options `{}` to new ProxyServer...", options);
-            proxy.setOptions(options);
+        // this is a short-term work-around for Proxy Auth in the REST API until the upcoming REST API refactor
+        if (proxyUsername != null && proxyPassword != null) {
+            proxy.chainedProxyAuthorization(proxyUsername, proxyPassword, AuthType.BASIC);
         }
 
+        if (upstreamHttpProxy != null) {
+            try {
+                InetSocketAddress chainedProxyAddress = BrowserMobProxyUtil.inetSocketAddressFromString(upstreamHttpProxy);
+                proxy.setChainedProxy(chainedProxyAddress);
+            }
+            catch(URISyntaxException e) {
+                LOG.error("Invalid upstream http proxy specified: " + upstreamHttpProxy + ". Must use host:port format.");
+                throw new RuntimeException("Invalid upstream http proxy");
+            }
+        }
+
+        InetAddress clientBindAddress = null;
         if (bindAddr != null) {
             LOG.debug("Bind ProxyServer to `{}`...", bindAddr);
-            InetAddress inetAddress;
             try {
-                inetAddress = InetAddress.getByName(bindAddr);
+                clientBindAddress = InetAddress.getByName(bindAddr);
             } catch (UnknownHostException e) {
                 LOG.error("Unable to bind proxy to address: " + bindAddr + "; proxy will not be created.", e);
 
                 throw new RuntimeException("Unable to bind proxy to address: ", e);
             }
-
-            proxy.setLocalHost(inetAddress);
         }
 
         InetAddress serverInetAddress = null;
@@ -183,14 +184,14 @@ public class ProxyManager {
         }
 
         if (port != null) {
-            return startProxy(proxy, port, serverInetAddress);
+            return startProxy(proxy, port, clientBindAddress, serverInetAddress);
         }
 
         while (proxies.size() <= maxPort - minPort) {
             LOG.debug("Use next available port for new ProxyServer...");
             port = nextPort();
             try {
-                return startProxy(proxy, port, serverInetAddress);
+                return startProxy(proxy, port, clientBindAddress, serverInetAddress);
             } catch (ProxyExistsException ex) {
                 LOG.debug("Proxy already exists at port {}", port);
             }
@@ -198,34 +199,33 @@ public class ProxyManager {
         throw new ProxyPortsExhaustedException();
     }
 
-    public BrowserMobProxyServerLegacyAdapter create(Map<String, String> options, Integer port, String bindAddr, boolean useEcc, boolean trustAllServers) {
-        return create(options, port, null, null, false, false);
+    public BrowserMobProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword, Integer port, String bindAddr, boolean useEcc, boolean trustAllServers) {
+        return create(upstreamHttpProxy, proxyUsername, proxyPassword, port, null, null, false, false);
     }
 
-    public BrowserMobProxyServerLegacyAdapter create(Map<String, String> options, Integer port) {
-        return create(options, port, null, null, false, false);
+    public BrowserMobProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword, Integer port) {
+        return create(upstreamHttpProxy, proxyUsername, proxyPassword, port, null, null, false, false);
     }
 
-    public BrowserMobProxyServerLegacyAdapter create(Map<String, String> options) {
-        return create(options, null, null, null, false, false);
+    public BrowserMobProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword) {
+        return create(upstreamHttpProxy, proxyUsername, proxyPassword, null, null, null, false, false);
     }
 
-    public BrowserMobProxyServerLegacyAdapter create() {
-        return create(null, null, null, null, false, false);
+    public BrowserMobProxyServer create() {
+        return create(null, null, null, null, null, null, false, false);
     }
 
-    public BrowserMobProxyServerLegacyAdapter create(int port) {
-        return create(null, port, null, null, false, false);
+    public BrowserMobProxyServer create(int port) {
+        return create(null, null, null, port, null, null, false, false);
     }
 
-    public BrowserMobProxyServerLegacyAdapter get(int port) {
+    public BrowserMobProxyServer get(int port) {
         return proxies.get(port);
     }
 
-    private BrowserMobProxyServerLegacyAdapter startProxy(BrowserMobProxyServerLegacyAdapter proxy, int port, InetAddress serverBindAddr) {
+    private BrowserMobProxyServer startProxy(BrowserMobProxyServer proxy, int port, InetAddress clientBindAddr, InetAddress serverBindAddr) {
         if (port != 0) {
-            proxy.setPort(port);
-            BrowserMobProxyServerLegacyAdapter old = proxies.putIfAbsent(port, proxy);
+            BrowserMobProxyServer old = proxies.putIfAbsent(port, proxy);
             if (old != null) {
                 LOG.info("Proxy already exists at port {}", port);
                 throw new ProxyExistsException(port);
@@ -233,11 +233,7 @@ public class ProxyManager {
         }
 
         try {
-            if (serverBindAddr != null) {
-                proxy.start(port, null, serverBindAddr);
-            } else {
-                proxy.start();
-            }
+            proxy.start(port, clientBindAddr, serverBindAddr);
 
             if (port == 0) {
                 int realPort = proxy.getPort();
@@ -262,18 +258,18 @@ public class ProxyManager {
         return lastPort < maxPort ? ++lastPort : (lastPort = minPort);
     }
 
-    public Collection<BrowserMobProxyServerLegacyAdapter> get() {
+    public Collection<BrowserMobProxyServer> get() {
         return proxies.values();
     }
 
     public void delete(int port) {
-        BrowserMobProxyServerLegacyAdapter proxy = proxies.remove(port);
+        BrowserMobProxyServer proxy = proxies.remove(port);
         if (proxy == null) {
             return;
         }
 
         // temporary: to avoid stopping an already-stopped BrowserMobProxyServer instance, see if it's stopped before re-stopping it
-        if (!proxy.isStopped()) {
+        if (!(proxy).isStopped()) {
             proxy.stop();
         }
     }
