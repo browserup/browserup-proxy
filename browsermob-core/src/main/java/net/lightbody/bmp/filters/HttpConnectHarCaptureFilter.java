@@ -1,15 +1,16 @@
 package net.lightbody.bmp.filters;
 
 import com.google.common.cache.CacheBuilder;
+import de.sstoehr.harreader.model.HttpMethod;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
-import net.lightbody.bmp.core.har.Har;
-import net.lightbody.bmp.core.har.HarEntry;
-import net.lightbody.bmp.core.har.HarRequest;
-import net.lightbody.bmp.core.har.HarResponse;
-import net.lightbody.bmp.core.har.HarTimings;
+import de.sstoehr.harreader.model.Har;
+import de.sstoehr.harreader.model.HarEntry;
+import de.sstoehr.harreader.model.HarRequest;
+import de.sstoehr.harreader.model.HarResponse;
+import de.sstoehr.harreader.model.HarTiming;
 import net.lightbody.bmp.filters.support.HttpConnectTiming;
 import net.lightbody.bmp.filters.util.HarCaptureUtil;
 import net.lightbody.bmp.util.HttpUtil;
@@ -152,11 +153,14 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
         // since this is a CONNECT, which is not handled by the HarCaptureFilter, we need to create and populate the
         // entire HarEntry and add it to this har.
         HarEntry harEntry = createHarEntryForFailedCONNECT(HarCaptureUtil.getResolutionFailedErrorMessage(hostAndPort));
-        har.getLog().addEntry(harEntry);
+        har.getLog().getEntries().add(harEntry);
 
-        // record the amount of time we attempted to resolve the hostname in the HarTimings object
+        // record the amount of time we attempted to resolve the hostname in the HarTiming object
         if (dnsResolutionStartedNanos > 0L) {
-            harEntry.getTimings().setDns(System.nanoTime() - dnsResolutionStartedNanos, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setDns(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        System.nanoTime() - dnsResolutionStartedNanos, TimeUnit.NANOSECONDS)));
         }
 
         httpConnectTimes.remove(clientAddress);
@@ -167,11 +171,14 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
         // since this is a CONNECT, which is not handled by the HarCaptureFilter, we need to create and populate the
         // entire HarEntry and add it to this har.
         HarEntry harEntry = createHarEntryForFailedCONNECT(HarCaptureUtil.getConnectionFailedErrorMessage());
-        har.getLog().addEntry(harEntry);
+        har.getLog().getEntries().add(harEntry);
 
         // record the amount of time we attempted to connect in the HarTimings object
         if (connectionStartedNanos > 0L) {
-            harEntry.getTimings().setConnect(System.nanoTime() - connectionStartedNanos, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setConnect(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        System.nanoTime() - connectionStartedNanos, TimeUnit.NANOSECONDS)));
         }
 
         httpConnectTimes.remove(clientAddress);
@@ -202,22 +209,31 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
     @Override
     public void serverToProxyResponseTimedOut() {
         HarEntry harEntry = createHarEntryForFailedCONNECT(HarCaptureUtil.getResponseTimedOutErrorMessage());
-        har.getLog().addEntry(harEntry);
+        har.getLog().getEntries().add(harEntry);
 
         // include this timeout time in the HarTimings object
         long timeoutTimestampNanos = System.nanoTime();
 
         // if the proxy started to send the request but has not yet finished, we are currently "sending"
         if (sendStartedNanos > 0L && sendFinishedNanos == 0L) {
-            harEntry.getTimings().setSend(timeoutTimestampNanos - sendStartedNanos, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setSend(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        timeoutTimestampNanos - sendStartedNanos, TimeUnit.NANOSECONDS)));
         }
         // if the entire request was sent but the proxy has not begun receiving the response, we are currently "waiting"
         else if (sendFinishedNanos > 0L && responseReceiveStartedNanos == 0L) {
-            harEntry.getTimings().setWait(timeoutTimestampNanos - sendFinishedNanos, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setWait(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        timeoutTimestampNanos - sendFinishedNanos, TimeUnit.NANOSECONDS)));
         }
         // if the proxy has already begun to receive the response, we are currenting "receiving"
         else if (responseReceiveStartedNanos > 0L) {
-            harEntry.getTimings().setReceive(timeoutTimestampNanos - responseReceiveStartedNanos, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setReceive(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        timeoutTimestampNanos - responseReceiveStartedNanos, TimeUnit.NANOSECONDS)));
         }
     }
 
@@ -281,30 +297,48 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
      * @param harEntry HAR entry to populate timing information in
      */
     private void populateTimingsForFailedCONNECT(HarEntry harEntry) {
-        HarTimings timings = harEntry.getTimings();
+        HarTiming timings = harEntry.getTimings();
 
         if (connectionQueuedNanos > 0L && dnsResolutionStartedNanos > 0L) {
-            timings.setBlocked(dnsResolutionStartedNanos - connectionQueuedNanos, TimeUnit.NANOSECONDS);
+            timings.setBlocked(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        dnsResolutionStartedNanos - connectionQueuedNanos, TimeUnit.NANOSECONDS)));
         }
 
         if (dnsResolutionStartedNanos > 0L && dnsResolutionFinishedNanos > 0L) {
-            timings.setDns(dnsResolutionFinishedNanos - dnsResolutionStartedNanos, TimeUnit.NANOSECONDS);
+            timings.setDns(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        dnsResolutionFinishedNanos - dnsResolutionStartedNanos, TimeUnit.NANOSECONDS)));
         }
 
         if (connectionStartedNanos > 0L && connectionSucceededTimeNanos > 0L) {
-            timings.setConnect(connectionSucceededTimeNanos - connectionStartedNanos, TimeUnit.NANOSECONDS);
+            timings.setConnect(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        connectionSucceededTimeNanos - connectionStartedNanos, TimeUnit.NANOSECONDS)));
 
             if (sslHandshakeStartedNanos > 0L) {
-                timings.setSsl(connectionSucceededTimeNanos - this.sslHandshakeStartedNanos, TimeUnit.NANOSECONDS);
+                timings.setSsl(
+                    Math.toIntExact(
+                        TimeUnit.MILLISECONDS.convert(
+                            connectionSucceededTimeNanos - this.sslHandshakeStartedNanos, TimeUnit.NANOSECONDS)));
             }
         }
 
         if (sendStartedNanos > 0L && sendFinishedNanos >= 0L) {
-            timings.setSend(sendFinishedNanos - sendStartedNanos, TimeUnit.NANOSECONDS);
+            timings.setSend(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        sendFinishedNanos - sendStartedNanos, TimeUnit.NANOSECONDS)));
         }
 
         if (sendFinishedNanos > 0L && responseReceiveStartedNanos >= 0L) {
-            timings.setWait(responseReceiveStartedNanos - sendFinishedNanos, TimeUnit.NANOSECONDS);
+            timings.setWait(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        responseReceiveStartedNanos - sendFinishedNanos, TimeUnit.NANOSECONDS)));
         }
 
         // since this method is for HTTP CONNECT failures only, we can't populate a "received" time, since that would
@@ -313,7 +347,7 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
 
     /**
      * Creates a {@link HarEntry} for a failed CONNECT request. Initializes and populates the entry, including the
-     * {@link HarRequest}, {@link HarResponse}, and {@link HarTimings}. (Note: only successful timing information is
+     * {@link HarRequest}, {@link HarResponse}, and {@link HarTiming}. (Note: only successful timing information is
      * populated in the timings object; the calling method must populate the timing information for the final, failed
      * step. For example, if DNS resolution failed, this method will populate the network 'blocked' time, but not the DNS
      * time.) Populates the specified errorMessage in the {@link HarResponse}'s error field.
@@ -322,16 +356,16 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
      * @return a new HAR entry
      */
     private HarEntry createHarEntryForFailedCONNECT(String errorMessage) {
-        HarEntry harEntry = new HarEntry(currentPageRef);
+        HarEntry harEntry = new HarEntry();
+        harEntry.setPageref(currentPageRef);
         harEntry.setStartedDateTime(requestStartTime);
 
         HarRequest request = createRequestForFailedConnect(originalRequest);
         harEntry.setRequest(request);
 
         HarResponse response = HarCaptureUtil.createHarResponseForFailure();
+        response.setAdditionalField("_errorMessage", errorMessage);
         harEntry.setResponse(response);
-
-        response.setError(errorMessage);
 
         populateTimingsForFailedCONNECT(harEntry);
 
@@ -358,7 +392,7 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
                     log.trace("Unable to find cached IP address for host: {}. IP address in HAR entry will be blank.", serverHost);
                 }
             } else {
-                log.warn("Unable to identify host from request uri: {}", modifiedHttpRequest.getUri());
+                log.warn("Unable to identify host from request uri: {}", modifiedHttpRequest.uri());
             }
         }
     }
@@ -373,7 +407,11 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
     private HarRequest createRequestForFailedConnect(HttpRequest httpConnectRequest) {
         String url = getFullUrl(httpConnectRequest);
 
-        return new HarRequest(httpConnectRequest.getMethod().toString(), url, httpConnectRequest.getProtocolVersion().text());
+        HarRequest harRequest = new HarRequest();
+        harRequest.setMethod(HttpMethod.valueOf(httpConnectRequest.method().toString()));
+        harRequest.setUrl(url);
+        harRequest.setHttpVersion(httpConnectRequest.protocolVersion().text());
+        return harRequest;
     }
 
     /**

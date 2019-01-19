@@ -2,6 +2,8 @@ package net.lightbody.bmp.filters;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
+import de.sstoehr.harreader.model.HarHeader;
+import de.sstoehr.harreader.model.HttpMethod;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpContent;
@@ -14,14 +16,14 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
-import net.lightbody.bmp.core.har.Har;
-import net.lightbody.bmp.core.har.HarCookie;
-import net.lightbody.bmp.core.har.HarEntry;
-import net.lightbody.bmp.core.har.HarNameValuePair;
-import net.lightbody.bmp.core.har.HarPostData;
-import net.lightbody.bmp.core.har.HarPostDataParam;
-import net.lightbody.bmp.core.har.HarRequest;
-import net.lightbody.bmp.core.har.HarResponse;
+import de.sstoehr.harreader.model.Har;
+import de.sstoehr.harreader.model.HarCookie;
+import de.sstoehr.harreader.model.HarEntry;
+import de.sstoehr.harreader.model.HarQueryParam;
+import de.sstoehr.harreader.model.HarPostData;
+import de.sstoehr.harreader.model.HarPostDataParam;
+import de.sstoehr.harreader.model.HarRequest;
+import de.sstoehr.harreader.model.HarResponse;
 import net.lightbody.bmp.exception.UnsupportedCharsetException;
 import net.lightbody.bmp.filters.support.HttpConnectTiming;
 import net.lightbody.bmp.filters.util.HarCaptureUtil;
@@ -170,7 +172,8 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
         this.har = har;
 
-        this.harEntry = new HarEntry(currentPageRef);
+        this.harEntry = new HarEntry();
+        this.harEntry.setPageref(currentPageRef);
     }
 
     @Override
@@ -185,7 +188,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
             // link the object up now, before we make the request, so that if we get cut off (ie: favicon.ico request and browser shuts down)
             // we still have the attempt associated, even if we never got a response
             harEntry.setStartedDateTime(new Date());
-            har.getLog().addEntry(harEntry);
+            har.getLog().getEntries().add(harEntry);
 
             HttpRequest httpRequest = (HttpRequest) httpObject;
             this.capturedOriginalRequest = httpRequest;
@@ -197,7 +200,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
             // create a "no response received" HarResponse, in case the connection is interrupted, terminated, or the response is not received
             // for any other reason. having a "default" HarResponse prevents us from generating an invalid HAR.
             HarResponse defaultHarResponse = HarCaptureUtil.createHarResponseForFailure();
-            defaultHarResponse.setError(HarCaptureUtil.getNoResponseReceivedErrorMessage());
+            defaultHarResponse.setAdditionalField("_errorMessage", HarCaptureUtil.getNoResponseReceivedErrorMessage());
             harEntry.setResponse(defaultHarResponse);
 
             captureQueryParameters(httpRequest);
@@ -236,7 +239,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
                 captureRequestContent(requestCaptureFilter.getHttpRequest(), requestCaptureFilter.getFullRequestContents());
             }
 
-            harEntry.getRequest().setBodySize(requestBodySize.get());
+            harEntry.getRequest().setBodySize((long)(requestBodySize.get()));
         }
 
         return null;
@@ -267,7 +270,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
                 captureResponseContent(responseCaptureFilter.getHttpResponse(), responseCaptureFilter.getFullResponseContents());
             }
 
-            harEntry.getResponse().setBodySize(responseBodySize.get());
+            harEntry.getResponse().setBodySize((long)(responseBodySize.get()));
         }
 
         return super.serverToProxyResponse(httpObject);
@@ -279,7 +282,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         HarResponse response = HarCaptureUtil.createHarResponseForFailure();
         harEntry.setResponse(response);
 
-        response.setError(HarCaptureUtil.getResponseTimedOutErrorMessage());
+        response.setAdditionalField ("_errorMessage", HarCaptureUtil.getResponseTimedOutErrorMessage());
 
 
         // include this timeout time in the HarTimings object
@@ -287,15 +290,24 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
         // if the proxy started to send the request but has not yet finished, we are currently "sending"
         if (sendStartedNanos > 0L && sendFinishedNanos == 0L) {
-            harEntry.getTimings().setSend(timeoutTimestampNanos - sendStartedNanos, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setSend(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        timeoutTimestampNanos - sendStartedNanos, TimeUnit.NANOSECONDS)));
         }
         // if the entire request was sent but the proxy has not begun receiving the response, we are currently "waiting"
         else if (sendFinishedNanos > 0L && responseReceiveStartedNanos == 0L) {
-            harEntry.getTimings().setWait(timeoutTimestampNanos - sendFinishedNanos, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setWait(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        timeoutTimestampNanos - sendFinishedNanos, TimeUnit.NANOSECONDS)));
         }
         // if the proxy has already begun to receive the response, we are currenting "receiving"
         else if (responseReceiveStartedNanos > 0L) {
-            harEntry.getTimings().setReceive(timeoutTimestampNanos - responseReceiveStartedNanos, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setReceive(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        timeoutTimestampNanos - responseReceiveStartedNanos, TimeUnit.NANOSECONDS)));
         }
     }
 
@@ -312,7 +324,11 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         // the full URL consists of the scheme + host + port (if non-standard) + path + query params + fragment.
         String url = getFullUrl(httpRequest);
 
-        return new HarRequest(httpRequest.getMethod().toString(), url, httpRequest.getProtocolVersion().text());
+        HarRequest harRequest = new HarRequest();
+        harRequest.setMethod(HttpMethod.valueOf(httpRequest.method().toString()));
+        harRequest.setUrl(url);
+        harRequest.setHttpVersion(httpRequest.protocolVersion().text());
+        return harRequest;
     }
 
     //TODO: add unit tests for these utility-like capture() methods
@@ -325,7 +341,10 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         try {
             for (Map.Entry<String, List<String>> entry : queryStringDecoder.parameters().entrySet()) {
                 for (String value : entry.getValue()) {
-                    harEntry.getRequest().getQueryString().add(new HarNameValuePair(entry.getKey(), value));
+                    HarQueryParam harQueryParam = new HarQueryParam();
+                    harQueryParam.setName(entry.getKey());
+                    harQueryParam.setValue(value);
+                    harEntry.getRequest().getQueryString().add(harQueryParam);
                 }
             }
         } catch (IllegalArgumentException e) {
@@ -379,7 +398,10 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
     protected void captureHeaders(HttpHeaders headers) {
         for (Map.Entry<String, String> header : headers.entries()) {
-            harEntry.getRequest().getHeaders().add(new HarNameValuePair(header.getKey(), header.getValue()));
+            HarHeader harHeader = new HarHeader();
+            harHeader.setName(header.getKey());
+            harHeader.setValue(header.getValue());
+            harEntry.getRequest().getHeaders().add(harHeader);
         }
     }
 
@@ -429,7 +451,10 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
             for (Map.Entry<String, List<String>> entry : queryStringDecoder.parameters().entrySet()) {
                 for (String value : entry.getValue()) {
-                    paramBuilder.add(new HarPostDataParam(entry.getKey(), value));
+                    HarPostDataParam harPostDataParam = new HarPostDataParam();
+                    harPostDataParam.setName(entry.getKey());
+                    harPostDataParam.setValue(value);
+                    paramBuilder.add(harPostDataParam);
                 }
             }
 
@@ -481,11 +506,14 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
             harEntry.getResponse().getContent().setEncoding("base64");
         }
 
-        harEntry.getResponse().getContent().setSize(fullMessage.length);
+        harEntry.getResponse().getContent().setSize((long)fullMessage.length);
     }
 
     protected void captureResponse(HttpResponse httpResponse) {
-        HarResponse response = new HarResponse(httpResponse.getStatus().code(), httpResponse.getStatus().reasonPhrase(), httpResponse.getProtocolVersion().text());
+        HarResponse response = new HarResponse();
+        response.setStatus(httpResponse.status().code());
+        response.setStatusText(httpResponse.status().reasonPhrase());
+        response.setHttpVersion(httpResponse.protocolVersion().text());
         harEntry.setResponse(response);
 
         captureResponseHeaderSize(httpResponse);
@@ -564,7 +592,10 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
     protected void captureResponseHeaders(HttpResponse httpResponse) {
         HttpHeaders headers = httpResponse.headers();
         for (Map.Entry<String, String> header : headers.entries()) {
-            harEntry.getResponse().getHeaders().add(new HarNameValuePair(header.getKey(), header.getValue()));
+            HarHeader harHeader = new HarHeader();
+            harHeader.setName(header.getKey());
+            harHeader.setValue(header.getValue());
+            harEntry.getResponse().getHeaders().add(harHeader);
         }
     }
 
@@ -603,10 +634,22 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
     protected void captureConnectTiming() {
         HttpConnectTiming httpConnectTiming = HttpConnectHarCaptureFilter.consumeConnectTimingForConnection(clientAddress);
         if (httpConnectTiming != null) {
-            harEntry.getTimings().setSsl(httpConnectTiming.getSslHandshakeTimeNanos(), TimeUnit.NANOSECONDS);
-            harEntry.getTimings().setConnect(httpConnectTiming.getConnectTimeNanos(), TimeUnit.NANOSECONDS);
-            harEntry.getTimings().setBlocked(httpConnectTiming.getBlockedTimeNanos(), TimeUnit.NANOSECONDS);
-            harEntry.getTimings().setDns(httpConnectTiming.getDnsTimeNanos(), TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setSsl(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        httpConnectTiming.getSslHandshakeTimeNanos(), TimeUnit.NANOSECONDS)));
+            harEntry.getTimings().setConnect(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        httpConnectTiming.getConnectTimeNanos(), TimeUnit.NANOSECONDS)));
+            harEntry.getTimings().setBlocked(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        httpConnectTiming.getBlockedTimeNanos(), TimeUnit.NANOSECONDS)));
+            harEntry.getTimings().setDns(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        httpConnectTiming.getDnsTimeNanos(), TimeUnit.NANOSECONDS)));
         }
     }
 
@@ -639,9 +682,12 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
         // resolution started means the connection is no longer queued, so populate 'blocked' time
         if (connectionQueuedNanos > 0L) {
-            harEntry.getTimings().setBlocked(dnsResolutionStartedNanos - connectionQueuedNanos, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setBlocked(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        dnsResolutionStartedNanos - connectionQueuedNanos, TimeUnit.NANOSECONDS)));
         } else {
-            harEntry.getTimings().setBlocked(0L, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setBlocked(0);
         }
 
         return null;
@@ -652,11 +698,14 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         HarResponse response = HarCaptureUtil.createHarResponseForFailure();
         harEntry.setResponse(response);
 
-        response.setError(HarCaptureUtil.getResolutionFailedErrorMessage(hostAndPort));
+        response.setAdditionalField("_errorMessage", HarCaptureUtil.getResolutionFailedErrorMessage(hostAndPort));
 
         // record the amount of time we attempted to resolve the hostname in the HarTimings object
         if (dnsResolutionStartedNanos > 0L) {
-            harEntry.getTimings().setDns(System.nanoTime() - dnsResolutionStartedNanos, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setDns(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        System.nanoTime() - dnsResolutionStartedNanos, TimeUnit.NANOSECONDS)));
         }
     }
 
@@ -665,9 +714,12 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         long dnsResolutionFinishedNanos = System.nanoTime();
 
         if (dnsResolutionStartedNanos > 0L) {
-            harEntry.getTimings().setDns(dnsResolutionFinishedNanos - dnsResolutionStartedNanos, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setDns(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        dnsResolutionFinishedNanos - dnsResolutionStartedNanos, TimeUnit.NANOSECONDS)));
         } else {
-            harEntry.getTimings().setDns(0L, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setDns(0);
         }
 
         // the address *should* always be resolved at this point
@@ -694,11 +746,14 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         HarResponse response = HarCaptureUtil.createHarResponseForFailure();
         harEntry.setResponse(response);
 
-        response.setError(HarCaptureUtil.getConnectionFailedErrorMessage());
+        response.setAdditionalField("_errorMessage", HarCaptureUtil.getConnectionFailedErrorMessage());
 
         // record the amount of time we attempted to connect in the HarTimings object
         if (connectionStartedNanos > 0L) {
-            harEntry.getTimings().setConnect(System.nanoTime() - connectionStartedNanos, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setConnect(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        System.nanoTime() - connectionStartedNanos, TimeUnit.NANOSECONDS)));
         }
     }
 
@@ -708,9 +763,12 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
         // make sure the previous timestamp was captured, to avoid setting an absurd value in the har (see serverToProxyResponseReceiving())
         if (connectionStartedNanos > 0L) {
-            harEntry.getTimings().setConnect(connectionSucceededTimeNanos - connectionStartedNanos, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setConnect(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        connectionSucceededTimeNanos - connectionStartedNanos, TimeUnit.NANOSECONDS)));
         } else {
-            harEntry.getTimings().setConnect(0L, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setConnect(0);
         }
     }
 
@@ -730,9 +788,12 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
         // make sure the previous timestamp was captured, to avoid setting an absurd value in the har (see serverToProxyResponseReceiving())
         if (sendStartedNanos > 0L) {
-            harEntry.getTimings().setSend(sendFinishedNanos - sendStartedNanos, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setSend(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        sendFinishedNanos - sendStartedNanos, TimeUnit.NANOSECONDS)));
         } else {
-            harEntry.getTimings().setSend(0L, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setSend(0);
         }
     }
 
@@ -744,9 +805,12 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         // sending (for example, the server replied with a 404 while we were uploading a large file), there was no wait time, so
         // make sure the wait is set to 0.
         if (sendFinishedNanos > 0L && sendFinishedNanos < responseReceiveStartedNanos) {
-            harEntry.getTimings().setWait(responseReceiveStartedNanos - sendFinishedNanos, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setWait(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        responseReceiveStartedNanos - sendFinishedNanos, TimeUnit.NANOSECONDS)));
         } else {
-            harEntry.getTimings().setWait(0L, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setWait(0);
         }
     }
 
@@ -758,9 +822,12 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         // typically that should happen, but it has been reported (https://github.com/lightbody/browsermob-proxy/issues/288) that it
         // sometimes does not. therefore, to be safe, make sure responseReceiveStartedNanos is populated before setting the receive time.
         if (responseReceiveStartedNanos > 0L) {
-            harEntry.getTimings().setReceive(responseReceivedNanos - responseReceiveStartedNanos, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setReceive(
+                Math.toIntExact(
+                    TimeUnit.MILLISECONDS.convert(
+                        responseReceivedNanos - responseReceiveStartedNanos, TimeUnit.NANOSECONDS)));
         } else {
-            harEntry.getTimings().setReceive(0L, TimeUnit.NANOSECONDS);
+            harEntry.getTimings().setReceive(0);
         }
     }
 }

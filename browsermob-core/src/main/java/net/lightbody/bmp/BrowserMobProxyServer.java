@@ -3,15 +3,15 @@ package net.lightbody.bmp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MapMaker;
+import de.sstoehr.harreader.model.HarCreatorBrowser;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import net.lightbody.bmp.client.ClientUtil;
-import net.lightbody.bmp.core.har.Har;
-import net.lightbody.bmp.core.har.HarLog;
-import net.lightbody.bmp.core.har.HarNameVersion;
-import net.lightbody.bmp.core.har.HarPage;
+import de.sstoehr.harreader.model.Har;
+import de.sstoehr.harreader.model.HarLog;
+import de.sstoehr.harreader.model.HarPage;
 import net.lightbody.bmp.filters.AddHeadersFilter;
 import net.lightbody.bmp.filters.AutoBasicAuthFilter;
 import net.lightbody.bmp.filters.BlacklistFilter;
@@ -86,7 +86,12 @@ import java.util.regex.Pattern;
 public class BrowserMobProxyServer implements BrowserMobProxy {
     private static final Logger log = LoggerFactory.getLogger(BrowserMobProxyServer.class);
 
-    private static final HarNameVersion HAR_CREATOR_VERSION = new HarNameVersion("BrowserMob Proxy", BrowserMobProxyUtil.getVersionString());
+    private static final HarCreatorBrowser HAR_CREATOR_VERSION =
+        new HarCreatorBrowser();
+    static {
+        HAR_CREATOR_VERSION.setName("BrowserMob Proxy");
+        HAR_CREATOR_VERSION.setVersion(BrowserMobProxyUtil.getVersionString());
+    }
 
     /* Default MITM resources */
     private static final String RSA_KEYSTORE_RESOURCE = "/sslSupport/ca-keystore-rsa.p12";
@@ -467,7 +472,10 @@ public class BrowserMobProxyServer implements BrowserMobProxy {
 
         harPageCount.set(0);
 
-        this.har = new Har(new HarLog(HAR_CREATOR_VERSION));
+        this.har = new Har();
+        HarLog harLog = new HarLog();
+        this.har.setLog(harLog);
+        harLog.setCreator(HAR_CREATOR_VERSION);
 
         newPage(initialPageRef, initialPageTitle);
 
@@ -562,8 +570,10 @@ public class BrowserMobProxyServer implements BrowserMobProxy {
             pageTitle = pageRef;
         }
 
-        HarPage newPage = new HarPage(pageRef, pageTitle);
-        har.getLog().addPage(newPage);
+        HarPage newPage = new HarPage();
+        newPage.setTitle(pageTitle);
+        newPage.setId(pageRef);
+        har.getLog().getPages().add(newPage);
 
         currentHarPage = newPage;
 
@@ -622,7 +632,7 @@ public class BrowserMobProxyServer implements BrowserMobProxy {
             return;
         }
 
-        previousPage.getPageTimings().setOnLoad(new Date().getTime() - previousPage.getStartedDateTime().getTime());
+        previousPage.getPageTimings().setOnLoad(Math.toIntExact(new Date().getTime() - previousPage.getStartedDateTime().getTime()));
     }
 
     @Override

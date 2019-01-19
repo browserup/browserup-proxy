@@ -5,10 +5,10 @@ import com.google.common.base.Suppliers;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
-import net.lightbody.bmp.core.har.Har;
-import net.lightbody.bmp.core.har.HarEntry;
-import net.lightbody.bmp.core.har.HarLog;
-import net.lightbody.bmp.core.har.HarPage;
+import de.sstoehr.harreader.model.Har;
+import de.sstoehr.harreader.model.HarEntry;
+import de.sstoehr.harreader.model.HarLog;
+import de.sstoehr.harreader.model.HarPage;
 import net.lightbody.bmp.mitm.exception.UncheckedIOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,13 +78,13 @@ public class BrowserMobProxyUtil {
         // lists, we are guaranteed that we will iterate through the pages and entries in the proper order
         for (HarEntry entry : har.getLog().getEntries()) {
             if (pageRefsToCopy.contains(entry.getPageref())) {
-                logCopy.addEntry(entry);
+                logCopy.getEntries().add(entry);
             }
         }
 
         for (HarPage page : har.getLog().getPages()) {
             if (pageRefsToCopy.contains(page.getId())) {
-                logCopy.addPage(page);
+                logCopy.getPages().add(page);
             }
         }
 

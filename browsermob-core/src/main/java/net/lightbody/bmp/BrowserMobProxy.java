@@ -1,6 +1,6 @@
 package net.lightbody.bmp;
 
-import net.lightbody.bmp.core.har.Har;
+import de.sstoehr.harreader.model.Har;
 import net.lightbody.bmp.filters.RequestFilter;
 import net.lightbody.bmp.filters.ResponseFilter;
 import net.lightbody.bmp.mitm.TrustSource;

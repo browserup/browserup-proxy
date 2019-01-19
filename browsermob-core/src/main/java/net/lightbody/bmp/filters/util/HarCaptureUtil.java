@@ -1,6 +1,6 @@
 package net.lightbody.bmp.filters.util;
 
-import net.lightbody.bmp.core.har.HarResponse;
+import de.sstoehr.harreader.model.HarResponse;
 
 /**
  * Static utility methods for {@link net.lightbody.bmp.filters.HarCaptureFilter} and {@link net.lightbody.bmp.filters.HttpConnectHarCaptureFilter}.
@@ -53,7 +53,11 @@ public class HarCaptureUtil {
      * @return a new HarResponse object with invalid HTTP status code (0) and version string ("unknown")
      */
     public static HarResponse createHarResponseForFailure() {
-        return new HarResponse(HTTP_STATUS_CODE_FOR_FAILURE, HTTP_REASON_PHRASE_FOR_FAILURE, HTTP_VERSION_STRING_FOR_FAILURE);
+        HarResponse harResponse = new HarResponse();
+        harResponse.setStatus(HTTP_STATUS_CODE_FOR_FAILURE);
+        harResponse.setStatusText(HTTP_REASON_PHRASE_FOR_FAILURE);
+        harResponse.setHttpVersion(HTTP_VERSION_STRING_FOR_FAILURE);
+        return harResponse;
     }
 
     /**
