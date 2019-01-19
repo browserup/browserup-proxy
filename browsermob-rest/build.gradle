@@ -1,33 +1,47 @@
-description = 'BrowserMob Proxy REST Module'
+plugins {
+    id 'java'
+    id 'maven'
+}
+
+repositories {
+    mavenLocal()
+    maven {
+        url = 'http://repo.maven.apache.org/maven2'
+    }
+}
+
 dependencies {
     compile project(':browsermob-core')
-    compile(group: 'com.google.sitebricks', name: 'sitebricks', version: '0.8.10') {
-        exclude(module: 'netty')
-    }
-    compile group: 'com.google.inject', name: 'guice', version: '3.0'
-    compile group: 'com.google.inject.extensions', name: 'guice-servlet', version: '3.0'
-    compile group: 'com.google.inject.extensions', name: 'guice-multibindings', version: '3.0'
-    compile group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.22'
-    compile group: 'org.eclipse.jetty', name: 'jetty-server', version: '7.3.0.v20110203'
-    compile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '7.3.0.v20110203'
-    compile group: 'net.sf.jopt-simple', name: 'jopt-simple', version: '3.2'
-    compile group: 'com.google.guava', name: 'guava', version: '20.0'
-    testCompile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8'
-    testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.8'
-    testCompile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.8'
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    testCompile group: 'org.mockito', name: 'mockito-core', version: '2.7.2'
-    testCompile group: 'org.seleniumhq.selenium', name: 'selenium-api', version: '2.53.1'
-    testCompile(group: 'org.mock-server', name: 'mockserver-netty', version: '3.10.4') {
-        exclude(module: 'logback-classic')
-        exclude(module: 'netty-codec-socks')
-        exclude(module: 'netty-buffer')
-        exclude(module: 'netty-codec')
-        exclude(module: 'netty-codec-http')
-        exclude(module: 'netty-common')
-        exclude(module: 'netty-handler')
-        exclude(module: 'netty-transport')
-    }
-    testCompile group: 'org.codehaus.groovy.modules.http-builder', name: 'http-builder', version: '0.7.1'
-    testCompile group: 'org.hamcrest', name: 'hamcrest-library', version: '1.3'
+    compile 'net.lightbody.bmp:browsermob-core:2.2.0-beta-1-SNAPSHOT'
+    compile 'com.google.sitebricks:sitebricks:0.8.10'
+    compile 'com.google.inject:guice:3.0'
+    compile 'com.google.inject.extensions:guice-servlet:3.0'
+    compile 'com.google.inject.extensions:guice-multibindings:3.0'
+    compile 'org.slf4j:jcl-over-slf4j:1.7.25'
+    compile 'org.eclipse.jetty:jetty-server:7.3.0.v20110203'
+    compile 'org.eclipse.jetty:jetty-servlet:7.3.0.v20110203'
+    compile 'net.sf.jopt-simple:jopt-simple:3.2'
+    compile 'com.google.guava:guava:22.0'
+    testCompile 'org.apache.logging.log4j:log4j-api:2.8.2'
+    testCompile 'org.apache.logging.log4j:log4j-core:2.8.2'
+    testCompile 'org.apache.logging.log4j:log4j-slf4j-impl:2.8.2'
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.mockito:mockito-core:2.8.47'
+    testCompile 'org.seleniumhq.selenium:selenium-api:3.4.0'
+    testCompile 'org.mock-server:mockserver-netty:3.10.8'
+    testCompile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
+    testCompile 'org.hamcrest:hamcrest-library:1.3'
+    testCompile 'org.codehaus.groovy:groovy-all:2.4.12'
 }
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+compileJava {
+    sourceCompatibility = '1.8'
+}
+
+description = 'BrowserMob Proxy REST Module'
+group = 'net.lightbody.bmp'
+version = '2.2.0-beta-1-SNAPSHOT'

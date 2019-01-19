@@ -1,22 +1,41 @@
-description = 'LittleProxy MITM Module'
-dependencies {
-    compile(group: 'org.littleshoot', name: 'littleproxy', version: '1.1.1') {
-        exclude(module: 'barchart-udt-bundle')
-        exclude(module: 'commons-cli')
-    }
-    compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.56'
-    compile group: 'org.bouncycastle', name: 'bcpkix-jdk15on', version: '1.56'
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    testCompile group: 'org.mockito', name: 'mockito-core', version: '2.7.2'
-    testCompile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8'
-    testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.8'
-    testCompile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.8'
-    testCompile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.8.6'
-    testCompile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.8.6'
-    testCompile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.8.6'
-    testCompile group: 'org.hamcrest', name: 'hamcrest-library', version: '1.3'
-    testCompile(group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.3') {
-        exclude(module: 'commons-logging')
-    }
-    testCompile group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.22'
+plugins {
+    id 'java'
+    id 'maven'
 }
+
+repositories {
+    mavenLocal()
+    maven {
+        url = 'http://repo.maven.apache.org/maven2'
+    }
+}
+
+dependencies {
+    compile 'net.lightbody.bmp:littleproxy:1.1.0-beta-bmp-17'
+    compile 'org.bouncycastle:bcprov-jdk15on:1.57'
+    compile 'org.bouncycastle:bcpkix-jdk15on:1.57'
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.mockito:mockito-core:2.8.47'
+    testCompile 'org.apache.logging.log4j:log4j-api:2.8.2'
+    testCompile 'org.apache.logging.log4j:log4j-core:2.8.2'
+    testCompile 'org.apache.logging.log4j:log4j-slf4j-impl:2.8.2'
+    testCompile 'com.fasterxml.jackson.core:jackson-core:2.8.9'
+    testCompile 'com.fasterxml.jackson.core:jackson-databind:2.8.9'
+    testCompile 'com.fasterxml.jackson.core:jackson-annotations:2.8.9'
+    testCompile 'org.hamcrest:hamcrest-library:1.3'
+    testCompile 'org.apache.httpcomponents:httpclient:4.5.3'
+    testCompile 'org.slf4j:jcl-over-slf4j:1.7.25'
+    testCompile 'org.codehaus.groovy:groovy-all:2.4.12'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+compileJava {
+    sourceCompatibility = '1.8'
+}
+
+description = 'LittleProxy MITM Module'
+group = 'net.lightbody.bmp'
+version = '2.2.0-beta-1-SNAPSHOT'
