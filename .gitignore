@@ -20,3 +20,7 @@ ClientCertificate.pem
 ClientPrivateKey.pem
 ClientPublicKey.pem
 mockserver_keystore.jks
+browsermob-core/build/
+browsermob-dist/build/
+browsermob-rest/build/
+mitm/build/
