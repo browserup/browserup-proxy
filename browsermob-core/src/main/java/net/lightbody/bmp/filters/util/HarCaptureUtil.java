@@ -1,6 +1,6 @@
 package net.lightbody.bmp.filters.util;
 
-import de.sstoehr.harreader.model.HarResponse;
+import com.browserup.harreader.model.HarResponse;
 
 /**
  * Static utility methods for {@link net.lightbody.bmp.filters.HarCaptureFilter} and {@link net.lightbody.bmp.filters.HttpConnectHarCaptureFilter}.

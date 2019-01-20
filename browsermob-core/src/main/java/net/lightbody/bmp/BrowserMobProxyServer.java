@@ -3,15 +3,15 @@ package net.lightbody.bmp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MapMaker;
-import de.sstoehr.harreader.model.HarCreatorBrowser;
+import com.browserup.harreader.model.HarCreatorBrowser;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import net.lightbody.bmp.client.ClientUtil;
-import de.sstoehr.harreader.model.Har;
-import de.sstoehr.harreader.model.HarLog;
-import de.sstoehr.harreader.model.HarPage;
+import com.browserup.harreader.model.Har;
+import com.browserup.harreader.model.HarLog;
+import com.browserup.harreader.model.HarPage;
 import net.lightbody.bmp.filters.AddHeadersFilter;
 import net.lightbody.bmp.filters.AutoBasicAuthFilter;
 import net.lightbody.bmp.filters.BlacklistFilter;
@@ -466,7 +466,7 @@ public class BrowserMobProxyServer implements BrowserMobProxy {
 
     @Override
     public Har newHar(String initialPageRef, String initialPageTitle) {
-        Har oldHar = getHar();
+        Har oldHar = endHar();
 
         addHarCaptureFilter();
 
@@ -573,6 +573,7 @@ public class BrowserMobProxyServer implements BrowserMobProxy {
         HarPage newPage = new HarPage();
         newPage.setTitle(pageTitle);
         newPage.setId(pageRef);
+        newPage.setStartedDateTime(new Date());
         har.getLog().getPages().add(newPage);
 
         currentHarPage = newPage;
@@ -583,6 +584,7 @@ public class BrowserMobProxyServer implements BrowserMobProxy {
     @Override
     public Har endHar() {
         Har oldHar = getHar();
+        if (oldHar == null) return null;
 
         // end the page and populate timings
         endPage();
@@ -632,7 +634,10 @@ public class BrowserMobProxyServer implements BrowserMobProxy {
             return;
         }
 
-        previousPage.getPageTimings().setOnLoad(Math.toIntExact(new Date().getTime() - previousPage.getStartedDateTime().getTime()));
+        if (previousPage.getStartedDateTime() != null) {
+            previousPage.getPageTimings().setOnLoad(Math.toIntExact(
+                new Date().getTime() - previousPage.getStartedDateTime().getTime()));
+        }
     }
 
     @Override

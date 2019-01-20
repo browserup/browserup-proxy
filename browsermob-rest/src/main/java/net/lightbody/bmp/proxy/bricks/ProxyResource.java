@@ -27,7 +27,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.script.ScriptException;
 import net.lightbody.bmp.BrowserMobProxyServer;
-import de.sstoehr.harreader.model.Har;
+import com.browserup.harreader.model.Har;
 import net.lightbody.bmp.exception.ProxyExistsException;
 import net.lightbody.bmp.exception.ProxyPortsExhaustedException;
 import net.lightbody.bmp.exception.UnsupportedCharsetException;

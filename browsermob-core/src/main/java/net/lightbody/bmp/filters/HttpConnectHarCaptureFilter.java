@@ -1,16 +1,16 @@
 package net.lightbody.bmp.filters;
 
 import com.google.common.cache.CacheBuilder;
-import de.sstoehr.harreader.model.HttpMethod;
+import com.browserup.harreader.model.HttpMethod;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
-import de.sstoehr.harreader.model.Har;
-import de.sstoehr.harreader.model.HarEntry;
-import de.sstoehr.harreader.model.HarRequest;
-import de.sstoehr.harreader.model.HarResponse;
-import de.sstoehr.harreader.model.HarTiming;
+import com.browserup.harreader.model.Har;
+import com.browserup.harreader.model.HarEntry;
+import com.browserup.harreader.model.HarRequest;
+import com.browserup.harreader.model.HarResponse;
+import com.browserup.harreader.model.HarTiming;
 import net.lightbody.bmp.filters.support.HttpConnectTiming;
 import net.lightbody.bmp.filters.util.HarCaptureUtil;
 import net.lightbody.bmp.util.HttpUtil;
@@ -157,10 +157,7 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
 
         // record the amount of time we attempted to resolve the hostname in the HarTiming object
         if (dnsResolutionStartedNanos > 0L) {
-            harEntry.getTimings().setDns(
-                Math.toIntExact(
-                    TimeUnit.MILLISECONDS.convert(
-                        System.nanoTime() - dnsResolutionStartedNanos, TimeUnit.NANOSECONDS)));
+            harEntry.getTimings().setDns(System.nanoTime() - dnsResolutionStartedNanos, TimeUnit.NANOSECONDS);
         }
 
         httpConnectTimes.remove(clientAddress);
@@ -175,10 +172,7 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
 
         // record the amount of time we attempted to connect in the HarTimings object
         if (connectionStartedNanos > 0L) {
-            harEntry.getTimings().setConnect(
-                Math.toIntExact(
-                    TimeUnit.MILLISECONDS.convert(
-                        System.nanoTime() - connectionStartedNanos, TimeUnit.NANOSECONDS)));
+            harEntry.getTimings().setConnect(System.nanoTime() - connectionStartedNanos, TimeUnit.NANOSECONDS);
         }
 
         httpConnectTimes.remove(clientAddress);
@@ -216,24 +210,15 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
 
         // if the proxy started to send the request but has not yet finished, we are currently "sending"
         if (sendStartedNanos > 0L && sendFinishedNanos == 0L) {
-            harEntry.getTimings().setSend(
-                Math.toIntExact(
-                    TimeUnit.MILLISECONDS.convert(
-                        timeoutTimestampNanos - sendStartedNanos, TimeUnit.NANOSECONDS)));
+            harEntry.getTimings().setSend(timeoutTimestampNanos - sendStartedNanos, TimeUnit.NANOSECONDS);
         }
         // if the entire request was sent but the proxy has not begun receiving the response, we are currently "waiting"
         else if (sendFinishedNanos > 0L && responseReceiveStartedNanos == 0L) {
-            harEntry.getTimings().setWait(
-                Math.toIntExact(
-                    TimeUnit.MILLISECONDS.convert(
-                        timeoutTimestampNanos - sendFinishedNanos, TimeUnit.NANOSECONDS)));
+            harEntry.getTimings().setWait(timeoutTimestampNanos - sendFinishedNanos, TimeUnit.NANOSECONDS);
         }
         // if the proxy has already begun to receive the response, we are currenting "receiving"
         else if (responseReceiveStartedNanos > 0L) {
-            harEntry.getTimings().setReceive(
-                Math.toIntExact(
-                    TimeUnit.MILLISECONDS.convert(
-                        timeoutTimestampNanos - responseReceiveStartedNanos, TimeUnit.NANOSECONDS)));
+            harEntry.getTimings().setReceive(timeoutTimestampNanos - responseReceiveStartedNanos, TimeUnit.NANOSECONDS);
         }
     }
 
@@ -300,45 +285,27 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
         HarTiming timings = harEntry.getTimings();
 
         if (connectionQueuedNanos > 0L && dnsResolutionStartedNanos > 0L) {
-            timings.setBlocked(
-                Math.toIntExact(
-                    TimeUnit.MILLISECONDS.convert(
-                        dnsResolutionStartedNanos - connectionQueuedNanos, TimeUnit.NANOSECONDS)));
+            timings.setBlocked(dnsResolutionStartedNanos - connectionQueuedNanos, TimeUnit.NANOSECONDS);
         }
 
         if (dnsResolutionStartedNanos > 0L && dnsResolutionFinishedNanos > 0L) {
-            timings.setDns(
-                Math.toIntExact(
-                    TimeUnit.MILLISECONDS.convert(
-                        dnsResolutionFinishedNanos - dnsResolutionStartedNanos, TimeUnit.NANOSECONDS)));
+            timings.setDns(dnsResolutionFinishedNanos - dnsResolutionStartedNanos, TimeUnit.NANOSECONDS);
         }
 
         if (connectionStartedNanos > 0L && connectionSucceededTimeNanos > 0L) {
-            timings.setConnect(
-                Math.toIntExact(
-                    TimeUnit.MILLISECONDS.convert(
-                        connectionSucceededTimeNanos - connectionStartedNanos, TimeUnit.NANOSECONDS)));
+            timings.setConnect(connectionSucceededTimeNanos - connectionStartedNanos, TimeUnit.NANOSECONDS);
 
             if (sslHandshakeStartedNanos > 0L) {
-                timings.setSsl(
-                    Math.toIntExact(
-                        TimeUnit.MILLISECONDS.convert(
-                            connectionSucceededTimeNanos - this.sslHandshakeStartedNanos, TimeUnit.NANOSECONDS)));
+                timings.setSsl(connectionSucceededTimeNanos - this.sslHandshakeStartedNanos, TimeUnit.NANOSECONDS);
             }
         }
 
         if (sendStartedNanos > 0L && sendFinishedNanos >= 0L) {
-            timings.setSend(
-                Math.toIntExact(
-                    TimeUnit.MILLISECONDS.convert(
-                        sendFinishedNanos - sendStartedNanos, TimeUnit.NANOSECONDS)));
+            timings.setSend(sendFinishedNanos - sendStartedNanos, TimeUnit.NANOSECONDS);
         }
 
         if (sendFinishedNanos > 0L && responseReceiveStartedNanos >= 0L) {
-            timings.setWait(
-                Math.toIntExact(
-                    TimeUnit.MILLISECONDS.convert(
-                        responseReceiveStartedNanos - sendFinishedNanos, TimeUnit.NANOSECONDS)));
+            timings.setWait(responseReceiveStartedNanos - sendFinishedNanos, TimeUnit.NANOSECONDS);
         }
 
         // since this method is for HTTP CONNECT failures only, we can't populate a "received" time, since that would
