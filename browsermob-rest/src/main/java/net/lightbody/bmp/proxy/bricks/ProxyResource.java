@@ -53,6 +53,7 @@ public class ProxyResource {
 
     @Get
     public Reply<?> getProxies() {
+        LOG.info("GET /");
         Collection<ProxyDescriptor> proxyList = new ArrayList<ProxyDescriptor>();
         for (BrowserMobProxyServer proxy : proxyManager.get()) {
             proxyList.add(new ProxyDescriptor(proxy.getPort()));
@@ -62,6 +63,8 @@ public class ProxyResource {
 
     @Post
     public Reply<?> newProxy(Request<String> request) {
+        LOG.info("POST /");
+        LOG.info(request.params().toString());
         String systemProxyHost = System.getProperty("http.proxyHost");
         String systemProxyPort = System.getProperty("http.proxyPort");
         String httpProxy = request.param("httpProxy");
@@ -108,6 +111,7 @@ public class ProxyResource {
     @Get
     @At("/:port/har")
     public Reply<?> getHar(@Named("port") int port) {
+        LOG.info("GET /" + port + "/har");
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -121,6 +125,8 @@ public class ProxyResource {
     @Put
     @At("/:port/har")
     public Reply<?> newHar(@Named("port") int port, Request<String> request) {
+        LOG.info("PUT /" + port + "/har");
+        LOG.info(request.params().toString());
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -161,6 +167,8 @@ public class ProxyResource {
     @Put
     @At("/:port/har/pageRef")
     public Reply<?> setPage(@Named("port") int port, Request<String> request) {
+        LOG.info("PUT /" + port + "/har/pageRef");
+        LOG.info(request.params().toString());
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -173,9 +181,38 @@ public class ProxyResource {
         return Reply.saying().ok();
     }
 
+    @Post
+    @At("/:port/har/commands/endPage")
+    public Reply<?> endPage(@Named("port") int port, Request<String> request) {
+        LOG.info("POST /" + port + "/commands/endPage");
+        BrowserMobProxyServer proxy = proxyManager.get(port);
+        if (proxy == null) {
+            return Reply.saying().notFound();
+        }
+
+        proxy.endPage();
+
+        return Reply.saying().ok();
+    }
+
+    @Post
+    @At("/:port/har/commands/endHar")
+    public Reply<?> endHar(@Named("port") int port, Request<String> request) {
+        LOG.info("POST /" + port + "/commands/endHar");
+        BrowserMobProxyServer proxy = proxyManager.get(port);
+        if (proxy == null) {
+            return Reply.saying().notFound();
+        }
+
+        proxy.endHar();
+
+        return Reply.saying().ok();
+    }
+
     @Get
     @At("/:port/blacklist")
     public Reply<?> getBlacklist(@Named("port") int port, Request<String> request) {
+        LOG.info("GET /" + port + "/blacklist");
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -187,6 +224,8 @@ public class ProxyResource {
     @Put
     @At("/:port/blacklist")
     public Reply<?> blacklist(@Named("port") int port, Request<String> request) {
+        LOG.info("PUT /" + port + "/blacklist");
+        LOG.info(request.params().toString());
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -203,6 +242,7 @@ public class ProxyResource {
     @Delete
     @At("/:port/blacklist")
     public Reply<?> clearBlacklist(@Named("port") int port, Request<String> request) {
+        LOG.info("DELETE /" + port + "/blacklist");
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -215,6 +255,7 @@ public class ProxyResource {
     @Get
     @At("/:port/whitelist")
     public Reply<?> getWhitelist(@Named("port") int port, Request<String> request) {
+        LOG.info("GET /" + port + "/whitelist");
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -226,6 +267,8 @@ public class ProxyResource {
     @Put
     @At("/:port/whitelist")
     public Reply<?> whitelist(@Named("port") int port, Request<String> request) {
+        LOG.info("PUT /" + port + "/whitelist");
+        LOG.info(request.params().toString());
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -241,6 +284,7 @@ public class ProxyResource {
     @Delete
     @At("/:port/whitelist")
     public Reply<?> clearWhitelist(@Named("port") int port, Request<String> request) {
+        LOG.info("DELETE /" + port + "/whitelist");
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -253,6 +297,7 @@ public class ProxyResource {
     @Post
     @At("/:port/auth/basic/:domain")
     public Reply<?> autoBasicAuth(@Named("port") int port, @Named("domain") String domain, Request<String> request) {
+        LOG.info("POST /" + port + "/auth/basic/" + domain);
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -267,6 +312,8 @@ public class ProxyResource {
     @Post
     @At("/:port/headers")
     public Reply<?> updateHeaders(@Named("port") int port, Request<String> request) {
+        LOG.info("POST /" + port + "/headers");
+
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -284,6 +331,7 @@ public class ProxyResource {
     @Post
     @At("/:port/filter/request")
     public Reply<?> addRequestFilter(@Named("port") int port, Request<String> request) throws IOException, ScriptException {
+        LOG.info("POST /" + port + "/filter/request");
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -302,6 +350,7 @@ public class ProxyResource {
     @Post
     @At("/:port/filter/response")
     public Reply<?> addResponseFilter(@Named("port") int port, Request<String> request) throws IOException, ScriptException {
+        LOG.info("POST /" + port + "/filter/response");
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -320,6 +369,7 @@ public class ProxyResource {
     @Put
     @At("/:port/limit")
     public Reply<?> limit(@Named("port") int port, Request<String> request) {
+        LOG.info("PUT /" + port + "/limit");
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -404,6 +454,7 @@ public class ProxyResource {
     @Put
     @At("/:port/timeout")
     public Reply<?> timeout(@Named("port") int port, Request<String> request) {
+        LOG.info("PUT /" + port + "/timeout");
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -452,6 +503,7 @@ public class ProxyResource {
     @Delete
     @At("/:port")
     public Reply<?> delete(@Named("port") int port) {
+        LOG.info("DELETE /" + port);
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -464,6 +516,8 @@ public class ProxyResource {
     @Post
     @At("/:port/hosts")
     public Reply<?> remapHosts(@Named("port") int port, Request<String> request) {
+        LOG.info("POST /" + port + "/hosts");
+        LOG.info(request.params().toString());
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -487,6 +541,8 @@ public class ProxyResource {
     @Put
     @At("/:port/wait")
     public Reply<?> wait(@Named("port") int port, Request<String> request) {
+        LOG.info("PUT /" + port + "/wait");
+        LOG.info(request.params().toString());
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -501,6 +557,7 @@ public class ProxyResource {
     @Delete
     @At("/:port/dns/cache")
     public Reply<?> clearDnsCache(@Named("port") int port) {
+        LOG.info("DELETE /" + port + "/dns/cache");
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -513,6 +570,7 @@ public class ProxyResource {
     @Put
     @At("/:port/rewrite")
     public Reply<?> rewriteUrl(@Named("port") int port, Request<String> request) {
+        LOG.info("PUT /" + port + "/rewrite");
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
@@ -527,6 +585,7 @@ public class ProxyResource {
     @Delete
     @At("/:port/rewrite")
     public Reply<?> clearRewriteRules(@Named("port") int port, Request<String> request) {
+        LOG.info("DELETE /" + port + "/rewrite");
         BrowserMobProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
