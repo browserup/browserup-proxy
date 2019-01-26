@@ -1,0 +1,30 @@
+plugins {
+    id 'application'
+}
+
+repositories {
+    flatDir {
+        dirs 'lib'
+    }
+}
+
+dependencies {
+    implementation project(':browserup-proxy-core')
+    implementation project(':browserup-proxy-rest')
+
+    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.8.6'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.8.6'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.8.6'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.8.6'
+    implementation 'com.google.inject:guice:4.2.2'
+    implementation 'com.google.inject.extensions:guice-servlet:3.0'
+    implementation 'com.google.sitebricks:sitebricks:0.8.10'
+    implementation 'org.apache.logging.log4j:log4j-api:2.8'
+    implementation 'org.apache.logging.log4j:log4j-core:2.8'
+    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.8'
+    implementation 'org.eclipse.jetty:jetty-server:7.3.0.v20110203'
+    implementation 'org.eclipse.jetty:jetty-servlet:7.3.0.v20110203'
+    implementation 'org.javassist:javassist:3.21.0-GA'
+}
+
+mainClassName = 'net.lightbody.bmp.proxy.Main'
