@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: com.twitter:jsr166e:1.0.0">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.twitter/jsr166e/1.0.0/dc8b472bb653a97ecde9b109fa698168c98ce943/jsr166e-1.0.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.twitter/jsr166e/1.0.0/62b26cda935e24ae49c2dcd47d4dc5aeabeb410e/jsr166e-1.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

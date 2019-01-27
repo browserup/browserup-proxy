@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel>
+      <module name="com.browserup.browserup-proxy-core.main" target="1.8" />
+      <module name="com.browserup.browserup-proxy-core.test" target="1.8" />
+      <module name="com.browserup.browserup-proxy-dist.main" target="1.8" />
+      <module name="com.browserup.browserup-proxy-dist.test" target="1.8" />
+      <module name="com.browserup.browserup-proxy-mitm.main" target="1.8" />
+      <module name="com.browserup.browserup-proxy-mitm.test" target="1.8" />
+      <module name="com.browserup.browserup-proxy-rest.main" target="1.8" />
+      <module name="com.browserup.browserup-proxy-rest.test" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

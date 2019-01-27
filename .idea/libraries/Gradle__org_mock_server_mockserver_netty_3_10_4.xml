@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.mock-server:mockserver-netty:3.10.4">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.mock-server/mockserver-netty/3.10.4/97cf9105ea05efa0db96be712305d68f31a2bc1c/mockserver-netty-3.10.4.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.mock-server/mockserver-netty/3.10.4/8ce20e9550f35fd5c181685218d8045817ce2e09/mockserver-netty-3.10.4-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

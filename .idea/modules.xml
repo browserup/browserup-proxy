@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/browserup-proxy.iml" filepath="$PROJECT_DIR$/browserup-proxy.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/browserup-proxy-core/com.browserup.browserup-proxy-core.iml" filepath="$PROJECT_DIR$/.idea/modules/browserup-proxy-core/com.browserup.browserup-proxy-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/browserup-proxy-core/com.browserup.browserup-proxy-core.main.iml" filepath="$PROJECT_DIR$/.idea/modules/browserup-proxy-core/com.browserup.browserup-proxy-core.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/browserup-proxy-core/com.browserup.browserup-proxy-core.test.iml" filepath="$PROJECT_DIR$/.idea/modules/browserup-proxy-core/com.browserup.browserup-proxy-core.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/browserup-proxy-dist/com.browserup.browserup-proxy-dist.iml" filepath="$PROJECT_DIR$/.idea/modules/browserup-proxy-dist/com.browserup.browserup-proxy-dist.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/browserup-proxy-dist/com.browserup.browserup-proxy-dist.main.iml" filepath="$PROJECT_DIR$/.idea/modules/browserup-proxy-dist/com.browserup.browserup-proxy-dist.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/browserup-proxy-dist/com.browserup.browserup-proxy-dist.test.iml" filepath="$PROJECT_DIR$/.idea/modules/browserup-proxy-dist/com.browserup.browserup-proxy-dist.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/browserup-proxy-mitm/com.browserup.browserup-proxy-mitm.iml" filepath="$PROJECT_DIR$/.idea/modules/browserup-proxy-mitm/com.browserup.browserup-proxy-mitm.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/browserup-proxy-mitm/com.browserup.browserup-proxy-mitm.main.iml" filepath="$PROJECT_DIR$/.idea/modules/browserup-proxy-mitm/com.browserup.browserup-proxy-mitm.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/browserup-proxy-mitm/com.browserup.browserup-proxy-mitm.test.iml" filepath="$PROJECT_DIR$/.idea/modules/browserup-proxy-mitm/com.browserup.browserup-proxy-mitm.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/browserup-proxy-rest/com.browserup.browserup-proxy-rest.iml" filepath="$PROJECT_DIR$/.idea/modules/browserup-proxy-rest/com.browserup.browserup-proxy-rest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/browserup-proxy-rest/com.browserup.browserup-proxy-rest.main.iml" filepath="$PROJECT_DIR$/.idea/modules/browserup-proxy-rest/com.browserup.browserup-proxy-rest.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/browserup-proxy-rest/com.browserup.browserup-proxy-rest.test.iml" filepath="$PROJECT_DIR$/.idea/modules/browserup-proxy-rest/com.browserup.browserup-proxy-rest.test.iml" />
+    </modules>
+  </component>
+</project>

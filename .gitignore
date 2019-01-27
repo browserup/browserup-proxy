@@ -46,10 +46,13 @@ ClientCertificate.pem
 ClientPrivateKey.pem
 ClientPublicKey.pem
 mockserver_keystore.jks
-browsermob-core/build/
 
-browsermob-dist/build/
-
-browsermob-rest/build/
-
-mitm/build/
+browserup-proxy-core/build/
+browserup-proxy-core/out/
+browserup-proxy-dist/build/
+browserup-proxy-dist/out/
+browserup-proxy-mitm/build/
+browserup-proxy-mitm/out/
+browserup-proxy-rest/build/
+browserup-proxy-rest/out/
+bmp.log

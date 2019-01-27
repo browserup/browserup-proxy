@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: com.google.sitebricks:sitebricks-client:0.8.10">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.google.sitebricks/sitebricks-client/0.8.10/160baee1df93c19c118130fff7be76a60cbab882/sitebricks-client-0.8.10.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.google.sitebricks/sitebricks-client/0.8.10/f895dd442a8a4a74f756985b278e2747da797262/sitebricks-client-0.8.10-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

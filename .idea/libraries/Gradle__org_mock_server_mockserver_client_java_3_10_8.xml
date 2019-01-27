@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.mock-server:mockserver-client-java:3.10.8">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.mock-server/mockserver-client-java/3.10.8/2838aa94228ecd78ef71d6c7ea93f22f77f86118/mockserver-client-java-3.10.8.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.mock-server/mockserver-client-java/3.10.8/c3a1714ccdad89f6ed094da2d4c456a4e9cb8b14/mockserver-client-java-3.10.8-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
