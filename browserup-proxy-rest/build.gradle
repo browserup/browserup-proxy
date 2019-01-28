@@ -3,12 +3,17 @@ plugins {
     id 'groovy'
 }
 
+repositories {
+    flatDir {
+        dirs 'lib'
+    }
+}
+
+
 dependencies {
     implementation project(':browserup-proxy-core')
 
-    implementation fileTree(dir: 'lib', include: '*.jar')
-
-    //implementation 'com.browserup:har-reader:3.0.0-SNAPSHOT'
+    implementation 'com.browserup:har-reader:3.0.0-SNAPSHOT'
 
     implementation 'com.google.guava:guava:27.0.1-jre'
     implementation 'com.google.inject:guice:3.0'
