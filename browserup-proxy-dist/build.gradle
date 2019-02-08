@@ -27,4 +27,4 @@ dependencies {
     implementation 'org.javassist:javassist:3.21.0-GA'
 }
 
-mainClassName = 'net.lightbody.bmp.proxy.Main'
+mainClassName = 'com.browserup.bup.proxy.Main'
