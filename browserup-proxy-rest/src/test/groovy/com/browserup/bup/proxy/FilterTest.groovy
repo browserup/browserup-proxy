@@ -20,7 +20,7 @@ import static org.junit.Assert.assertThat
 import static org.junit.Assert.assertTrue
 import static org.junit.Assert.fail
 import static org.junit.Assume.assumeThat
-import static org.mockito.Matchers.any
+import static org.mockito.ArgumentMatchers.any
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.never
 import static org.mockito.Mockito.verify
@@ -49,7 +49,7 @@ class FilterTest extends ProxyResourceTest {
                 .respond(response()
                 .withStatusCode(200)
                 .withHeader(new Header("Content-Type", "text/plain"))
-                .withBody("success"));
+                .withBody("success"))
 
         HTTPBuilder http = getHttpBuilder()
 
@@ -87,7 +87,7 @@ class FilterTest extends ProxyResourceTest {
                 .respond(response()
                 .withStatusCode(200)
                 .withHeader(new Header("Content-Type", "text/plain; charset=UTF-8"))
-                .withBody("success"));
+                .withBody("success"))
 
         HTTPBuilder http = getHttpBuilder()
 
@@ -124,7 +124,7 @@ class FilterTest extends ProxyResourceTest {
                 .respond(response()
                 .withStatusCode(200)
                 .withHeader(new Header("Content-Type", "text/plain; charset=UTF-8"))
-                .withBody("original response text"));
+                .withBody("original response text"))
 
         HTTPBuilder http = getHttpBuilder()
 
@@ -163,7 +163,7 @@ class FilterTest extends ProxyResourceTest {
                 .respond(response()
                 .withStatusCode(200)
                 .withHeader(new Header("Content-Type", "text/plain; charset=UTF-8"))
-                .withBody("should-be-replaced"));
+                .withBody("should-be-replaced"))
 
         HTTPBuilder http = getHttpBuilder()
 
@@ -195,12 +195,12 @@ class FilterTest extends ProxyResourceTest {
         // not using the local ProxyResource, since we need to mock out the dependencies
         ProxyResource proxyResource = new ProxyResource(mockProxyManager)
 
-        boolean javascriptExceptionOccurred = false;
+        boolean javascriptExceptionOccurred = false
 
         try {
             proxyResource.addRequestFilter(proxyPort, mockRestAddReqFilterRequest)
-        } catch (JavascriptCompilationException) {
-            javascriptExceptionOccurred = true;
+        } catch (ignored) {
+            javascriptExceptionOccurred = true
         }
 
         assertTrue("Expected javascript to fail to compile", javascriptExceptionOccurred)
@@ -227,12 +227,12 @@ class FilterTest extends ProxyResourceTest {
         // not using the local ProxyResource, since we need to mock out the dependencies
         ProxyResource proxyResource = new ProxyResource(mockProxyManager)
 
-        boolean javascriptExceptionOccurred = false;
+        boolean javascriptExceptionOccurred = false
 
         try {
             proxyResource.addResponseFilter(proxyPort, mockRestAddRespFilterRequest)
-        } catch (JavascriptCompilationException) {
-            javascriptExceptionOccurred = true;
+        } catch (ignored) {
+            javascriptExceptionOccurred = true
         }
 
         assertTrue("Expected javascript to fail to compile", javascriptExceptionOccurred)

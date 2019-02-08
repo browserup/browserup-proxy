@@ -36,21 +36,21 @@ class RemapHostsTest extends MockServerTest {
                 Times.exactly(1))
                 .respond(response()
                 .withStatusCode(200)
-                .withBody("success"));
+                .withBody("success"))
 
-        proxy = new BrowserUpProxyServer();
+        proxy = new BrowserUpProxyServer()
         proxy.setTrustAllServers(true)
 
         proxy.getHostNameResolver().remapHost("www.someaddress.notreal", "localhost")
 
-        proxy.start();
+        proxy.start()
 
-        int proxyPort = proxy.getPort();
+        int proxyPort = proxy.getPort()
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://www.someaddress.notreal:${mockServerPort}/remapHttpHost")).getEntity().getContent());
-            assertEquals("Did not receive expected response from mock server", "success", responseBody);
-        };
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://www.someaddress.notreal:${mockServerPort}/remapHttpHost")).getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", responseBody)
+        }
     }
 
     @Test
@@ -62,20 +62,20 @@ class RemapHostsTest extends MockServerTest {
                 Times.exactly(1))
                 .respond(response()
                 .withStatusCode(200)
-                .withBody("success"));
+                .withBody("success"))
 
-        proxy = new BrowserUpProxyServer();
+        proxy = new BrowserUpProxyServer()
         proxy.setTrustAllServers(true)
 
         proxy.getHostNameResolver().remapHost("www.someaddress.notreal", "localhost")
 
-        proxy.start();
+        proxy.start()
 
-        int proxyPort = proxy.getPort();
+        int proxyPort = proxy.getPort()
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://www.someaddress.notreal:${mockServerPort}/remapHttpsHost")).getEntity().getContent());
-            assertEquals("Did not receive expected response from mock server", "success", responseBody);
-        };
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://www.someaddress.notreal:${mockServerPort}/remapHttpsHost")).getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", responseBody)
+        }
     }
 }

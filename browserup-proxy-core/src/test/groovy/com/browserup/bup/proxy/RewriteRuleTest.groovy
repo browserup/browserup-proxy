@@ -36,8 +36,8 @@ class RewriteRuleTest extends MockServerTest {
                 .withStatusCode(200)
                 .withBody("success"))
 
-        proxy = new BrowserUpProxyServer();
-        proxy.rewriteUrl('http://www\\.(yahoo|bing)\\.com/\\?(\\w+)=(\\w+)', 'http://localhost:' + mockServerPort + '/?originalDomain=$1&$2=$3');
+        proxy = new BrowserUpProxyServer()
+        proxy.rewriteUrl('http://www\\.(yahoo|bing)\\.com/\\?(\\w+)=(\\w+)', 'http://localhost:' + mockServerPort + '/?originalDomain=$1&$2=$3')
         proxy.setTrustAllServers(true)
         proxy.start()
 
@@ -47,9 +47,9 @@ class RewriteRuleTest extends MockServerTest {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
             assertEquals("Did not receive HTTP 200 from mock server", 200, response.getStatusLine().getStatusCode())
 
-            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
-            assertEquals("Did not receive expected response from mock server", "success", responseBody);
-        };
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", responseBody)
+        }
     }
 
     @Test
@@ -66,8 +66,8 @@ class RewriteRuleTest extends MockServerTest {
                 .withStatusCode(200)
                 .withBody("success"))
 
-        proxy = new BrowserUpProxyServer();
-        proxy.rewriteUrl('https://localhost:' + mockServerPort + '/\\?(\\w+)=(\\w+)', 'https://localhost:' + mockServerPort + '/?firstParam=$1&firstValue=$2');
+        proxy = new BrowserUpProxyServer()
+        proxy.rewriteUrl('https://localhost:' + mockServerPort + '/\\?(\\w+)=(\\w+)', 'https://localhost:' + mockServerPort + '/?firstParam=$1&firstValue=$2')
         proxy.setTrustAllServers(true)
         proxy.start()
 
@@ -77,8 +77,8 @@ class RewriteRuleTest extends MockServerTest {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
             assertEquals("Did not receive HTTP 200 from mock server", 200, response.getStatusLine().getStatusCode())
 
-            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
-            assertEquals("Did not receive expected response from mock server", "success", responseBody);
-        };
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", responseBody)
+        }
     }
 }

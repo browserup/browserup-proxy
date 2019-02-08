@@ -48,9 +48,9 @@ class FilterChainTest extends MockServerTest {
                 Times.exactly(1))
                 .respond(response()
                 .withStatusCode(200)
-                .withBody("success"));
+                .withBody("success"))
 
-        proxy = new BrowserUpProxyServer();
+        proxy = new BrowserUpProxyServer()
 
         proxy.addHttpFilterFactory(new HttpFiltersSourceAdapter() {
             @Override
@@ -67,9 +67,9 @@ class FilterChainTest extends MockServerTest {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
             assertEquals("Did not receive HTTP 200 from mock server", 200, response.getStatusLine().getStatusCode())
 
-            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
-            assertEquals("Did not receive expected response from mock server", "success", responseBody);
-        };
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", responseBody)
+        }
     }
 
     @Test
@@ -82,9 +82,9 @@ class FilterChainTest extends MockServerTest {
                 Times.exactly(1))
                 .respond(response()
                 .withStatusCode(200)
-                .withBody("success"));
+                .withBody("success"))
 
-        proxy = new BrowserUpProxyServer();
+        proxy = new BrowserUpProxyServer()
 
         proxy.addHttpFilterFactory(new HttpFiltersSourceAdapter() {
             @Override
@@ -132,9 +132,9 @@ class FilterChainTest extends MockServerTest {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
             assertEquals("Did not receive HTTP 200 from mock server", 200, response.getStatusLine().getStatusCode())
 
-            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
-            assertEquals("Did not receive expected response from mock server", "success", responseBody);
-        };
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", responseBody)
+        }
 
         assertTrue("Expected second filter method to be invoked after first filter threw exception", clientToProxyRequest.get())
         assertTrue("Expected second filter method to be invoked after first filter threw exception", serverToProxyResponse.get())
@@ -150,9 +150,9 @@ class FilterChainTest extends MockServerTest {
                 Times.exactly(1))
                 .respond(response()
                 .withStatusCode(200)
-                .withBody("success"));
+                .withBody("success"))
 
-        proxy = new BrowserUpProxyServer();
+        proxy = new BrowserUpProxyServer()
 
         proxy.addRequestFilter({ a, b, c ->
             throw new RuntimeException("Throwing exception from RequestFilter")
@@ -170,9 +170,9 @@ class FilterChainTest extends MockServerTest {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
             assertEquals("Did not receive HTTP 200 from mock server", 200, response.getStatusLine().getStatusCode())
 
-            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
-            assertEquals("Did not receive expected response from mock server", "success", responseBody);
-        };
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", responseBody)
+        }
     }
 
     @Test
@@ -184,9 +184,9 @@ class FilterChainTest extends MockServerTest {
                 Times.exactly(1))
                 .respond(response()
                 .withStatusCode(200)
-                .withBody("success"));
+                .withBody("success"))
 
-        proxy = new BrowserUpProxyServer();
+        proxy = new BrowserUpProxyServer()
 
         final AtomicBoolean secondRequestFilterInvoked = new AtomicBoolean()
         final AtomicBoolean secondResponseFilterInvoked = new AtomicBoolean()
@@ -218,9 +218,9 @@ class FilterChainTest extends MockServerTest {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
             assertEquals("Did not receive HTTP 200 from mock server", 200, response.getStatusLine().getStatusCode())
 
-            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
-            assertEquals("Did not receive expected response from mock server", "success", responseBody);
-        };
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", responseBody)
+        }
 
         assertTrue("Expected second request filter to be invoked", secondRequestFilterInvoked.get())
         assertTrue("Expected second response filter to be invoked", secondResponseFilterInvoked.get())

@@ -60,16 +60,16 @@ class ChainedProxyAuthTest extends MockServerTest {
                 .withStatusCode(200)
                 .withBody("success"))
 
-        proxy = new BrowserUpProxyServer();
+        proxy = new BrowserUpProxyServer()
         proxy.setChainedProxy(upstreamProxy.getListenAddress())
         proxy.chainedProxyAuthorization(proxyUser, proxyPassword, AuthType.BASIC)
         proxy.setTrustAllServers(true)
         proxy.start()
 
         NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://localhost:${mockServerPort}/proxyauth")).getEntity().getContent());
-            assertEquals("Did not receive expected response from mock server", "success", responseBody);
-        };
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://localhost:${mockServerPort}/proxyauth")).getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", responseBody)
+        }
     }
 
     @Test
@@ -100,7 +100,7 @@ class ChainedProxyAuthTest extends MockServerTest {
                 .withStatusCode(500)
                 .withBody("shouldn't happen"))
 
-        proxy = new BrowserUpProxyServer();
+        proxy = new BrowserUpProxyServer()
         proxy.setChainedProxy(upstreamProxy.getListenAddress())
         proxy.chainedProxyAuthorization(proxyUser, "wrongpassword", AuthType.BASIC)
         proxy.setTrustAllServers(true)
@@ -109,6 +109,6 @@ class ChainedProxyAuthTest extends MockServerTest {
         NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
             CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerPort}/proxyauth"))
             assertEquals("Expected to receive a Bad Gateway due to incorrect proxy authentication credentials", 502, response.getStatusLine().statusCode)
-        };
+        }
     }
 }

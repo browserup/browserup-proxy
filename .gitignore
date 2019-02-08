@@ -52,7 +52,7 @@ mockserver_keystore.jks
 *.log
 
 # IntelliJ Idea specific stuff
-.idea/**
+.idea
 *.iml
 
 # CMake

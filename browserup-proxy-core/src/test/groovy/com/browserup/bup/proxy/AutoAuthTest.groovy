@@ -37,15 +37,15 @@ class AutoAuthTest extends MockServerTest {
                 .withStatusCode(200)
                 .withBody("success"))
 
-        proxy = new BrowserUpProxyServer();
+        proxy = new BrowserUpProxyServer()
         proxy.autoAuthorization("localhost", "testUsername", "testPassword", AuthType.BASIC)
         proxy.setTrustAllServers(true)
         proxy.start()
 
         NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/basicAuthHttp")).getEntity().getContent());
-            assertEquals("Did not receive expected response from mock server", "success", responseBody);
-        };
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/basicAuthHttp")).getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", responseBody)
+        }
     }
 
     @Test
@@ -60,15 +60,15 @@ class AutoAuthTest extends MockServerTest {
                 .withStatusCode(200)
                 .withBody("success"))
 
-        proxy = new BrowserUpProxyServer();
+        proxy = new BrowserUpProxyServer()
         proxy.autoAuthorization("localhost", "testUsername", "testPassword", AuthType.BASIC)
         proxy.setTrustAllServers(true)
         proxy.start()
 
         NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://localhost:${mockServerPort}/basicAuthHttp")).getEntity().getContent());
-            assertEquals("Did not receive expected response from mock server", "success", responseBody);
-        };
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://localhost:${mockServerPort}/basicAuthHttp")).getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", responseBody)
+        }
     }
 
     @Test
@@ -84,7 +84,7 @@ class AutoAuthTest extends MockServerTest {
                 .withStatusCode(200)
                 .withBody("success"))
 
-        proxy = new BrowserUpProxyServer();
+        proxy = new BrowserUpProxyServer()
         proxy.autoAuthorization("localhost", "testUsername", "testPassword", AuthType.BASIC)
         proxy.setTrustAllServers(true)
         proxy.start()
@@ -92,8 +92,8 @@ class AutoAuthTest extends MockServerTest {
         proxy.stopAutoAuthorization("localhost")
 
         NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/basicAuthHttp")).getEntity().getContent());
-            assertEquals("Did not receive expected response from mock server", "success", responseBody);
-        };
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/basicAuthHttp")).getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", responseBody)
+        }
     }
 }

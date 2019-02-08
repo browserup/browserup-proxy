@@ -12,26 +12,26 @@ import org.mockserver.integration.ClientAndServer
 
 import java.nio.charset.StandardCharsets
 
-import static org.mockito.Matchers.any
+import static org.mockito.ArgumentMatchers.any
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.when
 
 abstract class ProxyResourceTest extends ProxyManagerTest {
     ProxyResource proxyResource
     int proxyPort
-    protected ClientAndServer mockServer;
-    protected int mockServerPort;
+    protected ClientAndServer mockServer
+    protected int mockServerPort
 
     @Before
-    public void setUpMockServer() {
-        mockServer = new ClientAndServer(0);
-        mockServerPort = mockServer.getPort();
+    void setUpMockServer() {
+        mockServer = new ClientAndServer(0)
+        mockServerPort = mockServer.getPort()
     }
 
     @After
-    public void tearDownMockServer() {
+    void tearDownMockServer() {
         if (mockServer != null) {
-            mockServer.stop();
+            mockServer.stop()
         }
     }
 
@@ -43,7 +43,7 @@ abstract class ProxyResourceTest extends ProxyManagerTest {
         proxyResource = new ProxyResource(proxyManager)
     }
 
-    public HTTPBuilder getHttpBuilder() {
+    HTTPBuilder getHttpBuilder() {
         def http = new HTTPBuilder("http://localhost:${mockServerPort}")
         http.setProxy("localhost", proxyPort, "http")
 
@@ -53,7 +53,7 @@ abstract class ProxyResourceTest extends ProxyManagerTest {
     /**
      * Creates a mock sitebricks REST request with the specified entity body.
      */
-    public static Request<String> createMockRestRequestWithEntity(String entityBody) {
+    static Request<String> createMockRestRequestWithEntity(String entityBody) {
         Request<String> mockRestRequest = mock(Request)
         when(mockRestRequest.header("Content-Type")).thenReturn("text/plain; charset=utf-8")
         when(mockRestRequest.readTo(any(OutputStream))).then(new Answer<Object>() {

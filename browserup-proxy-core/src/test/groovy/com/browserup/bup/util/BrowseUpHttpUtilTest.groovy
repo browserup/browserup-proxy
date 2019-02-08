@@ -76,7 +76,7 @@ class BrowseUpHttpUtilTest {
         boolean threwException = false
         try {
             BrowseUpHttpUtil.readCharsetInContentTypeHeader('text/html; charset=FUTURE_CHARSET')
-        } catch (UnsupportedCharsetException) {
+        } catch (ignored) {
             threwException = true
         }
 
@@ -135,18 +135,18 @@ class BrowseUpHttpUtilTest {
         assertEquals("127.0.0.1", ipv4WithoutPort)
 
         def ipv4WithNonMatchingPort = BrowseUpHttpUtil.removeMatchingPort("127.0.0.1:443", 1234)
-        assertEquals("127.0.0.1:443", ipv4WithNonMatchingPort);
+        assertEquals("127.0.0.1:443", ipv4WithNonMatchingPort)
 
         def ipv4NoPort = BrowseUpHttpUtil.removeMatchingPort("127.0.0.1", 443)
-        assertEquals("127.0.0.1", ipv4NoPort);
+        assertEquals("127.0.0.1", ipv4NoPort)
 
         def ipv6WithoutPort = BrowseUpHttpUtil.removeMatchingPort("[::1]:443", 443)
         assertEquals("[::1]", ipv6WithoutPort)
 
         def ipv6WithNonMatchingPort = BrowseUpHttpUtil.removeMatchingPort("[::1]:443", 1234)
-        assertEquals("[::1]:443", ipv6WithNonMatchingPort);
+        assertEquals("[::1]:443", ipv6WithNonMatchingPort)
 
         def ipv6NoPort = BrowseUpHttpUtil.removeMatchingPort("[::1]", 443)
-        assertEquals("[::1]", ipv6NoPort);
+        assertEquals("[::1]", ipv6NoPort)
     }
 }

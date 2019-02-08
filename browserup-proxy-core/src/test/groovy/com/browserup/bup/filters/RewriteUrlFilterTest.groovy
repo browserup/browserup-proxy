@@ -39,11 +39,11 @@ class RewriteUrlFilterTest extends MockServerTest {
         HttpHeaders mockHeaders = mock(HttpHeaders.class)
         when(mockHeaders.contains(HttpHeaders.Names.HOST)).thenReturn(false)
 
-        HttpRequest request = mock(HttpRequest.class);
-        when(request.getUri()).thenReturn('http://www.yahoo.com?param=someValue');
+        HttpRequest request = mock(HttpRequest.class)
+        when(request.getUri()).thenReturn('http://www.yahoo.com?param=someValue')
         when(request.headers()).thenReturn(mockHeaders)
 
-        Collection<RewriteRule> rewriteRules = ImmutableList.of(new RewriteRule('http://www\\.(yahoo|bing)\\.com\\?(\\w+)=(\\w+)', 'http://www.google.com?originalDomain=$1&$2=$3'));
+        Collection<RewriteRule> rewriteRules = ImmutableList.of(new RewriteRule('http://www\\.(yahoo|bing)\\.com\\?(\\w+)=(\\w+)', 'http://www.google.com?originalDomain=$1&$2=$3'))
 
         // mock out the netty ChannelHandlerContext for the isHttps() call in the filter
         Attribute<Boolean> mockIsHttpsAttribute = mock(Attribute)
@@ -53,10 +53,10 @@ class RewriteUrlFilterTest extends MockServerTest {
         when(mockCtx.attr(AttributeKey.<Boolean>valueOf(HttpsAwareFiltersAdapter.IS_HTTPS_ATTRIBUTE_NAME)))
                 .thenReturn(mockIsHttpsAttribute)
 
-        RewriteUrlFilter filter = new RewriteUrlFilter(request, mockCtx, rewriteRules);
-        filter.clientToProxyRequest(request);
+        RewriteUrlFilter filter = new RewriteUrlFilter(request, mockCtx, rewriteRules)
+        filter.clientToProxyRequest(request)
 
-        verify(request).setUri('http://www.google.com?originalDomain=yahoo&param=someValue');
+        verify(request).setUri('http://www.google.com?originalDomain=yahoo&param=someValue')
     }
 
     @Test
@@ -64,14 +64,14 @@ class RewriteUrlFilterTest extends MockServerTest {
         HttpHeaders mockHeaders = mock(HttpHeaders.class)
         when(mockHeaders.contains(HttpHeaders.Names.HOST)).thenReturn(false)
 
-        HttpRequest request = mock(HttpRequest.class);
-        when(request.getUri()).thenReturn('http://www.yahoo.com?param=someValue');
+        HttpRequest request = mock(HttpRequest.class)
+        when(request.getUri()).thenReturn('http://www.yahoo.com?param=someValue')
         when(request.headers()).thenReturn(mockHeaders)
 
         Collection<RewriteRule> rewriteRules = ImmutableList.of(
                 new RewriteRule('http://www\\.yahoo\\.com\\?(\\w+)=(\\w+)', 'http://www.bing.com?new$1=new$2'),
                 new RewriteRule('http://www\\.(yahoo|bing)\\.com\\?(\\w+)=(\\w+)', 'http://www.google.com?originalDomain=$1&$2=$3')
-        );
+        )
 
         // mock out the netty ChannelHandlerContext for the isHttps() call in the filter
         Attribute<Boolean> mockIsHttpsAttribute = mock(Attribute)
@@ -81,10 +81,10 @@ class RewriteUrlFilterTest extends MockServerTest {
         when(mockCtx.attr(AttributeKey.<Boolean>valueOf(HttpsAwareFiltersAdapter.IS_HTTPS_ATTRIBUTE_NAME)))
                 .thenReturn(mockIsHttpsAttribute)
 
-        RewriteUrlFilter filter = new RewriteUrlFilter(request, mockCtx, rewriteRules);
-        filter.clientToProxyRequest(request);
+        RewriteUrlFilter filter = new RewriteUrlFilter(request, mockCtx, rewriteRules)
+        filter.clientToProxyRequest(request)
 
-        verify(request).setUri('http://www.google.com?originalDomain=bing&newparam=newsomeValue');
+        verify(request).setUri('http://www.google.com?originalDomain=bing&newparam=newsomeValue')
     }
 
     @Test
@@ -108,15 +108,15 @@ class RewriteUrlFilterTest extends MockServerTest {
             CloseableHttpResponse firstResponse = it.execute(new HttpGet(url))
             assertEquals("Did not receive HTTP 200 from mock server", 200, firstResponse.getStatusLine().getStatusCode())
 
-            String firstResponseBody = NewProxyServerTestUtil.toStringAndClose(firstResponse.getEntity().getContent());
-            assertEquals("Did not receive expected response from mock server", "success", firstResponseBody);
+            String firstResponseBody = NewProxyServerTestUtil.toStringAndClose(firstResponse.getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", firstResponseBody)
 
             CloseableHttpResponse secondResponse = it.execute(new HttpGet(url))
             assertEquals("Did not receive HTTP 200 from mock server", 200, secondResponse.getStatusLine().getStatusCode())
 
-            String secondResponseBody = NewProxyServerTestUtil.toStringAndClose(secondResponse.getEntity().getContent());
-            assertEquals("Did not receive expected response from mock server", "success", secondResponseBody);
-        };
+            String secondResponseBody = NewProxyServerTestUtil.toStringAndClose(secondResponse.getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", secondResponseBody)
+        }
     }
 
     @Test
@@ -136,12 +136,12 @@ class RewriteUrlFilterTest extends MockServerTest {
 
         String url = "http://badhost:${mockServerPort}/badresource"
         NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
-            String firstResponseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent());
-            assertEquals("Did not receive expected response from mock server", "success", firstResponseBody);
+            String firstResponseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", firstResponseBody)
 
-            String secondResponseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent());
-            assertEquals("Did not receive expected response from mock server", "success", secondResponseBody);
-        };
+            String secondResponseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", secondResponseBody)
+        }
     }
 
     @Test
@@ -162,11 +162,11 @@ class RewriteUrlFilterTest extends MockServerTest {
 
         String url = "https://localhost:${mockServerPort}/badresource"
         NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
-            String firstResponseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent());
-            assertEquals("Did not receive expected response from mock server", "success", firstResponseBody);
+            String firstResponseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", firstResponseBody)
 
-            String secondResponseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent());
-            assertEquals("Did not receive expected response from mock server", "success", secondResponseBody);
-        };
+            String secondResponseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", secondResponseBody)
+        }
     }
 }

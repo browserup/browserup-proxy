@@ -330,14 +330,12 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         QueryStringDecoder queryStringDecoder = new QueryStringDecoder(httpRequest.getUri(), StandardCharsets.UTF_8);
 
         try {
-            queryStringDecoder.parameters().forEach((key, value1) -> {
-                value1.forEach(value -> {
-                    HarQueryParam harQueryParam = new HarQueryParam();
-                    harQueryParam.setName(key);
-                    harQueryParam.setValue(value);
-                    harEntry.getRequest().getQueryString().add(harQueryParam);
-                });
-            });
+            queryStringDecoder.parameters().forEach((key, value) -> value.forEach(val -> {
+                HarQueryParam harQueryParam = new HarQueryParam();
+                harQueryParam.setName(key);
+                harQueryParam.setValue(val);
+                harEntry.getRequest().getQueryString().add(harQueryParam);
+            }));
         } catch (IllegalArgumentException e) {
             // QueryStringDecoder will throw an IllegalArgumentException if it cannot interpret a query string. rather than cause the entire request to
             // fail by propagating the exception, simply skip the query parameter capture.

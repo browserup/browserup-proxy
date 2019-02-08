@@ -9,7 +9,7 @@ import org.junit.rules.TemporaryFolder
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
-public class KeyStoreFileCertificateSourceTest {
+class KeyStoreFileCertificateSourceTest {
 
     @Rule
     public TemporaryFolder tmpDir = new TemporaryFolder()
@@ -30,7 +30,7 @@ public class KeyStoreFileCertificateSourceTest {
     void testPkcs12FileOnClasspath() {
         KeyStoreFileCertificateSource keyStoreFileCertificateSource = new KeyStoreFileCertificateSource("PKCS12", "/net/lightbody/bmp/mitm/keystore.p12", "privateKey", "password")
 
-        CertificateAndKey certificateAndKey = keyStoreFileCertificateSource.load();
+        CertificateAndKey certificateAndKey = keyStoreFileCertificateSource.load()
 
         CertificateTestUtil.verifyTestRSACertWithCNandO(certificateAndKey)
     }
@@ -39,7 +39,7 @@ public class KeyStoreFileCertificateSourceTest {
     void testPkcs12FileOnDisk() {
         KeyStoreFileCertificateSource keyStoreFileCertificateSource = new KeyStoreFileCertificateSource("PKCS12", pkcs12File, "privateKey", "password")
 
-        CertificateAndKey certificateAndKey = keyStoreFileCertificateSource.load();
+        CertificateAndKey certificateAndKey = keyStoreFileCertificateSource.load()
 
         CertificateTestUtil.verifyTestRSACertWithCNandO(certificateAndKey)
     }
@@ -48,7 +48,7 @@ public class KeyStoreFileCertificateSourceTest {
     void testJksFileOnClasspath() {
         KeyStoreFileCertificateSource keyStoreFileCertificateSource = new KeyStoreFileCertificateSource("JKS", "/net/lightbody/bmp/mitm/keystore.jks", "privateKey", "password")
 
-        CertificateAndKey certificateAndKey = keyStoreFileCertificateSource.load();
+        CertificateAndKey certificateAndKey = keyStoreFileCertificateSource.load()
 
         CertificateTestUtil.verifyTestRSACertWithCNandO(certificateAndKey)
     }
@@ -57,7 +57,7 @@ public class KeyStoreFileCertificateSourceTest {
     void testJksFileOnDisk() {
         KeyStoreFileCertificateSource keyStoreFileCertificateSource = new KeyStoreFileCertificateSource("JKS", jksFile, "privateKey", "password")
 
-        CertificateAndKey certificateAndKey = keyStoreFileCertificateSource.load();
+        CertificateAndKey certificateAndKey = keyStoreFileCertificateSource.load()
 
         CertificateTestUtil.verifyTestRSACertWithCNandO(certificateAndKey)
     }
