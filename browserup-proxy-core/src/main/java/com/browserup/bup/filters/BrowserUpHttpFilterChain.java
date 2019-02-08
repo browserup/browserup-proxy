@@ -18,6 +18,7 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * The filter "driver" that delegates to all chained filters specified by the proxy server.
@@ -38,14 +39,11 @@ public class BrowserUpHttpFilterChain extends HttpFiltersAdapter {
             filters = new ArrayList<>(proxyServer.getFilterFactories().size());
 
             // instantiate all HttpFilters using the proxy's filter factories
-            for (HttpFiltersSource filterFactory : proxyServer.getFilterFactories()) {
-                HttpFilters filter = filterFactory.filterRequest(originalRequest, ctx);
-                // allow filter factories to avoid adding a filter on a per-request basis by returning a null
-                // HttpFilters instance
-                if (filter != null) {
-                    filters.add(filter);
-                }
-            }
+            // allow filter factories to avoid adding a filter on a per-request basis by returning a null
+            // HttpFilters instance
+            proxyServer.getFilterFactories().stream()
+                    .map(filterFactory -> filterFactory.filterRequest(originalRequest, ctx))
+                    .filter(Objects::nonNull).forEach(filters::add);
         } else {
             filters = Collections.emptyList();
         }
@@ -104,13 +102,13 @@ public class BrowserUpHttpFilterChain extends HttpFiltersAdapter {
 
     @Override
     public void proxyToServerRequestSending() {
-        for (HttpFilters filter : filters) {
+        filters.forEach(filter -> {
             try {
                 filter.proxyToServerRequestSending();
             } catch (RuntimeException e) {
                 log.warn("Filter in filter chain threw exception. Filter method may have been aborted.", e);
             }
-        }
+        });
     }
 
 
@@ -134,24 +132,24 @@ public class BrowserUpHttpFilterChain extends HttpFiltersAdapter {
 
     @Override
     public void serverToProxyResponseTimedOut() {
-        for (HttpFilters filter : filters) {
+        filters.forEach(filter -> {
             try {
                 filter.serverToProxyResponseTimedOut();
             } catch (RuntimeException e) {
                 log.warn("Filter in filter chain threw exception. Filter method may have been aborted.", e);
             }
-        }
+        });
     }
 
     @Override
     public void serverToProxyResponseReceiving() {
-        for (HttpFilters filter : filters) {
+        filters.forEach(filter -> {
             try {
                 filter.serverToProxyResponseReceiving();
             } catch (RuntimeException e) {
                 log.warn("Filter in filter chain threw exception. Filter method may have been aborted.", e);
             }
-        }
+        });
     }
 
     @Override
@@ -176,92 +174,92 @@ public class BrowserUpHttpFilterChain extends HttpFiltersAdapter {
 
     @Override
     public void proxyToServerResolutionFailed(String hostAndPort) {
-        for (HttpFilters filter : filters) {
+        filters.forEach(filter -> {
             try {
                 filter.proxyToServerResolutionFailed(hostAndPort);
             } catch (RuntimeException e) {
                 log.warn("Filter in filter chain threw exception. Filter method may have been aborted.", e);
             }
-        }
+        });
     }
 
     @Override
     public void proxyToServerResolutionSucceeded(String serverHostAndPort, InetSocketAddress resolvedRemoteAddress) {
-        for (HttpFilters filter : filters) {
+        filters.forEach(filter -> {
             try {
                 filter.proxyToServerResolutionSucceeded(serverHostAndPort, resolvedRemoteAddress);
             } catch (RuntimeException e) {
                 log.warn("Filter in filter chain threw exception. Filter method may have been aborted.", e);
             }
-        }
+        });
 
         super.proxyToServerResolutionSucceeded(serverHostAndPort, resolvedRemoteAddress);
     }
 
     @Override
     public void proxyToServerConnectionStarted() {
-        for (HttpFilters filter : filters) {
+        filters.forEach(filter -> {
             try {
                 filter.proxyToServerConnectionStarted();
             } catch (RuntimeException e) {
                 log.warn("Filter in filter chain threw exception. Filter method may have been aborted.", e);
             }
-        }
+        });
     }
 
     @Override
     public void proxyToServerConnectionSSLHandshakeStarted() {
-        for (HttpFilters filter : filters) {
+        filters.forEach(filter -> {
             try {
                 filter.proxyToServerConnectionSSLHandshakeStarted();
             } catch (RuntimeException e) {
                 log.warn("Filter in filter chain threw exception. Filter method may have been aborted.", e);
             }
-        }
+        });
     }
 
     @Override
     public void proxyToServerConnectionFailed() {
-        for (HttpFilters filter : filters) {
+        filters.forEach(filter -> {
             try {
                 filter.proxyToServerConnectionFailed();
             } catch (RuntimeException e) {
                 log.warn("Filter in filter chain threw exception. Filter method may have been aborted.", e);
             }
-        }
+        });
     }
 
     @Override
     public void proxyToServerConnectionSucceeded(ChannelHandlerContext serverCtx) {
-        for (HttpFilters filter : filters) {
+        filters.forEach(filter -> {
             try {
                 filter.proxyToServerConnectionSucceeded(serverCtx);
             } catch (RuntimeException e) {
                 log.warn("Filter in filter chain threw exception. Filter method may have been aborted.", e);
             }
-        }
+        });
     }
 
     @Override
     public void proxyToServerRequestSent() {
-        for (HttpFilters filter : filters) {
+        filters.forEach(filter -> {
             try {
                 filter.proxyToServerRequestSent();
             } catch (RuntimeException e) {
                 log.warn("Filter in filter chain threw exception. Filter method may have been aborted.", e);
             }
-        }
+        });
     }
 
     @Override
     public void serverToProxyResponseReceived() {
-        for (HttpFilters filter : filters) {
+        filters.forEach(filter -> {
             try {
                 filter.serverToProxyResponseReceived();
             } catch (RuntimeException e) {
                 log.warn("Filter in filter chain threw exception. Filter method may have been aborted.", e);
             }
-        }
+        });
     }
 
     @Override
@@ -283,13 +281,13 @@ public class BrowserUpHttpFilterChain extends HttpFiltersAdapter {
 
     @Override
     public void proxyToServerConnectionQueued() {
-        for (HttpFilters filter : filters) {
+        filters.forEach(filter -> {
             try {
                 filter.proxyToServerConnectionQueued();
             } catch (RuntimeException e) {
                 log.warn("Filter in filter chain threw exception. Filter method may have been aborted.", e);
             }
-        }
+        });
     }
 
     /**

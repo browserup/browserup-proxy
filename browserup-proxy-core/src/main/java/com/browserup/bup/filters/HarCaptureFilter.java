@@ -330,14 +330,14 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         QueryStringDecoder queryStringDecoder = new QueryStringDecoder(httpRequest.getUri(), StandardCharsets.UTF_8);
 
         try {
-            for (Map.Entry<String, List<String>> entry : queryStringDecoder.parameters().entrySet()) {
-                for (String value : entry.getValue()) {
+            queryStringDecoder.parameters().forEach((key, value1) -> {
+                value1.forEach(value -> {
                     HarQueryParam harQueryParam = new HarQueryParam();
-                    harQueryParam.setName(entry.getKey());
+                    harQueryParam.setName(key);
                     harQueryParam.setValue(value);
                     harEntry.getRequest().getQueryString().add(harQueryParam);
-                }
-            }
+                });
+            });
         } catch (IllegalArgumentException e) {
             // QueryStringDecoder will throw an IllegalArgumentException if it cannot interpret a query string. rather than cause the entire request to
             // fail by propagating the exception, simply skip the query parameter capture.
@@ -365,14 +365,12 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
         Set<Cookie> cookies = ServerCookieDecoder.LAX.decode(cookieHeader);
 
-        for (Cookie cookie : cookies) {
+        cookies.forEach(cookie -> {
             HarCookie harCookie = new HarCookie();
-
             harCookie.setName(cookie.name());
             harCookie.setValue(cookie.value());
-
             harEntry.getRequest().getCookies().add(harCookie);
-        }
+        });
     }
 
     protected void captureRequestHeaders(HttpRequest httpRequest) {
@@ -388,12 +386,12 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
     }
 
     protected void captureHeaders(HttpHeaders headers) {
-        for (Map.Entry<String, String> header : headers.entries()) {
+        headers.entries().forEach(header -> {
             HarHeader harHeader = new HarHeader();
             harHeader.setName(header.getKey());
             harHeader.setValue(header.getValue());
             harEntry.getRequest().getHeaders().add(harHeader);
-        }
+        });
     }
 
     protected void captureRequestContent(HttpRequest httpRequest, byte[] fullMessage) {
@@ -440,14 +438,14 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
             ImmutableList.Builder<HarPostDataParam> paramBuilder = ImmutableList.builder();
 
-            for (Map.Entry<String, List<String>> entry : queryStringDecoder.parameters().entrySet()) {
-                for (String value : entry.getValue()) {
+            queryStringDecoder.parameters().forEach((key, value1) -> {
+                value1.forEach(value -> {
                     HarPostDataParam harPostDataParam = new HarPostDataParam();
-                    harPostDataParam.setName(entry.getKey());
+                    harPostDataParam.setName(key);
                     harPostDataParam.setValue(value);
                     paramBuilder.add(harPostDataParam);
-                }
-            }
+                });
+            });
 
             harEntry.getRequest().getPostData().setParams(paramBuilder.build());
         } else {
@@ -582,12 +580,12 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
     protected void captureResponseHeaders(HttpResponse httpResponse) {
         HttpHeaders headers = httpResponse.headers();
-        for (Map.Entry<String, String> header : headers.entries()) {
+        headers.entries().forEach(header -> {
             HarHeader harHeader = new HarHeader();
             harHeader.setName(header.getKey());
             harHeader.setValue(header.getValue());
             harEntry.getResponse().getHeaders().add(harHeader);
-        }
+        });
     }
 
     protected void captureRedirectUrl(HttpResponse httpResponse) {

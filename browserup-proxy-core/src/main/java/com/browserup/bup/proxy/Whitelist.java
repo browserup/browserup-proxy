@@ -64,9 +64,7 @@ public class Whitelist {
             this.patterns = Collections.emptyList();
         } else {
             ImmutableList.Builder<Pattern> builder = ImmutableList.builder();
-            for (String pattern : patterns) {
-                builder.add(Pattern.compile(pattern));
-            }
+            patterns.stream().map(Pattern::compile).forEach(builder::add);
 
             this.patterns = builder.build();
         }
@@ -117,13 +115,6 @@ public class Whitelist {
             return false;
         }
 
-        for (Pattern pattern : getPatterns()) {
-            Matcher matcher = pattern.matcher(url);
-            if (matcher.matches()) {
-                return true;
-            }
-        }
-
-        return false;
+        return getPatterns().stream().map(pattern -> pattern.matcher(url)).anyMatch(Matcher::matches);
     }
 }

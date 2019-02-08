@@ -12,6 +12,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static java.util.Collections.*;
+
 /**
  * An {@link com.browserup.bup.proxy.dns.AdvancedHostResolver} that applies the AdvancedHostResolver methods to multiple implementations. Methods
  * are applied to the resolvers in the order specified when the ChainedHostResolver is constructed. AdvancedHostResolver methods that modify the
@@ -49,7 +51,7 @@ public class ChainedHostResolver implements AdvancedHostResolver {
      */
     public ChainedHostResolver(Collection<? extends AdvancedHostResolver> resolvers) {
         if (resolvers == null) {
-            this.resolvers = Collections.emptyList();
+            this.resolvers = emptyList();
         } else {
             this.resolvers = ImmutableList.copyOf(resolvers);
         }
@@ -69,9 +71,7 @@ public class ChainedHostResolver implements AdvancedHostResolver {
     public void remapHosts(Map<String, String> hostRemappings) {
         writeLock.lock();
         try {
-            for (AdvancedHostResolver resolver : resolvers) {
-                resolver.remapHosts(hostRemappings);
-            }
+            resolvers.forEach(resolver -> resolver.remapHosts(hostRemappings));
         } finally {
             writeLock.unlock();
         }
@@ -81,9 +81,7 @@ public class ChainedHostResolver implements AdvancedHostResolver {
     public void remapHost(String originalHost, String remappedHost) {
         writeLock.lock();
         try {
-            for (AdvancedHostResolver resolver : resolvers) {
-                resolver.remapHost(originalHost, remappedHost);
-            }
+            resolvers.forEach(resolver -> resolver.remapHost(originalHost, remappedHost));
         } finally {
             writeLock.unlock();
         }
@@ -93,9 +91,7 @@ public class ChainedHostResolver implements AdvancedHostResolver {
     public void removeHostRemapping(String originalHost) {
         writeLock.lock();
         try {
-            for (AdvancedHostResolver resolver : resolvers) {
-                resolver.removeHostRemapping(originalHost);
-            }
+            resolvers.forEach(resolver -> resolver.removeHostRemapping(originalHost));
         } finally {
             writeLock.unlock();
         }
@@ -105,9 +101,7 @@ public class ChainedHostResolver implements AdvancedHostResolver {
     public void clearHostRemappings() {
         writeLock.lock();
         try {
-            for (AdvancedHostResolver resolver : resolvers) {
-                resolver.clearHostRemappings();
-            }
+            resolvers.forEach(AdvancedHostResolver::clearHostRemappings);
         } finally {
             writeLock.unlock();
         }
@@ -118,7 +112,7 @@ public class ChainedHostResolver implements AdvancedHostResolver {
         readLock.lock();
         try {
             if (resolvers.isEmpty()) {
-                return Collections.emptyMap();
+                return emptyMap();
             } else {
                 return resolvers.get(0).getHostRemappings();
             }
@@ -132,7 +126,7 @@ public class ChainedHostResolver implements AdvancedHostResolver {
         readLock.lock();
         try {
             if (resolvers.isEmpty()) {
-                return Collections.emptyList();
+                return emptyList();
             } else {
                 return resolvers.get(0).getOriginalHostnames(remappedHost);
             }
@@ -145,9 +139,7 @@ public class ChainedHostResolver implements AdvancedHostResolver {
     public void clearDNSCache() {
         writeLock.lock();
         try {
-            for (AdvancedHostResolver resolver : resolvers) {
-                resolver.clearDNSCache();
-            }
+            resolvers.forEach(AdvancedHostResolver::clearDNSCache);
         } finally {
             writeLock.unlock();
         }
@@ -157,9 +149,7 @@ public class ChainedHostResolver implements AdvancedHostResolver {
     public void setPositiveDNSCacheTimeout(int timeout, TimeUnit timeUnit) {
         writeLock.lock();
         try {
-            for (AdvancedHostResolver resolver : resolvers) {
-                resolver.setPositiveDNSCacheTimeout(timeout, timeUnit);
-            }
+            resolvers.forEach(resolver -> resolver.setPositiveDNSCacheTimeout(timeout, timeUnit));
         } finally {
             writeLock.unlock();
         }
@@ -169,9 +159,7 @@ public class ChainedHostResolver implements AdvancedHostResolver {
     public void setNegativeDNSCacheTimeout(int timeout, TimeUnit timeUnit) {
         writeLock.lock();
         try {
-            for (AdvancedHostResolver resolver : resolvers) {
-                resolver.setNegativeDNSCacheTimeout(timeout, timeUnit);
-            }
+            resolvers.forEach(resolver -> resolver.setNegativeDNSCacheTimeout(timeout, timeUnit));
         } finally {
             writeLock.unlock();
         }
@@ -182,15 +170,13 @@ public class ChainedHostResolver implements AdvancedHostResolver {
         readLock.lock();
         try {
             // attempt to resolve the host using all resolvers. returns the results from the first successful resolution.
-            for (AdvancedHostResolver resolver : resolvers) {
-                Collection<InetAddress> results = resolver.resolve(host);
-                if (!results.isEmpty()) {
-                    return results;
-                }
-            }
+            return resolvers.stream()
+                    .map(resolver -> resolver.resolve(host))
+                    .filter(results -> !results.isEmpty())
+                    .findFirst()
+                    .orElse(emptyList());
 
             // no resolvers returned results
-            return Collections.emptyList();
         } finally {
             readLock.unlock();
         }

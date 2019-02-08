@@ -49,12 +49,8 @@ public class AdvancedHostResolverTest {
     public void testForIPv6() throws UnknownHostException {
         InetAddress[] addresses = InetAddress.getAllByName("::1");
         if (addresses != null) {
-            for (InetAddress addr : addresses) {
-                if (addr.getClass() == Inet6Address.class) {
-                    ipv6Enabled = true;
-
-                    return;
-                }
+            if (Arrays.stream(addresses).anyMatch(addr -> addr.getClass() == Inet6Address.class)) {
+                ipv6Enabled = true;
             }
         }
     }

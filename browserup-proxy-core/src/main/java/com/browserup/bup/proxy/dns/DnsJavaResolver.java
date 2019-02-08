@@ -15,6 +15,7 @@ import org.xbill.DNS.Type;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -111,7 +112,7 @@ public class DnsJavaResolver extends AbstractHostNameRemapper implements Advance
         List<InetAddress> addrList = new ArrayList<InetAddress>(records.length);
 
         // the InetAddresses returned by dnsjava include the trailing dot, e.g. "www.google.com." -- use the passed-in (or remapped) host value instead
-        for (Record record : records) {
+        Arrays.stream(records).forEach(record -> {
             if (record instanceof ARecord) {
                 ARecord ipv4Record = (ARecord) record;
 
@@ -122,7 +123,6 @@ public class DnsJavaResolver extends AbstractHostNameRemapper implements Advance
                 } catch (UnknownHostException e) {
                     // this should never happen, unless there is a bug in dnsjava
                     log.warn("dnsjava resolver returned an invalid InetAddress for host: " + host, e);
-                    continue;
                 }
             } else if (record instanceof AAAARecord) {
                 AAAARecord ipv6Record = (AAAARecord) record;
@@ -134,10 +134,9 @@ public class DnsJavaResolver extends AbstractHostNameRemapper implements Advance
                 } catch (UnknownHostException e) {
                     // this should never happen, unless there is a bug in dnsjava
                     log.warn("dnsjava resolver returned an invalid InetAddress for host: " + host, e);
-                    continue;
                 }
             }
-        }
+        });
 
         return addrList;
     }

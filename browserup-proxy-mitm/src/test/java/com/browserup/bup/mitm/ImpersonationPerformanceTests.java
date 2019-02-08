@@ -26,6 +26,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 // ignored as a quick work-around to running these tests with unit tests
 @Ignore
@@ -114,7 +115,7 @@ public class ImpersonationPerformanceTests {
                 rootCertKeyGen, rootCertDigest, serverCertKeyGen, serverCertDigest);
 
         log.info("Executing {} warm up iterations", WARM_UP_ITERATIONS);
-        for (int i = 0; i < WARM_UP_ITERATIONS; i++) {
+        IntStream.range(0, WARM_UP_ITERATIONS).forEach(i -> {
             KeyPair serverCertKeyPair = serverCertKeyGen.generate();
             CertificateAndKey serverCert = new BouncyCastleSecurityProviderTool().createServerCertificate(
                     createCertificateInfo("warnmup-" + i + ".com"),
@@ -122,15 +123,14 @@ public class ImpersonationPerformanceTests {
                     rootCert.getPrivateKey(),
                     serverCertKeyPair,
                     serverCertDigest);
-
             new DefaultSecurityProviderTool().createServerKeyStore(MitmConstants.DEFAULT_KEYSTORE_TYPE, serverCert, rootCert.getCertificate(), "alias", "password");
-        }
+        });
 
         log.info("Executing {} performance test iterations", ITERATIONS);
 
         long start = System.currentTimeMillis();
 
-        for (int i = 0; i < ITERATIONS; i++) {
+        IntStream.range(0, ITERATIONS).forEach(i -> {
             KeyPair serverCertKeyPair = serverCertKeyGen.generate();
             CertificateAndKey serverCert = new BouncyCastleSecurityProviderTool().createServerCertificate(
                     createCertificateInfo(i + ".com"),
@@ -138,9 +138,8 @@ public class ImpersonationPerformanceTests {
                     rootCert.getPrivateKey(),
                     serverCertKeyPair,
                     serverCertDigest);
-
             new DefaultSecurityProviderTool().createServerKeyStore(MitmConstants.DEFAULT_KEYSTORE_TYPE, serverCert, rootCert.getCertificate(), "alias", "password");
-        }
+        });
 
         long finish = System.currentTimeMillis();
 

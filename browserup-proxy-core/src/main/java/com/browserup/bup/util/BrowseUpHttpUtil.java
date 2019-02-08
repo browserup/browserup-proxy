@@ -67,12 +67,10 @@ public class BrowseUpHttpUtil {
      * @return length of the headers, in bytes
      */
     public static long getHeaderSize(HttpHeaders headers) {
-        long headersSize = 0;
-        for (Map.Entry<String, String> header : headers.entries()) {
-            // +2 for ': ', +2 for new line
-            headersSize += header.getKey().length() + header.getValue().length() + 4;
-        }
-        return headersSize;
+        // +2 for ': ', +2 for new line
+        return headers.entries().stream()
+                .mapToLong(header -> header.getKey().length() + header.getValue().length() + 4)
+                .sum();
     }
 
     /**

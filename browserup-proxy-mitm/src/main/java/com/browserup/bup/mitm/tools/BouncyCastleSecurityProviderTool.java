@@ -59,6 +59,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static com.google.common.net.InetAddresses.*;
+
 public class BouncyCastleSecurityProviderTool implements SecurityProviderTool {
     static {
         Security.addProvider(new BouncyCastleProvider());
@@ -312,14 +314,14 @@ public class BouncyCastleSecurityProviderTool implements SecurityProviderTool {
      */
     private static GeneralNames getDomainNameSANsAsASN1Encodable(List<String> subjectAlternativeNames) {
         List<GeneralName> encodedSANs = new ArrayList<>(subjectAlternativeNames.size());
-        for (String subjectAlternativeName : subjectAlternativeNames) {
-            // IP addresses use the IP Address tag instead of the DNS Name tag in the SAN list
-            boolean isIpAddress = InetAddresses.isInetAddress(subjectAlternativeName);
+        // IP addresses use the IP Address tag instead of the DNS Name tag in the SAN list
+        subjectAlternativeNames.forEach(subjectAlternativeName -> {
+            boolean isIpAddress = isInetAddress(subjectAlternativeName);
             GeneralName generalName = new GeneralName(isIpAddress ? GeneralName.iPAddress : GeneralName.dNSName, subjectAlternativeName);
             encodedSANs.add(generalName);
-        }
+        });
 
-        return new GeneralNames(encodedSANs.toArray(new GeneralName[encodedSANs.size()]));
+        return new GeneralNames(encodedSANs.toArray(new GeneralName[0]));
     }
 
     /**

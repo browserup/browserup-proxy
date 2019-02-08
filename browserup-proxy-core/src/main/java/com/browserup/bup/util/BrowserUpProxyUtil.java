@@ -76,17 +76,13 @@ public class BrowserUpProxyUtil {
 
         // copy every entry and page in the HarLog that matches a pageRefToCopy. since getEntries() and getPages() return
         // lists, we are guaranteed that we will iterate through the pages and entries in the proper order
-        for (HarEntry entry : har.getLog().getEntries()) {
-            if (pageRefsToCopy.contains(entry.getPageref())) {
-                logCopy.getEntries().add(entry);
-            }
-        }
+        har.getLog().getEntries().stream()
+                .filter(entry -> pageRefsToCopy.contains(entry.getPageref()))
+                .forEach(entry -> logCopy.getEntries().add(entry));
 
-        for (HarPage page : har.getLog().getPages()) {
-            if (pageRefsToCopy.contains(page.getId())) {
-                logCopy.getPages().add(page);
-            }
-        }
+        har.getLog().getPages().stream()
+                .filter(page -> pageRefsToCopy.contains(page.getId()))
+                .forEach(page -> logCopy.getPages().add(page));
 
         Har harCopy = new Har();
         harCopy.setLog(logCopy);

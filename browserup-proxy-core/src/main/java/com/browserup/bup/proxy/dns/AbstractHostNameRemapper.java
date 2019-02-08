@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 /**
  * Base class that provides host name remapping capabilities for AdvancedHostResolvers. Subclasses must implement {@link #resolveRemapped(String)}
@@ -82,14 +83,13 @@ public abstract class AbstractHostNameRemapper implements AdvancedHostResolver {
     public Collection<String> getOriginalHostnames(String remappedHost) {
         //TODO: implement this using a reverse mapping multimap that is guarded by the same lock as remappedHostNames, since this method will likely be called
         // very often when forging certificates
-        List<String> originalHostnames = new ArrayList<>();
+        List<String> originalHostnames;
 
         Map<String, String> currentRemappings = remappedHostNames.get();
-        for (Map.Entry<String, String> entry : currentRemappings.entrySet()) {
-            if (entry.getValue().equals(remappedHost)) {
-                originalHostnames.add(entry.getKey());
-            }
-        }
+        originalHostnames = currentRemappings.entrySet().stream()
+                .filter(entry -> entry.getValue().equals(remappedHost))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
 
         return originalHostnames;
     }

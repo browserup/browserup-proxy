@@ -25,6 +25,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.script.ScriptException;
 import com.browserup.bup.BrowserUpProxyServer;
 import com.browserup.harreader.model.Har;
@@ -38,6 +39,8 @@ import com.browserup.bup.proxy.auth.AuthType;
 import com.browserup.bup.util.BrowseUpHttpUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static java.util.stream.Collectors.*;
 
 @At("/proxy")
 @Service
@@ -54,10 +57,9 @@ public class ProxyResource {
     @Get
     public Reply<?> getProxies() {
         LOG.info("GET /");
-        Collection<ProxyDescriptor> proxyList = new ArrayList<ProxyDescriptor>();
-        for (BrowserUpProxyServer proxy : proxyManager.get()) {
-            proxyList.add(new ProxyDescriptor(proxy.getPort()));
-        }
+        Collection<ProxyDescriptor> proxyList = proxyManager.get().stream()
+                .map(proxy -> new ProxyDescriptor(proxy.getPort()))
+                .collect(toList());
         return Reply.with(new ProxyListDescriptor(proxyList)).as(Json.class);
     }
 
@@ -320,11 +322,7 @@ public class ProxyResource {
         }
 
         Map<String, String> headers = request.read(Map.class).as(Json.class);
-        for (Map.Entry<String, String> entry : headers.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            proxy.addHeader(key, value);
-        }
+        headers.forEach(proxy::addHeader);
         return Reply.saying().ok();
     }
 
@@ -525,14 +523,12 @@ public class ProxyResource {
 
         @SuppressWarnings("unchecked") Map<String, String> headers = request.read(Map.class).as(Json.class);
 
-        for (Map.Entry<String, String> entry : headers.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
+        headers.forEach((key, value) -> {
             proxy.getHostNameResolver().remapHost(key, value);
             proxy.getHostNameResolver().setNegativeDNSCacheTimeout(0, TimeUnit.SECONDS);
             proxy.getHostNameResolver().setPositiveDNSCacheTimeout(0, TimeUnit.SECONDS);
             proxy.getHostNameResolver().clearDNSCache();
-        }
+        });
 
         return Reply.saying().ok();
     }

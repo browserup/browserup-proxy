@@ -30,9 +30,7 @@ public class AddHeadersFilter extends HttpFiltersAdapter {
         if (httpObject instanceof HttpRequest) {
             HttpRequest httpRequest = (HttpRequest) httpObject;
 
-            for (Map.Entry<String, String> header : additionalHeaders.entrySet()) {
-                httpRequest.headers().add(header.getKey(), header.getValue());
-            }
+            additionalHeaders.forEach((key, value) -> httpRequest.headers().add(key, value));
         }
 
         return null;

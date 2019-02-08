@@ -7,6 +7,7 @@ import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpUtil;
 import org.littleshoot.proxy.impl.ProxyUtils;
 
 import java.util.Collection;
@@ -50,21 +51,16 @@ public class WhitelistFilter extends HttpsAwareFiltersAdapter {
                 return null;
             }
 
-            boolean urlWhitelisted = false;
+            boolean urlWhitelisted;
 
             String url = getFullUrl(httpRequest);
 
-            for (Pattern pattern : whitelistUrls) {
-                if (pattern.matcher(url).matches()) {
-                    urlWhitelisted = true;
-                    break;
-                }
-            }
+            urlWhitelisted = whitelistUrls.stream().anyMatch(pattern -> pattern.matcher(url).matches());
 
             if (!urlWhitelisted) {
                 HttpResponseStatus status = HttpResponseStatus.valueOf(whitelistResponseCode);
-                HttpResponse resp = new DefaultFullHttpResponse(httpRequest.getProtocolVersion(), status);
-                HttpHeaders.setContentLength(resp, 0L);
+                HttpResponse resp = new DefaultFullHttpResponse(httpRequest.protocolVersion(), status);
+                HttpUtil.setContentLength(resp, 0L);
 
                 return resp;
             }

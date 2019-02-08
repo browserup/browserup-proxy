@@ -79,6 +79,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.*;
 
 /**
  * A LittleProxy-based implementation of {@link BrowserUpProxy}.
@@ -728,13 +731,9 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
 
     @Override
     public void rewriteUrls(Map<String, String> rewriteRules) {
-        List<RewriteRule> newRules = new ArrayList<>(rewriteRules.size());
-        for (Map.Entry<String, String> rewriteRule : rewriteRules.entrySet()) {
-            RewriteRule newRule = new RewriteRule(rewriteRule.getKey(), rewriteRule.getValue());
-            newRules.add(newRule);
-        }
-
-        this.rewriteRules = new CopyOnWriteArrayList<>(newRules);
+        this.rewriteRules = rewriteRules.entrySet().stream()
+                .map(rewriteRule -> new RewriteRule(rewriteRule.getKey(), rewriteRule.getValue()))
+                .collect(toCollection(CopyOnWriteArrayList::new));
     }
 
     @Override
@@ -770,9 +769,9 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     @Override
     public Collection<String> getWhitelistUrls() {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
-        for (Pattern pattern : whitelist.get().getPatterns()) {
-            builder.add(pattern.pattern());
-        }
+        whitelist.get().getPatterns().stream()
+                .map(Pattern::pattern)
+                .forEach(builder::add);
 
         return builder.build();
     }
@@ -806,10 +805,9 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
             // retrieve the response code and list of patterns from the current whitelist, the construct a new list of patterns that contains
             // all of the old whitelist's patterns + this new pattern
             int statusCode = currentWhitelist.getStatusCode();
-            List<String> newPatterns = new ArrayList<>(currentWhitelist.getPatterns().size() + 1);
-            for (Pattern pattern : currentWhitelist.getPatterns()) {
-                newPatterns.add(pattern.pattern());
-            }
+            List<String> newPatterns = currentWhitelist.getPatterns().stream()
+                    .map(Pattern::pattern)
+                    .collect(toCollection(() -> new ArrayList<>(currentWhitelist.getPatterns().size() + 1)));
             newPatterns.add(urlPattern);
 
             // create a new (immutable) Whitelist object with the new pattern list and status code
@@ -965,9 +963,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     @Override
     public Map<String, String> getRewriteRules() {
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-        for (RewriteRule rewriteRule : rewriteRules) {
-            builder.put(rewriteRule.getPattern().pattern(), rewriteRule.getReplace());
-        }
+        rewriteRules.forEach(rewriteRule -> builder.put(rewriteRule.getPattern().pattern(), rewriteRule.getReplace()));
 
         return builder.build();
     }
@@ -976,11 +972,9 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     public void removeRewriteRule(String urlPattern) {
         // normally removing elements from the list we are iterating over would not be possible, but since this is a CopyOnWriteArrayList
         // the iterator it returns is a "snapshot" of the list that will not be affected by removal (and that does not support removal, either)
-        for (RewriteRule rewriteRule : rewriteRules) {
-            if (rewriteRule.getPattern().pattern().equals(urlPattern)) {
-                rewriteRules.remove(rewriteRule);
-            }
-        }
+        rewriteRules.stream()
+                .filter(rewriteRule -> rewriteRule.getPattern().pattern().equals(urlPattern))
+                .forEach(rewriteRule -> rewriteRules.remove(rewriteRule));
     }
 
     public boolean isStopped() {
