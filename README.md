@@ -1,7 +1,7 @@
 # BrowserUp Proxy
 
 BrowserUp Proxy allows you to manipulate HTTP requests and responses, capture HTTP content, and export performance data as a [HAR file](http://www.softwareishard.com/blog/har-12-spec/).
-BUP works well as a standalone proxy server, but it is especially useful when embedded in Selenium tests.
+BrowserUp Proxy works well as a standalone proxy server, but it is especially useful when embedded in Selenium tests.
 
 The latest version of BrowserUp Proxy is 2.1.4, powered by [LittleProxy](https://github.com/adamfisk/LittleProxy).
 
@@ -13,7 +13,7 @@ To use BrowserUp Proxy in your tests or application, add the `BrowserUp-core` de
 ```xml
     <dependency>
         <groupId>com.browserup.bup</groupId>
-        <artifactId>BrowserUp-core</artifactId>
+        <artifactId>browserup-core</artifactId>
         <version>3.0.0-beta</version>
         <scope>test</scope>
     </dependency>
@@ -36,7 +36,7 @@ To run in standalone mode from the command line, first download the latest relea
 
 Start the REST API:
 ```sh
-    ./BrowserUp-proxy -port 8080
+    ./browserup-proxy -port 8080
 ```
 
 Then create a proxy server instance:
