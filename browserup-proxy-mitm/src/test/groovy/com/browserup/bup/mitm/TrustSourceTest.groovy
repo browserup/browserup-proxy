@@ -28,7 +28,7 @@ class TrustSourceTest {
     void stageFiles() {
         certificateFile = tmpDir.newFile("certificate.crt")
 
-        Files.copy(KeyStoreFileCertificateSourceTest.getResourceAsStream("/net/lightbody/bmp/mitm/certificate.crt"), certificateFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+        Files.copy(KeyStoreFileCertificateSourceTest.getResourceAsStream("/net/lightbody/bup/mitm/certificate.crt"), certificateFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
     }
 
     @Test
@@ -91,7 +91,7 @@ class TrustSourceTest {
 
     @Test
     void testCanAddTrustedCertificateInKeyStore() {
-        InputStream keystoreStream = TrustSource.class.getResourceAsStream("/net/lightbody/bmp/mitm/trusted-cert.jks")
+        InputStream keystoreStream = TrustSource.class.getResourceAsStream("/net/lightbody/bup/mitm/trusted-cert.jks")
         assertNotNull("Unable to load keystore", keystoreStream)
         KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
         keyStore.load(keystoreStream, null)

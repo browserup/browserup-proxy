@@ -8,7 +8,7 @@ import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.LastHttpContent;
-import com.browserup.bup.util.BrowseUpHttpUtil;
+import com.browserup.bup.util.BrowserUpHttpUtil;
 import org.littleshoot.proxy.HttpFiltersAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,7 +128,7 @@ public class ServerResponseCaptureFilter extends HttpFiltersAdapter {
     protected void decompressContents() {
         if (contentEncoding.equals(HttpHeaders.Values.GZIP)) {
             try {
-                fullResponseContents = BrowseUpHttpUtil.decompressContents(getRawResponseContents());
+                fullResponseContents = BrowserUpHttpUtil.decompressContents(getRawResponseContents());
                 decompressionSuccessful = true;
             } catch (RuntimeException e) {
                 log.warn("Failed to decompress response with encoding type " + contentEncoding + " when decoding request from " + originalRequest.getUri(), e);
@@ -157,7 +157,7 @@ public class ServerResponseCaptureFilter extends HttpFiltersAdapter {
 
     protected void storeResponseContent(HttpContent httpContent) {
         ByteBuf bufferedContent = httpContent.content();
-        byte[] content = BrowseUpHttpUtil.extractReadableBytes(bufferedContent);
+        byte[] content = BrowserUpHttpUtil.extractReadableBytes(bufferedContent);
 
         try {
             rawResponseContents.write(content);

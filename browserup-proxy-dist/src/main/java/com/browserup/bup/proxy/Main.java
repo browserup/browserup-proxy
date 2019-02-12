@@ -31,8 +31,8 @@ public class Main {
         private static final Logger log = LoggerFactory.getLogger(Main.class);
     }
 
-    private static final String BMP_LOG_CONFIG_NAME = "bmp-logging.yaml";
-    private static final String DEFAULT_LOG_CONFIG_LOCATION = "bin/conf/" + BMP_LOG_CONFIG_NAME;
+    private static final String BUP_LOG_CONFIG_NAME = "bup-logging.yaml";
+    private static final String DEFAULT_LOG_CONFIG_LOCATION = "bin/conf/" + BUP_LOG_CONFIG_NAME;
 
     public static final String LOG4J_CONFIGURATION_FILE_PROPERTY = "log4j.configurationFile";
 
@@ -82,15 +82,15 @@ public class Main {
      * Configures logging when running the proxy in stand-alone mode. Searches for a configuration file in the following order:
      * <ol>
      * <li>The file specified in the log4j.configurationFile system property, if defined</li>
-     * <li>The bmp-logging.yaml file in (basedir)/bin/conf, if the basedir system property has been defined</li>
-     * <li>The bmp-logging.yaml file in the bin/conf directory relative to the current working directory</li>
-     * <li>The bmp-logging.yaml file in the current working directory</li>
-     * <li>The bmp-logging.yaml file on the classpath</li>
+     * <li>The bup-logging.yaml file in (basedir)/bin/conf, if the basedir system property has been defined</li>
+     * <li>The bup-logging.yaml file in the bin/conf directory relative to the current working directory</li>
+     * <li>The bup-logging.yaml file in the current working directory</li>
+     * <li>The bup-logging.yaml file on the classpath</li>
      * </ol>
      */
     private static void configureLogging() {
         // allow users to override the log4j config file location. if the log4j.configurationFile property has been set, don't attempt to override it
-        // with BMP's logging configuration.
+        // with BUP's logging configuration.
         String log4jFileLocation = System.getProperty(LOG4J_CONFIGURATION_FILE_PROPERTY);
         if (log4jFileLocation == null || log4jFileLocation.isEmpty()) {
             // user is not specifying a log file, so look for one on the filesystem.
@@ -107,12 +107,12 @@ public class Main {
 
             // if the config file is not readable, attempt to find the config file in the current working directory
             if (!Files.isReadable(logFilePath)) {
-                logFilePath = Paths.get(BMP_LOG_CONFIG_NAME);
+                logFilePath = Paths.get(BUP_LOG_CONFIG_NAME);
 
                 // if the config file is still not readable, fall back to the config file on the classpath.
                 if (!Files.isReadable(logFilePath)) {
 
-                    InputStream defaultLogConfigStream = Main.class.getResourceAsStream("/" + BMP_LOG_CONFIG_NAME);
+                    InputStream defaultLogConfigStream = Main.class.getResourceAsStream("/" + BUP_LOG_CONFIG_NAME);
                     if (defaultLogConfigStream == null) {
                         // can't find the default log config file. give up.
                         return;
@@ -130,7 +130,7 @@ public class Main {
                     Runtime.getRuntime().addShutdownHook(new Thread(new DeleteDirectoryTask(tempDir)));
 
                     // copy the default config file to the temp directory from the classpath
-                    logFilePath = tempDir.resolve(BMP_LOG_CONFIG_NAME);
+                    logFilePath = tempDir.resolve(BUP_LOG_CONFIG_NAME);
                     try {
                         Files.copy(defaultLogConfigStream, logFilePath);
                     } catch (IOException e) {

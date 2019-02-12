@@ -1,11 +1,11 @@
 # BrowserUp Proxy
 
 BrowserUp Proxy allows you to manipulate HTTP requests and responses, capture HTTP content, and export performance data as a [HAR file](http://www.softwareishard.com/blog/har-12-spec/).
-BMP works well as a standalone proxy server, but it is especially useful when embedded in Selenium tests.
+BUP works well as a standalone proxy server, but it is especially useful when embedded in Selenium tests.
 
 The latest version of BrowserUp Proxy is 2.1.4, powered by [LittleProxy](https://github.com/adamfisk/LittleProxy).
 
-If you're running BrowserUp Proxy within a Java application or Selenium test, get started with [Embedded Mode](#getting-started-embedded-mode). If you want to run BMP from the
+If you're running BrowserUp Proxy within a Java application or Selenium test, get started with [Embedded Mode](#getting-started-embedded-mode). If you want to run BUP from the
 command line as a standalone proxy, start with [Standalone](#getting-started-standalone).
 
 ### Getting started: Embedded Mode
@@ -14,7 +14,7 @@ To use BrowserUp Proxy in your tests or application, add the `BrowserUp-core` de
     <dependency>
         <groupId>com.browserup.bup</groupId>
         <artifactId>BrowserUp-core</artifactId>
-        <version>2.1.4</version>
+        <version>3.0.0-beta</version>
         <scope>test</scope>
     </dependency>
 ```
@@ -50,17 +50,17 @@ For more information on the features available in the REST API, see [the REST AP
 
 ## Changes since 2.0.0
 
-The new [BrowserUpProxyServer class](BrowserUp-core/src/main/java/net/lightbody/bmp/BrowserUpProxyServer.java) has replaced the legacy ProxyServer implementation. The legacy implementation is no longer actively supported; all new code should use `BrowserUpProxyServer`. We highly recommend that existing code migrate to the new implementation.
+The new [BrowserUpProxyServer class](BrowserUp-core/src/main/java/net/lightbody/bup/BrowserUpProxyServer.java) has replaced the legacy ProxyServer implementation. The legacy implementation is no longer actively supported; all new code should use `BrowserUpProxyServer`. We highly recommend that existing code migrate to the new implementation.
 
 The most important changes from 2.0 are:
 
 - [Separate REST API and Embedded Mode modules](#embedded-mode). Include only the functionality you need.
-- [New BrowserUpProxy interface](BrowserUp-core/src/main/java/net/lightbody/bmp/BrowserUpProxy.java). The new interface will completely replace the legacy 2.0 ProxyServer contract in version 3.0 and higher.
+- [New BrowserUpProxy interface](BrowserUp-core/src/main/java/net/lightbody/bup/BrowserUpProxy.java). The new interface will completely replace the legacy 2.0 ProxyServer contract in version 3.0 and higher.
 - [LittleProxy support](#littleproxy-support). More stable and more powerful than the legacy Jetty back-end.
 
 ### New BrowserUpProxy API
 
-BrowserUp Proxy 2.1 includes a [new BrowserUpProxy interface](BrowserUp-core/src/main/java/net/lightbody/bmp/BrowserUpProxy.java) to interact with BrowserUp Proxy programmatically. The new interface defines the functionality that BrowserUp Proxy will support in future releases (including 3.0+). To ease migration, both the legacy (Jetty-based) ProxyServer class and the new, LittleProxy-powered BrowserUpProxy class support the new BrowserUpProxy interface.
+BrowserUp Proxy 2.1 includes a [new BrowserUpProxy interface](BrowserUp-core/src/main/java/net/lightbody/bup/BrowserUpProxy.java) to interact with BrowserUp Proxy programmatically. The new interface defines the functionality that BrowserUp Proxy will support in future releases (including 3.0+). To ease migration, both the legacy (Jetty-based) ProxyServer class and the new, LittleProxy-powered BrowserUpProxy class support the new BrowserUpProxy interface.
 
 We _highly_ recommend migrating existing code to the BrowserUpProxy interface using the `BrowserUpProxyServer` class.
 
@@ -69,7 +69,7 @@ We _highly_ recommend migrating existing code to the BrowserUpProxy interface us
 The legacy interface, implicitly defined by the ProxyServer class, has been extracted into `com.browserup.bup.proxy.LegacyProxyServer` and is now officially deprecated. The new LittleProxy-based implementation will implement LegacyProxyServer for all 2.1.x releases. This means you can switch to the LittleProxy-powered implementation with minimal change to existing code ([with the exception of interceptors](#http-request-manipulation)):
 
 ```java
-    // With the Jetty-based 2.0.0 release, BMP was created like this:
+    // With the Jetty-based 2.0.0 release, BUP was created like this:
     ProxyServer proxyServer = new ProxyServer();
     proxyServer.start();
     // [...]
@@ -376,11 +376,11 @@ NodeJS bindings for browswerup-proxy are available [here](https://github.com/zzo
 
 ### Logging
 
-When running in stand-alone mode, the proxy loads the default logging configuration from the conf/bmp-logging.yaml file. To increase/decrease the logging level, change the logging entry for com.browserup.bup.
+When running in stand-alone mode, the proxy loads the default logging configuration from the conf/bup-logging.yaml file. To increase/decrease the logging level, change the logging entry for com.browserup.bup.
 
 ### DNS Resolution
 
-The BrowserUpProxyServer implementation uses native DNS resolution by default, but supports custom DNS resolution and advanced DNS manipulation. See the [ClientUtil](BrowserUp-proxy/BrowserUp-core/src/main/java/net/lightbody/bmp/client/ClientUtil.java) class for information on DNS manipulation using the dnsjava resolver.
+The BrowserUpProxyServer implementation uses native DNS resolution by default, but supports custom DNS resolution and advanced DNS manipulation. See the [ClientUtil](BrowserUp-proxy/BrowserUp-core/src/main/java/net/lightbody/bup/client/ClientUtil.java) class for information on DNS manipulation using the dnsjava resolver.
 
 ## Building the latest from source
 

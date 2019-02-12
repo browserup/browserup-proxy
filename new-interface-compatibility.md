@@ -1,5 +1,5 @@
 # New BrowserUpProxy interface
-The `BrowserUpProxyServer` class, powered by LitleProxy, implements the ``BrowserUpProxy` interface. The following table lists the current level of support for the new interface in the modern and legacy BMP implementations:
+The `BrowserUpProxyServer` class, implements the ``BrowserUpProxy` interface. The following table lists the current level of support for the new interface in the modern and legacy BUP implementations:
 
 `BrowserUpProxy` method | Legacy `ProxyServer` (Jetty 5) | `BrowserUpProxyServer` (LittleProxy)
 :----------------------- | :---------------------: | :-----------------------------------:

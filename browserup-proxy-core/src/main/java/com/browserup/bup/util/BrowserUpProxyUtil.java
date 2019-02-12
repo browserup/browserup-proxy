@@ -93,7 +93,7 @@ public class BrowserUpProxyUtil {
     /**
      * Returns the version of BrowserUp Proxy, e.g. "2.1.0".
      *
-     * @return BMP version string
+     * @return BUP version string
      */
     public static String getVersionString() {
         return version.get();

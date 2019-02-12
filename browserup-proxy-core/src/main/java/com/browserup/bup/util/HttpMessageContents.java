@@ -91,14 +91,14 @@ public class HttpMessageContents {
 
     /**
      * Retrieves the Content-Type header of this message. If no Content-Type is present, returns the assumed default Content-Type (see
-     * {@link BrowseUpHttpUtil#UNKNOWN_CONTENT_TYPE}).
+     * {@link BrowserUpHttpUtil#UNKNOWN_CONTENT_TYPE}).
      *
      * @return the message's content type
      */
     public String getContentType() {
         String contentTypeHeader = HttpHeaders.getHeader(httpMessage, HttpHeaders.Names.CONTENT_TYPE);
         if (contentTypeHeader == null || contentTypeHeader.isEmpty()) {
-            return BrowseUpHttpUtil.UNKNOWN_CONTENT_TYPE;
+            return BrowserUpHttpUtil.UNKNOWN_CONTENT_TYPE;
         } else {
             return contentTypeHeader;
         }
@@ -118,7 +118,7 @@ public class HttpMessageContents {
 
         Charset charset = null;
         try {
-            charset = BrowseUpHttpUtil.readCharsetInContentTypeHeader(contentTypeHeader);
+            charset = BrowserUpHttpUtil.readCharsetInContentTypeHeader(contentTypeHeader);
         } catch (UnsupportedCharsetException e) {
             java.nio.charset.UnsupportedCharsetException cause = e.getUnsupportedCharsetExceptionCause();
             log.error("Character set specified in Content-Type header is not supported on this platform. Content-Type header: {}", contentTypeHeader, cause);
@@ -127,18 +127,18 @@ public class HttpMessageContents {
         }
 
         if (charset == null) {
-            return BrowseUpHttpUtil.DEFAULT_HTTP_CHARSET;
+            return BrowserUpHttpUtil.DEFAULT_HTTP_CHARSET;
         }
 
         return charset;
     }
 
     /**
-     * Returns true if this message's Content-Type header indicates that it contains a textual data type. See {@link BrowseUpHttpUtil#hasTextualContent(String)}.
+     * Returns true if this message's Content-Type header indicates that it contains a textual data type. See {@link BrowserUpHttpUtil#hasTextualContent(String)}.
      *
      * @return true if the Content-Type header is a textual type, otherwise false
      */
     public boolean isText() {
-        return BrowseUpHttpUtil.hasTextualContent(getContentType());
+        return BrowserUpHttpUtil.hasTextualContent(getContentType());
     }
 }

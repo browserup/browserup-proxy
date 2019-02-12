@@ -7,7 +7,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import com.browserup.bup.util.HttpUtil;
 import com.browserup.bup.proxy.RewriteRule;
-import com.browserup.bup.util.BrowseUpHttpUtil;
+import com.browserup.bup.util.BrowserUpHttpUtil;
 import org.littleshoot.proxy.impl.ProxyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +69,7 @@ public class RewriteUrlFilter extends HttpsAwareFiltersAdapter {
                     httpRequest.setUri(rewrittenUrl);
                 } else {
                     try {
-                        String resource = BrowseUpHttpUtil.getRawPathAndParamsFromUri(rewrittenUrl);
+                        String resource = BrowserUpHttpUtil.getRawPathAndParamsFromUri(rewrittenUrl);
                         httpRequest.setUri(resource);
                     } catch (URISyntaxException e) {
                         // the rewritten URL couldn't be parsed, possibly due to the rewrite rule mangling the URL. log

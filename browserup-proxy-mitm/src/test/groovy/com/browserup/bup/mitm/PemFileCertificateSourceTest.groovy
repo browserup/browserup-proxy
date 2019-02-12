@@ -29,9 +29,9 @@ class PemFileCertificateSourceTest {
         encryptedPrivateKeyFile = tmpDir.newFile("encrypted-private-key.key")
         unencryptedPrivateKeyFile = tmpDir.newFile("unencrypted-private-key.key")
 
-        Files.copy(KeyStoreFileCertificateSourceTest.getResourceAsStream("/net/lightbody/bmp/mitm/certificate.crt"), certificateFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
-        Files.copy(KeyStoreFileCertificateSourceTest.getResourceAsStream("/net/lightbody/bmp/mitm/encrypted-private-key.key"), encryptedPrivateKeyFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
-        Files.copy(KeyStoreFileCertificateSourceTest.getResourceAsStream("/net/lightbody/bmp/mitm/unencrypted-private-key.key"), unencryptedPrivateKeyFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+        Files.copy(KeyStoreFileCertificateSourceTest.getResourceAsStream("/net/lightbody/bup/mitm/certificate.crt"), certificateFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+        Files.copy(KeyStoreFileCertificateSourceTest.getResourceAsStream("/net/lightbody/bup/mitm/encrypted-private-key.key"), encryptedPrivateKeyFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+        Files.copy(KeyStoreFileCertificateSourceTest.getResourceAsStream("/net/lightbody/bup/mitm/unencrypted-private-key.key"), unencryptedPrivateKeyFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
     }
 
     @Test

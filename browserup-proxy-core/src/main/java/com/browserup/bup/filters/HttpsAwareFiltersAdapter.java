@@ -6,7 +6,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import com.browserup.bup.util.HttpUtil;
-import com.browserup.bup.util.BrowseUpHttpUtil;
+import com.browserup.bup.util.BrowserUpHttpUtil;
 import org.littleshoot.proxy.HttpFiltersAdapter;
 import org.littleshoot.proxy.impl.ProxyUtils;
 
@@ -54,7 +54,7 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
         // special case: for HTTPS requests, the full URL is scheme (https://) + the URI of this request
         if (ProxyUtils.isCONNECT(modifiedRequest)) {
             // CONNECT requests contain the default port, even if it isn't specified on the request.
-            String hostNoDefaultPort = BrowseUpHttpUtil.removeMatchingPort(modifiedRequest.getUri(), 443);
+            String hostNoDefaultPort = BrowserUpHttpUtil.removeMatchingPort(modifiedRequest.getUri(), 443);
             return "https://" + hostNoDefaultPort;
         }
 

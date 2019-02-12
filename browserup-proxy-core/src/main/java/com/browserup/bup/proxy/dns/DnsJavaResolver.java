@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
  * An {@link com.browserup.bup.proxy.dns.AdvancedHostResolver} that uses dnsjava to perform DNS lookups. This implementation provides full
  * cache manipulation capabilities.
  *
- * @deprecated The dnsjava resolver has been deprecated in favor of the standard JVM resolver and will be removed in BMP >2.1.
+ * @deprecated The dnsjava resolver has been deprecated in favor of the standard JVM resolver and will be removed in BUP >2.1.
  */
 public class DnsJavaResolver extends AbstractHostNameRemapper implements AdvancedHostResolver {
     private static final Logger log = LoggerFactory.getLogger(DnsJavaResolver.class);

@@ -25,7 +25,7 @@ dependencies {
     // We haven't upgraded to this:
     // implementation('org.littleshoot:littleproxy:1.1.2')
     // because it still uses Guava 23. We should fork it some day.
-    //implementation('com.browserup.bup:littleproxy:1.1.0-beta-bmp-15') {
+    //implementation('com.browserup.bup:littleproxy:1.1.0-beta-bup-15') {
     // Using our own fork now, build it and put it in the lib/ dir
     //    implementation('org.littleshoot:littleproxy:1.1.2') {
     //        exclude(module: 'barchart-udt-bundle')

@@ -43,7 +43,7 @@ import com.browserup.bup.proxy.Whitelist;
 import com.browserup.bup.proxy.auth.AuthType;
 import com.browserup.bup.proxy.dns.AdvancedHostResolver;
 import com.browserup.bup.proxy.dns.DelegatingHostResolver;
-import com.browserup.bup.util.BrowseUpHttpUtil;
+import com.browserup.bup.util.BrowserUpHttpUtil;
 import com.browserup.bup.util.BrowserUpProxyUtil;
 import org.littleshoot.proxy.ChainedProxy;
 import org.littleshoot.proxy.ChainedProxyAdapter;
@@ -79,7 +79,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.*;
 
@@ -287,7 +286,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
 
         this.serverBindAddress = serverBindAddress;
 
-        // initialize all the default BrowserUp filter factories that provide core BMP functionality
+        // initialize all the default BrowserUp filter factories that provide core BUP functionality
         addBrowserUpFilters();
 
         HttpProxyServerBootstrap bootstrap = DefaultHttpProxyServer.bootstrap()
@@ -661,7 +660,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         switch (authType) {
             case BASIC:
                 // base64 encode the "username:password" string
-                String base64EncodedCredentials = BrowseUpHttpUtil.base64EncodeBasicCredentials(username, password);
+                String base64EncodedCredentials = BrowserUpHttpUtil.base64EncodeBasicCredentials(username, password);
 
                 basicAuthCredentials.put(domain, base64EncodedCredentials);
                 break;
@@ -680,7 +679,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     public void chainedProxyAuthorization(String username, String password, AuthType authType) {
         switch (authType) {
             case BASIC:
-                chainedProxyCredentials = BrowseUpHttpUtil.base64EncodeBasicCredentials(username, password);
+                chainedProxyCredentials = BrowserUpHttpUtil.base64EncodeBasicCredentials(username, password);
                 break;
 
             default:

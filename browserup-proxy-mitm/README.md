@@ -5,7 +5,7 @@ The MITM module is a LittleProxy-compatible module that enables man-in-the-middl
 - [Specify a custom trust store](#trusted-root-certificates-and-custom-trust-stores) on proxy-to-server connections, allowing the proxy to trust personal or corporate CAs
 - [Use OpenSSL](#openssl-support), improving performance over Java's built-in TLS implementation
 
-Though MITM is developed and distributed with BrowserUp Proxy, it has no dependency on BMP and can be used in a LittleProxy-only environment. The only additional dependency is the Bouncy Castle encryption library.
+Though MITM is developed and distributed with BrowserUp Proxy, it has no dependency on BUP and can be used in a LittleProxy-only environment. The only additional dependency is the Bouncy Castle encryption library.
 
 ## Quick start
 ### LittleProxy (without BrowserUp Proxy)
@@ -47,10 +47,10 @@ Several examples are available to help you get started:
 
 Example File | Configuration
 -------------|--------------
-[LittleProxyDefaultConfigExample.java](src/test/java/net/lightbody/bmp/mitm/example/CustomCAKeyStoreExample.java) | Default configuration with LittleProxy
-[SaveGeneratedCAExample.java](src/test/java/net/lightbody/bmp/mitm/example/SaveGeneratedCAExample.java) | Save a dynamically-generated CA root certificate for installation in a browser
-[CustomCAKeyStoreExample.java](src/test/java/net/lightbody/bmp/mitm/example/CustomCAKeyStoreExample.java) and [CustomCAPemFileExample.java](src/test/java/net/lightbody/bmp/mitm/example/CustomCAPemFileExample.java) | Use an existing CA certificate and private key
-[EllipticCurveCAandServerExample.java](src/test/java/net/lightbody/bmp/mitm/example/EllipticCurveCAandServerExample.java) | Use EC cryptography when generating the CA private key and when impersonating server certificates
+[LittleProxyDefaultConfigExample.java](src/test/java/com/browserup/bup/mitm/example/CustomCAKeyStoreExample.java) | Default configuration with LittleProxy
+[SaveGeneratedCAExample.java](src/test/java/com/browserup/bup/mitm/example/SaveGeneratedCAExample.java) | Save a dynamically-generated CA root certificate for installation in a browser
+[CustomCAKeyStoreExample.java](src/test/java/com/browserup/bup/mitm/example/CustomCAKeyStoreExample.java) and [CustomCAPemFileExample.java](src/test/java/com/browserup/bup/mitm/example/CustomCAPemFileExample.java) | Use an existing CA certificate and private key
+[EllipticCurveCAandServerExample.java](src/test/java/com/browserup/bup/mitm/example/EllipticCurveCAandServerExample.java) | Use EC cryptography when generating the CA private key and when impersonating server certificates
 
 ## Generating and Saving Root Certificates
 By default, when using the MITM module with LittleProxy, the CA Root Certificate and Private Key are generated dynamically. The dynamically generated Root Certificate and Private Key can be saved for installation in a browser or later reuse by using the methods on the `RootCertificateGenerator` class. For example:

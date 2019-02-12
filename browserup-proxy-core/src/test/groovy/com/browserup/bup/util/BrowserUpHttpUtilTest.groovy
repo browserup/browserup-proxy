@@ -9,7 +9,7 @@ import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertNull
 import static org.junit.Assert.assertTrue
 
-class BrowseUpHttpUtilTest {
+class BrowserUpHttpUtilTest {
     @Test
     void testGetResourceFromUri() {
         Map<String, String> uriToResource = [
@@ -26,7 +26,7 @@ class BrowseUpHttpUtilTest {
         ]
 
         uriToResource.each {uri, expectedResource ->
-            String parsedResource = BrowseUpHttpUtil.getRawPathAndParamsFromUri(uri)
+            String parsedResource = BrowserUpHttpUtil.getRawPathAndParamsFromUri(uri)
             assertEquals("Parsed resource from URL did not match expected resource for URL: " + uri, expectedResource, parsedResource)
         }
     }
@@ -66,16 +66,16 @@ class BrowseUpHttpUtilTest {
         ]
 
         contentTypeHeaderAndCharset.each {contentTypeHeader, expectedCharset ->
-            Charset derivedCharset = BrowseUpHttpUtil.readCharsetInContentTypeHeader(contentTypeHeader)
+            Charset derivedCharset = BrowserUpHttpUtil.readCharsetInContentTypeHeader(contentTypeHeader)
             assertEquals("Charset derived from parsed content type header did not match expected charset for content type header: " + contentTypeHeader, expectedCharset, derivedCharset)
         }
 
-        Charset derivedCharset = BrowseUpHttpUtil.readCharsetInContentTypeHeader(null)
+        Charset derivedCharset = BrowserUpHttpUtil.readCharsetInContentTypeHeader(null)
         assertNull("Expected null Content-Type header to return a null charset", derivedCharset)
 
         boolean threwException = false
         try {
-            BrowseUpHttpUtil.readCharsetInContentTypeHeader('text/html; charset=FUTURE_CHARSET')
+            BrowserUpHttpUtil.readCharsetInContentTypeHeader('text/html; charset=FUTURE_CHARSET')
         } catch (ignored) {
             threwException = true
         }
@@ -98,11 +98,11 @@ class BrowseUpHttpUtilTest {
         ]
 
         contentTypeHeaderAndTextFlag.each {contentTypeHeader, expectedIsText ->
-            boolean isTextualContent = BrowseUpHttpUtil.hasTextualContent(contentTypeHeader)
+            boolean isTextualContent = BrowserUpHttpUtil.hasTextualContent(contentTypeHeader)
             assertEquals("hasTextualContent did not return expected value for content type header: " + contentTypeHeader, expectedIsText, isTextualContent)
         }
 
-        boolean isTextualContent = BrowseUpHttpUtil.hasTextualContent(null)
+        boolean isTextualContent = BrowserUpHttpUtil.hasTextualContent(null)
         assertFalse("Expected hasTextualContent to return false for null content type", isTextualContent)
     }
 
@@ -110,43 +110,43 @@ class BrowseUpHttpUtilTest {
     void testGetRawPathWithQueryParams() {
         String path = "/some%20resource?param%20name=value"
 
-        assertEquals(path, BrowseUpHttpUtil.getRawPathAndParamsFromUri("https://www.example.com" + path))
+        assertEquals(path, BrowserUpHttpUtil.getRawPathAndParamsFromUri("https://www.example.com" + path))
     }
 
     @Test
     void testGetRawPathWithoutQueryParams() {
         String path = "/some%20resource"
 
-        assertEquals(path, BrowseUpHttpUtil.getRawPathAndParamsFromUri("https://www.example.com" + path))
+        assertEquals(path, BrowserUpHttpUtil.getRawPathAndParamsFromUri("https://www.example.com" + path))
     }
 
     @Test
     void testRemoveMatchingPort() {
-        def portRemoved = BrowseUpHttpUtil.removeMatchingPort("www.example.com:443", 443)
+        def portRemoved = BrowserUpHttpUtil.removeMatchingPort("www.example.com:443", 443)
         assertEquals("www.example.com", portRemoved)
 
-        def hostnameWithNonMatchingPort = BrowseUpHttpUtil.removeMatchingPort("www.example.com:443", 1234)
+        def hostnameWithNonMatchingPort = BrowserUpHttpUtil.removeMatchingPort("www.example.com:443", 1234)
         assertEquals("www.example.com:443", hostnameWithNonMatchingPort)
 
-        def hostnameNoPort = BrowseUpHttpUtil.removeMatchingPort("www.example.com", 443)
+        def hostnameNoPort = BrowserUpHttpUtil.removeMatchingPort("www.example.com", 443)
         assertEquals("www.example.com", hostnameNoPort)
 
-        def ipv4WithoutPort = BrowseUpHttpUtil.removeMatchingPort("127.0.0.1:443", 443)
+        def ipv4WithoutPort = BrowserUpHttpUtil.removeMatchingPort("127.0.0.1:443", 443)
         assertEquals("127.0.0.1", ipv4WithoutPort)
 
-        def ipv4WithNonMatchingPort = BrowseUpHttpUtil.removeMatchingPort("127.0.0.1:443", 1234)
+        def ipv4WithNonMatchingPort = BrowserUpHttpUtil.removeMatchingPort("127.0.0.1:443", 1234)
         assertEquals("127.0.0.1:443", ipv4WithNonMatchingPort)
 
-        def ipv4NoPort = BrowseUpHttpUtil.removeMatchingPort("127.0.0.1", 443)
+        def ipv4NoPort = BrowserUpHttpUtil.removeMatchingPort("127.0.0.1", 443)
         assertEquals("127.0.0.1", ipv4NoPort)
 
-        def ipv6WithoutPort = BrowseUpHttpUtil.removeMatchingPort("[::1]:443", 443)
+        def ipv6WithoutPort = BrowserUpHttpUtil.removeMatchingPort("[::1]:443", 443)
         assertEquals("[::1]", ipv6WithoutPort)
 
-        def ipv6WithNonMatchingPort = BrowseUpHttpUtil.removeMatchingPort("[::1]:443", 1234)
+        def ipv6WithNonMatchingPort = BrowserUpHttpUtil.removeMatchingPort("[::1]:443", 1234)
         assertEquals("[::1]:443", ipv6WithNonMatchingPort)
 
-        def ipv6NoPort = BrowseUpHttpUtil.removeMatchingPort("[::1]", 443)
+        def ipv6NoPort = BrowserUpHttpUtil.removeMatchingPort("[::1]", 443)
         assertEquals("[::1]", ipv6NoPort)
     }
 }

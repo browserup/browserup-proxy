@@ -19,15 +19,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
 /**
  * Utility class with static methods for processing HTTP requests and responses.
  */
-public class BrowseUpHttpUtil {
-    private static final Logger log = LoggerFactory.getLogger(BrowseUpHttpUtil.class);
+public class BrowserUpHttpUtil {
+    private static final Logger log = LoggerFactory.getLogger(BrowserUpHttpUtil.class);
 
     /**
      * Default MIME content type if no Content-Type header is present. According to the HTTP 1.1 spec, section 7.2.1:

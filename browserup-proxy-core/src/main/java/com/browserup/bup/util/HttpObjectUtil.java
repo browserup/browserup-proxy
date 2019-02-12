@@ -19,7 +19,7 @@ public class HttpObjectUtil {
 
     /**
      * Replaces the entity body of the message with the specified contents. Encodes the message contents according to charset in the message's
-     * Content-Type header, or uses {@link BrowseUpHttpUtil#DEFAULT_HTTP_CHARSET} if none is specified.
+     * Content-Type header, or uses {@link BrowserUpHttpUtil#DEFAULT_HTTP_CHARSET} if none is specified.
      * <b>Note:</b> If the charset of the message is not supported on this platform, this will throw an {@link java.nio.charset.UnsupportedCharsetException}.
      *
      * TODO: Currently this method only works for FullHttpMessages, since it must modify the Content-Length header; determine if this may be applied to chunked messages as well
@@ -34,7 +34,7 @@ public class HttpObjectUtil {
 
         Charset messageCharset;
         try {
-            messageCharset = BrowseUpHttpUtil.readCharsetInContentTypeHeader(contentTypeHeader);
+            messageCharset = BrowserUpHttpUtil.readCharsetInContentTypeHeader(contentTypeHeader);
         } catch (UnsupportedCharsetException e) {
             java.nio.charset.UnsupportedCharsetException cause = e.getUnsupportedCharsetExceptionCause() ;
             log.error("Found unsupported character set in Content-Type header '{}' while attempting to replace contents of HTTP message.", contentTypeHeader, cause);
@@ -43,7 +43,7 @@ public class HttpObjectUtil {
         }
 
         if (messageCharset == null) {
-            messageCharset = BrowseUpHttpUtil.DEFAULT_HTTP_CHARSET;
+            messageCharset = BrowserUpHttpUtil.DEFAULT_HTTP_CHARSET;
             log.warn("No character set declared in HTTP message. Replacing text using default charset {}.", messageCharset);
         }
 
@@ -71,7 +71,7 @@ public class HttpObjectUtil {
 
     /**
      * Extracts the entity body from an HTTP content object, according to the specified character set. The character set cannot be null. If
-     * the character set is not specified or is unknown, you still must specify a suitable default charset (see {@link BrowseUpHttpUtil#DEFAULT_HTTP_CHARSET}).
+     * the character set is not specified or is unknown, you still must specify a suitable default charset (see {@link BrowserUpHttpUtil#DEFAULT_HTTP_CHARSET}).
      *
      * @param httpContent HTTP content object to extract the entity body from
      * @param charset character set of the entity body
@@ -83,14 +83,14 @@ public class HttpObjectUtil {
             throw new IllegalArgumentException("No charset specified when extracting the contents of an HTTP message");
         }
 
-        byte[] contentBytes = BrowseUpHttpUtil.extractReadableBytes(httpContent.content());
+        byte[] contentBytes = BrowserUpHttpUtil.extractReadableBytes(httpContent.content());
 
         return new String(contentBytes, charset);
     }
 
     /**
      * Extracts the entity body from a FullHttpMessage, according to the character set in the message's Content-Type header. If the Content-Type
-     * header is not present or does not specify a charset, assumes the ISO-8859-1 character set (see {@link BrowseUpHttpUtil#DEFAULT_HTTP_CHARSET}).
+     * header is not present or does not specify a charset, assumes the ISO-8859-1 character set (see {@link BrowserUpHttpUtil#DEFAULT_HTTP_CHARSET}).
      *
      * @param httpMessage HTTP message to extract entity body from
      * @return String representation of the entity body
@@ -116,7 +116,7 @@ public class HttpObjectUtil {
 
     /**
      * Derives the charset from the Content-Type header in the HttpMessage. If the Content-Type header is not present or does not contain
-     * a character set, this method returns the ISO-8859-1 character set. See {@link BrowseUpHttpUtil#readCharsetInContentTypeHeader(String)}
+     * a character set, this method returns the ISO-8859-1 character set. See {@link BrowserUpHttpUtil#readCharsetInContentTypeHeader(String)}
      * for more details.
      *
      * @param httpMessage HTTP message to extract charset from
@@ -126,9 +126,9 @@ public class HttpObjectUtil {
     public static Charset getCharsetFromMessage(HttpMessage httpMessage) throws UnsupportedCharsetException {
         String contentTypeHeader = HttpHeaders.getHeader(httpMessage, HttpHeaders.Names.CONTENT_TYPE);
 
-        Charset charset = BrowseUpHttpUtil.readCharsetInContentTypeHeader(contentTypeHeader);
+        Charset charset = BrowserUpHttpUtil.readCharsetInContentTypeHeader(contentTypeHeader);
         if (charset == null) {
-            return BrowseUpHttpUtil.DEFAULT_HTTP_CHARSET;
+            return BrowserUpHttpUtil.DEFAULT_HTTP_CHARSET;
         }
 
         return charset;
@@ -141,6 +141,6 @@ public class HttpObjectUtil {
      * @return binary contents of the HTTP message
      */
     public static byte[] extractBinaryHttpEntityBody(HttpContent httpContent) {
-        return BrowseUpHttpUtil.extractReadableBytes(httpContent.content());
+        return BrowserUpHttpUtil.extractReadableBytes(httpContent.content());
     }
 }

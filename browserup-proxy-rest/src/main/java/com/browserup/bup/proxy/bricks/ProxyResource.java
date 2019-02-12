@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,7 +24,6 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import javax.script.ScriptException;
 import com.browserup.bup.BrowserUpProxyServer;
 import com.browserup.harreader.model.Har;
@@ -36,7 +34,7 @@ import com.browserup.bup.filters.JavascriptRequestResponseFilter;
 import com.browserup.bup.proxy.CaptureType;
 import com.browserup.bup.proxy.ProxyManager;
 import com.browserup.bup.proxy.auth.AuthType;
-import com.browserup.bup.util.BrowseUpHttpUtil;
+import com.browserup.bup.util.BrowserUpHttpUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -651,7 +649,7 @@ public class ProxyResource {
         String contentTypeHeader = request.header("Content-Type");
         Charset charset = null;
         try {
-            charset = BrowseUpHttpUtil.readCharsetInContentTypeHeader(contentTypeHeader);
+            charset = BrowserUpHttpUtil.readCharsetInContentTypeHeader(contentTypeHeader);
         } catch (UnsupportedCharsetException e) {
             java.nio.charset.UnsupportedCharsetException cause = e.getUnsupportedCharsetExceptionCause();
             LOG.error("Character set declared in Content-Type header is not supported. Content-Type header: {}", contentTypeHeader, cause);
@@ -660,7 +658,7 @@ public class ProxyResource {
         }
 
         if (charset == null) {
-            charset = BrowseUpHttpUtil.DEFAULT_HTTP_CHARSET;
+            charset = BrowserUpHttpUtil.DEFAULT_HTTP_CHARSET;
         }
 
         ByteArrayOutputStream entityBodyBytes = new ByteArrayOutputStream();

@@ -12,7 +12,7 @@ configuration:
     file:
       -
         name: file
-        fileName: bmp.log
+        fileName: bup.log
         PatternLayout:
           pattern: "[%-5level %date{ISO8601} %logger] (%thread) %msg %xThrowable%n"
         append: false
@@ -24,7 +24,7 @@ configuration:
         additivity: false
       -
         name: com.browserup.bup
-        # to suppress unwanted BMP logging statements, set the level below for the source logger to WARN or ERROR.
+        # to suppress unwanted BUP logging statements, set the level below for the source logger to WARN or ERROR.
         # to enable more verbose logging, set the level to DEBUG or TRACE.
         level: info
     root:

@@ -6,7 +6,7 @@ import org.junit.After;
 import org.junit.Before;
 
 /**
- * A base class that spins up and shuts down a BrowserUpProxy instance using the new interface. IT also provides mock server support via
+ * A base class that spins up and shuts down a BrowserUpProxy instance using the new interface. It also provides mock server support via
  * {@link com.browserup.bup.proxy.test.util.MockServerTest}.
  */
 public class NewProxyServerTest extends MockServerTest {

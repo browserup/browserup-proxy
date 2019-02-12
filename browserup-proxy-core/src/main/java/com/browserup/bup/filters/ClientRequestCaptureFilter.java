@@ -8,7 +8,7 @@ import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.LastHttpContent;
-import com.browserup.bup.util.BrowseUpHttpUtil;
+import com.browserup.bup.util.BrowserUpHttpUtil;
 import org.littleshoot.proxy.HttpFiltersAdapter;
 
 import java.io.ByteArrayOutputStream;
@@ -69,7 +69,7 @@ public class ClientRequestCaptureFilter extends HttpFiltersAdapter {
 
     protected void storeRequestContent(HttpContent httpContent) {
         ByteBuf bufferedContent = httpContent.content();
-        byte[] content = BrowseUpHttpUtil.extractReadableBytes(bufferedContent);
+        byte[] content = BrowserUpHttpUtil.extractReadableBytes(bufferedContent);
 
         try {
             requestContents.write(content);

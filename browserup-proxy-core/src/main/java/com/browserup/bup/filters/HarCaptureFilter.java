@@ -28,7 +28,7 @@ import com.browserup.bup.exception.UnsupportedCharsetException;
 import com.browserup.bup.filters.support.HttpConnectTiming;
 import com.browserup.bup.filters.util.HarCaptureUtil;
 import com.browserup.bup.proxy.CaptureType;
-import com.browserup.bup.util.BrowseUpHttpUtil;
+import com.browserup.bup.util.BrowserUpHttpUtil;
 import org.littleshoot.proxy.impl.ProxyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +41,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -350,7 +349,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         long requestHeadersSize = requestLine.length() + 6;
 
         HttpHeaders headers = httpRequest.headers();
-        requestHeadersSize += BrowseUpHttpUtil.getHeaderSize(headers);
+        requestHeadersSize += BrowserUpHttpUtil.getHeaderSize(headers);
 
         harEntry.getRequest().setHeadersSize(requestHeadersSize);
     }
@@ -399,8 +398,8 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
         String contentType = HttpHeaders.getHeader(httpRequest, HttpHeaders.Names.CONTENT_TYPE);
         if (contentType == null) {
-            log.warn("No content type specified in request to {}. Content will be treated as {}", httpRequest.getUri(), BrowseUpHttpUtil.UNKNOWN_CONTENT_TYPE);
-            contentType = BrowseUpHttpUtil.UNKNOWN_CONTENT_TYPE;
+            log.warn("No content type specified in request to {}. Content will be treated as {}", httpRequest.getUri(), BrowserUpHttpUtil.UNKNOWN_CONTENT_TYPE);
+            contentType = BrowserUpHttpUtil.UNKNOWN_CONTENT_TYPE;
         }
 
         HarPostData postData = new HarPostData();
@@ -417,7 +416,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
         Charset charset;
         try {
-             charset = BrowseUpHttpUtil.readCharsetInContentTypeHeader(contentType);
+             charset = BrowserUpHttpUtil.readCharsetInContentTypeHeader(contentType);
         } catch (UnsupportedCharsetException e) {
             log.warn("Found unsupported character set in Content-Type header '{}' in HTTP request to {}. Content will not be captured in HAR.", contentType, httpRequest.getUri(), e);
             return;
@@ -425,12 +424,12 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
         if (charset == null) {
             // no charset specified, so use the default -- but log a message since this might not encode the data correctly
-            charset = BrowseUpHttpUtil.DEFAULT_HTTP_CHARSET;
+            charset = BrowserUpHttpUtil.DEFAULT_HTTP_CHARSET;
             log.debug("No charset specified; using charset {} to decode contents to {}", charset, httpRequest.getUri());
         }
 
         if (urlEncoded) {
-            String textContents = BrowseUpHttpUtil.getContentAsString(fullMessage, charset);
+            String textContents = BrowserUpHttpUtil.getContentAsString(fullMessage, charset);
 
             QueryStringDecoder queryStringDecoder = new QueryStringDecoder(textContents, charset, false);
 
@@ -450,7 +449,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
             //TODO: implement capture of files and multipart form data
 
             // not URL encoded, so let's grab the body of the POST and capture that
-            String postBody = BrowseUpHttpUtil.getContentAsString(fullMessage, charset);
+            String postBody = BrowserUpHttpUtil.getContentAsString(fullMessage, charset);
             harEntry.getRequest().getPostData().setText(postBody);
         }
     }
@@ -461,8 +460,8 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
         String contentType = HttpHeaders.getHeader(httpResponse, HttpHeaders.Names.CONTENT_TYPE);
         if (contentType == null) {
-            log.warn("No content type specified in response from {}. Content will be treated as {}", originalRequest.getUri(), BrowseUpHttpUtil.UNKNOWN_CONTENT_TYPE);
-            contentType = BrowseUpHttpUtil.UNKNOWN_CONTENT_TYPE;
+            log.warn("No content type specified in response from {}. Content will be treated as {}", originalRequest.getUri(), BrowserUpHttpUtil.UNKNOWN_CONTENT_TYPE);
+            contentType = BrowserUpHttpUtil.UNKNOWN_CONTENT_TYPE;
         }
 
         if (responseCaptureFilter.isResponseCompressed() && !responseCaptureFilter.isDecompressionSuccessful()) {
@@ -473,7 +472,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
         Charset charset;
         try {
-            charset = BrowseUpHttpUtil.readCharsetInContentTypeHeader(contentType);
+            charset = BrowserUpHttpUtil.readCharsetInContentTypeHeader(contentType);
         } catch (UnsupportedCharsetException e) {
             log.warn("Found unsupported character set in Content-Type header '{}' in HTTP response from {}. Content will not be captured in HAR.", contentType, originalRequest.getUri(), e);
             return;
@@ -481,12 +480,12 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
         if (charset == null) {
             // no charset specified, so use the default -- but log a message since this might not encode the data correctly
-            charset = BrowseUpHttpUtil.DEFAULT_HTTP_CHARSET;
+            charset = BrowserUpHttpUtil.DEFAULT_HTTP_CHARSET;
             log.debug("No charset specified; using charset {} to decode contents from {}", charset, originalRequest.getUri());
         }
 
-        if (!forceBinary && BrowseUpHttpUtil.hasTextualContent(contentType)) {
-            String text = BrowseUpHttpUtil.getContentAsString(fullMessage, charset);
+        if (!forceBinary && BrowserUpHttpUtil.hasTextualContent(contentType)) {
+            String text = BrowserUpHttpUtil.getContentAsString(fullMessage, charset);
             harEntry.getResponse().getContent().setText(text);
         } else if (dataToCapture.contains(CaptureType.RESPONSE_BINARY_CONTENT)) {
             harEntry.getResponse().getContent().setText(BaseEncoding.base64().encode(fullMessage));
@@ -515,7 +514,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
             captureResponseHeaders(httpResponse);
         }
 
-        if (BrowseUpHttpUtil.isRedirect(httpResponse)) {
+        if (BrowserUpHttpUtil.isRedirect(httpResponse)) {
             captureRedirectUrl(httpResponse);
         }
     }
@@ -571,7 +570,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         // +2 => CRLF after status line, +4 => header/data separation
         long responseHeadersSize = statusLine.length() + 6;
         HttpHeaders headers = httpResponse.headers();
-        responseHeadersSize += BrowseUpHttpUtil.getHeaderSize(headers);
+        responseHeadersSize += BrowserUpHttpUtil.getHeaderSize(headers);
 
         harEntry.getResponse().setHeadersSize(responseHeadersSize);
     }

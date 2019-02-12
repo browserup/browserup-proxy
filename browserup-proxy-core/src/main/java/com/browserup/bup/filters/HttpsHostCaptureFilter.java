@@ -6,7 +6,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
-import com.browserup.bup.util.BrowseUpHttpUtil;
+import com.browserup.bup.util.BrowserUpHttpUtil;
 import org.littleshoot.proxy.HttpFiltersAdapter;
 import org.littleshoot.proxy.impl.ProxyUtils;
 
@@ -33,7 +33,7 @@ public class HttpsHostCaptureFilter extends HttpFiltersAdapter {
                 // CONNECT requests contain the port, even when using the default port. a sensible default is to remove the
                 // default port, since in most cases it is not explicitly specified and its presence (in a HAR file, for example)
                 // would be unexpected.
-                String hostNoDefaultPort = BrowseUpHttpUtil.removeMatchingPort(hostAndPort, 443);
+                String hostNoDefaultPort = BrowserUpHttpUtil.removeMatchingPort(hostAndPort, 443);
                 hostname.set(hostNoDefaultPort);
             }
         }

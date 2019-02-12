@@ -1,6 +1,6 @@
 package com.browserup.bup.proxy;
 
-import com.browserup.bup.util.BrowseUpHttpUtil;
+import com.browserup.bup.util.BrowserUpHttpUtil;
 
 import java.util.EnumSet;
 
@@ -21,7 +21,7 @@ public enum CaptureType {
 
     /**
      * Non-binary HTTP request content, such as post data or other text-based request payload.
-     * See {@link BrowseUpHttpUtil#hasTextualContent(String)} for a list of Content-Types that
+     * See {@link BrowserUpHttpUtil#hasTextualContent(String)} for a list of Content-Types that
      * are considered non-binary.
      *
      */
@@ -44,7 +44,7 @@ public enum CaptureType {
 
     /**
      * Non-binary HTTP response content (typically, HTTP body content).
-     * See {@link BrowseUpHttpUtil#hasTextualContent(String)} for a list of Content-Types that
+     * See {@link BrowserUpHttpUtil#hasTextualContent(String)} for a list of Content-Types that
      * are considered non-binary.
      */
     RESPONSE_CONTENT,
