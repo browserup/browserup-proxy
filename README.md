@@ -3,7 +3,7 @@
 BrowserUp Proxy allows you to manipulate HTTP requests and responses, capture HTTP content, and export performance data as a [HAR file](http://www.softwareishard.com/blog/har-12-spec/).
 BrowserUp Proxy works well as a standalone proxy server, but it is especially useful when embedded in Selenium tests.
 
-The latest version of BrowserUp Proxy is 2.1.4, powered by [LittleProxy](https://github.com/adamfisk/LittleProxy).
+The latest version of BrowserUp Proxy is 3.0.0-beta. BrowserUp Proxy is originally forked from [BrowserMobProxy](https://github.com/lightbody/browsermob-proxy) and is powered by [LittleProxy](https://github.com/adamfisk/LittleProxy).
 
 If you're running BrowserUp Proxy within a Java application or Selenium test, get started with [Embedded Mode](#getting-started-embedded-mode). If you want to run BUP from the
 command line as a standalone proxy, start with [Standalone](#getting-started-standalone).
