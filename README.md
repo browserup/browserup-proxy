@@ -258,10 +258,6 @@ BrowserUp Proxy makes it easy to use a proxy in Selenium tests:
 created by `createSeleniumProxy()` to point to the hostname of the machine that your test is running on. You can also run a standalone
 BrowserUp Proxy instance on a separate machine and configure the Selenium Proxy object to use that proxy.
 
-### HTTP Request Manipulation
-
-**HTTP request manipulation has changed in 2.1.0+ with LittleProxy.** The LittleProxy-based interceptors are easier to use and more reliable. The legacy ProxyServer implementation **will not** support the new interceptor methods.
-
 #### 2.1.0+ (LittleProxy) interceptors
 
 There are four new methods to support request and response interception in LittleProxy:
@@ -364,8 +360,6 @@ Consult the Java API docs for more info.
 
 **BrowserUp Proxy 2.1.0+ now supports full MITM:** For most users, MITM will work out-of-the-box with default settings. Install the [ca-certificate-rsa.cer](/BrowserUp-core/src/main/resources/sslSupport/ca-certificate-rsa.cer) file in your browser or HTTP client to avoid untrusted certificate warnings. Generally, it is safer to generate your own private key, rather than using the .cer files distributed with BrowserUp Proxy. See the [README file in the `mitm` module](/mitm/README.md) for instructions on generating or using your own root certificate and private key with MITM.
 
-**Legacy Jetty-based ProxyServer support for MITM:** The legacy `ProxyServer` implementation uses the same `ca-certificate-rsa.cer` root certificate as the default BrowserUpProxyServer implementation. The previous cybervillainsCA.cer certificate has been removed.
-
 **Note: DO NOT** permanently install the .cer files distributed with BrowserUp Proxy in users' browsers. They should be used for testing only and must not be used with general web browsing.
 
 If you're doing testing with Selenium, you'll want to make sure that the browser profile that gets set up by Selenium not only has the proxy configured, but also has the CA installed. Unfortunately, there is no API for doing this in Selenium; it must be done manually for each browser and environment.
@@ -388,14 +382,14 @@ You'll need maven (`brew install maven` if you're on OS X):
 
     [~]$ mvn -DskipTests
 
-You'll find the standalone BrowserUp Proxy distributable zip at `BrowserUp-dist/target/BrowserUp-proxy-2.1.5-SNAPSHOT-bin.zip`. Unzip the contents and run the `BrowserUp-proxy` or `BrowserUp-proxy.bat` files in the `bin` directory.
+You'll find the standalone BrowserUp Proxy distributable zip at `browserup-dist/target/browserup-proxy-3.0.0-beta-bin.zip`. Unzip the contents and run the `browserup-proxy` or `browserup-proxy.bat` files in the `bin` directory.
 
 When you build the latest code from source, you'll have access to the latest snapshot release. To use the SNAPSHOT version in your code, modify the version in your pom:
 ```xml
     <dependency>
         <groupId>com.browserup.bup</groupId>
-        <artifactId>BrowserUp-core</artifactId>
-        <version>2.1.5-SNAPSHOT</version>
+        <artifactId>browserup-core</artifactId>
+        <version>3.0.0-beta</version>
         <scope>test</scope>
     </dependency>
 ```
