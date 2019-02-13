@@ -1,7 +1,7 @@
-# New BrowserMobProxy interface
-The `BrowserMobProxyServer` class, powered by LitleProxy, implements the ``BrowserMobProxy` interface. The following table lists the current level of support for the new interface in the modern and legacy BMP implementations:
+# New BrowserUpProxy interface
+The `BrowserUpProxyServer` class, implements the ``BrowserUpProxy` interface. The following table lists the current level of support for the new interface in the modern and legacy BUP implementations:
 
-`BrowserMobProxy` method | Legacy `ProxyServer` (Jetty 5) | `BrowserMobProxyServer` (LittleProxy)
+`BrowserUpProxy` method | Legacy `ProxyServer` (Jetty 5) | `BrowserUpProxyServer` (LittleProxy)
 :----------------------- | :---------------------: | :-----------------------------------:
 `start` (and related) | X | X
 `stop` | X | X
@@ -58,18 +58,18 @@ The `BrowserMobProxyServer` class, powered by LitleProxy, implements the ``Brows
 
 # Limitations
 ## Interceptors
-Interceptors are tightly coupled to the underlying BrowserMob Proxy implementation (Jetty 5 or LittleProxy). As a result,
+Interceptors are tightly coupled to the underlying BrowserUp Proxy implementation (Jetty 5 or LittleProxy). As a result,
 the Jetty 5-based `ProxyServer` implementation will continue to support the legacy interceptor methods, `addRequestInterceptor`
-and `addResponseInterceptor`, but **will not support the new interceptor methods in `BrowserMobProxy`**. The new LittleProxy-based
+and `addResponseInterceptor`, but **will not support the new interceptor methods in `BrowserUpProxy`**. The new LittleProxy-based
 implementation will fully support the new interceptor methods (`addResponseFilter`, `addRequestFilter`, `addFirstHttpFilterFactory` 
 and `addLastHttpFilterFactory`), and will not support the legacy interceptor methods.
 
 To continue using interceptors with the Jetty 5-based implementation, downcast to `LegacyProxyServer` when adding the interceptor:
 ```java
-        BrowserMobProxy legacyImpl = new ProxyServer();
+        BrowserUpProxy legacyImpl = new ProxyServer();
         ((LegacyProxyServer)legacyImpl).addRequestInterceptor(new RequestInterceptor() {
             @Override
-            public void process(BrowserMobHttpRequest request, Har har) {
+            public void process(BrowserUpHttpRequest request, Har har) {
                 // interceptor code goes here
             }
         });

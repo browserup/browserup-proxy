@@ -5,10 +5,10 @@ The MITM module is a LittleProxy-compatible module that enables man-in-the-middl
 - [Specify a custom trust store](#trusted-root-certificates-and-custom-trust-stores) on proxy-to-server connections, allowing the proxy to trust personal or corporate CAs
 - [Use OpenSSL](#openssl-support), improving performance over Java's built-in TLS implementation
 
-Though MITM is developed and distributed with BrowserMob Proxy, it has no dependency on BMP and can be used in a LittleProxy-only environment. The only additional dependency is the Bouncy Castle encryption library.
+Though MITM is developed and distributed with BrowserUp Proxy, it has no dependency on BUP and can be used in a LittleProxy-only environment. The only additional dependency is the Bouncy Castle encryption library.
 
 ## Quick start
-### LittleProxy (without BrowserMob Proxy)
+### LittleProxy (without BrowserUp Proxy)
 
 To use MITM with standalone LittleProxy, add a dependency on the `mitm` module in your pom:
 
@@ -22,13 +22,13 @@ To use MITM with standalone LittleProxy, add a dependency on the `mitm` module i
     
     <!-- new dependency on the MITM module -->
     <dependency>
-        <groupId>net.lightbody.bmp</groupId>
+        <groupId>com.browserup.bup</groupId>
         <artifactId>mitm</artifactId>
         <version>2.1.4</version>
     </dependency>
 ```
 
-When creating your LittleProxy server, set the MitmManager to an instance of `net.lightbody.bmp.mitm.manager.ImpersonatingMitmManager`:
+When creating your LittleProxy server, set the MitmManager to an instance of `com.browserup.bup.mitm.manager.ImpersonatingMitmManager`:
 
 ```java
     HttpProxyServerBootstrap bootstrap = DefaultHttpProxyServer.bootstrap()
@@ -37,20 +37,20 @@ When creating your LittleProxy server, set the MitmManager to an instance of `ne
 
 The default implementation of `ImpersonatingMitmManager` will generate a new CA Root Certificate when the first request is made to the proxy. See below for instructions on saving the generated root certificate, or using your own root certificate and private key.
 
-### BrowserMob Proxy
-The MITM module is enabled by default with BrowserMob Proxy. No additional steps are required to enable MITM with BrowserMob Proxy. 
+### BrowserUp Proxy
+The MITM module is enabled by default with BrowserUp Proxy. No additional steps are required to enable MITM with BrowserUp Proxy. 
 
-By default, BrowserMob Proxy will use the `ca-keystore-rsa.p12` file to load its CA Root Certificate and Private Key. The corresponding certificate file is `ca-certificate-rsa.cer`, which can be installed as a trusted Certificate Authority in browsers or other HTTP clients to avoid HTTPS warnings when using BrowserMob Proxy.
+By default, BrowserUp Proxy will use the `ca-keystore-rsa.p12` file to load its CA Root Certificate and Private Key. The corresponding certificate file is `ca-certificate-rsa.cer`, which can be installed as a trusted Certificate Authority in browsers or other HTTP clients to avoid HTTPS warnings when using BrowserUp Proxy.
 
 ## Examples
 Several examples are available to help you get started:
 
 Example File | Configuration
 -------------|--------------
-[LittleProxyDefaultConfigExample.java](src/test/java/net/lightbody/bmp/mitm/example/CustomCAKeyStoreExample.java) | Default configuration with LittleProxy
-[SaveGeneratedCAExample.java](src/test/java/net/lightbody/bmp/mitm/example/SaveGeneratedCAExample.java) | Save a dynamically-generated CA root certificate for installation in a browser
-[CustomCAKeyStoreExample.java](src/test/java/net/lightbody/bmp/mitm/example/CustomCAKeyStoreExample.java) and [CustomCAPemFileExample.java](src/test/java/net/lightbody/bmp/mitm/example/CustomCAPemFileExample.java) | Use an existing CA certificate and private key
-[EllipticCurveCAandServerExample.java](src/test/java/net/lightbody/bmp/mitm/example/EllipticCurveCAandServerExample.java) | Use EC cryptography when generating the CA private key and when impersonating server certificates
+[LittleProxyDefaultConfigExample.java](src/test/java/com/browserup/bup/mitm/example/CustomCAKeyStoreExample.java) | Default configuration with LittleProxy
+[SaveGeneratedCAExample.java](src/test/java/com/browserup/bup/mitm/example/SaveGeneratedCAExample.java) | Save a dynamically-generated CA root certificate for installation in a browser
+[CustomCAKeyStoreExample.java](src/test/java/com/browserup/bup/mitm/example/CustomCAKeyStoreExample.java) and [CustomCAPemFileExample.java](src/test/java/com/browserup/bup/mitm/example/CustomCAPemFileExample.java) | Use an existing CA certificate and private key
+[EllipticCurveCAandServerExample.java](src/test/java/com/browserup/bup/mitm/example/EllipticCurveCAandServerExample.java) | Use EC cryptography when generating the CA private key and when impersonating server certificates
 
 ## Generating and Saving Root Certificates
 By default, when using the MITM module with LittleProxy, the CA Root Certificate and Private Key are generated dynamically. The dynamically generated Root Certificate and Private Key can be saved for installation in a browser or later reuse by using the methods on the `RootCertificateGenerator` class. For example:
@@ -79,7 +79,7 @@ By default, when using the MITM module with LittleProxy, the CA Root Certificate
 ```
 
 ## Using a Custom Certificate Authority
-Whether you are using the MITM module with LittleProxy or BrowserMob Proxy, you can provide your own root certificate and private key to use when signing impersonated server certificates. To use a root certificate and private key from a key store (PKCS12 or JKS), use the `KeyStoreFileCertificateSource` class:
+Whether you are using the MITM module with LittleProxy or BrowserUp Proxy, you can provide your own root certificate and private key to use when signing impersonated server certificates. To use a root certificate and private key from a key store (PKCS12 or JKS), use the `KeyStoreFileCertificateSource` class:
 
 ```java
     CertificateAndKeySource existingCertificateSource = 
@@ -94,8 +94,8 @@ Whether you are using the MITM module with LittleProxy or BrowserMob Proxy, you 
     HttpProxyServerBootstrap bootstrap = DefaultHttpProxyServer.bootstrap()
             .withManInTheMiddle(mitmManager);
             
-    // when using BrowserMob Proxy, use .setMitmManager() on the BrowserMobProxy object:
-    BrowserMobProxy proxyServer = new BrowserMobProxyServer();
+    // when using BrowserUp Proxy, use .setMitmManager() on the BrowserUpProxy object:
+    BrowserUpProxy proxyServer = new BrowserUpProxyServer();
     proxyServer.setMitmManager(mitmManager);
 ```
 
@@ -104,7 +104,7 @@ You can also load the root certificate and private key from separate PEM-encoded
 ## Trusted Root Certificates and Custom Trust Stores
 The MITM module trusts the Certificate Authorities in the JVM's default trust store, as well as a default list of trusted CAs derived from NSS/Firefox's list of trusted CAs (courtesy of the cURL team: https://curl.haxx.se/ca/cacert.pem).
 
-To add your own CA to the list of root CAs trusted by the MITM module, use the `add()` methods in the `net.lightbody.bmp.mitm.TrustSource` class. Alternatively, it is possible to disable upstream server validation, but this is only recommended when testing. Examples:
+To add your own CA to the list of root CAs trusted by the MITM module, use the `add()` methods in the `com.browserup.bup.mitm.TrustSource` class. Alternatively, it is possible to disable upstream server validation, but this is only recommended when testing. Examples:
 ```java
     // your root CA certificate(s) may be in a Java KeyStore, a PEM-encoded File or String, or an X509Certificate
     File pemEncodedCAFile = ...;
@@ -116,8 +116,8 @@ To add your own CA to the list of root CAs trusted by the MITM module, use the `
         .trustAllServers(true) // do not validate servers' certificates
         .build();
 
-    // when using BrowserMob Proxy, use the .setTrustSource() method:
-    BrowserMobProxy proxyServer = new BrowserMobProxyServer();
+    // when using BrowserUp Proxy, use the .setTrustSource() method:
+    BrowserUpProxy proxyServer = new BrowserUpProxyServer();
     proxyServer.setTrustSource(trustSource);
     // or disable server certificate validation:
     proxyServer.setTrustAllServers(true);
@@ -150,8 +150,8 @@ To generate EC certificates for impersonated servers, set the `serverKeyGenerato
     HttpProxyServerBootstrap bootstrap = DefaultHttpProxyServer.bootstrap()
             .withManInTheMiddle(mitmManager);
             
-    // when using BrowserMob Proxy:
-    BrowserMobProxy proxy = new BrowserMobProxyServer();
+    // when using BrowserUp Proxy:
+    BrowserUpProxy proxy = new BrowserUpProxyServer();
     proxy.setMitmManager(mitmManager);
 ```
 

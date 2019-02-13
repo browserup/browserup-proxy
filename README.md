@@ -1,27 +1,27 @@
-# BrowserMob Proxy
+# BrowserUp Proxy
 
-BrowserMob Proxy allows you to manipulate HTTP requests and responses, capture HTTP content, and export performance data as a [HAR file](http://www.softwareishard.com/blog/har-12-spec/).
-BMP works well as a standalone proxy server, but it is especially useful when embedded in Selenium tests.
+BrowserUp Proxy allows you to manipulate HTTP requests and responses, capture HTTP content, and export performance data as a [HAR file](http://www.softwareishard.com/blog/har-12-spec/).
+BrowserUp Proxy works well as a standalone proxy server, but it is especially useful when embedded in Selenium tests.
 
-The latest version of BrowserMob Proxy is 2.1.4, powered by [LittleProxy](https://github.com/adamfisk/LittleProxy).
+The latest version of BrowserUp Proxy is 3.0.0-beta. BrowserUp Proxy is originally forked from [BrowserMobProxy](https://github.com/lightbody/browsermob-proxy) and is powered by [LittleProxy](https://github.com/adamfisk/LittleProxy).
 
-If you're running BrowserMob Proxy within a Java application or Selenium test, get started with [Embedded Mode](#getting-started-embedded-mode). If you want to run BMP from the
+If you're running BrowserUp Proxy within a Java application or Selenium test, get started with [Embedded Mode](#getting-started-embedded-mode). If you want to run BUP from the
 command line as a standalone proxy, start with [Standalone](#getting-started-standalone).
 
 ### Getting started: Embedded Mode
-To use BrowserMob Proxy in your tests or application, add the `browsermob-core` dependency to your pom:
+To use BrowserUp Proxy in your tests or application, add the `BrowserUp-core` dependency to your pom:
 ```xml
     <dependency>
-        <groupId>net.lightbody.bmp</groupId>
-        <artifactId>browsermob-core</artifactId>
-        <version>2.1.4</version>
+        <groupId>com.browserup.bup</groupId>
+        <artifactId>browserup-core</artifactId>
+        <version>3.0.0-beta</version>
         <scope>test</scope>
     </dependency>
 ```
 
 Start the proxy:
 ```java
-    BrowserMobProxy proxy = new BrowserMobProxyServer();
+    BrowserUpProxy proxy = new BrowserUpProxyServer();
     proxy.start(0);
     int port = proxy.getPort(); // get the JVM-assigned port
     // Selenium or HTTP client configuration goes here
@@ -32,11 +32,11 @@ Then configure your HTTP client to use a proxy running at the specified port.
 **Using with Selenium?** See the [Using with Selenium](#using-with-selenium) section.
 
 ### Getting started: Standalone
-To run in standalone mode from the command line, first download the latest release from the [releases page](https://github.com/lightbody/browsermob-proxy/releases), or [build the latest from source](#building-the-latest-from-source).
+To run in standalone mode from the command line, first download the latest release from the [releases page](https://github.com/lightbody/BrowserUp-proxy/releases), or [build the latest from source](#building-the-latest-from-source).
 
 Start the REST API:
 ```sh
-    ./browsermob-proxy -port 8080
+    ./browserup-proxy -port 8080
 ```
 
 Then create a proxy server instance:
@@ -50,26 +50,26 @@ For more information on the features available in the REST API, see [the REST AP
 
 ## Changes since 2.0.0
 
-The new [BrowserMobProxyServer class](browsermob-core/src/main/java/net/lightbody/bmp/BrowserMobProxyServer.java) has replaced the legacy ProxyServer implementation. The legacy implementation is no longer actively supported; all new code should use `BrowserMobProxyServer`. We highly recommend that existing code migrate to the new implementation.
+The new [BrowserUpProxyServer class](BrowserUp-core/src/main/java/net/lightbody/bup/BrowserUpProxyServer.java) has replaced the legacy ProxyServer implementation. The legacy implementation is no longer actively supported; all new code should use `BrowserUpProxyServer`. We highly recommend that existing code migrate to the new implementation.
 
 The most important changes from 2.0 are:
 
 - [Separate REST API and Embedded Mode modules](#embedded-mode). Include only the functionality you need.
-- [New BrowserMobProxy interface](browsermob-core/src/main/java/net/lightbody/bmp/BrowserMobProxy.java). The new interface will completely replace the legacy 2.0 ProxyServer contract in version 3.0 and higher.
+- [New BrowserUpProxy interface](BrowserUp-core/src/main/java/net/lightbody/bup/BrowserUpProxy.java). The new interface will completely replace the legacy 2.0 ProxyServer contract in version 3.0 and higher.
 - [LittleProxy support](#littleproxy-support). More stable and more powerful than the legacy Jetty back-end.
 
-### New BrowserMobProxy API
+### New BrowserUpProxy API
 
-BrowserMob Proxy 2.1 includes a [new BrowserMobProxy interface](browsermob-core/src/main/java/net/lightbody/bmp/BrowserMobProxy.java) to interact with BrowserMob Proxy programmatically. The new interface defines the functionality that BrowserMob Proxy will support in future releases (including 3.0+). To ease migration, both the legacy (Jetty-based) ProxyServer class and the new, LittleProxy-powered BrowserMobProxy class support the new BrowserMobProxy interface.
+BrowserUp Proxy 2.1 includes a [new BrowserUpProxy interface](BrowserUp-core/src/main/java/net/lightbody/bup/BrowserUpProxy.java) to interact with BrowserUp Proxy programmatically. The new interface defines the functionality that BrowserUp Proxy will support in future releases (including 3.0+). To ease migration, both the legacy (Jetty-based) ProxyServer class and the new, LittleProxy-powered BrowserUpProxy class support the new BrowserUpProxy interface.
 
-We _highly_ recommend migrating existing code to the BrowserMobProxy interface using the `BrowserMobProxyServer` class.
+We _highly_ recommend migrating existing code to the BrowserUpProxy interface using the `BrowserUpProxyServer` class.
 
 ### Using the LittleProxy implementation with 2.0.0 code
 
-The legacy interface, implicitly defined by the ProxyServer class, has been extracted into `net.lightbody.bmp.proxy.LegacyProxyServer` and is now officially deprecated. The new LittleProxy-based implementation will implement LegacyProxyServer for all 2.1.x releases. This means you can switch to the LittleProxy-powered implementation with minimal change to existing code ([with the exception of interceptors](#http-request-manipulation)):
+The legacy interface, implicitly defined by the ProxyServer class, has been extracted into `com.browserup.bup.proxy.LegacyProxyServer` and is now officially deprecated. The new LittleProxy-based implementation will implement LegacyProxyServer for all 2.1.x releases. This means you can switch to the LittleProxy-powered implementation with minimal change to existing code ([with the exception of interceptors](#http-request-manipulation)):
 
 ```java
-    // With the Jetty-based 2.0.0 release, BMP was created like this:
+    // With the Jetty-based 2.0.0 release, BUP was created like this:
     ProxyServer proxyServer = new ProxyServer();
     proxyServer.start();
     // [...]
@@ -77,16 +77,16 @@ The legacy interface, implicitly defined by the ProxyServer class, has been extr
     // To use the LittleProxy-powered 2.1.4 release, simply change to
     // the LegacyProxyServer interface and the adapter for the new
     // LittleProxy-based implementation:
-    LegacyProxyServer proxyServer = new BrowserMobProxyServerLegacyAdapter();
+    LegacyProxyServer proxyServer = new BrowserUpProxyServerLegacyAdapter();
     proxyServer.start();
     // Almost all deprecated 2.0.0 methods are supported by the
-    // new BrowserMobProxyServerLegacyAdapter implementation, so in most cases,
+    // new BrowserUpProxyServerLegacyAdapter implementation, so in most cases,
     // no further code changes are necessary
 ```
 
-LegacyProxyServer will not be supported after 3.0 is released, so we recommend migrating to the `BrowserMobProxy` interface as soon as possible. The new interface provides additional functionality and is compatible with both the legacy Jetty-based ProxyServer implementation [(with some exceptions)](new-interface-compatibility.md) and the new LittleProxy implementation.
+LegacyProxyServer will not be supported after 3.0 is released, so we recommend migrating to the `BrowserUpProxy` interface as soon as possible. The new interface provides additional functionality and is compatible with both the legacy Jetty-based ProxyServer implementation [(with some exceptions)](new-interface-compatibility.md) and the new LittleProxy implementation.
 
-If you must continue using the legacy Jetty-based implementation, include the `browsermob-core-legacy` artifact instead of `browsermob-core`.
+If you must continue using the legacy Jetty-based implementation, include the `BrowserUp-core-legacy` artifact instead of `BrowserUp-core`.
 
 ## Features and Usage
 
@@ -103,9 +103,9 @@ The proxy is programmatically controlled via a REST interface or by being embedd
 
 **New in 2.1:** LittleProxy is the default implementation of the REST API. You may specify `--use-littleproxy false` to disable LittleProxy in favor of the legacy Jetty 5-based implementation.
 
-To get started, first start the proxy by running `browsermob-proxy` or `browsermob-proxy.bat` in the bin directory:
+To get started, first start the proxy by running `BrowserUp-proxy` or `BrowserUp-proxy.bat` in the bin directory:
 
-    $ sh browsermob-proxy -port 8080
+    $ sh BrowserUp-proxy -port 8080
     INFO 05/31 03:12:48 o.b.p.Main           - Starting up...
     2011-05-30 20:12:49.517:INFO::jetty-7.3.0.v20110203
     2011-05-30 20:12:49.689:INFO::started o.e.j.s.ServletContextHandler{/,null}
@@ -121,7 +121,7 @@ or optionally specify your own port:
     [~]$ curl -X POST -d 'port=8089' http://localhost:8080/proxy
     {"port":8089}
 
-or if running BrowserMob Proxy in a multi-homed environment, specify a desired bind address (default is `0.0.0.0`):
+or if running BrowserUp Proxy in a multi-homed environment, specify a desired bind address (default is `0.0.0.0`):
 
     [~]$ curl -X POST -d 'bindAddress=192.168.1.222' http://localhost:8080/proxy
     {"port":8086}
@@ -131,7 +131,7 @@ Once that is done, a new proxy will be available on the port returned. All you h
 Description |  HTTP method | Request path | Request parameters
 --- | :---: | :---: | ---
 Get a list of ports attached to `ProxyServer` instances managed by `ProxyManager` | GET | */proxy* ||
-Creates a new proxy to run requests off of | POST | */proxy* | <p>*port* - Integer, The specific port to start the proxy service on. Optional, default is generated and returned in response.</p><p>*proxyUsername* - String, The username to use to authenticate with the chained proxy. Optional, default to null.</p><p>*proxyPassword* - String, The password to use to authenticate with the chained proxy. Optional, default to null.</p><p>*bindAddress* - String, If running BrowserMob Proxy in a multi-homed environment, specify a desired bind address. Optional, default to "0.0.0.0".</p><p>*serverBindAddress* - String, If running BrowserMob Proxy in a multi-homed environment, specify a desired server bind address. Optional, default to "0.0.0.0".</p><p>*useEcc* - Boolean. True, Uses Elliptic Curve Cryptography for certificate impersonation. Optional, default to "false".</p><p>*trustAllServers* - Boolean. True, Disables verification of all upstream servers' SSL certificates. All upstream servers will be trusted, even if they do not present valid certificates signed by certification authorities in the JDK's trust store. Optional, default to "false".</p>| 
+Creates a new proxy to run requests off of | POST | */proxy* | <p>*port* - Integer, The specific port to start the proxy service on. Optional, default is generated and returned in response.</p><p>*proxyUsername* - String, The username to use to authenticate with the chained proxy. Optional, default to null.</p><p>*proxyPassword* - String, The password to use to authenticate with the chained proxy. Optional, default to null.</p><p>*bindAddress* - String, If running BrowserUp Proxy in a multi-homed environment, specify a desired bind address. Optional, default to "0.0.0.0".</p><p>*serverBindAddress* - String, If running BrowserUp Proxy in a multi-homed environment, specify a desired server bind address. Optional, default to "0.0.0.0".</p><p>*useEcc* - Boolean. True, Uses Elliptic Curve Cryptography for certificate impersonation. Optional, default to "false".</p><p>*trustAllServers* - Boolean. True, Disables verification of all upstream servers' SSL certificates. All upstream servers will be trusted, even if they do not present valid certificates signed by certification authorities in the JDK's trust store. Optional, default to "false".</p>| 
 <a name="harcreate">Creates a new HAR</a> attached to the proxy and returns the HAR content if there was a previous HAR. *[port]* in request path it is port where your proxy was started | PUT |*/proxy/[port]/har* |<p>*captureHeaders* - Boolean, capture headers or not. Optional, default to "false".</p><p>*captureCookies* - Boolean, capture cookies or not. Optional, default to "false".</p><p>*captureContent* - Boolean, capture content bodies or not. Optional, default to "false".</p><p>*captureBinaryContent* - Boolean, capture binary content or not. Optional, default to "false".</p><p>*initialPageRef* - The string name of The first page ref that should be used in the HAR. Optional, default to "Page 1".</p><p>*initialPageTitle* - The title of first HAR page. Optional, default to *initialPageRef*.</p>
 Starts a new page on the existing HAR. *[port]* in request path it is port where your proxy was started | PUT | */proxy/[port]/har/pageRef* |<p>*pageRef* - The string name of the first page ref that should be used in the HAR. Optional, default to "Page N" where N is the next page number.</p><p>*pageTitle* - The title of new HAR page. Optional, default to `pageRef`.</p>
 Shuts down the proxy and closes the port. *[port]* in request path it is port where your proxy was started | DELETE | */proxy/[port]* ||
@@ -144,7 +144,7 @@ Set a URL to blacklist | PUT | */proxy/[port]/blacklist* |<p>*regex* - The black
 Clears all URL patterns from the blacklist | DELETE | */proxy/[port]/blacklist* ||
 Limit the bandwidth through the proxy on the *[port]* | PUT | */proxy/[port]/limit* |<p>*downstreamKbps* - Sets the downstream bandwidth limit in kbps. Optional.</p><p>*upstreamKbps* - Sets the upstream bandwidth limit kbps. Optional, by default unlimited.</p><p>*downstreamMaxKB* - Specifies how many kilobytes in total the client is allowed to download through the proxy. Optional, by default unlimited.</p><p>*upstreamMaxKB* - Specifies how many kilobytes in total the client is allowed to upload through the proxy. Optional, by default unlimited.</p><p>*latency* - Add the given latency to each HTTP request. Optional, by default all requests are invoked without latency.</p><p>*enable* - A boolean that enable bandwidth limiter. Optional, by default to "false", but setting any of the properties above will implicitly enable throttling</p><p>*payloadPercentage* - Specifying what percentage of data sent is payload, e.g. use this to take into account overhead due to tcp/ip. Optional.</p><p>*maxBitsPerSecond* - The max bits per seconds you want this instance of StreamManager to respect. Optional.</p>
 Displays the amount of data remaining to be uploaded/downloaded until the limit is reached | GET | */proxy/[port]/limit* ||
-Set and override HTTP Request headers | POST | */proxy/[port]/headers* | Payload data should be **JSON** encoded set of headers. Where key is a header name (such as "User-Agent") and  value is a value of HTTP header to setup (such as "BrowserMob-Agent"). Example: `{"User-Agent": "BrowserMob-Agent"}`|
+Set and override HTTP Request headers | POST | */proxy/[port]/headers* | Payload data should be **JSON** encoded set of headers. Where key is a header name (such as "User-Agent") and  value is a value of HTTP header to setup (such as "BrowserUp-Agent"). Example: `{"User-Agent": "BrowserUp-Agent"}`|
 Overrides normal DNS lookups and remaps the given hosts with the associated IP address | POST | */proxy/[port]/hosts* | Payload data should be **JSON** encoded set of hosts. Where key is a host name (such as "example.com") and value is a IP address which associatied with host hame (such as "1.2.3.4"'). Example: `{"example.com": "1.2.3.4"}`|
 Sets automatic basic authentication for the specified domain | POST | */proxy/[port]/auth/basic/[domain]* | Payload data should be **JSON** encoded username and password name/value pairs. Example: `{"username": "myUsername", "password": "myPassword"}`|
 Wait till all request are being made | PUT | */proxy/[port]/wait* |<p>*quietPeriodInMs* - Wait till all request are being made. Optional.</p><p>*timeoutInMs* - Sets quiet period in milliseconds. Optional.</p>|
@@ -196,39 +196,39 @@ system properties will be used to specify the upstream proxy.
 
 **New in 2.1:** New Embedded Mode module
 
-**New in 2.1:** New [BrowserMobProxy interface](#new-browsermobproxy-api) for Embedded Mode
+**New in 2.1:** New [BrowserUpProxy interface](#new-BrowserUpproxy-api) for Embedded Mode
 
-BrowserMob Proxy 2.1 separates the Embedded Mode and REST API into two modules. If you only need Embedded Mode functionality, add the `browsermob-core` artifact as a dependency. The REST API artifact is `browsermob-rest`.
+BrowserUp Proxy 2.1 separates the Embedded Mode and REST API into two modules. If you only need Embedded Mode functionality, add the `BrowserUp-core` artifact as a dependency. The REST API artifact is `BrowserUp-rest`.
 
 If you're using Java and Selenium, the easiest way to get started is to embed the project directly in your test. First, you'll need to make sure that all the dependencies are imported in to the project. You can find them in the *lib* directory. Or, if you're using Maven, you can add this to your pom:
 ```xml
     <dependency>
-        <groupId>net.lightbody.bmp</groupId>
-        <artifactId>browsermob-core</artifactId>
+        <groupId>com.browserup.bup</groupId>
+        <artifactId>BrowserUp-core</artifactId>
         <version>2.1.4</version>
         <scope>test</scope>
     </dependency>
 ```
 
-Once done, you can start a proxy using `net.lightbody.bmp.BrowserMobProxy`:
+Once done, you can start a proxy using `com.browserup.bup.BrowserUpProxy`:
 ```java
-    BrowserMobProxy proxy = new BrowserMobProxyServer();
+    BrowserUpProxy proxy = new BrowserUpProxyServer();
     proxy.start(0);
     // get the JVM-assigned port and get to work!
     int port = proxy.getPort();
     //...
 ```
 
-Consult the Javadocs on the `net.lightbody.bmp.BrowserMobProxy` class for the full API.
+Consult the Javadocs on the `com.browserup.bup.BrowserUpProxy` class for the full API.
 
 ### Using With Selenium
 
 **Selenium 3 users**: Due to a [geckodriver issue](https://github.com/mozilla/geckodriver/issues/97), Firefox 51 and lower do not properly support proxies with WebDriver's DesiredCapabilities. See [this answer](http://stackoverflow.com/a/41373808/4256475) for a suitable work-around.
 
-BrowserMob Proxy makes it easy to use a proxy in Selenium tests:
+BrowserUp Proxy makes it easy to use a proxy in Selenium tests:
 ```java
     // start the proxy
-    BrowserMobProxy proxy = new BrowserMobProxyServer();
+    BrowserUpProxy proxy = new BrowserUpProxyServer();
     proxy.start(0);
 
     // get the Selenium proxy object
@@ -256,11 +256,7 @@ BrowserMob Proxy makes it easy to use a proxy in Selenium tests:
 
 **Note**: If you're running running tests on a Selenium grid, you will need to customize the Selenium Proxy object
 created by `createSeleniumProxy()` to point to the hostname of the machine that your test is running on. You can also run a standalone
-BrowserMob Proxy instance on a separate machine and configure the Selenium Proxy object to use that proxy.
-
-### HTTP Request Manipulation
-
-**HTTP request manipulation has changed in 2.1.0+ with LittleProxy.** The LittleProxy-based interceptors are easier to use and more reliable. The legacy ProxyServer implementation **will not** support the new interceptor methods.
+BrowserUp Proxy instance on a separate machine and configure the Selenium Proxy object to use that proxy.
 
 #### 2.1.0+ (LittleProxy) interceptors
 
@@ -323,7 +319,7 @@ When running the REST API with LittleProxy enabled, you cannot use the legacy `/
 
 ##### <a name="interceptorsRESTapiLPRequestFilter">Request filters</a>
 
-Javascript request filters have access to the variables `request` (type `io.netty.handler.codec.http.HttpRequest`), `contents` (type `net.lightbody.bmp.util.HttpMessageContents`), and `messageInfo` (type `net.lightbody.bmp.util.HttpMessageInfo`). `messageInfo` contains additional information about the message, including whether the message is sent over HTTP or HTTPS, as well as the original request received from the client before any changes made by previous filters. If the javascript returns an object of type `io.netty.handler.codec.http.HttpResponse`, the HTTP request will "short-circuit" and return the response immediately.
+Javascript request filters have access to the variables `request` (type `io.netty.handler.codec.http.HttpRequest`), `contents` (type `com.browserup.bup.util.HttpMessageContents`), and `messageInfo` (type `com.browserup.bup.util.HttpMessageInfo`). `messageInfo` contains additional information about the message, including whether the message is sent over HTTP or HTTPS, as well as the original request received from the client before any changes made by previous filters. If the javascript returns an object of type `io.netty.handler.codec.http.HttpResponse`, the HTTP request will "short-circuit" and return the response immediately.
 
 **Example: Modify User-Agent header**
 
@@ -333,7 +329,7 @@ curl -i -X POST -H 'Content-Type: text/plain' -d "request.headers().remove('User
 
 ##### <a name="interceptorsRESTapiLPResponseFilter">Response filters</a>
 
-Javascript response filters have access to the variables `response` (type `io.netty.handler.codec.http.HttpResponse`), `contents` (type `net.lightbody.bmp.util.HttpMessageContents`), and `messageInfo` (type `net.lightbody.bmp.util.HttpMessageInfo`). As in the request filter, `messageInfo` contains additional information about the message.
+Javascript response filters have access to the variables `response` (type `io.netty.handler.codec.http.HttpResponse`), `contents` (type `com.browserup.bup.util.HttpMessageContents`), and `messageInfo` (type `com.browserup.bup.util.HttpMessageInfo`). As in the request filter, `messageInfo` contains additional information about the message.
 
 **Example: Modify response body**
 
@@ -345,10 +341,10 @@ curl -i -X POST -H 'Content-Type: text/plain' -d "contents.setTextContents('<htm
 
 If you are using the legacy ProxyServer implementation, you can manipulate the requests like so:
 ```java
-    BrowserMobProxy server = new ProxyServer();
+    BrowserUpProxy server = new ProxyServer();
     ((LegacyProxyServer)server).addRequestInterceptor(new RequestInterceptor() {
         @Override
-        public void process(BrowserMobHttpRequest request, Har har) {
+        public void process(BrowserUpHttpRequest request, Har har) {
             request.getMethod().removeHeaders("User-Agent");
             request.getMethod().addHeader("User-Agent", "Bananabot/1.0");
         }
@@ -362,25 +358,23 @@ Consult the Java API docs for more info.
 
 ### SSL Support
 
-**BrowserMob Proxy 2.1.0+ now supports full MITM:** For most users, MITM will work out-of-the-box with default settings. Install the [ca-certificate-rsa.cer](/browsermob-core/src/main/resources/sslSupport/ca-certificate-rsa.cer) file in your browser or HTTP client to avoid untrusted certificate warnings. Generally, it is safer to generate your own private key, rather than using the .cer files distributed with BrowserMob Proxy. See the [README file in the `mitm` module](/mitm/README.md) for instructions on generating or using your own root certificate and private key with MITM.
+**BrowserUp Proxy 2.1.0+ now supports full MITM:** For most users, MITM will work out-of-the-box with default settings. Install the [ca-certificate-rsa.cer](/BrowserUp-core/src/main/resources/sslSupport/ca-certificate-rsa.cer) file in your browser or HTTP client to avoid untrusted certificate warnings. Generally, it is safer to generate your own private key, rather than using the .cer files distributed with BrowserUp Proxy. See the [README file in the `mitm` module](/mitm/README.md) for instructions on generating or using your own root certificate and private key with MITM.
 
-**Legacy Jetty-based ProxyServer support for MITM:** The legacy `ProxyServer` implementation uses the same `ca-certificate-rsa.cer` root certificate as the default BrowserMobProxyServer implementation. The previous cybervillainsCA.cer certificate has been removed.
-
-**Note: DO NOT** permanently install the .cer files distributed with BrowserMob Proxy in users' browsers. They should be used for testing only and must not be used with general web browsing.
+**Note: DO NOT** permanently install the .cer files distributed with BrowserUp Proxy in users' browsers. They should be used for testing only and must not be used with general web browsing.
 
 If you're doing testing with Selenium, you'll want to make sure that the browser profile that gets set up by Selenium not only has the proxy configured, but also has the CA installed. Unfortunately, there is no API for doing this in Selenium; it must be done manually for each browser and environment.
 
 ### NodeJS Support
 
-NodeJS bindings for browswermob-proxy are available [here](https://github.com/zzo/browsermob-node).  Built-in support for [Selenium](http://seleniumhq.org) or use [CapserJS-on-PhantomJS](http://casperjs.org) or anything else to drive traffic for HAR generation.
+NodeJS bindings for browswerup-proxy are available [here](https://github.com/zzo/BrowserUp-node).  Built-in support for [Selenium](http://seleniumhq.org) or use [CapserJS-on-PhantomJS](http://casperjs.org) or anything else to drive traffic for HAR generation.
 
 ### Logging
 
-When running in stand-alone mode, the proxy loads the default logging configuration from the conf/bmp-logging.yaml file. To increase/decrease the logging level, change the logging entry for net.lightbody.bmp.
+When running in stand-alone mode, the proxy loads the default logging configuration from the conf/bup-logging.yaml file. To increase/decrease the logging level, change the logging entry for com.browserup.bup.
 
 ### DNS Resolution
 
-The BrowserMobProxyServer implementation uses native DNS resolution by default, but supports custom DNS resolution and advanced DNS manipulation. See the [ClientUtil](browsermob-proxy/browsermob-core/src/main/java/net/lightbody/bmp/client/ClientUtil.java) class for information on DNS manipulation using the dnsjava resolver.
+The BrowserUpProxyServer implementation uses native DNS resolution by default, but supports custom DNS resolution and advanced DNS manipulation. See the [ClientUtil](BrowserUp-proxy/BrowserUp-core/src/main/java/net/lightbody/bup/client/ClientUtil.java) class for information on DNS manipulation using the dnsjava resolver.
 
 ## Building the latest from source
 
@@ -388,14 +382,14 @@ You'll need maven (`brew install maven` if you're on OS X):
 
     [~]$ mvn -DskipTests
 
-You'll find the standalone BrowserMob Proxy distributable zip at `browsermob-dist/target/browsermob-proxy-2.1.5-SNAPSHOT-bin.zip`. Unzip the contents and run the `browsermob-proxy` or `browsermob-proxy.bat` files in the `bin` directory.
+You'll find the standalone BrowserUp Proxy distributable zip at `browserup-dist/target/browserup-proxy-3.0.0-beta-bin.zip`. Unzip the contents and run the `browserup-proxy` or `browserup-proxy.bat` files in the `bin` directory.
 
 When you build the latest code from source, you'll have access to the latest snapshot release. To use the SNAPSHOT version in your code, modify the version in your pom:
 ```xml
     <dependency>
-        <groupId>net.lightbody.bmp</groupId>
-        <artifactId>browsermob-core</artifactId>
-        <version>2.1.5-SNAPSHOT</version>
+        <groupId>com.browserup.bup</groupId>
+        <artifactId>browserup-core</artifactId>
+        <version>3.0.0-beta</version>
         <scope>test</scope>
     </dependency>
 ```
