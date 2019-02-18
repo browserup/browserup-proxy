@@ -13,13 +13,10 @@ dependencies {
     implementation project(':browserup-proxy-mitm')
 
     implementation 'com.browserup:har-reader:3.0.0-SNAPSHOT'
-
-    implementation 'org.littleshoot:littleproxy-1.1.3-SNAPSHOT'
+    implementation 'com.browserup:littleproxy:2.0.0-SNAPSHOT'
 
     // Needed by org.littleshoot.proxy JAR
     implementation 'org.apache.commons:commons-lang3:3.5'
-
-    implementation 'com.browserup:har-reader:3.0.0-SNAPSHOT'
 
     // We haven't upgraded to this:
     // implementation('org.littleshoot:littleproxy:1.1.2')
