@@ -28,6 +28,7 @@ public class ECKeyGenerator implements KeyGenerator {
 
     /**
      * Create a {@link KeyGenerator} that will create EC key pairs using the specified named curve.
+     * @param namedCurve namedCurve
      */
     public ECKeyGenerator(String namedCurve) {
         this.namedCurve = namedCurve;

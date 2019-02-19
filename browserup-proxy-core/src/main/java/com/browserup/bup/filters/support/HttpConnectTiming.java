@@ -3,7 +3,6 @@ package com.browserup.bup.filters.support;
 /**
  * Holds the connection-related timing information from an HTTP CONNECT request, so it can be added to the HAR timings for the first
  * "real" request to the same host. The HTTP CONNECT and the "real" HTTP requests are processed in different HarCaptureFilter instances.
- * <p/>
  * <b>Note:</b> The connect time must include the ssl time. According to the HAR spec at <a href="https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/HAR/Overview.htm">https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/HAR/Overview.htm</a>:
  <pre>
  ssl [number, optional] (new in 1.2) - Time required for SSL/TLS negotiation. If this field is defined then the time is also

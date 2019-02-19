@@ -20,8 +20,10 @@ configurations.all {
 subprojects {
     apply plugin: 'java'
     apply plugin: 'idea'
+    apply plugin: 'maven'
+    apply plugin: 'signing'
 
-    group = 'com.browserup'
+    group = 'com.browserup.bup'
     version = '1.0.0-SNAPSHOT'
 
     sourceCompatibility=1.8
@@ -31,5 +33,23 @@ subprojects {
         mavenCentral()
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
         maven { url "https://oss.sonatype.org/service/local/staging/deploy/maven2/" }
+    }
+
+    task javadocJar(type: Jar) {
+        classifier = 'javadoc'
+        from javadoc
+    }
+
+    task sourcesJar(type: Jar) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    artifacts {
+        archives javadocJar, sourcesJar
+    }
+
+    signing {
+        sign configurations.archives
     }
 }

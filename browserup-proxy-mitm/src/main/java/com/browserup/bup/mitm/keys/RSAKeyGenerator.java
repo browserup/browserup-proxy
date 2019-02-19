@@ -29,6 +29,7 @@ public class RSAKeyGenerator implements KeyGenerator {
 
     /**
      * Create a {@link KeyGenerator} that will create an RSA key pair of the specified keySize.
+     * @param keySize keySize
      */
     public RSAKeyGenerator(int keySize) {
         this.keySize = keySize;

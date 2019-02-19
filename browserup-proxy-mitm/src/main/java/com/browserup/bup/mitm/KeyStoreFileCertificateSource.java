@@ -33,16 +33,11 @@ public class KeyStoreFileCertificateSource implements CertificateAndKeySource {
 
     private SecurityProviderTool securityProviderTool = new DefaultSecurityProviderTool();
 
-    private final Supplier<CertificateAndKey> certificateAndKey = Suppliers.memoize(new Supplier<CertificateAndKey>() {
-        @Override
-        public CertificateAndKey get() {
-            return loadKeyStore();
-        }
-    });
+    private final Supplier<CertificateAndKey> certificateAndKey = Suppliers.memoize(this::loadKeyStore);
 
     /**
      * Creates a {@link CertificateAndKeySource} that loads an existing {@link KeyStore} from a classpath resource.
-     *  @param keyStoreType              the KeyStore type, such as PKCS12 or JKS
+     * @param keyStoreType              the KeyStore type, such as PKCS12 or JKS
      * @param keyStoreClasspathResource classpath resource to load (for example, "/keystore.jks")
      * @param privateKeyAlias           the alias of the private key in the KeyStore
      * @param keyStorePassword          te KeyStore password
@@ -70,7 +65,7 @@ public class KeyStoreFileCertificateSource implements CertificateAndKeySource {
 
     /**
      * Creates a {@link CertificateAndKeySource} that loads an existing {@link KeyStore} from a classpath resource.
-     *  @param keyStoreType     the KeyStore type, such as PKCS12 or JKS
+     * @param keyStoreType     the KeyStore type, such as PKCS12 or JKS
      * @param keyStoreFile     KeyStore file to load
      * @param privateKeyAlias  the alias of the private key in the KeyStore
      * @param keyStorePassword te KeyStore password
@@ -98,6 +93,8 @@ public class KeyStoreFileCertificateSource implements CertificateAndKeySource {
 
     /**
      * Override the default {@link SecurityProviderTool} used to load the KeyStore.
+     * @param securityProviderTool securityProviderTool
+     * @return KeyStoreFileCertificateSource
      */
     public KeyStoreFileCertificateSource certificateTool(SecurityProviderTool securityProviderTool) {
         this.securityProviderTool = securityProviderTool;
@@ -112,6 +109,7 @@ public class KeyStoreFileCertificateSource implements CertificateAndKeySource {
 
     /**
      * Loads the {@link CertificateAndKey} from the KeyStore using the {@link SecurityProviderTool}.
+     * @return CertificateAndKey
      */
     private CertificateAndKey loadKeyStore() {
         // load the KeyStore from the file or classpath resource, then delegate to a KeyStoreCertificateSource

@@ -14,6 +14,8 @@ public class CertificateGenerationStatistics {
 
     /**
      * Records a certificate generation that started at startTimeMs and completed at finishTimeMs.
+     * @param startTimeMs startTimeMs
+     * @param finishTimeMs finishTimeMs
      */
     public void certificateCreated(long startTimeMs, long finishTimeMs) {
         certificatesGenerated.incrementAndGet();
@@ -25,6 +27,7 @@ public class CertificateGenerationStatistics {
 
     /**
      * Returns the total number of certificates created.
+     * @return CertificatesGenerated
      */
     public int getCertificatesGenerated() {
         return certificatesGenerated.get();
@@ -32,6 +35,7 @@ public class CertificateGenerationStatistics {
 
     /**
      * Returns the total number of ms spent generating all certificates.
+     * @return TotalCertificateGenerationTimeMs
      */
     public long getTotalCertificateGenerationTimeMs() {
         return certificateGenerationTimeMs.get();
@@ -39,6 +43,7 @@ public class CertificateGenerationStatistics {
 
     /**
      * Returns the average number of ms per certificate generated.
+     * @return AvgCertificateGenerationTimeMs
      */
     public long getAvgCertificateGenerationTimeMs() {
         if (certificatesGenerated.get() > 0) {
@@ -50,6 +55,7 @@ public class CertificateGenerationStatistics {
 
     /**
      * Returns the timestamp (ms since epoch) when the first certificate was generated, or 0 if none have been generated.
+     * @return firstCertificateGeneratedTimestamp
      */
     public long firstCertificateGeneratedTimestamp() {
         return firstCertificateGeneratedTimestamp.get();

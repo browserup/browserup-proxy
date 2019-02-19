@@ -23,6 +23,7 @@ public class HttpMessageInfo {
 
     /**
      * The original request from the client. Does not reflect any modifications from previous filters.
+     * @return HttpRequest
      */
     public HttpRequest getOriginalRequest() {
         return originalRequest;
@@ -30,6 +31,7 @@ public class HttpMessageInfo {
 
     /**
      * The {@link ChannelHandlerContext} for this request's client connection.
+     * @return ChannelHandlerContext
      */
     public ChannelHandlerContext getChannelHandlerContext() {
         return channelHandlerContext;
@@ -37,6 +39,7 @@ public class HttpMessageInfo {
 
     /**
      * Returns true if this is an HTTPS message.
+     * @return boolean
      */
     public boolean isHttps() {
         return isHttps;
@@ -45,6 +48,7 @@ public class HttpMessageInfo {
     /**
      * Returns the full, absolute URL of the original request from the client for both HTTP and HTTPS URLs. The URL
      * will not reflect modifications from this or other filters.
+     * @return original URL
      */
     public String getOriginalUrl() {
         return originalUrl;
@@ -54,6 +58,7 @@ public class HttpMessageInfo {
      * Returns the full, absolute URL of this request from the client for both HTTP and HTTPS URLs. The URL will reflect
      * modifications from filters. If this method is called while a request filter is processing, it will reflect any
      * modifications to the URL from all previous filters.
+     * @return URL
      */
     public String getUrl() {
         return url;

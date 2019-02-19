@@ -52,13 +52,9 @@ public class RootCertificateGenerator implements CertificateAndKeySource {
     /**
      * The new root certificate and private key are generated only once, even across multiple calls to {@link #load()}},
      * to allow users to save the new generated root certificate for use in browsers/other HTTP clients.
+     * @return CertificateAndKey
      */
-    private final Supplier<CertificateAndKey> generatedCertificateAndKey = Suppliers.memoize(new Supplier<CertificateAndKey>() {
-        @Override
-        public CertificateAndKey get() {
-            return generateRootCertificate();
-        }
-    });
+    private final Supplier<CertificateAndKey> generatedCertificateAndKey = Suppliers.memoize(this::generateRootCertificate);
 
     public RootCertificateGenerator(CertificateInfo rootCertificateInfo,
                                     String messageDigest,
@@ -119,6 +115,7 @@ public class RootCertificateGenerator implements CertificateAndKeySource {
 
     /**
      * Returns the generated root certificate as a PEM-encoded String.
+     * @return encoded RootCertificateAsPem
      */
     public String encodeRootCertificateAsPem() {
         return securityProviderTool.encodeCertificateAsPem(generatedCertificateAndKey.get().getCertificate());
@@ -129,6 +126,7 @@ public class RootCertificateGenerator implements CertificateAndKeySource {
      * {@link #DEFAULT_PEM_ENCRYPTION_ALGORITHM}.
      *
      * @param privateKeyPassword password to use to encrypt the private key
+     * @return encoded PrivateKeyAsPem
      */
     public String encodePrivateKeyAsPem(String privateKeyPassword) {
         return securityProviderTool.encodePrivateKeyAsPem(generatedCertificateAndKey.get().getPrivateKey(), privateKeyPassword, DEFAULT_PEM_ENCRYPTION_ALGORITHM);
@@ -136,6 +134,7 @@ public class RootCertificateGenerator implements CertificateAndKeySource {
 
     /**
      * Saves the root certificate as PEM-encoded data to the specified file.
+     * @param file file
      */
     public void saveRootCertificateAsPemFile(File file) {
         String pemEncodedCertificate = securityProviderTool.encodeCertificateAsPem(generatedCertificateAndKey.get().getCertificate());
@@ -178,6 +177,7 @@ public class RootCertificateGenerator implements CertificateAndKeySource {
 
     /**
      * Convenience method to return a new {@link Builder} instance.
+     * @return Builder
      */
     public static Builder builder() {
         return new Builder();
@@ -202,6 +202,8 @@ public class RootCertificateGenerator implements CertificateAndKeySource {
         /**
          * Certificate info to use to generate the root certificate. Reasonable default values will be used if certificate
          * info is not supplied.
+         * @param certificateInfo certificateInfo
+         * @return Builder
          */
         public Builder certificateInfo(CertificateInfo certificateInfo) {
             this.certificateInfo = certificateInfo;
@@ -210,6 +212,8 @@ public class RootCertificateGenerator implements CertificateAndKeySource {
 
         /**
          * The {@link KeyGenerator} that will be used to generate the root certificate's public and private keys.
+         * @param keyGenerator keyGenerator
+         * @return Builder
          */
         public Builder keyGenerator(KeyGenerator keyGenerator) {
             this.keyGenerator = keyGenerator;
@@ -218,6 +222,8 @@ public class RootCertificateGenerator implements CertificateAndKeySource {
 
         /**
          * The message digest that will be used when self-signing the root certificates.
+         * @param messageDigest messageDigest
+         * @return Builder
          */
         public Builder messageDigest(String messageDigest) {
             this.messageDigest = messageDigest;
@@ -226,6 +232,8 @@ public class RootCertificateGenerator implements CertificateAndKeySource {
 
         /**
          * The {@link SecurityProviderTool} implementation that will be used to generate certificates.
+         * @param securityProviderTool securityProviderTool
+         * @return Builder
          */
         public Builder certificateTool(SecurityProviderTool securityProviderTool) {
             this.securityProviderTool = securityProviderTool;
@@ -239,6 +247,7 @@ public class RootCertificateGenerator implements CertificateAndKeySource {
 
     /**
      * Creates a default CN field for a certificate, using the hostname of this machine and the current time.
+     * @return DefaultCommonName
      */
     private static String getDefaultCommonName() {
         String hostname;

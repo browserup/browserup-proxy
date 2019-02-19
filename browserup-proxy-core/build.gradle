@@ -9,6 +9,52 @@ repositories {
     }
 }
 
+group = 'com.browserup.bup'
+version = '1.0.0-SNAPSHOT'
+archivesBaseName = 'browserup-core'
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.project {
+                name 'BrowserUp-core'
+                packaging 'jar'
+
+                scm {
+                    connection 'scm:git:git@github.com:browserup/browserup-proxy.git'
+                    developerConnection 'scm:git:git@github.com:browserup/browserup-proxy.git'
+                    url 'https://github.com/browserup/browserup-proxy/tree/master/browserup-proxy-core'
+                }
+
+                licenses {
+                    license {
+                        name 'The MIT License'
+                        url 'http://www.opensource.org/licenses/mit-license.php'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'browserup'
+                        name 'BrowserUp, Inc.'
+                        email 'developers@browserup.com'
+                    }
+                }
+            }
+        }
+    }
+}
+
 dependencies {
     implementation project(':browserup-proxy-mitm')
 

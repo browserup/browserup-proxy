@@ -133,6 +133,16 @@ public class ImpersonatingMitmManager implements MitmManager {
     /**
      * Creates a new ImpersonatingMitmManager. In general, use {@link ImpersonatingMitmManager.Builder}
      * to construct new instances.
+     * @param cacheExpirationIntervalMs cacheExpirationIntervalMs
+     * @param certificateInfoGenerator certificateInfoGenerator
+     * @param clientCipherSuites clientCipherSuites
+     * @param rootCertificateSource rootCertificateSource
+     * @param securityProviderTool securityProviderTool
+     * @param serverCipherSuites serverCipherSuites
+     * @param serverKeyGenerator serverKeyGenerator
+     * @param serverMessageDigest serverMessageDigest
+     * @param sslContextCacheConcurrencyLevel sslContextCacheConcurrencyLevel
+     * @param trustSource trustSource
      */
     public ImpersonatingMitmManager(CertificateAndKeySource rootCertificateSource,
                                     KeyGenerator serverKeyGenerator,
@@ -334,6 +344,7 @@ public class ImpersonatingMitmManager implements MitmManager {
 
     /**
      * Returns basic certificate generation statistics for this MitmManager.
+     * @return CertificateGenerationStatistics
      */
     public CertificateGenerationStatistics getStatistics() {
         return this.statistics;
@@ -342,6 +353,7 @@ public class ImpersonatingMitmManager implements MitmManager {
     /**
      * Convenience method to return a new {@link Builder} instance default default values: a {@link RootCertificateGenerator}
      * that dynamically generates an RSA root certificate and RSA server certificates.
+     * @return Builder
      */
     public static Builder builder() {
         return new Builder();
@@ -350,6 +362,7 @@ public class ImpersonatingMitmManager implements MitmManager {
     /**
      * Convenience method to return a new {@link Builder} instance that will dynamically create EC root certificates and
      * EC server certificates, but otherwise uses default values.
+     * @return Builder
      */
     public static Builder builderWithECC() {
         return new Builder()
@@ -389,6 +402,7 @@ public class ImpersonatingMitmManager implements MitmManager {
          * and saved (for later import into browsers) using {@link RootCertificateGenerator}.
          *
          * @param certificateAndKeySource impersonation materials source to use
+         * @return Builder
          */
         public Builder rootCertificateSource(CertificateAndKeySource certificateAndKeySource) {
             this.rootCertificateSource = certificateAndKeySource;
@@ -397,6 +411,8 @@ public class ImpersonatingMitmManager implements MitmManager {
 
         /**
          * The message digest that will be used when signing server certificates with the root certificate's private key.
+         * @return Builder
+         * @param serverMessageDigest serverMessageDigest
          */
         public Builder serverMessageDigest(String serverMessageDigest) {
             this.serverMessageDigest = serverMessageDigest;
@@ -409,6 +425,8 @@ public class ImpersonatingMitmManager implements MitmManager {
          * Calling this method with 'true' will remove any trustSource set with {@link #trustSource(TrustSource)}.
          * Calling this method with 'false' has no effect unless trustAllServers was previously called with 'true'.
          * To set a specific TrustSource, use {@link #trustSource(TrustSource)}.
+         * @return Builder
+         * @param trustAllServers trustAllServers
          */
         public Builder trustAllServers(boolean trustAllServers) {
             if (trustAllServers) {
@@ -425,6 +443,8 @@ public class ImpersonatingMitmManager implements MitmManager {
 
         /**
          * The TrustSource that supplies the trusted root CAs used to validate upstream servers' certificates.
+         * @return Builder
+         * @param trustSource trustSource
          */
         public Builder trustSource(TrustSource trustSource) {
             this.trustSource = trustSource;
@@ -433,6 +453,8 @@ public class ImpersonatingMitmManager implements MitmManager {
 
         /**
          * The {@link KeyGenerator} that will be used to generate the server public and private keys.
+         * @return Builder
+         * @param serverKeyGenerator serverKeyGenerator
          */
         public Builder serverKeyGenerator(KeyGenerator serverKeyGenerator) {
             this.serverKeyGenerator = serverKeyGenerator;
@@ -441,6 +463,8 @@ public class ImpersonatingMitmManager implements MitmManager {
 
         /**
          * The concurrency level for the SSLContext cache. Increase this beyond the default value for high-volume proxy servers.
+         * @return Builder
+         * @param cacheConcurrencyLevel cacheConcurrencyLevel
          */
         public Builder cacheConcurrencyLevel(int cacheConcurrencyLevel) {
             this.cacheConcurrencyLevel = cacheConcurrencyLevel;
@@ -449,6 +473,9 @@ public class ImpersonatingMitmManager implements MitmManager {
 
         /**
          * The length of time SSLContexts with forged certificates will be kept in the cache.
+         * @return Builder
+         * @param cacheExpirationInterval cacheExpirationInterval
+         * @param timeUnit timeUnit
          */
         public Builder cacheExpirationInterval(long cacheExpirationInterval, TimeUnit timeUnit) {
             this.cacheExpirationIntervalMs = TimeUnit.MILLISECONDS.convert(cacheExpirationInterval, timeUnit);
@@ -458,6 +485,8 @@ public class ImpersonatingMitmManager implements MitmManager {
         /**
          * The {@link CertificateInfoGenerator} that will populate {@link CertificateInfo} objects containing certificate data for
          * forced X509Certificates.
+         * @return Builder
+         * @param certificateInfoGenerator certificateInfoGenerator
          */
         public Builder certificateInfoGenerator(CertificateInfoGenerator certificateInfoGenerator) {
             this.certificateInfoGenerator = certificateInfoGenerator;
@@ -468,6 +497,8 @@ public class ImpersonatingMitmManager implements MitmManager {
          * The cipher suites allowed on connections to upstream servers. Cipher suite names should be specified in Java
          * format, rather than OpenSSL format (e.g., TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384), even when using OpenSSL.
          * Ciphers will be preferred in the order they are returned by the collection's iterator.
+         * @return Builder
+         * @param serverCiphers serverCiphers
          */
         public Builder serverCiphers(Collection<String> serverCiphers) {
             this.serverCiphers = serverCiphers;
@@ -478,6 +509,8 @@ public class ImpersonatingMitmManager implements MitmManager {
          * The cipher suites allowed on client connections to the proxy. Cipher suite names should be specified in Java
          * format, rather than OpenSSL format (e.g., TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384), even when using OpenSSL.
          * Ciphers will be preferred in the order they are returned by the collection's iterator.
+         * @return Builder
+         * @param clientCiphers clientCiphers
          */
         public Builder clientCiphers(Collection<String> clientCiphers) {
             this.clientCiphers = clientCiphers;
@@ -486,6 +519,8 @@ public class ImpersonatingMitmManager implements MitmManager {
 
         /**
          * The {@link SecurityProviderTool} implementation that will be used to generate certificates.
+         * @return Builder
+         * @param securityProviderTool securityProviderTool
          */
         public Builder certificateTool(SecurityProviderTool securityProviderTool) {
             this.securityProviderTool = securityProviderTool;

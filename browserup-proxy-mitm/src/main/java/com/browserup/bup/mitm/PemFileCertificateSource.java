@@ -26,12 +26,7 @@ public class PemFileCertificateSource implements CertificateAndKeySource {
 
     private SecurityProviderTool securityProviderTool = new DefaultSecurityProviderTool();
 
-    private final Supplier<CertificateAndKey> certificateAndKey = Suppliers.memoize(new Supplier<CertificateAndKey>() {
-        @Override
-        public CertificateAndKey get() {
-            return loadCertificateAndKeyFiles();
-        }
-    });
+    private final Supplier<CertificateAndKey> certificateAndKey = Suppliers.memoize(this::loadCertificateAndKeyFiles);
 
     /**
      * Creates a {@link CertificateAndKeySource} that loads the certificate and private key from PEM files.
@@ -48,6 +43,8 @@ public class PemFileCertificateSource implements CertificateAndKeySource {
 
     /**
      * Override the default {@link SecurityProviderTool} used to load the PEM files.
+     * @return PemFileCertificateSource
+     * @param securityProviderTool securityProviderTool
      */
     public PemFileCertificateSource certificateTool(SecurityProviderTool securityProviderTool) {
         this.securityProviderTool = securityProviderTool;

@@ -101,6 +101,7 @@ public interface SecurityProviderTool {
      *
      * @param privateKeyReader a reader for a PEM-encoded private key
      * @param password         password protecting the private key  @return the decoded private key
+     * @return PrivateKey
      */
     PrivateKey decodePemEncodedPrivateKey(Reader privateKeyReader, String password);
 

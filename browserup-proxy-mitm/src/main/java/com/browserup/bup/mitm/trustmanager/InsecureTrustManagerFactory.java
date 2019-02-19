@@ -28,7 +28,7 @@ import java.security.KeyStore;
  * <b>Note:</b> This is a modified version of {@link io.netty.handler.ssl.util.InsecureTrustManagerFactory} from Netty
  * 4.0.36. Unlike the netty version, this class returns an {@link X509ExtendedTrustManager} instead of an
  * {@link javax.net.ssl.X509TrustManager} instance, which allows us to bypass additional certificate validations.
- * <p/>
+ * <p>
  * An insecure {@link TrustManagerFactory} that trusts all X.509 certificates without any verification.
  * <p>
  * <strong>NOTE:</strong>
@@ -43,11 +43,11 @@ public class InsecureTrustManagerFactory extends SimpleTrustManagerFactory {
     public static final X509ExtendedTrustManager tm = new InsecureExtendedTrustManager();
 
     @Override
-    protected void engineInit(KeyStore keyStore) throws Exception {
+    protected void engineInit(KeyStore keyStore) {
     }
 
     @Override
-    protected void engineInit(ManagerFactoryParameters managerFactoryParameters) throws Exception {
+    protected void engineInit(ManagerFactoryParameters managerFactoryParameters) {
     }
 
     @Override

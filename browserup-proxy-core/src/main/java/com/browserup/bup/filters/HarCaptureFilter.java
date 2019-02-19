@@ -121,7 +121,6 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
     /**
      * Create a new instance of the HarCaptureFilter that will capture request and response information. If no har is specified in the
      * constructor, this filter will do nothing.
-     * <p/>
      * Regardless of the CaptureTypes specified in <code>dataToCapture</code>, the HarCaptureFilter will always capture:
      * <ul>
      *     <li>Request and response sizes</li>
@@ -134,6 +133,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
      * @param currentPageRef the ProxyServer's currentPageRef at the time this request is received from the client
      * @param dataToCapture the data types to capture for this request. null or empty set indicates only basic information will be
      *                      captured (see {@link com.browserup.bup.proxy.CaptureType} for information on data collected for each CaptureType)
+     * @param ctx ChannelHandlerContext ctx
      */
     public HarCaptureFilter(HttpRequest originalRequest, ChannelHandlerContext ctx, Har har, String currentPageRef, Set<CaptureType> dataToCapture) {
         super(originalRequest, ctx);
@@ -631,7 +631,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
     }
 
     /**
-     * Populates the serverIpAddress field of the harEntry using the internal hostname->IP address cache.
+     * Populates the serverIpAddress field of the harEntry using the internal hostname-&gt;IP address cache.
      *
      * @param httpRequest HTTP request to take the hostname from
      */
