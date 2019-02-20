@@ -23,7 +23,7 @@ subprojects {
     apply plugin: 'maven'
     apply plugin: 'signing'
 
-    group = 'com.browserup.bup'
+    group = 'com.browserup'
     version = '1.0.0-SNAPSHOT'
 
     sourceCompatibility=1.8

@@ -3,14 +3,6 @@ plugins {
     id 'java-library'
 }
 
-repositories {
-    flatDir {
-        dirs 'lib'
-    }
-}
-
-group = 'com.browserup.bup'
-version = '1.0.0-SNAPSHOT'
 archivesBaseName = 'browserup-core'
 
 uploadArchives {

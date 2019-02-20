@@ -3,14 +3,6 @@ plugins {
     id 'groovy'
 }
 
-repositories {
-    flatDir {
-        dirs 'lib'
-    }
-}
-
-group = 'com.browserup.bup'
-version = '1.0.0-SNAPSHOT'
 archivesBaseName = 'browserup-rest'
 
 uploadArchives {
