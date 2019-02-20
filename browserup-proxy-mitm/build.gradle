@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
 }
 
-archivesBaseName = 'browserup-mitm'
+archivesBaseName = 'browserup-proxy-mitm'
 
 uploadArchives {
     repositories {

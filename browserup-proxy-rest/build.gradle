@@ -3,7 +3,7 @@ plugins {
     id 'groovy'
 }
 
-archivesBaseName = 'browserup-rest'
+archivesBaseName = 'browserup-proxy-rest'
 
 uploadArchives {
     repositories {

@@ -2,7 +2,7 @@ plugins {
     id 'application'
 }
 
-archivesBaseName = 'browserup-dist'
+archivesBaseName = 'browserup-proxy-dist'
 
 uploadArchives {
     repositories {
