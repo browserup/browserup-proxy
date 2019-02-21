@@ -58,6 +58,7 @@ public interface BrowserUpProxy {
 
     /**
      * Returns true if the proxy is started and listening for connections, otherwise false.
+     * @return is proxy started
      */
     boolean isStarted();
 
@@ -89,6 +90,7 @@ public interface BrowserUpProxy {
      * Returns the actual port on which the proxy is listening for client connections.
      *
      * @throws java.lang.IllegalStateException if the proxy has not been started
+     * @return port
      */
     int getPort();
 
@@ -136,7 +138,6 @@ public interface BrowserUpProxy {
      * capture types. A null or empty set will not disable HAR capture, but will disable collection of
      * additional {@link com.browserup.bup.proxy.CaptureType} data types. {@link com.browserup.bup.proxy.CaptureType} provides several
      * convenience methods to retrieve commonly-used capture settings.
-     * <p/>
      * <b>Note:</b> HAR capture must still be explicitly enabled via {@link #newHar()} or {@link #newHar(String)} to begin capturing
      * any request and response contents.
      *
@@ -149,7 +150,6 @@ public interface BrowserUpProxy {
      * capture types. A null or empty set will not disable HAR capture, but will disable collection of
      * additional {@link com.browserup.bup.proxy.CaptureType} data types. {@link com.browserup.bup.proxy.CaptureType} provides several
      * convenience methods to retrieve commonly-used capture settings.
-     * <p/>
      * <b>Note:</b> HAR capture must still be explicitly enabled via {@link #newHar()} or {@link #newHar(String)} to begin capturing
      * any request and response contents.
      *
@@ -239,6 +239,7 @@ public interface BrowserUpProxy {
 
     /**
      * Returns the current bandwidth limit for reading, in bytes per second.
+     * @return ReadBandwidthLimit
      */
     long getReadBandwidthLimit();
 
@@ -251,6 +252,7 @@ public interface BrowserUpProxy {
 
     /**
      * Returns the current bandwidth limit for writing, in bytes per second.
+     * @return WriteBandwidthLimit
      */
     long getWriteBandwidthLimit();
 
@@ -328,22 +330,18 @@ public interface BrowserUpProxy {
      * replacement expression. The urlPattern is treated as a Java regular expression and must be properly escaped (see {@link java.util.regex.Pattern}).
      * The replacementExpression may consist of capture groups specified in the urlPattern, denoted
      * by a $ (see {@link java.util.regex.Matcher#appendReplacement(StringBuffer, String)}.
-     * <p/>
      * For HTTP requests (not HTTPS), if the hostname and/or port is changed as a result of a rewrite rule, the Host header of the request will be modified
      * to reflect the updated hostname/port. For HTTPS requests, the host and port cannot be changed by rewrite rules
      * (use {@link #getHostNameResolver()} and {@link AdvancedHostResolver#remapHost(String, String)} to direct HTTPS requests
      * to a different host).
-     * <p/>
      * <b>Note:</b> The rewriting applies to the entire URL, including scheme (http:// or https://), hostname/address, port, and query string. Note that this means
      * a urlPattern of {@code "http://www\.website\.com/page"} will NOT match {@code http://www.website.com:80/page}.
-     * <p/>
      * For example, the following rewrite rule:
      *
      * <pre>   {@code proxy.rewriteUrl("http://www\\.(yahoo|bing)\\.com/\\?(\\w+)=(\\w+)", "http://www.google.com/?originalDomain=$1&$2=$3");}</pre>
      *
      * will match an HTTP request (but <i>not</i> HTTPS!) to www.yahoo.com or www.bing.com with exactly 1 query parameter,
      * and replace it with a call to www.google.com with an 'originalDomain' query parameter, as well as the original query parameter.
-     * <p/>
      * When applied to the URL:
      * <pre>   {@code http://www.yahoo.com?theFirstParam=someValue}</pre>
      * will result in the proxy making a request to:
@@ -361,7 +359,6 @@ public interface BrowserUpProxy {
     /**
      * Replaces existing rewrite rules with the specified patterns and replacement expressions. The rules will be applied in the order
      * specified by the Map's iterator.
-     * <p/>
      * See {@link #rewriteUrl(String, String)} for details on the format of the rewrite rules.
      *
      * @param rewriteRules {@code Map<urlPattern, replacementExpression>}
@@ -392,7 +389,6 @@ public interface BrowserUpProxy {
      * Adds a URL-matching regular expression to the blacklist. Requests that match a blacklisted URL will return the specified HTTP
      * statusCode for all HTTP methods. If there are existing patterns on the blacklist, the urlPattern will be evaluated last,
      * after the URL is checked against all other blacklist entries.
-     * <p/>
      * The urlPattern matches the full URL of the request, including scheme, host, and port, path, and query parameters
      * for both HTTP and HTTPS requests. For example, to blacklist both HTTP and HTTPS requests to www.google.com,
      * use a urlPattern of "https?://www\\.google\\.com/.*".
@@ -407,7 +403,6 @@ public interface BrowserUpProxy {
      * statusCode only when the request's HTTP method (GET, POST, PUT, etc.) matches the specified httpMethodPattern regular expression.
      * If there are existing patterns on the blacklist, the urlPattern will be evaluated last, after the URL is checked against all
      * other blacklist entries.
-     * <p/>
      * See {@link #blacklistRequests(String, int)} for details on the URL the urlPattern will match.
      *
      * @param urlPattern URL-matching regular expression to blacklist
@@ -442,7 +437,6 @@ public interface BrowserUpProxy {
      * The urlPattern matches the full URL of the request, including scheme, host, and port, path, and query parameters
      * for both HTTP and HTTPS requests. For example, to whitelist both HTTP and HTTPS requests to www.google.com, use a urlPattern
      * of "https?://www\\.google\\.com/.*".
-     * <p/>
      * <b>Note:</b> All HTTP CONNECT requests are automatically whitelisted and cannot be short-circuited using the
      * whitelist response code.
      *
@@ -488,6 +482,7 @@ public interface BrowserUpProxy {
 
     /**
      * Returns true if the whitelist is enabled, otherwise false.
+     * @return is WhitelistEnabled
      */
     boolean isWhitelistEnabled();
 
@@ -569,7 +564,6 @@ public interface BrowserUpProxy {
 
     /**
      * Adds a new filter factory (request/response interceptor) to the beginning of the HttpFilters chain.
-     * <p/>
      * <b>Usage note:</b> The actual filter (interceptor) instance is created on every request by implementing the
      * {@link HttpFiltersSource#filterRequest(io.netty.handler.codec.http.HttpRequest, io.netty.channel.ChannelHandlerContext)} method and returning an
      * {@link org.littleshoot.proxy.HttpFilters} instance (typically, a subclass of {@link org.littleshoot.proxy.HttpFiltersAdapter}).
@@ -581,7 +575,6 @@ public interface BrowserUpProxy {
 
     /**
      * Adds a new filter factory (request/response interceptor) to the end of the HttpFilters chain.
-     * <p/>
      * <b>Usage note:</b> The actual filter (interceptor) instance is created on every request by implementing the
      * {@link HttpFiltersSource#filterRequest(io.netty.handler.codec.http.HttpRequest, io.netty.channel.ChannelHandlerContext)} method and returning an
      * {@link org.littleshoot.proxy.HttpFilters} instance (typically, a subclass of {@link org.littleshoot.proxy.HttpFiltersAdapter}).

@@ -20,6 +20,8 @@ configurations.all {
 subprojects {
     apply plugin: 'java'
     apply plugin: 'idea'
+    apply plugin: 'maven'
+    apply plugin: 'signing'
 
     group = 'com.browserup'
     version = '1.0.0-SNAPSHOT'
@@ -31,5 +33,25 @@ subprojects {
         mavenCentral()
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
         maven { url "https://oss.sonatype.org/service/local/staging/deploy/maven2/" }
+    }
+
+    task javadocJar(type: Jar) {
+        classifier = 'javadoc'
+        from javadoc
+    }
+
+    task sourcesJar(type: Jar) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    artifacts {
+        archives javadocJar, sourcesJar
+    }
+
+    signing {
+        if (project.hasProperty("signing.keyId")) {
+            sign configurations.archives
+        }
     }
 }

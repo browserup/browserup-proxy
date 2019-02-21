@@ -13,7 +13,6 @@ public interface AdvancedHostResolver extends HostResolver {
     /**
      * Replaces the host remappings in the existing list of remappings (if any) with the specified remappings. The remappings will be
      * applied in the order specified by the Map's iterator.
-     * <p/>
      * <b>Note:</b> The original hostnames must exactly match the requested hostname. It is not a domain or regular expression match.
      *
      * @param hostRemappings Map of {@code <original hostname, remapped hostname>}
@@ -66,7 +65,6 @@ public interface AdvancedHostResolver extends HostResolver {
 
     /**
      * Sets the positive (successful DNS lookup) timeout when making DNS lookups.
-     * <p/>
      * <b>Note:</b> The timeUnit parameter does not guarantee the specified precision; implementations may need to reduce precision, depending on the underlying
      * DNS implementation. For example, the Oracle JVM's DNS cache only supports timeouts in whole seconds, so specifying a timeout of 1200ms will result
      * in a timeout of 1 second.
@@ -78,7 +76,6 @@ public interface AdvancedHostResolver extends HostResolver {
 
     /**
      * Sets the negative (failed DNS lookup) timeout when making DNS lookups.
-     * <p/>
      * <b>Note:</b> The timeUnit parameter does not guarantee the specified precision; implementations may need to reduce precision, depending on the underlying
      * DNS implementation. For example, the Oracle JVM's DNS cache only supports timeouts in whole seconds, so specifying a timeout of 1200ms will result
      * in a timeout of 1 second.

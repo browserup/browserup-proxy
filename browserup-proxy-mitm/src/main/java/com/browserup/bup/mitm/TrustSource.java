@@ -22,14 +22,14 @@ import java.util.List;
  *
  * Custom TrustSources can be built by starting with {@link #empty()}, then calling the various add() methods to add
  * PEM-encoded files and Strings, KeyStores, and X509Certificates to the TrustSource. For example:
- * <p/>
+ * <p>
  * <code>
  *      TrustSource customTrustSource = TrustSource.empty()
  *              .add(myX509Certificate)
  *              .add(pemFileContainingMyCA)
  *              .add(javaKeyStore);
  * </code>
- * <p/>
+ * <p>
  * <b>Note:</b> This class is immutable, so calls to add() will return a new instance, rather than modifying the existing instance.
  */
 public class TrustSource {
@@ -67,6 +67,7 @@ public class TrustSource {
     /**
      * Returns the X509 certificates considered "trusted" by this TrustSource. This method will not return null, but
      * may return an empty array.
+     * @return X509Certificate[]
      */
     public X509Certificate[] getTrustedCAs() {
         return trustedCAs;
@@ -75,6 +76,7 @@ public class TrustSource {
     /**
      * Returns a TrustSource that contains no trusted CAs. Can be used in conjunction with the add() methods to build
      * a TrustSource containing custom CAs from a variety of sources (PEM files, KeyStores, etc.).
+     * @return TrustSource
      */
     public static TrustSource empty() {
         return new TrustSource();
@@ -83,6 +85,7 @@ public class TrustSource {
     /**
      * Returns a TrustSource containing the default trusted CAs. By default, contains both the JVM's trusted CAs and the
      * built-in trusted CAs (Firefox's trusted CAs).
+     * @return TrustSource
      */
     public static TrustSource defaultTrustSource() {
         return DEFAULT_TRUST_SOURCE;
@@ -91,6 +94,7 @@ public class TrustSource {
     /**
      * Returns a TrustSource containing only the builtin trusted CAs and does not include the JVM's trusted CAs.
      * See {@link TrustUtil#getBuiltinTrustedCAs()}.
+     * @return TrustSource
      */
     public static TrustSource builtinTrustSource() {
         return new TrustSource(TrustUtil.getBuiltinTrustedCAs());
@@ -98,6 +102,7 @@ public class TrustSource {
 
     /**
      * Returns a TrustSource containing the default CAs trusted by this JVM. See {@link TrustUtil#getJavaTrustedCAs()}.
+     * @return TrustSource
      */
     public static TrustSource javaTrustSource() {
         return new TrustSource(TrustUtil.getJavaTrustedCAs());

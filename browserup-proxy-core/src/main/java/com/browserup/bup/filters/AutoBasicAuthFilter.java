@@ -13,7 +13,6 @@ import java.util.Map;
  * A filter that adds Basic authentication information to non-CONNECT requests. Takes a map of domain names to base64-encoded
  * Basic auth credentials as a constructor parameter. If a key in the map matches the hostname of a filtered request, an Authorization
  * header will be added to the request.
- * <p/>
  * The Authorization header itself is specified in RFC 7235, section 4.2: https://tools.ietf.org/html/rfc7235#section-4.2
  * The Basic authentication scheme is specified in RFC 2617, section 2: https://tools.ietf.org/html/rfc2617#section-2
  */

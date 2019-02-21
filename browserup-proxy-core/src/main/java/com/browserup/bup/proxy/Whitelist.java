@@ -46,6 +46,8 @@ public class Whitelist {
 
     /**
      * @deprecated use {@link #Whitelist(java.util.Collection, int)}
+     * @param patterns String[] patterns
+     * @param statusCode int statusCode
      */
     @Deprecated
     public Whitelist(String[] patterns, int statusCode) {
@@ -97,6 +99,7 @@ public class Whitelist {
 
     /**
      * @deprecated use {@link #getStatusCode()}
+     * @return response code
      */
     @Deprecated
     public int getResponseCode() {

@@ -3,12 +3,52 @@ plugins {
     id 'groovy'
 }
 
-repositories {
-    flatDir {
-        dirs 'lib'
+archivesBaseName = 'browserup-proxy-rest'
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            if (project.hasProperty("ossrhUsername") && project.hasProperty("ossrhPassword")) {
+                repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                }
+
+                snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                }
+            }
+
+            pom.project {
+                name 'browserup-proxy-rest'
+                packaging 'jar'
+
+                scm {
+                    connection 'scm:git:git@github.com:browserup/browserup-proxy.git'
+                    developerConnection 'scm:git:git@github.com:browserup/browserup-proxy.git'
+                    url 'https://github.com/browserup/browserup-proxy/tree/master/browserup-proxy-rest'
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'repo'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'browserup'
+                        name 'BrowserUp, Inc.'
+                        email 'developers@browserup.com'
+                    }
+                }
+            }
+        }
     }
 }
-
 
 dependencies {
     implementation project(':browserup-proxy-core')

@@ -94,6 +94,7 @@ public class TrustUtil {
     /**
      * Returns the built-in list of trusted CAs. This is a copy of cURL's list (https://curl.haxx.se/ca/cacert.pem), which is
      * ultimately derived from Firefox/NSS' list of trusted CAs.
+     * @return X509Certificate[]
      */
     public static X509Certificate[] getBuiltinTrustedCAs() {
         return builtinTrustedCAs.get();
@@ -102,6 +103,7 @@ public class TrustUtil {
     /**
      * Returns the list of root CAs trusted by default in this JVM, according to the TrustManager returned by
      * {@link #getDefaultJavaTrustManager()}.
+     * @return X509Certificate[]
      */
     public static  X509Certificate[] getJavaTrustedCAs() {
         return javaTrustedCAs.get();
@@ -142,6 +144,7 @@ public class TrustUtil {
     /**
      * Returns a new instance of the default TrustManager for this JVM. Uses the default JVM trust store, which is
      * generally the cacerts file in JAVA_HOME/jre/lib/security, but this can be overridden using JVM parameters.
+     * @return X509TrustManager
      */
     public static X509TrustManager getDefaultJavaTrustManager() {
         TrustManagerFactory tmf;

@@ -13,7 +13,6 @@ import org.littleshoot.proxy.impl.ProxyUtils;
 /**
  * The HttpsAwareFiltersAdapter exposes the original host and the "real" host (after filter modifications) to filters for HTTPS
  * requets. HTTPS requests do not normally contain the host in the URI, and the Host header may be missing or spoofed.
- * <p/>
  * <b>Note:</b> The {@link #getHttpsRequestHostAndPort()} and {@link #getHttpsOriginalRequestHostAndPort()} methods can only be
  * called when the request is an HTTPS request. Otherwise they will throw an IllegalStateException.
  */
