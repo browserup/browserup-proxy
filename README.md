@@ -13,7 +13,7 @@ To use BrowserUp Proxy in your tests or application, add the `BrowserUp-core` de
 ```xml
     <dependency>
         <groupId>com.browserup.bup</groupId>
-        <artifactId>browserup-core</artifactId>
+        <artifactId>browserup-proxy-core</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <scope>test</scope>
     </dependency>

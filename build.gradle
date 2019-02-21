@@ -50,6 +50,8 @@ subprojects {
     }
 
     signing {
-        sign configurations.archives
+        if (project.hasProperty("signing.keyId")) {
+            sign configurations.archives
+        }
     }
 }
