@@ -1,5 +1,6 @@
 package com.browserup.bup.util;
 
+import com.browserup.harreader.model.HarTiming;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import java.net.InetSocketAddress;
@@ -136,5 +137,15 @@ public class BrowserUpProxyUtil {
 
         // validation succeeded
         return new InetSocketAddress(host, port);
+    }
+
+    public static int getTotalElapsedTime(HarTiming timings) {
+        // getSsl() time purposely omitted here, because it is included in the getConnect() time
+        return (timings.getBlocked() != -1 ? timings.getBlocked() : 0)
+                + (timings.getDns() != -1 ? timings.getDns() : 0)
+                + (timings.getConnect() != -1 ? timings.getConnect() : 0)
+                + (timings.getSend() != -1 ? timings.getSend() : 0)
+                + (timings.getWait() != -1 ? timings.getWait() : 0)
+                + (timings.getReceive() != -1 ? timings.getReceive() : 0);
     }
 }

@@ -38,6 +38,7 @@ import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertNull
 import static org.junit.Assert.assertThat
+import static org.junit.Assert.assertTrue
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.when
 import static org.mockserver.model.HttpRequest.request
@@ -100,6 +101,7 @@ class NewHarTest extends MockServerTest {
 
         HarEntry entry = Iterables.get(har.getLog().getEntries(), 0)
         assertThat("Expected at least 1 second DNS delay", entry.getTimings().getDns(), greaterThanOrEqualTo(1000))
+        assertNotNull(har.log.entries[0].time)
     }
 
     @Test
@@ -298,6 +300,7 @@ class NewHarTest extends MockServerTest {
             assertEquals("Expected to capture body content in HAR", "success", content.text)
 
             assertThat("Expected HAR page timing onLoad value to be populated", har.log.pages.last().pageTimings.onLoad, greaterThan(0))
+            assertNotNull(har.log.entries[0].time)
         }
 
         harEmptyAfterEnd: {
@@ -658,6 +661,7 @@ class NewHarTest extends MockServerTest {
         assertEquals("Expected HAR timings to contain default values after DNS failure", 0L, harTimings.getSend(TimeUnit.NANOSECONDS))
         assertEquals("Expected HAR timings to contain default values after DNS failure", 0L, harTimings.getWait(TimeUnit.NANOSECONDS))
         assertEquals("Expected HAR timings to contain default values after DNS failure", 0L, harTimings.getReceive(TimeUnit.NANOSECONDS))
+        assertNotNull(har.log.entries[0].time)
     }
 
     @Test
@@ -706,6 +710,7 @@ class NewHarTest extends MockServerTest {
         assertEquals("Expected HAR timings to contain default values after DNS failure", 0L, harTimings.getSend(TimeUnit.NANOSECONDS))
         assertEquals("Expected HAR timings to contain default values after DNS failure", 0L, harTimings.getWait(TimeUnit.NANOSECONDS))
         assertEquals("Expected HAR timings to contain default values after DNS failure", 0L, harTimings.getReceive(TimeUnit.NANOSECONDS))
+        assertNotNull(har.log.entries[0].time)
     }
 
     @Test
@@ -753,6 +758,7 @@ class NewHarTest extends MockServerTest {
         assertEquals("Expected HAR timings to contain default values after connection failure", 0L, harTimings.getSend(TimeUnit.NANOSECONDS))
         assertEquals("Expected HAR timings to contain default values after connection failure", 0L, harTimings.getWait(TimeUnit.NANOSECONDS))
         assertEquals("Expected HAR timings to contain default values after connection failure", 0L, harTimings.getReceive(TimeUnit.NANOSECONDS))
+        assertNotNull(har.log.entries[0].time)
     }
 
     @Test
@@ -800,6 +806,7 @@ class NewHarTest extends MockServerTest {
         assertEquals("Expected HAR timings to contain default values after connection failure", 0L, harTimings.getSend(TimeUnit.NANOSECONDS))
         assertEquals("Expected HAR timings to contain default values after connection failure", 0L, harTimings.getWait(TimeUnit.NANOSECONDS))
         assertEquals("Expected HAR timings to contain default values after connection failure", 0L, harTimings.getReceive(TimeUnit.NANOSECONDS))
+        assertTrue(har.log.entries[0].time > 0)
     }
 
     @Test
@@ -859,6 +866,7 @@ class NewHarTest extends MockServerTest {
         assertThat("Expected wait time to be populated", harTimings.getWait(TimeUnit.NANOSECONDS), greaterThan(0L))
 
         assertEquals("Expected receive time to not be populated", 0L, harTimings.getReceive(TimeUnit.NANOSECONDS))
+        assertTrue(har.log.entries[0].time > 0)
     }
 
     @Test
@@ -919,6 +927,7 @@ class NewHarTest extends MockServerTest {
         assertThat("Expected wait time to be populated", harTimings.getWait(TimeUnit.NANOSECONDS), greaterThan(0L))
 
         assertEquals("Expected receive time to not be populated", 0L, harTimings.getReceive(TimeUnit.NANOSECONDS))
+        assertTrue(har.log.entries[0].time > 0)
     }
 
     @Test

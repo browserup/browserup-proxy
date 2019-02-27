@@ -10,14 +10,13 @@ import com.browserup.bup.proxy.test.util.ProxyManagerTest;
 import org.junit.Test;
 
 public class ProxyPortAssignmentTest extends ProxyManagerTest {
-
     @Override
     public String[] getArgs() {
         return new String[]{"--proxyPortRange", "9091-9093"};
     }
 
     @Test
-    public void testAutoAssignment() throws Exception {
+    public void testAutoAssignment() {
         int[] ports = {9091, 9092, 9093};
         BrowserUpProxyServer p;
         for(int port : ports){
@@ -43,7 +42,7 @@ public class ProxyPortAssignmentTest extends ProxyManagerTest {
     }
 
     @Test
-    public void testManualAssignment() throws Exception {
+    public void testManualAssignment() {
         BrowserUpProxyServer p = proxyManager.create(9094);
         assertEquals(9094, p.getPort());
         try{
