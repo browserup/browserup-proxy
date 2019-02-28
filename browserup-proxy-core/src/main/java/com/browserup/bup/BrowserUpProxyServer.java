@@ -105,7 +105,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     /**
      * The default pseudonym to use when adding the Via header to proxied requests.
      */
-    public static final String VIA_HEADER_ALIAS = "BrowserUpproxy";
+    public static final String VIA_HEADER_ALIAS = "BrowserUpProxy";
 
     /**
      * True only after the proxy has been successfully started.
@@ -453,7 +453,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
 
     @Override
     public Har getHar() {
-        return har;
+        return this.har;
     }
 
     @Override
@@ -637,8 +637,9 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         }
 
         if (previousPage.getStartedDateTime() != null) {
-            previousPage.getPageTimings().setOnLoad(Math.toIntExact(
-                new Date().getTime() - previousPage.getStartedDateTime().getTime()));
+            previousPage
+                    .getPageTimings()
+                    .setOnLoad(Math.toIntExact(new Date().getTime() - previousPage.getStartedDateTime().getTime()));
         }
     }
 

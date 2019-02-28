@@ -24,6 +24,8 @@ import java.util.Date;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
+import static com.browserup.bup.util.BrowserUpProxyUtil.getTotalElapsedTime;
+
 /**
  * This filter captures HAR data for HTTP CONNECT requests. CONNECTs are "meta" requests that must be made before HTTPS
  * requests, but are not populated as separate requests in the HAR. Most information from HTTP CONNECTs (such as SSL
@@ -153,12 +155,14 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
         // since this is a CONNECT, which is not handled by the HarCaptureFilter, we need to create and populate the
         // entire HarEntry and add it to this har.
         HarEntry harEntry = createHarEntryForFailedCONNECT(HarCaptureUtil.getResolutionFailedErrorMessage(hostAndPort));
-        har.getLog().getEntries().add(harEntry);
 
         // record the amount of time we attempted to resolve the hostname in the HarTiming object
         if (dnsResolutionStartedNanos > 0L) {
             harEntry.getTimings().setDns(System.nanoTime() - dnsResolutionStartedNanos, TimeUnit.NANOSECONDS);
         }
+
+        harEntry.setTime(getTotalElapsedTime(harEntry.getTimings()));
+        har.getLog().getEntries().add(harEntry);
 
         httpConnectTimes.remove(clientAddress);
     }
@@ -168,12 +172,14 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
         // since this is a CONNECT, which is not handled by the HarCaptureFilter, we need to create and populate the
         // entire HarEntry and add it to this har.
         HarEntry harEntry = createHarEntryForFailedCONNECT(HarCaptureUtil.getConnectionFailedErrorMessage());
-        har.getLog().getEntries().add(harEntry);
 
         // record the amount of time we attempted to connect in the HarTimings object
         if (connectionStartedNanos > 0L) {
             harEntry.getTimings().setConnect(System.nanoTime() - connectionStartedNanos, TimeUnit.NANOSECONDS);
         }
+
+        harEntry.setTime(getTotalElapsedTime(harEntry.getTimings()));
+        har.getLog().getEntries().add(harEntry);
 
         httpConnectTimes.remove(clientAddress);
     }
@@ -203,7 +209,6 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
     @Override
     public void serverToProxyResponseTimedOut() {
         HarEntry harEntry = createHarEntryForFailedCONNECT(HarCaptureUtil.getResponseTimedOutErrorMessage());
-        har.getLog().getEntries().add(harEntry);
 
         // include this timeout time in the HarTimings object
         long timeoutTimestampNanos = System.nanoTime();
@@ -220,6 +225,9 @@ public class HttpConnectHarCaptureFilter extends HttpsAwareFiltersAdapter implem
         else if (responseReceiveStartedNanos > 0L) {
             harEntry.getTimings().setReceive(timeoutTimestampNanos - responseReceiveStartedNanos, TimeUnit.NANOSECONDS);
         }
+
+        harEntry.setTime(getTotalElapsedTime(harEntry.getTimings()));
+        har.getLog().getEntries().add(harEntry);
     }
 
     @Override
