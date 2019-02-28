@@ -28,8 +28,6 @@ import java.util.Collection;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
-// ignored as a quick work-around to running these tests with unit tests
-@Ignore
 @RunWith(Parameterized.class)
 public class ImpersonationPerformanceTests {
     private static final Logger log = LoggerFactory.getLogger(ImpersonationPerformanceTests.class);

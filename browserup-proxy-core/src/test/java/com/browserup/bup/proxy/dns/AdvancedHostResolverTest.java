@@ -23,8 +23,6 @@ import static org.junit.Assume.assumeTrue;
 
 @RunWith(Parameterized.class)
 public class AdvancedHostResolverTest {
-    private static final Logger log = LoggerFactory.getLogger(AdvancedHostResolverTest.class);
-
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][]{
@@ -32,7 +30,7 @@ public class AdvancedHostResolverTest {
         });
     }
 
-    public AdvancedHostResolver resolver;
+    private AdvancedHostResolver resolver;
 
     public AdvancedHostResolverTest(Class<AdvancedHostResolver> resolverClass) throws IllegalAccessException, InstantiationException {
         // this is a hacky way to allow us to test the ChainedHostResolver, even though it doesn't have a no-arg constructor
@@ -78,13 +76,10 @@ public class AdvancedHostResolverTest {
         assumeTrue("Skipping test because IPv6 is not enabled", ipv6Enabled);
 
         boolean foundIPv4 = false;
-        boolean foundIPv6 = false;
         Collection<InetAddress> addresses = resolver.resolve("www.google.com");
         for (InetAddress address : addresses) {
             if (address.getClass() == Inet4Address.class) {
                 foundIPv4 = true;
-            } else if (address.getClass() == Inet6Address.class) {
-                foundIPv6 = true;
             }
         }
 
