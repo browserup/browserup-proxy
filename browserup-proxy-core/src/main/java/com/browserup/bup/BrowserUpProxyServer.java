@@ -1,5 +1,7 @@
 package com.browserup.bup;
 
+import com.browserup.bup.har.HarEntriesFilter;
+import com.browserup.harreader.model.HarEntry;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MapMaker;
@@ -79,6 +81,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.*;
 
@@ -454,6 +457,13 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     @Override
     public Har getHar() {
         return this.har;
+    }
+
+    @Override
+    public List<HarEntry> getFilteredHarEntries(HarEntriesFilter filter) {
+        return this.har.getLog().getEntries().stream()
+                .filter(filter)
+                .collect(Collectors.toList());
     }
 
     @Override

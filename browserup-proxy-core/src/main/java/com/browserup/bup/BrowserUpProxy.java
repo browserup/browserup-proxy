@@ -1,5 +1,6 @@
 package com.browserup.bup;
 
+import com.browserup.bup.har.HarEntriesFilter;
 import com.browserup.harreader.model.Har;
 import com.browserup.bup.filters.RequestFilter;
 import com.browserup.bup.filters.ResponseFilter;
@@ -8,6 +9,8 @@ import com.browserup.bup.proxy.BlacklistEntry;
 import com.browserup.bup.proxy.CaptureType;
 import com.browserup.bup.proxy.auth.AuthType;
 import com.browserup.bup.proxy.dns.AdvancedHostResolver;
+import com.browserup.harreader.model.HarEntry;
+import java.util.List;
 import org.littleshoot.proxy.HttpFiltersSource;
 import org.littleshoot.proxy.MitmManager;
 
@@ -108,6 +111,15 @@ public interface BrowserUpProxy {
      * @return current HAR, or null if HAR capture is not enabled
      */
     Har getHar();
+
+
+    /**
+     * Retrieves filtered entries of the current HAR
+     *
+     * @param filter filters entries to return
+     * @return list of har entries
+     */
+    List<HarEntry> getFilteredHarEntries(HarEntriesFilter filter);
 
     /**
      * Starts a new HAR file with the default page name (see {@link #newPage()}. Enables HAR capture if it was not previously enabled.
