@@ -1,5 +1,6 @@
 package com.browserup.bup.proxy.bricks;
 
+import com.browserup.harreader.model.HarEntry;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.sitebricks.At;
@@ -17,13 +18,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import javax.script.ScriptException;
 import com.browserup.bup.BrowserUpProxyServer;
 import com.browserup.harreader.model.Har;
@@ -35,6 +32,8 @@ import com.browserup.bup.proxy.CaptureType;
 import com.browserup.bup.proxy.ProxyManager;
 import com.browserup.bup.proxy.auth.AuthType;
 import com.browserup.bup.util.BrowserUpHttpUtil;
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jetty.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,6 +119,42 @@ public class ProxyResource {
         Har har = proxy.getHar();
 
         return Reply.with(har).as(Json.class);
+    }
+
+    @Get
+    @At("/:port/har/mostRecentEntry")
+    public Reply<?> findMostRecentEntry(@Named("port") int port, Request<String> request) {
+        LOG.info("GET /" + port + "/har/entry");
+        BrowserUpProxyServer proxy = proxyManager.get(port);
+        if (proxy == null) {
+            return Reply.saying().notFound();
+        }
+
+        return getUrlPatternFromRequest(request)
+                .map(urlPattern -> {
+                    Optional<HarEntry> optEntry = proxy.getHar().getLog().findMostRecentEntry(urlPattern);
+                    return optEntry
+                            .map(entry -> (Reply) Reply.with(entry).as(Json.class))
+                            .orElse(Reply.saying().ok());
+                })
+                .orElse(Reply.saying().badRequest());
+    }
+
+    @Get
+    @At("/:port/har/entries")
+    public Reply<?> findEntries(@Named("port") int port, Request<String> request) {
+        LOG.info("GET /" + port + "/har/entries");
+        BrowserUpProxyServer proxy = proxyManager.get(port);
+        if (proxy == null) {
+            return Reply.saying().notFound();
+        }
+
+        return getUrlPatternFromRequest(request)
+                .map(urlPattern -> {
+                    List<HarEntry> entries = proxy.getHar().getLog().findEntries(urlPattern);
+                    return (Reply) Reply.with(entries).as(Json.class);
+                })
+                .orElse(Reply.saying().badRequest());
     }
 
     @Put
@@ -667,4 +702,20 @@ public class ProxyResource {
         return new String(entityBodyBytes.toByteArray(), charset);
     }
 
+    private Optional<Pattern> getUrlPatternFromRequest(Request<String> request) {
+        String urlParam = request.param("url");
+        if (StringUtils.isEmpty(urlParam)) {
+            LOG.warn("Url parameter not present");
+            return Optional.empty();
+        }
+
+        Pattern urlPattern;
+        try {
+            urlPattern = Pattern.compile(urlParam);
+        } catch (Exception ex) {
+            LOG.warn("Url parameter not valid", ex);
+            return Optional.empty();
+        }
+        return Optional.of(urlPattern);
+    }
 }

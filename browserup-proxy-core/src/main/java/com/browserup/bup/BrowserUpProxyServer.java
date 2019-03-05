@@ -1,17 +1,14 @@
 package com.browserup.bup;
 
+import com.browserup.harreader.model.*;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MapMaker;
-import com.browserup.harreader.model.HarCreatorBrowser;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import com.browserup.bup.client.ClientUtil;
-import com.browserup.harreader.model.Har;
-import com.browserup.harreader.model.HarLog;
-import com.browserup.harreader.model.HarPage;
 import com.browserup.bup.filters.AddHeadersFilter;
 import com.browserup.bup.filters.AutoBasicAuthFilter;
 import com.browserup.bup.filters.BlacklistFilter;
@@ -62,16 +59,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -1037,6 +1025,14 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
 
     public void setUseEcc(boolean useEcc) {
         this.useEcc = useEcc;
+    }
+
+    public Optional<HarEntry> findMostRecentEntry(Pattern pattern) {
+        return getHar().getLog().findMostRecentEntry(pattern);
+    }
+
+    public List<HarEntry> findEntries(Pattern pattern) {
+        return getHar().getLog().findEntries(pattern);
     }
 
     /**

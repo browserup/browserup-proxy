@@ -3,6 +3,12 @@ plugins {
     id 'java-library'
 }
 
+repositories {
+    flatDir {
+        dirs 'lib'
+    }
+}
+
 archivesBaseName = 'browserup-proxy-core'
 
 uploadArchives {
@@ -53,7 +59,7 @@ uploadArchives {
 dependencies {
     implementation project(':browserup-proxy-mitm')
 
-    implementation 'com.browserup:har-reader:3.0.0-SNAPSHOT'
+    implementation 'com.browserup:har-reader:3.0.1-SNAPSHOT'
     implementation 'com.browserup:littleproxy:2.0.0-SNAPSHOT'
 
     // Needed by org.littleshoot.proxy JAR
