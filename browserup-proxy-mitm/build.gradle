@@ -2,12 +2,6 @@ plugins {
     id 'java-library'
 }
 
-repositories {
-    flatDir {
-        dirs 'lib'
-    }
-}
-
 archivesBaseName = 'browserup-proxy-mitm'
 
 uploadArchives {

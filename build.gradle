@@ -17,12 +17,6 @@ configurations.all {
     }
 }
 
-repositories {
-    flatDir {
-        dirs 'lib'
-    }
-}
-
 subprojects {
     apply plugin: 'java'
     apply plugin: 'idea'

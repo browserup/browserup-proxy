@@ -1,5 +1,6 @@
 package com.browserup.bup.proxy.bricks;
 
+import com.browserup.bup.exception.AssertionException;
 import com.browserup.harreader.model.HarEntry;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -18,7 +19,14 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import javax.script.ScriptException;
@@ -33,7 +41,7 @@ import com.browserup.bup.proxy.ProxyManager;
 import com.browserup.bup.proxy.auth.AuthType;
 import com.browserup.bup.util.BrowserUpHttpUtil;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jetty.util.StringUtil;
+import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -131,13 +139,38 @@ public class ProxyResource {
         }
 
         return getUrlPatternFromRequest(request)
-                .map(urlPattern -> {
-                    Optional<HarEntry> optEntry = proxy.getHar().getLog().findMostRecentEntry(urlPattern);
-                    return optEntry
-                            .map(entry -> (Reply) Reply.with(entry).as(Json.class))
-                            .orElse(Reply.saying().ok());
-                })
+                .map(urlPattern -> proxy.findMostRecentEntry(urlPattern)
+                        .map(entry -> (Reply) Reply.with(entry).as(Json.class))
+                        .orElse(Reply.saying().ok()))
                 .orElse(Reply.saying().badRequest());
+    }
+
+    @Get
+    @At("/:port/har/mostRecentEntry/assertResponseTimeWithin")
+    public Reply<?> mostRecentEntryAssertResponseTimeWithin(@Named("port") int port, Request<String> request) {
+        LOG.info("GET /" + port + "/har/mostRecentEntry/assertResponseTimeWithin");
+        BrowserUpProxyServer proxy = proxyManager.get(port);
+        if (proxy == null) {
+            return Reply.saying().notFound();
+        }
+
+        Optional<Pattern> pattern = getUrlPatternFromRequest(request);
+        if (!pattern.isPresent()) {
+            return Reply.saying().badRequest();
+        }
+
+        Optional<Long> time = getAssertionTimeFromRequest(request);
+        if (!time.isPresent()) {
+            return Reply.saying().badRequest();
+        }
+
+        try {
+            proxy.assertUrlResponseTimeWithin(pattern.get(), time.get());
+        } catch (AssertionException ex) {
+            return Reply.with(ex.getMessage()).status(HttpStatus.OK_200).as(Text.class);
+        }
+
+        return Reply.saying().ok();
     }
 
     @Get
@@ -150,10 +183,7 @@ public class ProxyResource {
         }
 
         return getUrlPatternFromRequest(request)
-                .map(urlPattern -> {
-                    List<HarEntry> entries = proxy.getHar().getLog().findEntries(urlPattern);
-                    return (Reply) Reply.with(entries).as(Json.class);
-                })
+                .map(urlPattern -> (Reply) Reply.with(proxy.findEntries(urlPattern)).as(Json.class))
                 .orElse(Reply.saying().badRequest());
     }
 
@@ -717,5 +747,22 @@ public class ProxyResource {
             return Optional.empty();
         }
         return Optional.of(urlPattern);
+    }
+
+    private Optional<Long> getAssertionTimeFromRequest(Request<String> request) {
+        String timeParam = request.param("time");
+        if (StringUtils.isEmpty(timeParam)) {
+            LOG.warn("Time parameter not present");
+            return Optional.empty();
+        }
+
+        Long time;
+        try {
+            time = Long.valueOf(timeParam);
+        } catch (Exception ex) {
+            LOG.warn("Time parameter not valid", ex);
+            return Optional.empty();
+        }
+        return Optional.of(time);
     }
 }

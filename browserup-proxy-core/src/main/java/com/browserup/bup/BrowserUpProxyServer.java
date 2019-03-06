@@ -1,6 +1,11 @@
 package com.browserup.bup;
 
-import com.browserup.harreader.model.*;
+import com.browserup.bup.exception.AssertionException;
+import com.browserup.harreader.model.Har;
+import com.browserup.harreader.model.HarCreatorBrowser;
+import com.browserup.harreader.model.HarEntry;
+import com.browserup.harreader.model.HarLog;
+import com.browserup.harreader.model.HarPage;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MapMaker;
@@ -59,7 +64,17 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -68,7 +83,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toCollection;
 
 /**
  * A LittleProxy-based implementation of {@link BrowserUpProxy}.
@@ -1019,20 +1034,35 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         this.trustSource = trustSource;
     }
 
+    @Override
+    public Optional<HarEntry> findMostRecentEntry(Pattern url) {
+        return getHar().getLog().findMostRecentEntry(url);
+    }
+
+    @Override
+    public List<HarEntry> findEntries(Pattern url) {
+        return getHar().getLog().findEntries(url);
+    }
+
+    @Override
+    public void assertUrlResponseTimeWithin(Pattern url, long time) throws AssertionException {
+        Optional<HarEntry> entry = findMostRecentEntry(url);
+        if (entry.isPresent()) {
+            Integer actualTime = entry.get().getTime();
+            if (actualTime > time) {
+                throw new AssertionException(String.format("Time exceeded, expected: %d, actual: %d", time, actualTime));
+            }
+        } else {
+            throw new AssertionException(String.format("Har entry not found for pattern: %s", url.pattern()));
+        }
+    }
+
     public boolean isMitmDisabled() {
         return this.mitmDisabled;
     }
 
     public void setUseEcc(boolean useEcc) {
         this.useEcc = useEcc;
-    }
-
-    public Optional<HarEntry> findMostRecentEntry(Pattern pattern) {
-        return getHar().getLog().findMostRecentEntry(pattern);
-    }
-
-    public List<HarEntry> findEntries(Pattern pattern) {
-        return getHar().getLog().findEntries(pattern);
     }
 
     /**

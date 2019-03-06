@@ -1,5 +1,6 @@
 package com.browserup.bup;
 
+import com.browserup.bup.exception.AssertionException;
 import com.browserup.harreader.model.Har;
 import com.browserup.bup.filters.RequestFilter;
 import com.browserup.bup.filters.ResponseFilter;
@@ -8,6 +9,7 @@ import com.browserup.bup.proxy.BlacklistEntry;
 import com.browserup.bup.proxy.CaptureType;
 import com.browserup.bup.proxy.auth.AuthType;
 import com.browserup.bup.proxy.dns.AdvancedHostResolver;
+import com.browserup.harreader.model.HarEntry;
 import org.littleshoot.proxy.HttpFiltersSource;
 import org.littleshoot.proxy.MitmManager;
 
@@ -15,9 +17,12 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 public interface BrowserUpProxy {
     /**
@@ -633,4 +638,64 @@ public interface BrowserUpProxy {
      * @param trustSource TrustSource containing root CAs, or null to disable upstream server validation
      */
     void setTrustSource(TrustSource trustSource);
+
+    /**
+     * Search the entire log for the most recent entry whose request URL matches the given <code>url</code>.
+     *
+     * @param url Regular expression match of URL to find.
+     *            URLs are formatted as: scheme://host:port/path?querystring.
+     *            Port is not included in the URL if it is the standard port for the scheme.
+     *            Fragments (example.com/#fragment) should not be included in the URL.
+     *            If more than one URL found, return the most recently requested URL.
+     *            Pattern examples:
+     *            - To match URL with http/https protocols and domain abc.com without parameters:
+     *              ^(http|https)://abc\\.com?
+     *            - To match URL with http protocol and domain abc.com and any parameters (or no parameters)
+     *              ^http://abc\\.com(\\z|\\?.*)
+     *            - To match URL with http protocol and domain abc.com and UUID parameter named 'id':
+     *              ^http://abc\\.com\\?id=[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}?
+     * @return <code>HarEntry</code> for the most recently requested URL matching the given <code>url</code> pattern.
+     */
+    Optional<HarEntry> findMostRecentEntry(Pattern url);
+
+    /**
+     * Search the entire log for entries whose request URL matches the given <code>url</code>.
+     *
+     * @param url Regular expression match of URL to find.
+     *            URLs are formatted as: scheme://host:port/path?querystring.
+     *            Port is not included in the URL if it is the standard port for the scheme.
+     *            Fragments (example.com/#fragment) should not be included in the URL.
+     *            If more than one URL found, use the most recently requested URL.
+     *            Pattern examples:
+     *            - To match URL with http/https protocols and domain abc.com without parameters:
+     *              ^(http|https)://abc\\.com?
+     *            - To match URL with http protocol and domain abc.com and any parameters (or no parameters)
+     *              ^http://abc\\.com(\\z|\\?.*)
+     *            - To match URL with http protocol and domain abc.com and UUID parameter named 'id':
+     *              ^http://abc\\.com\?id=[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}?
+     *
+     * @return A list of <code>HarEntry</code> for any requests whose URL matches the given <code>url</code> pattern,
+     *         or an empty list if none match.
+     */
+    List<HarEntry> findEntries(Pattern url);
+
+    /**
+     * Assert that response time for the most recent request found by URL pattern does not exceed specified time
+     *
+     * @param url Regular expression match of URL to find.
+     *            URLs are formatted as: scheme://host:port/path?querystring.
+     *            Port is not included in the URL if it is the standard port for the scheme.
+     *            Fragments (example.com/#fragment) should not be included in the URL.
+     *            If more than one URL found, use the most recently requested URL.
+     *            Pattern examples:
+     *            - To match URL with http/https protocols and domain abc.com without parameters:
+     *              ^(http|https)://abc\\.com?
+     *            - To match URL with http protocol and domain abc.com and any parameters (or no parameters)
+     *              ^http://abc\\.com(\\z|\\?.*)
+     *            - To match URL with http protocol and domain abc.com and UUID parameter named 'id':
+     *              ^http://abc\\.com\?id=[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}?
+     * @param time Time in milliseconds
+     * @throws AssertionException in case assertion fails
+     */
+    void assertUrlResponseTimeWithin(Pattern url, long time) throws AssertionException;
 }
