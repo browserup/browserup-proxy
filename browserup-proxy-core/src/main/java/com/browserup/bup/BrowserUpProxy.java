@@ -1,6 +1,8 @@
 package com.browserup.bup;
 
-import com.browserup.bup.exception.AssertionException;
+import com.browserup.bup.assertion.HarEntryAssertion;
+import com.browserup.bup.assertion.model.AssertionResult;
+import com.browserup.bup.assertion.supplier.HarEntriesSupplier;
 import com.browserup.harreader.model.Har;
 import com.browserup.bup.filters.RequestFilter;
 import com.browserup.bup.filters.ResponseFilter;
@@ -679,23 +681,7 @@ public interface BrowserUpProxy {
      */
     List<HarEntry> findEntries(Pattern url);
 
-    /**
-     * Assert that response time for the most recent request found by URL pattern does not exceed specified time
-     *
-     * @param url Regular expression match of URL to find.
-     *            URLs are formatted as: scheme://host:port/path?querystring.
-     *            Port is not included in the URL if it is the standard port for the scheme.
-     *            Fragments (example.com/#fragment) should not be included in the URL.
-     *            If more than one URL found, use the most recently requested URL.
-     *            Pattern examples:
-     *            - To match URL with http/https protocols and domain abc.com without parameters:
-     *              ^(http|https)://abc\\.com?
-     *            - To match URL with http protocol and domain abc.com and any parameters (or no parameters)
-     *              ^http://abc\\.com(\\z|\\?.*)
-     *            - To match URL with http protocol and domain abc.com and UUID parameter named 'id':
-     *              ^http://abc\\.com\?id=[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}?
-     * @param time Time in milliseconds
-     * @throws AssertionException in case assertion fails
-     */
-    void assertUrlResponseTimeWithin(Pattern url, long time) throws AssertionException;
+    AssertionResult assertUrlResponseTimeWithin(Pattern url, long time);
+
+    AssertionResult checkAssertion(HarEntriesSupplier harEntriesSupplier, HarEntryAssertion assertion);
 }

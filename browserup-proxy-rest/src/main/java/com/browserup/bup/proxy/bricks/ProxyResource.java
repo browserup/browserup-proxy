@@ -1,5 +1,6 @@
 package com.browserup.bup.proxy.bricks;
 
+import com.browserup.bup.assertion.model.AssertionResult;
 import com.browserup.bup.exception.AssertionException;
 import com.browserup.harreader.model.HarEntry;
 import com.google.inject.Inject;
@@ -164,13 +165,8 @@ public class ProxyResource {
             return Reply.saying().badRequest();
         }
 
-        try {
-            proxy.assertUrlResponseTimeWithin(pattern.get(), time.get());
-        } catch (AssertionException ex) {
-            return Reply.with(ex.getMessage()).status(HttpStatus.OK_200).as(Text.class);
-        }
-
-        return Reply.saying().ok();
+        AssertionResult result = proxy.assertUrlResponseTimeWithin(pattern.get(), time.get());
+        return Reply.with(result).status(HttpStatus.OK_200).as(Json.class);
     }
 
     @Get

@@ -1,5 +1,12 @@
 package com.browserup.bup;
 
+import com.browserup.bup.assertion.HarEntryAssertion;
+import com.browserup.bup.assertion.ResponseTimeWithinHarEntryAssertion;
+import com.browserup.bup.assertion.model.AssertionEntryResult;
+import com.browserup.bup.assertion.model.AssertionResult;
+import com.browserup.bup.assertion.supplier.HarEntriesSupplier;
+import com.browserup.bup.assertion.supplier.MostRecentUrlFilteredHarEntrySupplier;
+import com.browserup.bup.assertion.supplier.UrlFilteredHarEntriesSupplier;
 import com.browserup.bup.exception.AssertionException;
 import com.browserup.harreader.model.Har;
 import com.browserup.harreader.model.HarCreatorBrowser;
@@ -1036,25 +1043,46 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
 
     @Override
     public Optional<HarEntry> findMostRecentEntry(Pattern url) {
-        return getHar().getLog().findMostRecentEntry(url);
+        List<HarEntry> entries = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url).get();
+        return Optional.ofNullable(entries.isEmpty() ? null : entries.get(0));
     }
 
     @Override
     public List<HarEntry> findEntries(Pattern url) {
-        return getHar().getLog().findEntries(url);
+        return new UrlFilteredHarEntriesSupplier(getHar(), url).get();
     }
 
     @Override
-    public void assertUrlResponseTimeWithin(Pattern url, long time) throws AssertionException {
-        Optional<HarEntry> entry = findMostRecentEntry(url);
-        if (entry.isPresent()) {
-            Integer actualTime = entry.get().getTime();
-            if (actualTime > time) {
-                throw new AssertionException(String.format("Time exceeded, expected: %d, actual: %d", time, actualTime));
+    public AssertionResult assertUrlResponseTimeWithin(Pattern url, long time) throws AssertionException {
+        HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
+        HarEntryAssertion assertion = new ResponseTimeWithinHarEntryAssertion(time);
+
+        return checkAssertion(supplier, assertion);
+    }
+
+    @Override
+    public AssertionResult checkAssertion(HarEntriesSupplier harEntriesSupplier, HarEntryAssertion assertion) {
+        AssertionResult.Builder result = new AssertionResult.Builder();
+
+        AtomicBoolean anyFailed = new AtomicBoolean(false);
+
+        harEntriesSupplier.get().forEach(entry -> {
+            AssertionEntryResult.Builder requestResult = new AssertionEntryResult.Builder();
+            requestResult.setUrl(entry.getRequest().getUrl());
+            try {
+                assertion.assertion(entry);
+                requestResult.setFailed(false);
+            } catch (AssertionException ex) {
+                requestResult.setFailed(true).setMessage(ex.getMessage());
+                anyFailed.set(true);
             }
-        } else {
-            throw new AssertionException(String.format("Har entry not found for pattern: %s", url.pattern()));
-        }
+            result.addRequest(requestResult.create());
+        });
+
+        return result
+                .setFilter(harEntriesSupplier.getFilterInfo())
+                .setFailed(anyFailed.get())
+                .create();
     }
 
     public boolean isMitmDisabled() {
