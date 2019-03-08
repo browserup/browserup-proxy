@@ -2,12 +2,12 @@ package com.browserup.bup;
 
 import com.browserup.bup.assertion.HarEntryAssertion;
 import com.browserup.bup.assertion.ResponseTimeWithinHarEntryAssertion;
+import com.browserup.bup.assertion.error.HarEntryAssertionError;
 import com.browserup.bup.assertion.model.AssertionEntryResult;
 import com.browserup.bup.assertion.model.AssertionResult;
 import com.browserup.bup.assertion.supplier.HarEntriesSupplier;
 import com.browserup.bup.assertion.supplier.MostRecentUrlFilteredHarEntrySupplier;
 import com.browserup.bup.assertion.supplier.UrlFilteredHarEntriesSupplier;
-import com.browserup.bup.exception.AssertionException;
 import com.browserup.harreader.model.Har;
 import com.browserup.harreader.model.HarCreatorBrowser;
 import com.browserup.harreader.model.HarEntry;
@@ -1048,12 +1048,12 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     }
 
     @Override
-    public List<HarEntry> findEntries(Pattern url) {
+    public Collection<HarEntry> findEntries(Pattern url) {
         return new UrlFilteredHarEntriesSupplier(getHar(), url).get();
     }
 
     @Override
-    public AssertionResult assertUrlResponseTimeWithin(Pattern url, long time) throws AssertionException {
+    public AssertionResult assertMostRecentUrlResponseTimeWithin(Pattern url, long time) {
         HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
         HarEntryAssertion assertion = new ResponseTimeWithinHarEntryAssertion(time);
 
@@ -1064,24 +1064,34 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     public AssertionResult checkAssertion(HarEntriesSupplier harEntriesSupplier, HarEntryAssertion assertion) {
         AssertionResult.Builder result = new AssertionResult.Builder();
 
-        AtomicBoolean anyFailed = new AtomicBoolean(false);
+        List<HarEntry> entries = harEntriesSupplier.get();
 
-        harEntriesSupplier.get().forEach(entry -> {
+        AtomicBoolean anyFailed = new AtomicBoolean(false);
+        AtomicInteger failedCount = new AtomicInteger();
+
+        entries.forEach(entry -> {
             AssertionEntryResult.Builder requestResult = new AssertionEntryResult.Builder();
             requestResult.setUrl(entry.getRequest().getUrl());
-            try {
-                assertion.assertion(entry);
-                requestResult.setFailed(false);
-            } catch (AssertionException ex) {
-                requestResult.setFailed(true).setMessage(ex.getMessage());
+
+            Optional<HarEntryAssertionError> error = assertion.assertion(entry);
+            requestResult.setFailed(error.isPresent());
+
+            if (error.isPresent()) {
+                requestResult.setMessage(error.get().getMessage());
                 anyFailed.set(true);
+                failedCount.getAndIncrement();
             }
+
             result.addRequest(requestResult.create());
         });
+
+        String resultMessage = String.format("%d passed, %d total", entries.size() - failedCount.get(), entries.size());
 
         return result
                 .setFilter(harEntriesSupplier.getFilterInfo())
                 .setFailed(anyFailed.get())
+                .setMessage(resultMessage)
+                .setPassed(!anyFailed.get())
                 .create();
     }
 

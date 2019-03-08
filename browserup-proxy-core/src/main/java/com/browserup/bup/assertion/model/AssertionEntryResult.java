@@ -18,15 +18,15 @@ public class AssertionEntryResult {
     }
 
     public String getUrl() {
-        return url;
+        return this.url;
     }
 
     public String getMessage() {
-        return message;
+        return this.message;
     }
 
     public Boolean getFailed() {
-        return failed;
+        return this.failed;
     }
 
     public static class Builder {
@@ -50,7 +50,7 @@ public class AssertionEntryResult {
         }
 
         public AssertionEntryResult create() {
-            if (StringUtils.isAnyEmpty(url, message) || failed == null) {
+            if (StringUtils.isEmpty(url) || failed == null) {
                 throw new IllegalArgumentException("Not all required fields are set");
             }
             return new AssertionEntryResult(url, message, failed);

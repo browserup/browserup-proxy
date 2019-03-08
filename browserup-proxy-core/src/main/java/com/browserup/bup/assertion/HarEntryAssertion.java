@@ -1,10 +1,13 @@
 package com.browserup.bup.assertion;
 
-import com.browserup.bup.exception.AssertionException;
+import com.browserup.bup.assertion.error.HarEntryAssertionError;
 import com.browserup.harreader.model.HarEntry;
+
+import java.util.Optional;
 
 @FunctionalInterface
 public interface HarEntryAssertion {
 
-    void assertion(HarEntry entry) throws AssertionException;
+    Optional<HarEntryAssertionError> assertion(HarEntry entry);
+
 }

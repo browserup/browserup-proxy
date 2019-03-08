@@ -1,7 +1,9 @@
 package com.browserup.bup.assertion;
 
-import com.browserup.bup.exception.AssertionException;
+import com.browserup.bup.assertion.error.HarEntryAssertionError;
 import com.browserup.harreader.model.HarEntry;
+
+import java.util.Optional;
 
 public class ResponseTimeWithinHarEntryAssertion implements HarEntryAssertion {
     private final Long time;
@@ -11,9 +13,10 @@ public class ResponseTimeWithinHarEntryAssertion implements HarEntryAssertion {
     }
 
     @Override
-    public void assertion(HarEntry entry) throws AssertionException {
+    public Optional<HarEntryAssertionError> assertion(HarEntry entry) {
         if (entry.getTime() > time) {
-            throw new AssertionException(String.format("Time exceeded, expected: %d, actual: %d", time, entry.getTime()));
+            return Optional.of(new HarEntryAssertionError("Time exceeded", time, entry.getTime()));
         }
+        return Optional.empty();
     }
 }

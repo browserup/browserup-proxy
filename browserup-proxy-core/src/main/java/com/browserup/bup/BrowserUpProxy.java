@@ -679,9 +679,9 @@ public interface BrowserUpProxy {
      * @return A list of <code>HarEntry</code> for any requests whose URL matches the given <code>url</code> pattern,
      *         or an empty list if none match.
      */
-    List<HarEntry> findEntries(Pattern url);
+    Collection<HarEntry> findEntries(Pattern url);
 
-    AssertionResult assertUrlResponseTimeWithin(Pattern url, long time);
+    AssertionResult assertMostRecentUrlResponseTimeWithin(Pattern url, long time);
 
     AssertionResult checkAssertion(HarEntriesSupplier harEntriesSupplier, HarEntryAssertion assertion);
 }

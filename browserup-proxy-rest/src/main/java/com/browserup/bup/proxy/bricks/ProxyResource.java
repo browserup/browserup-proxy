@@ -1,8 +1,6 @@
 package com.browserup.bup.proxy.bricks;
 
 import com.browserup.bup.assertion.model.AssertionResult;
-import com.browserup.bup.exception.AssertionException;
-import com.browserup.harreader.model.HarEntry;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.sitebricks.At;
@@ -24,7 +22,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -165,7 +162,7 @@ public class ProxyResource {
             return Reply.saying().badRequest();
         }
 
-        AssertionResult result = proxy.assertUrlResponseTimeWithin(pattern.get(), time.get());
+        AssertionResult result = proxy.assertMostRecentUrlResponseTimeWithin(pattern.get(), time.get());
         return Reply.with(result).status(HttpStatus.OK_200).as(Json.class);
     }
 

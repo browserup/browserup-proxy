@@ -6,60 +6,73 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AssertionResult {
-    private String result;
+    private String message;
     private Boolean failed;
+    private Boolean passed;
     private Boolean errored;
     private AssertionFilterInfo filter;
     private List<AssertionEntryResult> requests;
 
-    private AssertionResult(String result, Boolean failed, Boolean errored,
+    private AssertionResult(String message, Boolean failed, Boolean passed, Boolean errored,
                             AssertionFilterInfo filter, List<AssertionEntryResult> requests) {
-        this.result = result;
+        this.message = message;
         this.failed = failed;
+        this.passed = passed;
         this.errored = errored;
         this.filter = filter;
         this.requests = requests;
     }
 
-    public String getResult() {
-        return result;
+    public String getMessage() {
+        return this.message;
     }
 
     public Boolean getFailed() {
-        return failed;
+        return this.failed;
+    }
+
+    public Boolean getPassed() {
+        return this.passed;
     }
 
     public Boolean getErrored() {
-        return errored;
+        return this.errored;
     }
 
     public AssertionFilterInfo getFilter() {
-        return filter;
+        return this.filter;
     }
 
     public List<AssertionEntryResult> getRequests() {
-        return requests;
+        return this.requests;
     }
 
     public static class Builder {
-        private String result;
+        private String message;
         private Boolean failed;
+        private Boolean passed;
         private Boolean errored;
         private AssertionFilterInfo filter;
         private List<AssertionEntryResult> requests;
 
-        public Builder setResult(String result) {
-            this.result = result;
+        public Builder setMessage(String message) {
+            this.message = message;
             return this;
         }
 
         public Builder setFailed(Boolean failed) {
             this.failed = failed;
+            return this;
+        }
+
+        public Builder setPassed(Boolean passed) {
+            this.passed = passed;
             return this;
         }
 
@@ -87,10 +100,11 @@ public class AssertionResult {
         }
 
         public AssertionResult create() {
-            if (StringUtils.isEmpty(result) || failed == null || filter == null) {
+            if (StringUtils.isEmpty(message) || failed == null || filter == null || passed == null) {
                 throw new IllegalArgumentException("Not all required fields are set");
             }
-            return new AssertionResult(result, failed, errored, filter, requests);
+            requests = requests == null ? Collections.emptyList() : requests;
+            return new AssertionResult(message, failed, passed, errored, filter, requests);
         }
     }
 }
