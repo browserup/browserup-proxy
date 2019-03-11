@@ -1065,7 +1065,6 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
 
         List<HarEntry> entries = harEntriesSupplier.get();
 
-        AtomicBoolean anyFailed = new AtomicBoolean(false);
         AtomicInteger failedCount = new AtomicInteger();
 
         entries.forEach(entry -> {
@@ -1077,7 +1076,6 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
 
             if (error.isPresent()) {
                 requestResult.setMessage(error.get().getMessage());
-                anyFailed.set(true);
                 failedCount.getAndIncrement();
             }
 
@@ -1088,9 +1086,9 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
 
         return result
                 .setFilter(harEntriesSupplier.getFilterInfo())
-                .setFailed(anyFailed.get())
+                .setFailed(failedCount.get() > 0)
                 .setMessage(resultMessage)
-                .setPassed(!anyFailed.get())
+                .setPassed(failedCount.get() == 0)
                 .create();
     }
 
