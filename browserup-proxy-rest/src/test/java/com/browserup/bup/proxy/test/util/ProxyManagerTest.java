@@ -11,7 +11,9 @@ import org.junit.Before;
 public abstract class ProxyManagerTest {
     protected ProxyManager proxyManager;
 
-    public abstract String[] getArgs();
+    public String[] getArgs() {
+        return new String[] {};
+    }
 
     @Before
     public void setUp() throws Exception {

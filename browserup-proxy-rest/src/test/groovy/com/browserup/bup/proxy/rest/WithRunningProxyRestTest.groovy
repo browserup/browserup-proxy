@@ -28,7 +28,7 @@ class WithRunningProxyRestTest {
     protected Server restServer
 
     protected String[] getArgs() {
-        ['--use-littleproxy', 'true', '--port', '0'] as String[]
+        ['--port', '0'] as String[]
     }
 
     @Before

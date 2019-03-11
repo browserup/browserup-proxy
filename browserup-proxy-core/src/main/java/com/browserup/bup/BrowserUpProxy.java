@@ -669,12 +669,12 @@ public interface BrowserUpProxy {
      *            Fragments (example.com/#fragment) should not be included in the URL.
      *            If more than one URL found, use the most recently requested URL.
      *            Pattern examples:
-     *            - To match URL with http/https protocols and domain abc.com without parameters:
-     *              ^(http|https)://abc\\.com?
-     *            - To match URL with http protocol and domain abc.com and any parameters (or no parameters)
-     *              ^http://abc\\.com(\\z|\\?.*)
-     *            - To match URL with http protocol and domain abc.com and UUID parameter named 'id':
-     *              ^http://abc\\.com\?id=[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}?
+     *            - Match a URL with "http" or "https" protocol, "example.com" domain, and "/index.html" exact file path, with no query parameters:
+     *              "^(http|https)://example\\.com/index\\.html$"
+     *            - Match a URL with "http" protocol, "example.com" domain, "/customer" exact path, followed by any query string:
+     *              "^http://example\\.com/customer\\?.*"
+     *            - Match a URL with "http" protocol, "example.com" domain, "/products" path, and exactly 1 UUID query parameter named "id":
+     *              "^http://example\\.com/products\\?id=[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}$"
      *
      * @return A list of <code>HarEntry</code> for any requests whose URL matches the given <code>url</code> pattern,
      *         or an empty list if none match.
@@ -682,6 +682,4 @@ public interface BrowserUpProxy {
     Collection<HarEntry> findEntries(Pattern url);
 
     AssertionResult assertMostRecentUrlResponseTimeWithin(Pattern url, long time);
-
-    AssertionResult checkAssertion(HarEntriesSupplier harEntriesSupplier, HarEntryAssertion assertion);
 }

@@ -1060,8 +1060,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         return checkAssertion(supplier, assertion);
     }
 
-    @Override
-    public AssertionResult checkAssertion(HarEntriesSupplier harEntriesSupplier, HarEntryAssertion assertion) {
+    private AssertionResult checkAssertion(HarEntriesSupplier harEntriesSupplier, HarEntryAssertion assertion) {
         AssertionResult.Builder result = new AssertionResult.Builder();
 
         List<HarEntry> entries = harEntriesSupplier.get();

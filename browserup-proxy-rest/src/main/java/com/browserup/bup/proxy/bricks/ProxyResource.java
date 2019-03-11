@@ -1,6 +1,7 @@
 package com.browserup.bup.proxy.bricks;
 
 import com.browserup.bup.assertion.model.AssertionResult;
+import com.browserup.harreader.model.HarEntry;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.sitebricks.At;
@@ -136,11 +137,15 @@ public class ProxyResource {
             return Reply.saying().notFound();
         }
 
-        return getUrlPatternFromRequest(request)
-                .map(urlPattern -> proxy.findMostRecentEntry(urlPattern)
-                        .map(entry -> (Reply) Reply.with(entry).as(Json.class))
-                        .orElse(Reply.saying().ok()))
-                .orElse(Reply.saying().badRequest());
+        Pattern pattern;
+        try {
+            pattern = getUrlPatternFromRequest(request);
+        } catch (IllegalArgumentException ex) {
+            return Reply.with(ex.getMessage()).badRequest();
+        }
+        return proxy.findMostRecentEntry(pattern)
+                .map(entry -> (Reply) Reply.with(entry).as(Json.class))
+                .orElse(Reply.with(new HarEntry()).as(Json.class));
     }
 
     @Get
@@ -152,17 +157,19 @@ public class ProxyResource {
             return Reply.saying().notFound();
         }
 
-        Optional<Pattern> pattern = getUrlPatternFromRequest(request);
-        if (!pattern.isPresent()) {
-            return Reply.saying().badRequest();
+        Pattern pattern;
+        try {
+            pattern = getUrlPatternFromRequest(request);
+        } catch (IllegalArgumentException ex) {
+            return Reply.with(ex.getMessage()).badRequest();
         }
 
         Optional<Long> time = getAssertionTimeFromRequest(request);
         if (!time.isPresent()) {
-            return Reply.saying().badRequest();
+            return Reply.with("Invalid 'milliseconds' url parameter").badRequest();
         }
 
-        AssertionResult result = proxy.assertMostRecentUrlResponseTimeWithin(pattern.get(), time.get());
+        AssertionResult result = proxy.assertMostRecentUrlResponseTimeWithin(pattern, time.get());
         return Reply.with(result).status(HttpStatus.OK_200).as(Json.class);
     }
 
@@ -175,9 +182,14 @@ public class ProxyResource {
             return Reply.saying().notFound();
         }
 
-        return getUrlPatternFromRequest(request)
-                .map(urlPattern -> (Reply) Reply.with(proxy.findEntries(urlPattern)).as(Json.class))
-                .orElse(Reply.saying().badRequest());
+        Pattern pattern;
+        try {
+            pattern = getUrlPatternFromRequest(request);
+        } catch (IllegalArgumentException ex) {
+            return Reply.with(ex.getMessage()).badRequest();
+        }
+
+        return Reply.with(proxy.findEntries(pattern)).as(Json.class);
     }
 
     @Put
@@ -725,11 +737,11 @@ public class ProxyResource {
         return new String(entityBodyBytes.toByteArray(), charset);
     }
 
-    private Optional<Pattern> getUrlPatternFromRequest(Request<String> request) {
-        String urlParam = request.param("url");
+    private Pattern getUrlPatternFromRequest(Request<String> request) throws IllegalArgumentException {
+        String urlParam = request.param("urlPattern");
         if (StringUtils.isEmpty(urlParam)) {
             LOG.warn("Url parameter not present");
-            return Optional.empty();
+            throw new IllegalArgumentException("URL parameter 'urlPattern' is mandatory");
         }
 
         Pattern urlPattern;
@@ -737,13 +749,13 @@ public class ProxyResource {
             urlPattern = Pattern.compile(urlParam);
         } catch (Exception ex) {
             LOG.warn("Url parameter not valid", ex);
-            return Optional.empty();
+            throw new IllegalArgumentException("URL parameter 'urlPattern' is not a valid regexp");
         }
-        return Optional.of(urlPattern);
+        return urlPattern;
     }
 
     private Optional<Long> getAssertionTimeFromRequest(Request<String> request) {
-        String timeParam = request.param("time");
+        String timeParam = request.param("milliseconds");
         if (StringUtils.isEmpty(timeParam)) {
             LOG.warn("Time parameter not present");
             return Optional.empty();

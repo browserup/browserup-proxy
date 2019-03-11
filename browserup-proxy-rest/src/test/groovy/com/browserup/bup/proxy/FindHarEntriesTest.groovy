@@ -80,12 +80,7 @@ class FindHarEntriesTest extends ProxyResourceTest {
     Request createMockedRequest(urlParam) {
         def mockRestRequest = mock(Request)
         when(mockRestRequest.method()).thenReturn("GET")
-        when(mockRestRequest.param("url")).thenReturn(".*${urlParam}.*".toString())
+        when(mockRestRequest.param("urlPattern")).thenReturn(".*${urlParam}.*".toString())
         mockRestRequest
-    }
-
-    @Override
-    String[] getArgs() {
-        ["--use-littleproxy", "true"]
     }
 }
