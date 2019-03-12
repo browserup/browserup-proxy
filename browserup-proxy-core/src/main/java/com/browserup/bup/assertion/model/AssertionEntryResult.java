@@ -11,6 +11,9 @@ public class AssertionEntryResult {
     private String message;
     private Boolean failed;
 
+    public AssertionEntryResult() {
+    }
+
     private AssertionEntryResult(String url, String message, Boolean failed) {
         this.url = url;
         this.message = message;

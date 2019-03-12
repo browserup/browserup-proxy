@@ -8,6 +8,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 public class AssertionUrlFilterInfo extends AssertionFilterInfo {
     private String urlPattern;
 
+    public AssertionUrlFilterInfo() {
+    }
+
     public AssertionUrlFilterInfo(String urlPattern) {
         this.urlPattern = urlPattern;
     }

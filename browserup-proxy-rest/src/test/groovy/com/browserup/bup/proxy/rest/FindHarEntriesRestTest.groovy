@@ -3,27 +3,19 @@ package com.browserup.bup.proxy.rest
 import com.browserup.harreader.model.HarEntry
 import com.fasterxml.jackson.databind.ObjectMapper
 import groovyx.net.http.Method
-import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
-import org.awaitility.Awaitility
-import org.eclipse.jetty.http.HttpMethods
 import org.hamcrest.Matchers
 import org.junit.Test
-import org.mockserver.matchers.Times
-import org.mockserver.model.Header
-import org.mockserver.model.HttpStatusCode
 
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
+import static org.awaitility.Awaitility.await
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertThat
-import static org.junit.Assert.assertTrue
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class FindHarEntriesRestTest extends WithRunningProxyRestTest {
+    private static final String URL_PATH = 'har/entries'
 
     @Test
     void getBadRequestIfUrlPatternNotProvided() {
@@ -31,15 +23,15 @@ class FindHarEntriesRestTest extends WithRunningProxyRestTest {
 
         def responsesCount = new AtomicInteger()
 
-        proxyRestServerHttpBuilder.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            uri.path = "/proxy/${proxy.port}/har/entries"
+        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+            uri.path = "/proxy/${proxy.port}/${URL_PATH}"
             response.failure = { resp, reader ->
                 responsesCount.incrementAndGet()
                 assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
             }
         }
 
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).until({ -> responsesCount.get() == 1 })
+        await().atMost(WAIT_FOR_RESPONSE_DURATION).until({ -> responsesCount.get() == 1 })
     }
 
     @Test
@@ -48,15 +40,15 @@ class FindHarEntriesRestTest extends WithRunningProxyRestTest {
 
         def responsesCount = new AtomicInteger()
 
-        proxyRestServerHttpBuilder.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             uri.query = [urlPattern: '[']
-            uri.path = "/proxy/${proxy.port}/har/entries"
+            uri.path = "/proxy/${proxy.port}/${URL_PATH}"
             response.failure = { resp, reader ->
                 responsesCount.incrementAndGet()
                 assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
             }
         }
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).until({ -> responsesCount.get() == 1 })
+        await().atMost(WAIT_FOR_RESPONSE_DURATION).until({ -> responsesCount.get() == 1 })
     }
 
     @Test
@@ -72,25 +64,25 @@ class FindHarEntriesRestTest extends WithRunningProxyRestTest {
 
         def responsesCount = new AtomicInteger()
 
-        targetServerHttpBuilder.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        targetServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             uri.path = "/${urlToCatch}"
             response.success = { _, reader ->
                 assertEquals(responseBody, reader.text)
                 responsesCount.incrementAndGet()
             }
         }
-        targetServerHttpBuilder.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        targetServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             uri.path = "/${urlNotToCatch}"
             response.success = { _, reader ->
                 assertEquals(responseBody, reader.text)
                 responsesCount.incrementAndGet()
             }
         }
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).until({ -> responsesCount.get() == 2 })
+        await().atMost(WAIT_FOR_RESPONSE_DURATION).until({ -> responsesCount.get() == 2 })
 
-        proxyRestServerHttpBuilder.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             def urlPattern = ".*${urlToCatch}"
-            uri.path = "/proxy/${proxy.port}/har/entries"
+            uri.path = "/proxy/${proxy.port}/${URL_PATH}"
             uri.query = [urlPattern: urlPattern]
             response.success = { _, reader ->
                 HarEntry[] entries = new ObjectMapper().readValue(reader, HarEntry[]) as HarEntry[]
@@ -104,7 +96,7 @@ class FindHarEntriesRestTest extends WithRunningProxyRestTest {
     }
 
     @Test
-    void returnEmptyEntriesArrayIfNoEntriesFoundByUrl() {
+    void getEmptyEntriesArrayIfNoEntriesFoundByUrl() {
         def urlToCatch = 'test'
         def urlNotToCatch = 'missing'
         def responseBody = 'success'
@@ -115,34 +107,23 @@ class FindHarEntriesRestTest extends WithRunningProxyRestTest {
 
         def responsesCount = new AtomicInteger()
 
-        targetServerHttpBuilder.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        targetServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             uri.path = "/${urlNotToCatch}"
             response.success = { _, reader ->
                 assertEquals(responseBody, reader.text)
                 responsesCount.incrementAndGet()
             }
         }
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).until({ -> responsesCount.get() == 1 })
+        await().atMost(WAIT_FOR_RESPONSE_DURATION).until({ -> responsesCount.get() == 1 })
 
-        proxyRestServerHttpBuilder.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             def urlPattern = ".*${urlToCatch}"
-            uri.path = "/proxy/${proxy.port}/har/entries"
+            uri.path = "/proxy/${proxy.port}/${URL_PATH}"
             uri.query = [urlPattern: urlPattern]
             response.success = { _, reader ->
                 HarEntry[] entries = new ObjectMapper().readValue(reader, HarEntry[]) as HarEntry[]
                 assertThat('Expected get empty har entries array', entries, Matchers.arrayWithSize(0))
             }
         }
-    }
-
-    private void mockTargetServerResponse(String url, String responseBody) {
-        targetMockedServer.when(request()
-                .withMethod("GET")
-                .withPath("/${url}"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(200)
-                .withHeader(new Header(HttpHeaders.CONTENT_TYPE, "text/plain"))
-                .withBody(responseBody))
     }
 }

@@ -19,6 +19,9 @@ public class AssertionResult {
     private AssertionFilterInfo filter;
     private List<AssertionEntryResult> requests;
 
+    public AssertionResult() {
+    }
+
     private AssertionResult(String message, Boolean failed, Boolean passed, Boolean errored,
                             AssertionFilterInfo filter, List<AssertionEntryResult> requests) {
         this.message = message;
