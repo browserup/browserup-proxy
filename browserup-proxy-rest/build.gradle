@@ -65,6 +65,7 @@ dependencies {
     implementation 'org.eclipse.jetty:jetty-server:7.3.0.v20110203'
     implementation 'org.eclipse.jetty:jetty-servlet:7.3.0.v20110203'
     implementation 'org.slf4j:jcl-over-slf4j:1.7.25'
+    implementation 'org.apache.commons:commons-lang3:3.8.1'
 
     testImplementation project(':browserup-proxy-mitm')
     testImplementation 'com.browserup:littleproxy:2.0.0-SNAPSHOT'
@@ -79,4 +80,5 @@ dependencies {
     testImplementation 'org.mock-server:mockserver-netty:3.10.8'
     testImplementation 'org.mockito:mockito-core:2.23.4'
     testImplementation 'org.seleniumhq.selenium:selenium-api:3.4.0'
+    testImplementation 'org.awaitility:awaitility:3.1.6'
 }

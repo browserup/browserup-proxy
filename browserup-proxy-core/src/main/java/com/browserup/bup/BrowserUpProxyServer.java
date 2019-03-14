@@ -1,17 +1,26 @@
 package com.browserup.bup;
 
+import com.browserup.bup.assertion.HarEntryAssertion;
+import com.browserup.bup.assertion.ResponseTimeWithinHarEntryAssertion;
+import com.browserup.bup.assertion.error.HarEntryAssertionError;
+import com.browserup.bup.assertion.model.AssertionEntryResult;
+import com.browserup.bup.assertion.model.AssertionResult;
+import com.browserup.bup.assertion.supplier.HarEntriesSupplier;
+import com.browserup.bup.assertion.supplier.MostRecentUrlFilteredHarEntrySupplier;
+import com.browserup.bup.assertion.supplier.UrlFilteredHarEntriesSupplier;
+import com.browserup.harreader.model.Har;
+import com.browserup.harreader.model.HarCreatorBrowser;
+import com.browserup.harreader.model.HarEntry;
+import com.browserup.harreader.model.HarLog;
+import com.browserup.harreader.model.HarPage;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MapMaker;
-import com.browserup.harreader.model.HarCreatorBrowser;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import com.browserup.bup.client.ClientUtil;
-import com.browserup.harreader.model.Har;
-import com.browserup.harreader.model.HarLog;
-import com.browserup.harreader.model.HarPage;
 import com.browserup.bup.filters.AddHeadersFilter;
 import com.browserup.bup.filters.AutoBasicAuthFilter;
 import com.browserup.bup.filters.BlacklistFilter;
@@ -70,6 +79,7 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
@@ -80,7 +90,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toCollection;
 
 /**
  * A LittleProxy-based implementation of {@link BrowserUpProxy}.
@@ -1029,6 +1039,57 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         }
 
         this.trustSource = trustSource;
+    }
+
+    @Override
+    public Optional<HarEntry> findMostRecentEntry(Pattern url) {
+        List<HarEntry> entries = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url).get();
+        return Optional.ofNullable(entries.isEmpty() ? null : entries.get(0));
+    }
+
+    @Override
+    public Collection<HarEntry> findEntries(Pattern url) {
+        return new UrlFilteredHarEntriesSupplier(getHar(), url).get();
+    }
+
+    @Override
+    public AssertionResult assertMostRecentUrlResponseTimeWithin(Pattern url, long time) {
+        HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
+        HarEntryAssertion assertion = new ResponseTimeWithinHarEntryAssertion(time);
+
+        return checkAssertion(supplier, assertion);
+    }
+
+    private AssertionResult checkAssertion(HarEntriesSupplier harEntriesSupplier, HarEntryAssertion assertion) {
+        AssertionResult.Builder result = new AssertionResult.Builder();
+
+        List<HarEntry> entries = harEntriesSupplier.get();
+
+        AtomicInteger failedCount = new AtomicInteger();
+
+        entries.forEach(entry -> {
+            AssertionEntryResult.Builder requestResult = new AssertionEntryResult.Builder();
+            requestResult.setUrl(entry.getRequest().getUrl());
+
+            Optional<HarEntryAssertionError> error = assertion.assertion(entry);
+            requestResult.setFailed(error.isPresent());
+
+            if (error.isPresent()) {
+                requestResult.setMessage(error.get().getMessage());
+                failedCount.getAndIncrement();
+            }
+
+            result.addRequest(requestResult.create());
+        });
+
+        String resultMessage = String.format("%d passed, %d total", entries.size() - failedCount.get(), entries.size());
+
+        return result
+                .setFilter(harEntriesSupplier.getFilterInfo())
+                .setFailed(failedCount.get() > 0)
+                .setMessage(resultMessage)
+                .setPassed(failedCount.get() == 0)
+                .create();
     }
 
     public boolean isMitmDisabled() {

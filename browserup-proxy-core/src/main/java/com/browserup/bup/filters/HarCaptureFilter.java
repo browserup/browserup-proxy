@@ -275,6 +275,8 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
             harEntry.getResponse().setBodySize((long)(responseBodySize.get()));
         }
 
+        this.harEntry.setTime(getTotalElapsedTime(this.harEntry.getTimings()));
+
         return super.serverToProxyResponse(httpObject);
     }
 

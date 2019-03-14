@@ -61,7 +61,7 @@ class BrowserUpHttpUtilTest {
                 'unknown-type/something-incredible' : null,
                 'unknown-type/something-incredible;charset=UTF-8' : Charset.forName('UTF-8'),
                 '1234 & extremely malformed!' : null,
-                '1234 & extremely malformed!;charset=UTF-8' : null, // malformed content-types result in unparseable charsets
+                '1234 & extremely malformed!;charset=UTF-8' : null, // malformed content-types message in unparseable charsets
                 '' : null,
         ]
 
