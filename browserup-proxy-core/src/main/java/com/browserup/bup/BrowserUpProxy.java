@@ -682,4 +682,6 @@ public interface BrowserUpProxy {
     Collection<HarEntry> findEntries(Pattern url);
 
     AssertionResult assertMostRecentUrlResponseTimeWithin(Pattern url, long time);
+
+    AssertionResult assertAllUrlsResponseTimeWithin(Pattern url, long time);
 }

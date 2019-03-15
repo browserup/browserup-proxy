@@ -1060,6 +1060,14 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         return checkAssertion(supplier, assertion);
     }
 
+    @Override
+    public AssertionResult assertAllUrlsResponseTimeWithin(Pattern url, long time) {
+        HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
+        HarEntryAssertion assertion = new ResponseTimeWithinHarEntryAssertion(time);
+
+        return checkAssertion(supplier, assertion);
+    }
+
     private AssertionResult checkAssertion(HarEntriesSupplier harEntriesSupplier, HarEntryAssertion assertion) {
         AssertionResult.Builder result = new AssertionResult.Builder();
 

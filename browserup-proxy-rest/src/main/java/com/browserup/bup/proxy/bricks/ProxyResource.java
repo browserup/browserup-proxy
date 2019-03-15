@@ -174,6 +174,31 @@ public class ProxyResource {
     }
 
     @Get
+    @At("/:port/har/entries/assertResponseTimeWithin")
+    public Reply<?> findEntriesAndAssertResponseTimeWithin(@Named("port") int port, Request<String> request) {
+        LOG.info("GET /" + port + "/har/entries/assertResponseTimeWithin");
+        BrowserUpProxyServer proxy = proxyManager.get(port);
+        if (proxy == null) {
+            return Reply.saying().notFound();
+        }
+
+        Pattern pattern;
+        try {
+            pattern = getUrlPatternFromRequest(request);
+        } catch (IllegalArgumentException ex) {
+            return Reply.with(ex.getMessage()).badRequest();
+        }
+
+        Optional<Long> time = getAssertionTimeFromRequest(request);
+        if (!time.isPresent()) {
+            return Reply.with("Invalid 'milliseconds' url parameter").badRequest();
+        }
+
+        AssertionResult result = proxy.assertAllUrlsResponseTimeWithin(pattern, time.get());
+        return Reply.with(result).status(HttpStatus.OK_200).as(Json.class);
+    }
+
+    @Get
     @At("/:port/har/entries")
     public Reply<?> findEntries(@Named("port") int port, Request<String> request) {
         LOG.info("GET /" + port + "/har/entries");
