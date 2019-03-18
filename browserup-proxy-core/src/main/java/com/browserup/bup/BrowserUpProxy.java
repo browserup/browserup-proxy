@@ -684,4 +684,12 @@ public interface BrowserUpProxy {
     AssertionResult assertMostRecentUrlResponseTimeWithin(Pattern url, long time);
 
     AssertionResult assertAllUrlsResponseTimeWithin(Pattern url, long time);
+
+    AssertionResult assertUrlContentContains(Pattern url, String text);
+
+    AssertionResult assertUrlContentDoesNotContain(Pattern url, String text);
+
+    AssertionResult assertUrlResponseHeaderContains(Pattern url, String text);
+
+    AssertionResult assertUrlResponseHeaderDoesNotContain(Pattern url, String text);
 }
