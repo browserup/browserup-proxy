@@ -692,4 +692,8 @@ public interface BrowserUpProxy {
     AssertionResult assertUrlResponseHeaderContains(Pattern url, String text);
 
     AssertionResult assertUrlResponseHeaderDoesNotContain(Pattern url, String text);
+
+    AssertionResult assertUrlStatusEquals(Pattern url, Integer status);
+
+    AssertionResult assertUrlContentLengthWithin(Pattern url, Long size);
 }

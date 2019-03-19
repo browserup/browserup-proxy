@@ -3,10 +3,12 @@ package com.browserup.bup;
 import com.browserup.bup.assertion.HarEntryAssertion;
 import com.browserup.bup.assertion.ResponseTimeWithinAssertion;
 import com.browserup.bup.assertion.error.HarEntryAssertionError;
+import com.browserup.bup.assertion.field.content.ContentSizeWithinAssertion;
 import com.browserup.bup.assertion.field.content.ContentContainsStringAssertion;
 import com.browserup.bup.assertion.field.content.ContentDoesNotContainStringAssertion;
 import com.browserup.bup.assertion.field.header.HeadersContainStringAssertion;
 import com.browserup.bup.assertion.field.header.HeadersDoesNotContainStringAssertion;
+import com.browserup.bup.assertion.field.status.StatusEqualsAssertion;
 import com.browserup.bup.assertion.model.AssertionEntryResult;
 import com.browserup.bup.assertion.model.AssertionResult;
 import com.browserup.bup.assertion.supplier.HarEntriesSupplier;
@@ -1084,6 +1086,22 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     public AssertionResult assertUrlContentDoesNotContain(Pattern url, String text) {
         HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
         HarEntryAssertion assertion = new ContentDoesNotContainStringAssertion(text);
+
+        return checkAssertion(supplier, assertion);
+    }
+
+    @Override
+    public AssertionResult assertUrlStatusEquals(Pattern url, Integer status) {
+        HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
+        HarEntryAssertion assertion = new StatusEqualsAssertion(status);
+
+        return checkAssertion(supplier, assertion);
+    }
+
+    @Override
+    public AssertionResult assertUrlContentLengthWithin(Pattern url, Long size) {
+        HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
+        HarEntryAssertion assertion = new ContentSizeWithinAssertion(size);
 
         return checkAssertion(supplier, assertion);
     }

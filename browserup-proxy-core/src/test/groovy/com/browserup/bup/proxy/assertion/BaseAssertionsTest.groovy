@@ -2,6 +2,7 @@ package com.browserup.bup.proxy.assertion
 
 import com.browserup.bup.BrowserUpProxy
 import com.browserup.bup.BrowserUpProxyServer
+import com.browserup.bup.proxy.CaptureType
 import com.browserup.bup.proxy.test.util.MockServerTest
 import com.browserup.bup.proxy.test.util.NewProxyServerTestUtil
 import org.apache.http.HttpStatus
@@ -33,6 +34,8 @@ abstract class BaseAssertionsTest extends MockServerTest {
     protected static final Delay FAST_RESPONSE_DELAY = new Delay(TimeUnit.SECONDS, 1)
     protected static final int TIME_DELTA_MILLISECONDS = 100
 
+    protected String url
+
     protected BrowserUpProxy proxy
     protected CloseableHttpClient clientToProxy
 
@@ -44,6 +47,8 @@ abstract class BaseAssertionsTest extends MockServerTest {
         proxy.newHar()
 
         clientToProxy = NewProxyServerTestUtil.getNewHttpClient(proxy.port)
+
+        url = "http://localhost:${mockServerPort}/${URL_PATH}"
     }
 
     @After
