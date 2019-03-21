@@ -1,7 +1,5 @@
 package com.browserup.bup.proxy.bricks;
 
-import com.browserup.bup.assertion.model.AssertionResult;
-import com.browserup.harreader.model.HarEntry;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.sitebricks.At;
@@ -27,7 +25,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 import javax.script.ScriptException;
 import com.browserup.bup.BrowserUpProxyServer;
 import com.browserup.harreader.model.Har;
@@ -40,7 +37,6 @@ import com.browserup.bup.proxy.ProxyManager;
 import com.browserup.bup.proxy.auth.AuthType;
 import com.browserup.bup.util.BrowserUpHttpUtil;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

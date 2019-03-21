@@ -1,6 +1,7 @@
-package com.browserup.bup.proxy.rest.assertion
+package com.browserup.bup.proxy.rest.assertion.mostrecent
 
 import com.browserup.bup.assertion.model.AssertionResult
+import com.browserup.bup.proxy.rest.assertion.BaseAssertResponseTimeWithinRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
 import groovyx.net.http.Method
 import org.apache.http.entity.ContentType
@@ -83,8 +84,6 @@ class MostRecentEntryAssertResponseTimeWithinRestTest extends BaseAssertResponse
                 assertFalse('Expected assertion to fail', assertionResult.passed)
                 assertTrue('Expected assertion to fail', assertionResult.failed)
                 assertTrue('Expected assertion entry result to have "true" failed flag', assertionResult.requests[0].failed)
-                assertThat('Expected assertion entry result to have "time exceeded" message',
-                        assertionResult.requests[0].message, Matchers.containsString('Time exceeded'))
                 responsesCount.incrementAndGet()
             }
         }
