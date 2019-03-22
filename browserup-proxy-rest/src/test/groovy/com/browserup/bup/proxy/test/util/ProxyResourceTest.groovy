@@ -40,7 +40,7 @@ abstract class ProxyResourceTest extends ProxyManagerTest {
         BrowserUpProxyServer proxy = proxyManager.create(0)
         proxyPort = proxy.port
 
-        proxyResource = new ProxyResource(proxyManager, mostRecentEntryProxyResource)
+        proxyResource = new ProxyResource(proxyManager)
     }
 
     HTTPBuilder getHttpBuilder() {

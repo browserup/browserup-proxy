@@ -1,27 +1,34 @@
 package com.browserup.bup.proxy.rest.assertion.mostrecent
 
 import com.browserup.bup.assertion.model.AssertionResult
-import com.browserup.bup.proxy.CaptureType
 import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
 import groovyx.net.http.Method
+import org.apache.http.HttpHeaders
+import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
+import org.eclipse.jetty.http.HttpMethods
 import org.hamcrest.Matchers
 import org.junit.Test
+import org.mockserver.matchers.Times
+import org.mockserver.model.Header
 
 import static org.junit.Assert.*
+import static org.mockserver.model.HttpRequest.request
+import static org.mockserver.model.HttpResponse.response
 
-class MostRecentEntryAssertContentContainsRestTest extends BaseRestTest {
+class MostRecentEntryAssertStatusEqualsRestTest extends BaseRestTest {
     def urlOfMostRecentRequest = 'url-most-recent'
     def urlOfOldRequest = 'url-old'
     def urlPatternToMatchUrl = '.*url-.*'
     def urlPatternNotToMatchUrl = '.*does_not_match-.*'
-    def responseBodyPart = 'some-body-part'
-    def responseBody = "begin body ${responseBodyPart} end body".toString()
+    def status = HttpStatus.SC_OK
+    def statusNotToMatch = HttpStatus.SC_NOT_FOUND
+    def responseBody = "success"
 
     @Override
     String getUrlPath() {
-        return 'har/mostRecentEntry/assertContentContains'
+        return 'har/mostRecentEntry/assertStatusEquals'
     }
 
     @Test
@@ -31,7 +38,7 @@ class MostRecentEntryAssertContentContainsRestTest extends BaseRestTest {
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             def urlPattern = ".*${urlPatternToMatchUrl}"
             uri.path = "/proxy/${proxy.port}/${urlPath}"
-            uri.query = [urlPattern: urlPattern, text: responseBodyPart]
+            uri.query = [urlPattern: urlPattern, status: status]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
                 assertNotNull('Expected to get non null assertion result', assertionResult)
@@ -45,7 +52,7 @@ class MostRecentEntryAssertContentContainsRestTest extends BaseRestTest {
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             def urlPattern = ".*${urlPatternToMatchUrl}"
             uri.path = "/proxy/${proxy.port}/${urlPath}"
-            uri.query = [urlPattern: urlPattern, text: 'will not be found']
+            uri.query = [urlPattern: urlPattern, status: statusNotToMatch]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
                 assertNotNull('Expected to get non null assertion result', assertionResult)
@@ -63,7 +70,7 @@ class MostRecentEntryAssertContentContainsRestTest extends BaseRestTest {
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             uri.path = "/proxy/${proxy.port}/${urlPath}"
-            uri.query = [urlPattern: urlPatternNotToMatchUrl, text: responseBodyPart]
+            uri.query = [urlPattern: urlPatternNotToMatchUrl, status: status]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
                 assertNotNull('Expected to get non null assertion result', assertionResult)
@@ -75,10 +82,8 @@ class MostRecentEntryAssertContentContainsRestTest extends BaseRestTest {
     }
 
     private void sendRequestsToTargetServer() {
-        proxy.enableHarCaptureTypes(CaptureType.RESPONSE_CONTENT)
-
-        mockTargetServerResponse(urlOfMostRecentRequest, responseBody)
-        mockTargetServerResponse(urlOfOldRequest, responseBody)
+        mockTargetServerResponse(urlOfMostRecentRequest, responseBody, status)
+        mockTargetServerResponse(urlOfOldRequest, responseBody, status)
 
         proxyManager.get()[0].newHar()
 
@@ -87,5 +92,16 @@ class MostRecentEntryAssertContentContainsRestTest extends BaseRestTest {
         sleep MILLISECONDS_BETWEEN_REQUESTS
 
         requestToTargetServer(urlOfMostRecentRequest, responseBody)
+    }
+
+    protected void mockTargetServerResponse(String url, String responseBody, int status) {
+        targetMockedServer.when(request()
+                .withMethod(HttpMethods.GET)
+                .withPath("/${url}"),
+                Times.exactly(1))
+                .respond(response()
+                .withStatusCode(status)
+                .withHeader(new Header(HttpHeaders.CONTENT_TYPE, 'text/plain'))
+                .withBody(responseBody))
     }
 }

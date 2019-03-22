@@ -147,7 +147,7 @@ public class MostRecentEntryAssertionsProxyResource extends MostRecentEntryProxy
         LOG.info("GET /" + port + "/har/mostRecentEntry/assertContentLengthWithin");
 
         proxy = parseProxyServer(new IntRawParam("proxy port", port));
-        checkParams(urlPattern, proxy, status);
+        checkParams(urlPattern, proxy, length);
 
         AssertionResult result = proxy.getRequiredParsedParam().assertUrlContentLengthWithin(
                 urlPattern.getRequiredParsedParam(),

@@ -1,18 +1,21 @@
-package com.browserup.bup.proxy.rest.assertion
+package com.browserup.bup.proxy.rest.assertion.entries
 
 import com.browserup.bup.assertion.model.AssertionResult
+import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
 import groovyx.net.http.Method
+import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
 import org.hamcrest.Matchers
 import org.junit.Test
 
-import java.util.concurrent.atomic.AtomicInteger
-
-import static org.awaitility.Awaitility.await
 import static org.junit.Assert.*
 
-class AllFoundEntriesAssertResponseTimeWithinRestTest extends BaseAssertResponseTimeWithinRestTest {
+class AllFoundEntriesAssertTimeWithinRestTest extends BaseRestTest {
+    def responseBody = 'success'
+    def url = 'some-url'
+    def urlPatternToMatchUrl = '.*url-.*'
+    def urlPatternNotToMatchUrl = '.*does_not_match-.*'
 
     @Override
     String getUrlPath() {
@@ -21,44 +24,25 @@ class AllFoundEntriesAssertResponseTimeWithinRestTest extends BaseAssertResponse
 
     @Test
     void someEntriesFailTimeWithinAssertion() {
-        def delay = TARGET_SERVER_SLOW_RESPONSE_DELAY
-        def successfulAssertionMilliseconds = SUCCESSFUL_ASSERTION_TIME_WITHIN
-        def responseBody = 'success'
-        def commonUrlPart = 'some-url'
-
         def fastRange = (1..2)
         def slowRange = (3..4)
 
-        def urlPathCreator = { index -> "${commonUrlPart}-${index}" }
+        def urlPathCreator = { index -> "${url}-${index}" }
 
         def fastUrls = fastRange.collect(urlPathCreator)
         def slowUrls = slowRange.collect(urlPathCreator)
         def allUrls = fastUrls + slowUrls
 
         fastUrls.forEach { mockTargetServerResponse(it, responseBody) }
-        slowUrls.forEach { mockTargetServerResponse(it, responseBody, delay) }
+        slowUrls.forEach { mockTargetServerResponse(it, responseBody, TARGET_SERVER_SLOW_RESPONSE_DELAY) }
 
         proxyManager.get()[0].newHar()
 
-        def responsesCount = new AtomicInteger()
-
-        allUrls.forEach {
-            targetServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-                uri.path = "/${it}"
-                response.success = { _, reader ->
-                    assertEquals(responseBody, reader.text)
-                    responsesCount.incrementAndGet()
-                }
-            }
-        }
-
-        await().atMost(WAIT_FOR_RESPONSE_DURATION).until({ -> responsesCount.get() == allUrls.size() })
-        responsesCount.set(0)
+        allUrls.forEach { requestToTargetServer(it, responseBody) }
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            def urlPattern = ".*${commonUrlPart}.*"
             uri.path = "/proxy/${proxy.port}/${urlPath}"
-            uri.query = [urlPattern: urlPattern, milliseconds: successfulAssertionMilliseconds]
+            uri.query = [urlPattern: urlPatternToMatchUrl, milliseconds: SUCCESSFUL_ASSERTION_TIME_WITHIN]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
                 assertNotNull('Expected to get non null assertion result', assertionResult)
@@ -75,37 +59,21 @@ class AllFoundEntriesAssertResponseTimeWithinRestTest extends BaseAssertResponse
                         assertTrue("Expected entry result for slow response to have failed flag = true", e.failed)
                     }
                 }
-                responsesCount.incrementAndGet()
             }
         }
-        await().atMost(WAIT_FOR_RESPONSE_DURATION).until({ -> responsesCount.get() == 1 })
     }
 
     @Test
     void emptyResultIfNoEntriesFoundForTimeWithinAssertion() {
-        def successfulAssertionMilliseconds = SUCCESSFUL_ASSERTION_TIME_WITHIN
-        def responseBody = 'success'
-        def url = 'some-url'
-
         proxyManager.get()[0].newHar()
 
-        def responsesCount = new AtomicInteger()
-
         mockTargetServerResponse(url, responseBody)
-        targetServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            uri.path = "/${url}"
-            response.success = { _, reader ->
-                assertEquals(responseBody, reader.text)
-                responsesCount.incrementAndGet()
-            }
-        }
 
-        await().atMost(WAIT_FOR_RESPONSE_DURATION).until({ -> responsesCount.get() == 1 })
+        requestToTargetServer(url, responseBody)
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            def urlPattern = ".*does-not-match.*"
             uri.path = "/proxy/${proxy.port}/${urlPath}"
-            uri.query = [urlPattern: urlPattern, milliseconds: successfulAssertionMilliseconds]
+            uri.query = [urlPattern: urlPatternNotToMatchUrl, milliseconds: SUCCESSFUL_ASSERTION_TIME_WITHIN]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
                 assertNotNull('Expected to get non null assertion result', assertionResult)
@@ -113,10 +81,20 @@ class AllFoundEntriesAssertResponseTimeWithinRestTest extends BaseAssertResponse
                         assertionResult.requests, Matchers.hasSize(0))
                 assertTrue('Expected assertion to pass', assertionResult.passed)
                 assertFalse('Expected assertion to pass', assertionResult.failed)
-
-                responsesCount.incrementAndGet()
             }
         }
-        await().atMost(WAIT_FOR_RESPONSE_DURATION).until({ -> responsesCount.get() == 2 })
+    }
+
+    @Test
+    void getBadRequestIfMillisecondsNotValid() {
+        proxyManager.get()[0].newHar()
+
+        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+            uri.query = [urlPattern: '.*', milliseconds: 'abcd']
+            uri.path = "/proxy/${proxy.port}/${urlPath}"
+            response.failure = { resp, reader ->
+                assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
+            }
+        }
     }
 }

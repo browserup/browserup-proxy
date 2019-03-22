@@ -193,7 +193,7 @@ class FilterTest extends ProxyResourceTest {
         when(mockProxyManager.get(proxyPort)).thenReturn(mockProxy)
 
         // not using the local ProxyResource, since we need to mock out the dependencies
-        ProxyResource proxyResource = new ProxyResource(mockProxyManager, mostRecentEntryProxyResource)
+        ProxyResource proxyResource = new ProxyResource(mockProxyManager)
 
         boolean javascriptExceptionOccurred = false
 
@@ -225,7 +225,7 @@ class FilterTest extends ProxyResourceTest {
         when(mockProxyManager.get(proxyPort)).thenReturn(mockProxy)
 
         // not using the local ProxyResource, since we need to mock out the dependencies
-        ProxyResource proxyResource = new ProxyResource(mockProxyManager, mostRecentEntryProxyResource)
+        ProxyResource proxyResource = new ProxyResource(mockProxyManager)
 
         boolean javascriptExceptionOccurred = false
 
