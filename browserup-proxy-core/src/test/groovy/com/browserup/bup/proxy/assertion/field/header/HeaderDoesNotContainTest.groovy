@@ -12,36 +12,92 @@ import static org.junit.Assert.*
 class HeaderDoesNotContainTest extends HeaderBaseTest {
 
     @Test
-    void headerDoesNotContainTextAssertionPasses() {
-        def headerNotToFind = 'abc'
-
+    void anyNameAndNotMatchingValue() {
         def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
         assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
 
-        def result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"), headerNotToFind)
+        def result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"), NOT_MATCHING_HEADER_VALUE)
+
+        assertTrue("Expected not to find header value", result.passed)
+        assertFalse("Expected not to find header value", result.failed)
+    }
+
+    @Test
+    void nameNotProvidedAndNotMatchingValue() {
+        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
+        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+
+        def result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"), null, NOT_MATCHING_HEADER_VALUE)
 
         assertTrue("Expected not to find header value", result.passed)
         assertFalse("Expected not to find header value", result.failed)
 
-        result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"), headerNotToFind)
+        result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"), '', NOT_MATCHING_HEADER_VALUE)
 
-        assertTrue("Expected not to find header name", result.passed)
-        assertFalse("Expected not to find header name", result.failed)
+        assertTrue("Expected not to find header value", result.passed)
+        assertFalse("Expected not to find header value", result.failed)
     }
 
     @Test
-    void headerDoesNotContainTextAssertionFails() {
+    void nameNotProvidedAndMatchingValue() {
         def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
         assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
 
-        def result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"), HEADER_NAME)
+        def result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"), null, HEADER_VALUE)
 
         assertFalse("Expected to find header value", result.passed)
         assertTrue("Expected to find header value", result.failed)
 
-        result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"), HEADER_VALUE)
+        result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"), '', HEADER_VALUE)
 
-        assertFalse("Expected to find header name", result.passed)
-        assertTrue("Expected to find header name", result.failed)
+        assertFalse("Expected to find header value", result.passed)
+        assertTrue("Expected to find header value", result.failed)
+    }
+
+    @Test
+    void anyNameAndMatchingValue() {
+        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
+        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+
+        def result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"), HEADER_VALUE)
+
+        assertFalse("Expected to find header value", result.passed)
+        assertTrue("Expected to find header value", result.failed)
+    }
+
+    @Test
+    void matchingNameAndNotMatchingValue() {
+        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
+        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+
+        def result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"),
+                HEADER_NAME, NOT_MATCHING_HEADER_VALUE)
+
+        assertTrue("Expected not to find header value", result.passed)
+        assertFalse("Expected not to find header value", result.failed)
+    }
+
+    @Test
+    void notMatchingNameAndMatchingValue() {
+        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
+        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+
+        def result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"),
+                NOT_MATCHING_HEADER_NAME, HEADER_VALUE)
+
+        assertTrue("Expected not to find header value", result.passed)
+        assertFalse("Expected not to find header value", result.failed)
+    }
+
+    @Test
+    void matchingNameAndMatchingValue() {
+        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
+        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+
+        def result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"),
+                HEADER_NAME, HEADER_VALUE)
+
+        assertFalse("Expected to find header value", result.passed)
+        assertTrue("Expected to find header value", result.failed)
     }
 }

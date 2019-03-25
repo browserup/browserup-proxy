@@ -54,7 +54,7 @@ public class EntriesProxyResource extends BaseResource {
         proxy = parseProxyServer(new IntRawParam("proxy port", port));
         checkParams(urlPattern, proxy);
 
-        Collection<HarEntry> result = proxy.getRequiredParsedParam().findEntries(urlPattern.getRequiredParsedParam());
+        Collection<HarEntry> result = proxy.getParsedParam().findEntries(urlPattern.getParsedParam());
 
         return Reply.with(result).as(Json.class);
     }
@@ -67,9 +67,9 @@ public class EntriesProxyResource extends BaseResource {
         proxy = parseProxyServer(new IntRawParam("proxy port", port));
         checkParams(urlPattern, milliseconds, proxy);
 
-        AssertionResult result = proxy.getRequiredParsedParam().assertAllUrlsResponseTimeWithin(
-                        urlPattern.getRequiredParsedParam(),
-                        milliseconds.getRequiredParsedParam());
+        AssertionResult result = proxy.getParsedParam().assertAllUrlResponseTimesWithin(
+                        urlPattern.getParsedParam(),
+                        milliseconds.getParsedParam());
 
         return Reply.with(result).as(Json.class);
     }

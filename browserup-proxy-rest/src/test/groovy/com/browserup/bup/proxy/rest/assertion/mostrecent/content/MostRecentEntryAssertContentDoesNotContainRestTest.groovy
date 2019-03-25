@@ -1,35 +1,28 @@
-package com.browserup.bup.proxy.rest.assertion.mostrecent
+package com.browserup.bup.proxy.rest.assertion.mostrecent.content
 
 import com.browserup.bup.assertion.model.AssertionResult
 import com.browserup.bup.proxy.CaptureType
 import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
 import groovyx.net.http.Method
-import org.apache.http.HttpHeaders
-import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
-import org.eclipse.jetty.http.HttpMethods
 import org.hamcrest.Matchers
 import org.junit.Test
-import org.mockserver.matchers.Times
-import org.mockserver.model.Header
 
 import static org.junit.Assert.*
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
-class MostRecentEntryAssertContentLengthWithinRestTest extends BaseRestTest {
+class MostRecentEntryAssertContentDoesNotContainRestTest extends BaseRestTest {
     def urlOfMostRecentRequest = 'url-most-recent'
     def urlOfOldRequest = 'url-old'
     def urlPatternToMatchUrl = '.*url-.*'
     def urlPatternNotToMatchUrl = '.*does_not_match-.*'
-    def responseBody = "success"
-    def lengthToMatch = responseBody.bytes.length
-    def lengthNotToMatch = lengthToMatch - 1
+    def responseNotToFind = 'will not find'
+    def responseToFind = 'middle body'
+    def responseBody = "begin body ${responseToFind} end body".toString()
 
     @Override
     String getUrlPath() {
-        return 'har/mostRecentEntry/assertContentLengthWithin'
+        return 'har/mostRecentEntry/assertContentDoesNotContain'
     }
 
     @Test
@@ -39,7 +32,7 @@ class MostRecentEntryAssertContentLengthWithinRestTest extends BaseRestTest {
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             def urlPattern = ".*${urlPatternToMatchUrl}"
             uri.path = "/proxy/${proxy.port}/${urlPath}"
-            uri.query = [urlPattern: urlPattern, length: lengthToMatch]
+            uri.query = [urlPattern: urlPattern, contentText: responseNotToFind]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
                 assertNotNull('Expected to get non null assertion result', assertionResult)
@@ -53,7 +46,7 @@ class MostRecentEntryAssertContentLengthWithinRestTest extends BaseRestTest {
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             def urlPattern = ".*${urlPatternToMatchUrl}"
             uri.path = "/proxy/${proxy.port}/${urlPath}"
-            uri.query = [urlPattern: urlPattern, length: lengthNotToMatch]
+            uri.query = [urlPattern: urlPattern, contentText: responseToFind]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
                 assertNotNull('Expected to get non null assertion result', assertionResult)
@@ -71,7 +64,7 @@ class MostRecentEntryAssertContentLengthWithinRestTest extends BaseRestTest {
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             uri.path = "/proxy/${proxy.port}/${urlPath}"
-            uri.query = [urlPattern: urlPatternNotToMatchUrl, length: lengthNotToMatch]
+            uri.query = [urlPattern: urlPatternNotToMatchUrl, contentText: responseToFind]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
                 assertNotNull('Expected to get non null assertion result', assertionResult)

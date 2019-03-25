@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.function.Predicate;
 
 public class HeadersPassPredicateAssertion extends FieldPassesPredicateAssertion<List<HarHeader>> {
+    protected static final Predicate<HarHeader> NONEMPTY_HEADER_FILTER = h -> h.getName() != null && h.getValue() != null;
 
     public HeadersPassPredicateAssertion(Predicate<List<HarHeader>> predicate) {
         super(entry -> entry.getResponse().getHeaders(), predicate);

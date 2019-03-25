@@ -683,15 +683,31 @@ public interface BrowserUpProxy {
 
     AssertionResult assertMostRecentUrlResponseTimeWithin(Pattern url, long time);
 
-    AssertionResult assertAllUrlsResponseTimeWithin(Pattern url, long time);
+    AssertionResult assertAllUrlResponseTimesWithin(Pattern url, long time);
 
     AssertionResult assertUrlContentContains(Pattern url, String text);
 
     AssertionResult assertUrlContentDoesNotContain(Pattern url, String text);
 
-    AssertionResult assertUrlResponseHeaderContains(Pattern url, String text);
+    AssertionResult assertUrlContentMatches(Pattern url, Pattern contentPattern);
 
-    AssertionResult assertUrlResponseHeaderDoesNotContain(Pattern url, String text);
+    AssertionResult assertUrlResponseHeaderContains(Pattern url, String name, String value);
+
+    default AssertionResult assertUrlResponseHeaderContains(Pattern url, String value) {
+        return assertUrlResponseHeaderContains(url, null, value);
+    }
+
+    AssertionResult assertUrlResponseHeaderDoesNotContain(Pattern url, String name, String value);
+
+    default AssertionResult assertUrlResponseHeaderDoesNotContain(Pattern url, String value) {
+        return assertUrlResponseHeaderDoesNotContain(url, null, value);
+    }
+
+    AssertionResult assertUrlResponseHeaderMatches(Pattern url, Pattern name, Pattern value);
+
+    default AssertionResult assertUrlResponseHeaderMatches(Pattern url, Pattern value) {
+        return assertUrlResponseHeaderMatches(url, null, value);
+    }
 
     AssertionResult assertUrlStatusEquals(Pattern url, Integer status);
 

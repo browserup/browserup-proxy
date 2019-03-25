@@ -12,7 +12,9 @@ import static org.mockserver.model.HttpResponse.response
 
 class HeaderBaseTest extends BaseAssertionsTest {
     protected static final def HEADER_NAME = 'headerName'
+    protected static final def NOT_MATCHING_HEADER_NAME = 'headerName not to match'
     protected static final def HEADER_VALUE = 'headerValue'
+    protected static final def NOT_MATCHING_HEADER_VALUE = 'headerValue not to match'
     protected static final def HEADER = Header.header(HEADER_NAME, HEADER_VALUE)
 
     @Before

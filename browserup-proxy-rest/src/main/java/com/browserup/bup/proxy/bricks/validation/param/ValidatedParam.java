@@ -29,15 +29,11 @@ public class ValidatedParam<ParamType> {
         this.errorMessage = errorMessage;
     }
 
-    public Optional<ParamType> getParsedParam() {
-        return Optional.ofNullable(parsedParam);
-    }
-
     public boolean isFailedToParse() {
-        return !getParsedParam().isPresent();
+        return parsedParam == null;
     }
 
-    public ParamType getRequiredParsedParam() {
+    public ParamType getParsedParam() {
         return parsedParam;
     }
 

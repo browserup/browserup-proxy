@@ -1,7 +1,6 @@
 package com.browserup.bup.proxy.bricks.resource.mostrecent;
 
 import com.browserup.bup.BrowserUpProxyServer;
-import com.browserup.bup.assertion.model.AssertionResult;
 import com.browserup.bup.proxy.ProxyManager;
 import com.browserup.bup.proxy.bricks.resource.BaseResource;
 import com.browserup.bup.proxy.bricks.validation.param.raw.IntRawParam;
@@ -15,7 +14,6 @@ import com.google.sitebricks.client.transport.Json;
 import com.google.sitebricks.headless.Reply;
 import com.google.sitebricks.headless.Service;
 import com.google.sitebricks.http.Get;
-import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,8 +48,8 @@ public class MostRecentEntryProxyResource extends BaseResource {
         proxy = parseProxyServer(new IntRawParam("proxy port", port));
         checkParams(urlPattern, proxy);
 
-        HarEntry result = proxy.getRequiredParsedParam()
-                .findMostRecentEntry(urlPattern.getRequiredParsedParam())
+        HarEntry result = proxy.getParsedParam()
+                .findMostRecentEntry(urlPattern.getParsedParam())
                 .orElse(new HarEntry());
 
         return Reply.with(result).as(Json.class);

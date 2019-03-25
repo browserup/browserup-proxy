@@ -64,6 +64,13 @@ public class BaseResource  {
         return new ValidatedParam<>(rawParam, result);
     }
 
+    protected ValidatedParam<String> parseNonEmptyStringParam(StringRawParam rawParam) throws IllegalArgumentException {
+        if (StringUtils.isEmpty(rawParam.getValue())) {
+            return new ValidatedParam<>(rawParam, "Empty string is not valid");
+        }
+        return new ValidatedParam<>(rawParam, rawParam.getValue(), null);
+    }
+
     protected ValidatedParam<Integer> parseIntParam(StringRawParam rawParam) throws IllegalArgumentException {
         if (StringUtils.isEmpty(rawParam.getValue())) {
             return new ValidatedParam<>(rawParam, "Empty string is not valid number");
