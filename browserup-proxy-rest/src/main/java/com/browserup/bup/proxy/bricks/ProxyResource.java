@@ -1,3 +1,7 @@
+/*
+ * Modifications Copyright (c) 2019 BrowserUp, Inc.
+ */
+
 package com.browserup.bup.proxy.bricks;
 
 import com.browserup.bup.assertion.model.AssertionResult;
