@@ -17,6 +17,9 @@ import org.junit.After
 import org.junit.Test
 import org.mockserver.matchers.Times
 
+import java.nio.channels.Channel
+
+import static com.browserup.bup.filters.HttpsAwareFiltersAdapter.*
 import static org.junit.Assert.assertEquals
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.verify
@@ -50,8 +53,9 @@ class RewriteUrlFilterTest extends MockServerTest {
         when(mockIsHttpsAttribute.get()).thenReturn(Boolean.FALSE)
 
         ChannelHandlerContext mockCtx = mock(ChannelHandlerContext)
-        when(mockCtx.attr(AttributeKey.<Boolean>valueOf(HttpsAwareFiltersAdapter.IS_HTTPS_ATTRIBUTE_NAME)))
-                .thenReturn(mockIsHttpsAttribute)
+        io.netty.channel.Channel channelMock = mock(io.netty.channel.Channel)
+        when(mockCtx.channel()).thenReturn(channelMock)
+        when(channelMock.attr(AttributeKey.<Boolean>valueOf(IS_HTTPS_ATTRIBUTE_NAME))).thenReturn(mockIsHttpsAttribute)
 
         RewriteUrlFilter filter = new RewriteUrlFilter(request, mockCtx, rewriteRules)
         filter.clientToProxyRequest(request)
@@ -78,8 +82,9 @@ class RewriteUrlFilterTest extends MockServerTest {
         when(mockIsHttpsAttribute.get()).thenReturn(Boolean.FALSE)
 
         ChannelHandlerContext mockCtx = mock(ChannelHandlerContext)
-        when(mockCtx.attr(AttributeKey.<Boolean>valueOf(HttpsAwareFiltersAdapter.IS_HTTPS_ATTRIBUTE_NAME)))
-                .thenReturn(mockIsHttpsAttribute)
+        io.netty.channel.Channel channelMock = mock(io.netty.channel.Channel)
+        when(mockCtx.channel()).thenReturn(channelMock)
+        when(channelMock.attr(AttributeKey.<Boolean>valueOf(IS_HTTPS_ATTRIBUTE_NAME))).thenReturn(mockIsHttpsAttribute)
 
         RewriteUrlFilter filter = new RewriteUrlFilter(request, mockCtx, rewriteRules)
         filter.clientToProxyRequest(request)

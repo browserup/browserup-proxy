@@ -31,7 +31,7 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
      * @return true if https, false if http
      */
     public boolean isHttps() {
-        Attribute<Boolean> isHttpsAttr = ctx.attr(AttributeKey.<Boolean>valueOf(IS_HTTPS_ATTRIBUTE_NAME));
+        Attribute<Boolean> isHttpsAttr = ctx.channel().attr(AttributeKey.valueOf(IS_HTTPS_ATTRIBUTE_NAME));
 
         Boolean isHttps = isHttpsAttr.get();
         if (isHttps == null) {
@@ -138,7 +138,7 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
             throw new IllegalStateException("Request is not HTTPS. Cannot get host and port on non-HTTPS request using this method.");
         }
 
-        Attribute<String> hostnameAttr = ctx.attr(AttributeKey.<String>valueOf(HOST_ATTRIBUTE_NAME));
+        Attribute<String> hostnameAttr = ctx.channel().attr(AttributeKey.valueOf(HOST_ATTRIBUTE_NAME));
         return hostnameAttr.get();
     }
 
@@ -155,7 +155,7 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
             throw new IllegalStateException("Request is not HTTPS. Cannot get original host and port on non-HTTPS request using this method.");
         }
 
-        Attribute<String> hostnameAttr = ctx.attr(AttributeKey.<String>valueOf(ORIGINAL_HOST_ATTRIBUTE_NAME));
+        Attribute<String> hostnameAttr = ctx.channel().attr(AttributeKey.valueOf(ORIGINAL_HOST_ATTRIBUTE_NAME));
         return hostnameAttr.get();
     }
 }
