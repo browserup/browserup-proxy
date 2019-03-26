@@ -10,6 +10,8 @@ import com.browserup.bup.util.BrowserUpHttpUtil;
 import org.littleshoot.proxy.HttpFiltersAdapter;
 import org.littleshoot.proxy.impl.ProxyUtils;
 
+import static com.browserup.bup.util.HttpUtil.*;
+
 /**
  * The HttpsAwareFiltersAdapter exposes the original host and the "real" host (after filter modifications) to filters for HTTPS
  * requets. HTTPS requests do not normally contain the host in the URI, and the Host header may be missing or spoofed.
@@ -31,7 +33,7 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
      * @return true if https, false if http
      */
     public boolean isHttps() {
-        Attribute<Boolean> isHttpsAttr = ctx.attr(AttributeKey.<Boolean>valueOf(IS_HTTPS_ATTRIBUTE_NAME));
+        Attribute<Boolean> isHttpsAttr = ctx.channel().attr(AttributeKey.valueOf(IS_HTTPS_ATTRIBUTE_NAME));
 
         Boolean isHttps = isHttpsAttr.get();
         if (isHttps == null) {
@@ -53,14 +55,14 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
         // special case: for HTTPS requests, the full URL is scheme (https://) + the URI of this request
         if (ProxyUtils.isCONNECT(modifiedRequest)) {
             // CONNECT requests contain the default port, even if it isn't specified on the request.
-            String hostNoDefaultPort = BrowserUpHttpUtil.removeMatchingPort(modifiedRequest.getUri(), 443);
+            String hostNoDefaultPort = BrowserUpHttpUtil.removeMatchingPort(modifiedRequest.uri(), 443);
             return "https://" + hostNoDefaultPort;
         }
 
         // To get the full URL, we need to retrieve the Scheme, Host + Port, Path, and Query Params from the request.
         // If the request URI starts with http:// or https://, it is already a full URL and can be returned directly.
-        if (HttpUtil.startsWithHttpOrHttps(modifiedRequest.getUri())) {
-            return modifiedRequest.getUri();
+        if (startsWithHttpOrHttps(modifiedRequest.uri())) {
+            return modifiedRequest.uri();
         }
 
         // The URI did not include the scheme and host, so examine the request to obtain them:
@@ -69,14 +71,9 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
         // Path + Query Params: since the request URI doesn't start with the scheme, we can safely assume that the URI
         //    contains only the path and query params.
         String hostAndPort = getHostAndPort(modifiedRequest);
-        String path = modifiedRequest.getUri();
-        String url;
-        if (isHttps()) {
-            url = "https://" + hostAndPort + path;
-        } else {
-            url = "http://" + hostAndPort + path;
-        }
-        return url;
+        String path = modifiedRequest.uri();
+
+        return isHttps() ? "https://" + hostAndPort + path : "http://" + hostAndPort + path;
     }
 
     /**
@@ -103,7 +100,7 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
             HostAndPort hostAndPort = HostAndPort.fromString(getHttpsRequestHostAndPort());
             serverHost = hostAndPort.getHost();
         } else {
-            serverHost = HttpUtil.getHostFromRequest(modifiedRequest);
+            serverHost = getHostFromRequest(modifiedRequest);
         }
         return serverHost;
     }
@@ -120,11 +117,7 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
         // For HTTP requests, the host and port can be read from the request itself using the URI and/or
         //   Host header. for HTTPS requests, the host and port are not available in the request. by using the
         //   getHttpsRequestHostAndPort() helper method, we can retrieve the host and port for HTTPS requests.
-        if (isHttps()) {
-            return getHttpsRequestHostAndPort();
-        } else {
-            return HttpUtil.getHostAndPortFromRequest(modifiedRequest);
-        }
+        return isHttps() ? getHttpsRequestHostAndPort() : getHostAndPortFromRequest(modifiedRequest);
     }
 
     /**
@@ -138,7 +131,7 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
             throw new IllegalStateException("Request is not HTTPS. Cannot get host and port on non-HTTPS request using this method.");
         }
 
-        Attribute<String> hostnameAttr = ctx.attr(AttributeKey.<String>valueOf(HOST_ATTRIBUTE_NAME));
+        Attribute<String> hostnameAttr = ctx.channel().attr(AttributeKey.valueOf(HOST_ATTRIBUTE_NAME));
         return hostnameAttr.get();
     }
 
@@ -155,7 +148,7 @@ public class HttpsAwareFiltersAdapter extends HttpFiltersAdapter {
             throw new IllegalStateException("Request is not HTTPS. Cannot get original host and port on non-HTTPS request using this method.");
         }
 
-        Attribute<String> hostnameAttr = ctx.attr(AttributeKey.<String>valueOf(ORIGINAL_HOST_ATTRIBUTE_NAME));
+        Attribute<String> hostnameAttr = ctx.channel().attr(AttributeKey.valueOf(ORIGINAL_HOST_ATTRIBUTE_NAME));
         return hostnameAttr.get();
     }
 }

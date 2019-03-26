@@ -1,6 +1,7 @@
 package com.browserup.bup.util;
 
 import com.google.common.net.HostAndPort;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 
@@ -48,9 +49,9 @@ public class HttpUtil {
      * @return host and port of the request
      */
     public static String getHostAndPortFromRequest(HttpRequest httpRequest) {
-        if (startsWithHttpOrHttps(httpRequest.getUri())) {
+        if (startsWithHttpOrHttps(httpRequest.uri())) {
             try {
-                return getHostAndPortFromUri(httpRequest.getUri());
+                return getHostAndPortFromUri(httpRequest.uri());
             } catch (URISyntaxException e) {
                 // the URI could not be parsed, so return the host and port in the Host header
             }
@@ -106,7 +107,7 @@ public class HttpUtil {
      */
     private static String parseHostHeader(HttpRequest httpRequest, boolean includePort) {
         // this header parsing logic is adapted from ClientToProxyConnection#identifyHostAndPort.
-        List<String> hosts = httpRequest.headers().getAll(HttpHeaders.Names.HOST);
+        List<String> hosts = httpRequest.headers().getAll(HttpHeaderNames.HOST);
         if (!hosts.isEmpty()) {
             String hostAndPort = hosts.get(0);
 

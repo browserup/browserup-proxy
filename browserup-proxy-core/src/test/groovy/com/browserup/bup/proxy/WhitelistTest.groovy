@@ -5,6 +5,7 @@ import com.browserup.bup.BrowserUpProxyServer
 import com.browserup.bup.filters.WhitelistFilter
 import com.browserup.bup.proxy.test.util.MockServerTest
 import com.browserup.bup.proxy.test.util.NewProxyServerTestUtil
+import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpRequest
 import io.netty.handler.codec.http.HttpResponse
@@ -12,7 +13,6 @@ import io.netty.handler.codec.http.HttpVersion
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.junit.After
-import org.junit.Ignore
 import org.junit.Test
 import org.mockserver.matchers.Times
 
@@ -34,15 +34,15 @@ class WhitelistTest extends MockServerTest {
     }
 
     @Test
-    @Ignore
     void testWhitelistCannotShortCircuitCONNECT() {
         HttpRequest request = mock(HttpRequest.class)
-        when(request.getMethod()).thenReturn(HttpMethod.CONNECT)
-        when(request.getUri()).thenReturn('somedomain.com:443')
-        when(request.getProtocolVersion()).thenReturn(HttpVersion.HTTP_1_1)
+        when(request.method()).thenReturn(HttpMethod.CONNECT)
+        when(request.uri()).thenReturn('somedomain.com:443')
+        when(request.protocolVersion()).thenReturn(HttpVersion.HTTP_1_1)
+        ChannelHandlerContext mockCtx = mock(ChannelHandlerContext)
 
         // create a whitelist filter that whitelists no requests (i.e., all requests should return the specified HTTP 500 status code)
-        WhitelistFilter filter = new WhitelistFilter(request, null, true, 500, [])
+        WhitelistFilter filter = new WhitelistFilter(request, mockCtx, true, 500, [])
         HttpResponse response = filter.clientToProxyRequest(request)
 
         assertNull("Whitelist short-circuited HTTP CONNECT. Expected all HTTP CONNECTs to be whitelisted.", response)

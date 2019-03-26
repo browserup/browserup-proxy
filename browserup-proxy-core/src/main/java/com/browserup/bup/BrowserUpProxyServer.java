@@ -17,6 +17,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MapMaker;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
@@ -370,7 +371,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
                                 String chainedProxyAuth = chainedProxyCredentials;
                                 if (chainedProxyAuth != null) {
                                     if (httpObject instanceof HttpRequest) {
-                                        HttpHeaders.addHeader((HttpRequest)httpObject, HttpHeaders.Names.PROXY_AUTHORIZATION, "Basic " + chainedProxyAuth);
+                                        HttpHeaders.addHeader((HttpRequest)httpObject, HttpHeaderNames.PROXY_AUTHORIZATION, "Basic " + chainedProxyAuth);
                                     }
                                 }
                             }

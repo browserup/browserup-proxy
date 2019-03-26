@@ -2,6 +2,7 @@ package com.browserup.bup.filters
 
 import com.google.common.collect.ImmutableList
 import io.netty.channel.ChannelHandlerContext
+import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpHeaders
 import io.netty.handler.codec.http.HttpRequest
 import io.netty.util.Attribute
@@ -17,6 +18,9 @@ import org.junit.After
 import org.junit.Test
 import org.mockserver.matchers.Times
 
+import java.nio.channels.Channel
+
+import static com.browserup.bup.filters.HttpsAwareFiltersAdapter.*
 import static org.junit.Assert.assertEquals
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.verify
@@ -37,10 +41,10 @@ class RewriteUrlFilterTest extends MockServerTest {
     @Test
     void testRewriteWithCaptureGroups() {
         HttpHeaders mockHeaders = mock(HttpHeaders.class)
-        when(mockHeaders.contains(HttpHeaders.Names.HOST)).thenReturn(false)
+        when(mockHeaders.contains(HttpHeaderNames.HOST)).thenReturn(false)
 
         HttpRequest request = mock(HttpRequest.class)
-        when(request.getUri()).thenReturn('http://www.yahoo.com?param=someValue')
+        when(request.uri()).thenReturn('http://www.yahoo.com?param=someValue')
         when(request.headers()).thenReturn(mockHeaders)
 
         Collection<RewriteRule> rewriteRules = ImmutableList.of(new RewriteRule('http://www\\.(yahoo|bing)\\.com\\?(\\w+)=(\\w+)', 'http://www.google.com?originalDomain=$1&$2=$3'))
@@ -50,8 +54,9 @@ class RewriteUrlFilterTest extends MockServerTest {
         when(mockIsHttpsAttribute.get()).thenReturn(Boolean.FALSE)
 
         ChannelHandlerContext mockCtx = mock(ChannelHandlerContext)
-        when(mockCtx.attr(AttributeKey.<Boolean>valueOf(HttpsAwareFiltersAdapter.IS_HTTPS_ATTRIBUTE_NAME)))
-                .thenReturn(mockIsHttpsAttribute)
+        io.netty.channel.Channel channelMock = mock(io.netty.channel.Channel)
+        when(mockCtx.channel()).thenReturn(channelMock)
+        when(channelMock.attr(AttributeKey.<Boolean>valueOf(IS_HTTPS_ATTRIBUTE_NAME))).thenReturn(mockIsHttpsAttribute)
 
         RewriteUrlFilter filter = new RewriteUrlFilter(request, mockCtx, rewriteRules)
         filter.clientToProxyRequest(request)
@@ -62,10 +67,10 @@ class RewriteUrlFilterTest extends MockServerTest {
     @Test
     void testRewriteMultipleMatches() {
         HttpHeaders mockHeaders = mock(HttpHeaders.class)
-        when(mockHeaders.contains(HttpHeaders.Names.HOST)).thenReturn(false)
+        when(mockHeaders.contains(HttpHeaderNames.HOST)).thenReturn(false)
 
         HttpRequest request = mock(HttpRequest.class)
-        when(request.getUri()).thenReturn('http://www.yahoo.com?param=someValue')
+        when(request.uri()).thenReturn('http://www.yahoo.com?param=someValue')
         when(request.headers()).thenReturn(mockHeaders)
 
         Collection<RewriteRule> rewriteRules = ImmutableList.of(
@@ -78,8 +83,9 @@ class RewriteUrlFilterTest extends MockServerTest {
         when(mockIsHttpsAttribute.get()).thenReturn(Boolean.FALSE)
 
         ChannelHandlerContext mockCtx = mock(ChannelHandlerContext)
-        when(mockCtx.attr(AttributeKey.<Boolean>valueOf(HttpsAwareFiltersAdapter.IS_HTTPS_ATTRIBUTE_NAME)))
-                .thenReturn(mockIsHttpsAttribute)
+        io.netty.channel.Channel channelMock = mock(io.netty.channel.Channel)
+        when(mockCtx.channel()).thenReturn(channelMock)
+        when(channelMock.attr(AttributeKey.<Boolean>valueOf(IS_HTTPS_ATTRIBUTE_NAME))).thenReturn(mockIsHttpsAttribute)
 
         RewriteUrlFilter filter = new RewriteUrlFilter(request, mockCtx, rewriteRules)
         filter.clientToProxyRequest(request)

@@ -2,6 +2,7 @@ package com.browserup.bup.util;
 
 import io.netty.handler.codec.http.FullHttpMessage;
 import io.netty.handler.codec.http.HttpContent;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMessage;
 import com.browserup.bup.exception.UnsupportedCharsetException;
@@ -30,7 +31,7 @@ public class HttpObjectUtil {
      */
     public static void replaceTextHttpEntityBody(FullHttpMessage message, String newContents) {
         // get the content type for this message so we can encode the newContents into a byte stream appropriately
-        String contentTypeHeader = message.headers().get(HttpHeaders.Names.CONTENT_TYPE);
+        String contentTypeHeader = message.headers().get(HttpHeaderNames.CONTENT_TYPE);
 
         Charset messageCharset;
         try {
@@ -66,7 +67,7 @@ public class HttpObjectUtil {
         message.content().writeBytes(newBinaryContents);
 
         // update the Content-Length header, since the size may have changed
-        message.headers().set(HttpHeaders.Names.CONTENT_LENGTH, newBinaryContents.length);
+        message.headers().set(HttpHeaderNames.CONTENT_LENGTH, newBinaryContents.length);
     }
 
     /**
@@ -105,7 +106,7 @@ public class HttpObjectUtil {
             // to alert the client code.
             java.nio.charset.UnsupportedCharsetException cause = e.getUnsupportedCharsetExceptionCause();
 
-            String contentTypeHeader = HttpHeaders.getHeader(httpMessage, HttpHeaders.Names.CONTENT_TYPE);
+            String contentTypeHeader = HttpHeaders.getHeader(httpMessage, HttpHeaderNames.CONTENT_TYPE);
             log.error("Cannot retrieve text contents of message because HTTP message declares a character set that is not supported on this platform. Content type header: {}.", contentTypeHeader, cause);
 
             throw cause;
@@ -124,7 +125,7 @@ public class HttpObjectUtil {
      * @throws UnsupportedCharsetException if there is a charset specified in the content-type header, but it is not supported
      */
     public static Charset getCharsetFromMessage(HttpMessage httpMessage) throws UnsupportedCharsetException {
-        String contentTypeHeader = HttpHeaders.getHeader(httpMessage, HttpHeaders.Names.CONTENT_TYPE);
+        String contentTypeHeader = HttpHeaders.getHeader(httpMessage, HttpHeaderNames.CONTENT_TYPE);
 
         Charset charset = BrowserUpHttpUtil.readCharsetInContentTypeHeader(contentTypeHeader);
         if (charset == null) {

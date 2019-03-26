@@ -14,6 +14,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.regex.Pattern;
 
+import static java.util.Collections.*;
+
 /**
  * Checks this request against the whitelist, and returns the modified response if the request is not in the whitelist. The filter does not
  * make a defensive copy of the whitelist URLs, so there is no guarantee that the whitelist URLs at the time of construction will contain the
@@ -24,17 +26,16 @@ public class WhitelistFilter extends HttpsAwareFiltersAdapter {
     private final int whitelistResponseCode;
     private final Collection<Pattern> whitelistUrls;
 
-    public WhitelistFilter(HttpRequest originalRequest, ChannelHandlerContext ctx, boolean whitelistEnabled,int whitelistResponseCode,
+    public WhitelistFilter(HttpRequest originalRequest,
+                           ChannelHandlerContext ctx,
+                           boolean whitelistEnabled,
+                           int whitelistResponseCode,
                            Collection<Pattern> whitelistUrls) {
         super(originalRequest, ctx);
 
         this.whitelistEnabled = whitelistEnabled;
         this.whitelistResponseCode = whitelistResponseCode;
-        if (whitelistUrls != null) {
-            this.whitelistUrls = whitelistUrls;
-        } else {
-            this.whitelistUrls = Collections.emptyList();
-        }
+        this.whitelistUrls = whitelistUrls != null ? whitelistUrls : emptyList();
     }
 
     @Override
