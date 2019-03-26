@@ -19,8 +19,8 @@ class HeaderMatchesTest extends HeaderBaseTest {
                 Pattern.compile(".*${URL_PATH}.*"),
                 Pattern.compile(".*"))
 
-        assertTrue("Expected to find header value", result.passed)
-        assertFalse("Expected to find header value", result.failed)
+        assertTrue("Expected all headers to match value pattern", result.passed)
+        assertFalse("Expected all headers to match value pattern", result.failed)
     }
 
     @Test
@@ -32,24 +32,23 @@ class HeaderMatchesTest extends HeaderBaseTest {
                 Pattern.compile(".*${URL_PATH}.*"),
                 Pattern.compile(".*${NOT_MATCHING_HEADER_VALUE}.*"))
 
-        assertFalse("Expected not to find header value", result.passed)
-        assertTrue("Expected not to find header value", result.failed)
+        assertFalse("Expected headers not to match value pattern", result.passed)
+        assertTrue("Expected headers not to match value pattern", result.failed)
     }
 
     @Test
-    void anyNameIfEmptyNameProvidedAndMatchingValue() {
+    void emptyNameProvidedAndMatchingValue() {
         def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
         assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
 
         def result = proxy.assertUrlResponseHeaderMatches(
                 Pattern.compile(".*${URL_PATH}.*"),
                 null,
-                Pattern.compile(".*${HEADER_VALUE}.*"))
+                Pattern.compile(".*"))
 
-        assertTrue("Expected to find header value", result.passed)
-        assertFalse("Expected to find header value", result.failed)
+        assertTrue("Expected all headers to match value pattern", result.passed)
+        assertFalse("Expected all headers to match value pattern", result.failed)
     }
-
 
     @Test
     void matchingNameAndMatchingValue() {
@@ -61,8 +60,8 @@ class HeaderMatchesTest extends HeaderBaseTest {
                 Pattern.compile(".*${HEADER_NAME}.*"),
                 Pattern.compile(".*${HEADER_VALUE}.*"))
 
-        assertTrue("Expected to find header value", result.passed)
-        assertFalse("Expected to find header value", result.failed)
+        assertTrue("Expected headers values found by name pattern to match value pattern", result.passed)
+        assertFalse("Expected headers values found by name pattern to match value pattern", result.failed)
     }
 
     @Test
@@ -76,8 +75,8 @@ class HeaderMatchesTest extends HeaderBaseTest {
                 Pattern.compile(".*${HEADER_NAME}.*"),
                 Pattern.compile(".*${NOT_MATCHING_HEADER_VALUE}.*"))
 
-        assertFalse("Expected not to find header value", result.passed)
-        assertTrue("Expected not to find header value", result.failed)
+        assertFalse("Expected headers values found by name pattern not to match value pattern", result.passed)
+        assertTrue("Expected headers values found by name pattern not to match value pattern", result.failed)
     }
 
     @Test
@@ -90,8 +89,8 @@ class HeaderMatchesTest extends HeaderBaseTest {
                 Pattern.compile(".*${NOT_MATCHING_HEADER_NAME}.*"),
                 Pattern.compile(".*${HEADER_VALUE}.*"))
 
-        assertFalse("Expected not to find header value", result.passed)
-        assertTrue("Expected not to find header value", result.failed)
+        assertTrue("Expected to pass when no header found by name pattern", result.passed)
+        assertFalse("Expected to pass when no header found by name pattern", result.failed)
     }
 
     @Test
@@ -104,7 +103,7 @@ class HeaderMatchesTest extends HeaderBaseTest {
                 Pattern.compile(".*${NOT_MATCHING_HEADER_NAME}.*"),
                 Pattern.compile(".*${NOT_MATCHING_HEADER_VALUE}.*"))
 
-        assertFalse("Expected not to find header value", result.passed)
-        assertTrue("Expected not to find header value", result.failed)
+        assertTrue("Expected to pass when no header found by name pattern", result.passed)
+        assertFalse("Expected to pass when no header found by name pattern", result.failed)
     }
 }

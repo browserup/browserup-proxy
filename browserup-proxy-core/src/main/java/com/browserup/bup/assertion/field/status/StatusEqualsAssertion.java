@@ -1,15 +1,27 @@
 package com.browserup.bup.assertion.field.status;
 
-import com.browserup.bup.assertion.field.FieldPassesPredicateAssertion;
-import com.browserup.bup.assertion.field.header.HeadersPassPredicateAssertion;
-import com.browserup.harreader.model.HarHeader;
+import com.browserup.bup.assertion.field.HarEntryPredicate;
 
-import java.util.List;
-import java.util.function.Predicate;
+import java.util.Optional;
 
 public class StatusEqualsAssertion extends StatusPassesPredicateAssertion {
+    private final Integer status;
 
     public StatusEqualsAssertion(Integer status) {
-        super(Predicate.isEqual(status));
+        this.status = status;
+    }
+
+    @Override
+    public HarEntryPredicate<Integer> getHarEntryPredicate() {
+        return s -> {
+            Optional<String> result = Optional.empty();
+
+            if (!s.equals(status)) {
+                return Optional.of(String.format(
+                        "Expected response status to be: '%d', but was: '%d'", status, s));
+            }
+
+            return result;
+        };
     }
 }

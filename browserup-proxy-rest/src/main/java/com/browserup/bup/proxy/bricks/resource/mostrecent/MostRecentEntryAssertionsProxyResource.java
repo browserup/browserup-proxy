@@ -187,7 +187,7 @@ public class MostRecentEntryAssertionsProxyResource extends MostRecentEntryProxy
         proxy = parseProxyServer(new IntRawParam("proxy port", port));
         checkParams(urlPattern, proxy, status);
 
-        AssertionResult result = proxy.getParsedParam().assertUrlStatusEquals(
+        AssertionResult result = proxy.getParsedParam().assertMostRecentResponseStatusCode(
                 urlPattern.getParsedParam(),
                 status.getParsedParam());
 
@@ -202,7 +202,7 @@ public class MostRecentEntryAssertionsProxyResource extends MostRecentEntryProxy
         proxy = parseProxyServer(new IntRawParam("proxy port", port));
         checkParams(urlPattern, proxy, length);
 
-        AssertionResult result = proxy.getParsedParam().assertUrlContentLengthWithin(
+        AssertionResult result = proxy.getParsedParam().assertUrlContentLengthUnder(
                 urlPattern.getParsedParam(),
                 length.getParsedParam());
 

@@ -8,11 +8,13 @@ import java.util.Optional;
 
 import static org.apache.commons.lang3.StringUtils.contains;
 
-public class HeadersDoNotContainStringAssertion extends HeadersPassPredicateAssertion {
+public class FilteredHeadersDoNotContainStringAssertion extends HeadersPassPredicateAssertion {
     private final String value;
+    private final String name;
 
-    public HeadersDoNotContainStringAssertion(String value) {
+    public FilteredHeadersDoNotContainStringAssertion(String name, String value) {
         this.value = value;
+        this.name = name;
     }
 
     @Override
@@ -20,13 +22,12 @@ public class HeadersDoNotContainStringAssertion extends HeadersPassPredicateAsse
         return harHeaders -> {
             Optional<HarHeader> found = harHeaders.stream()
                     .filter(NONEMPTY_HEADER_FILTER)
-                    .filter(hv -> contains(hv.getValue(), value))
+                    .filter(h -> h.getName().equals(name))
+                    .filter(h -> contains(h.getValue(), value))
                     .findFirst();
 
             return found.map(h -> String.format(
-                    "Expected to find no headers containing string '%s'. Found header with name: '%s' containing string: '%s'",
-                    value, h.getName(), value
-            ));
+                    "Expected to find no header with name '%s' and value containing string '%s'", h.getName(), value));
         };
     }
 }

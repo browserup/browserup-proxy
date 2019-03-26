@@ -18,7 +18,7 @@ import static org.junit.Assert.*
 import static org.mockserver.model.HttpRequest.request
 import static org.mockserver.model.HttpResponse.response
 
-class MostRecentEntryAssertContentLengthWithinRestTest extends BaseRestTest {
+class MostRecentEntryAssertContentLengthUnderRestTest extends BaseRestTest {
     def urlOfMostRecentRequest = 'url-most-recent'
     def urlOfOldRequest = 'url-old'
     def urlPatternToMatchUrl = '.*url-.*'

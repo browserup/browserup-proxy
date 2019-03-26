@@ -8,10 +8,12 @@ import java.util.Optional;
 
 import static org.apache.commons.lang3.StringUtils.contains;
 
-public class HeadersContainStringAssertion extends HeadersPassPredicateAssertion {
+public class FilteredHeadersContainStringAssertion extends HeadersPassPredicateAssertion {
+    private final String name;
     private final String value;
 
-    public HeadersContainStringAssertion(String value) {
+    public FilteredHeadersContainStringAssertion(String name, String value) {
+        this.name = name;
         this.value = value;
     }
 
@@ -21,15 +23,14 @@ public class HeadersContainStringAssertion extends HeadersPassPredicateAssertion
             Optional<String> result = Optional.empty();
             boolean contains = harHeaders.stream()
                     .filter(NONEMPTY_HEADER_FILTER)
-                    .map(HarHeader::getValue)
-                    .anyMatch(hv -> contains(hv, value));
+                    .filter(h -> h.getName().equals(name))
+                    .anyMatch(h -> contains(h.getValue(), value));
             if (!contains) {
                 result = Optional.of(String.format(
-                        "Expected to find one or more headers containing string: '%s'", value
+                        "Expected to find header with name: '%s' and value containing string: '%s'", name, value
                 ));
             }
             return result;
         };
     }
-
 }

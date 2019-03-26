@@ -8,10 +8,12 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class HeadersMatchAssertion extends HeadersPassPredicateAssertion {
+public class FilteredHeadersMatchAssertion extends HeadersPassPredicateAssertion {
+    private final Pattern namePattern;
     private final Pattern valuePattern;
 
-    public HeadersMatchAssertion(Pattern valuePattern) {
+    public FilteredHeadersMatchAssertion(Pattern namePattern, Pattern valuePattern) {
+        this.namePattern = namePattern;
         this.valuePattern = valuePattern;
     }
 
@@ -22,6 +24,7 @@ public class HeadersMatchAssertion extends HeadersPassPredicateAssertion {
 
             List<HarHeader> notMatchingHeaders = harHeaders.stream()
                     .filter(NONEMPTY_HEADER_FILTER)
+                    .filter(h -> namePattern.matcher(h.getName()).matches())
                     .filter(h -> !valuePattern.matcher(h.getValue()).matches())
                     .collect(Collectors.toList());
 
@@ -31,8 +34,9 @@ public class HeadersMatchAssertion extends HeadersPassPredicateAssertion {
                         .collect(Collectors.joining(","));
 
                 result = Optional.of(String.format(
-                        "Expected headers values to match pattern: '%s'. Headers names which values don't match value pattern: %s",
-                        valuePattern.pattern(), notMatchingHeadersNames
+                        "Expected headers with names matching pattern: '%s' to have values matching pattern: '%s'. " +
+                                "Headers names not matching value pattern: '%s'",
+                        namePattern.pattern(), valuePattern.pattern(), notMatchingHeadersNames
                 ));
             }
 

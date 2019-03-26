@@ -12,6 +12,7 @@ import com.browserup.bup.proxy.CaptureType;
 import com.browserup.bup.proxy.auth.AuthType;
 import com.browserup.bup.proxy.dns.AdvancedHostResolver;
 import com.browserup.harreader.model.HarEntry;
+import io.netty.handler.codec.http.HttpStatusClass;
 import org.littleshoot.proxy.HttpFiltersSource;
 import org.littleshoot.proxy.MitmManager;
 
@@ -709,7 +710,21 @@ public interface BrowserUpProxy {
         return assertUrlResponseHeaderMatches(url, null, value);
     }
 
-    AssertionResult assertUrlStatusEquals(Pattern url, Integer status);
+    AssertionResult assertUrlContentLengthUnder(Pattern url, Long max);
 
-    AssertionResult assertUrlContentLengthWithin(Pattern url, Long size);
+    AssertionResult assertResponseStatusCode(Integer status);
+
+    AssertionResult assertResponseStatusCode(HttpStatusClass clazz);
+
+    AssertionResult assertResponseStatusCode(Pattern url, Integer status);
+
+    AssertionResult assertResponseStatusCode(Pattern url, HttpStatusClass clazz);
+
+    AssertionResult assertMostRecentResponseStatusCode(Integer status);
+
+    AssertionResult assertMostRecentResponseStatusCode(HttpStatusClass clazz);
+
+    AssertionResult assertMostRecentResponseStatusCode(Pattern url, Integer status);
+
+    AssertionResult assertMostRecentResponseStatusCode(Pattern url, HttpStatusClass clazz);
 }

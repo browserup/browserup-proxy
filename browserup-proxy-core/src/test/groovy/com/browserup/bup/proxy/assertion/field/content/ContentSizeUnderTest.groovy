@@ -1,20 +1,15 @@
 package com.browserup.bup.proxy.assertion.field.content
 
-import com.browserup.bup.proxy.CaptureType
-import com.browserup.bup.proxy.assertion.BaseAssertionsTest
 import org.apache.commons.lang3.StringUtils
 import org.apache.http.client.methods.HttpGet
-import org.junit.Before
 import org.junit.Test
-import org.mockserver.model.Delay
 
-import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 
 import static com.browserup.bup.proxy.test.util.NewProxyServerTestUtil.toStringAndClose
 import static org.junit.Assert.*
 
-class ContentSizeWithinTest extends ContentBaseTest {
+class ContentSizeUnderTest extends ContentBaseTest {
 
     @Test
     void contentSizeWithinAssertionPasses() {
@@ -26,7 +21,7 @@ class ContentSizeWithinTest extends ContentBaseTest {
         def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
         assertEquals("Did not receive expected response from mock server", body, respBody)
 
-        def result = proxy.assertUrlContentLengthWithin(Pattern.compile(".*${URL_PATH}.*"), bodySize)
+        def result = proxy.assertUrlContentLengthUnder(Pattern.compile(".*${URL_PATH}.*"), bodySize)
 
         assertTrue("Expected assertion to pass", result.passed)
         assertFalse("Expected assertion to pass", result.failed)
@@ -42,7 +37,7 @@ class ContentSizeWithinTest extends ContentBaseTest {
         def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
         assertEquals("Did not receive expected response from mock server", body, respBody)
 
-        def result = proxy.assertUrlContentLengthWithin(Pattern.compile(".*${URL_PATH}.*"), bodySize - 1)
+        def result = proxy.assertUrlContentLengthUnder(Pattern.compile(".*${URL_PATH}.*"), bodySize - 1)
 
         assertFalse("Expected assertion to fail", result.passed)
         assertTrue("Expected assertion to fail", result.failed)
