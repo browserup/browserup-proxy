@@ -1,6 +1,7 @@
 package com.browserup.bup.filters;
 
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
@@ -14,8 +15,9 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URISyntaxException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.regex.Matcher;
+
+import static java.util.Collections.*;
 
 /**
  * Applies rewrite rules to the specified request. If a rewrite rule matches, the request's URI will be overwritten with the rewritten URI.
@@ -28,14 +30,12 @@ public class RewriteUrlFilter extends HttpsAwareFiltersAdapter {
 
     private final Collection<RewriteRule> rewriteRules;
 
-    public RewriteUrlFilter(HttpRequest originalRequest, ChannelHandlerContext ctx, Collection<RewriteRule> rewriterules) {
+    public RewriteUrlFilter(HttpRequest originalRequest,
+                            ChannelHandlerContext ctx,
+                            Collection<RewriteRule> rewriteRules) {
         super(originalRequest, ctx);
 
-        if (rewriterules != null) {
-            this.rewriteRules = rewriterules;
-        } else {
-            this.rewriteRules = Collections.emptyList();
-        }
+        this.rewriteRules = rewriteRules != null ? rewriteRules : emptyList();
     }
 
     @Override
@@ -64,7 +64,7 @@ public class RewriteUrlFilter extends HttpsAwareFiltersAdapter {
                 // if the URI in the request contains the scheme, host, and port, the request's URI can be replaced
                 // with the rewritten URI. if not (for example, on HTTPS requests), strip the scheme, host, and port from
                 // the rewritten URL before replacing the URI on the request.
-                String uriFromRequest = httpRequest.getUri();
+                String uriFromRequest = httpRequest.uri();
                 if (HttpUtil.startsWithHttpOrHttps(uriFromRequest)) {
                     httpRequest.setUri(rewrittenUrl);
                 } else {
@@ -117,7 +117,7 @@ public class RewriteUrlFilter extends HttpsAwareFiltersAdapter {
                                 originalHostAndPort, modifiedHostAndPort);
                     } else {
                         // only modify the Host header if it already exists
-                        if (httpRequest.headers().contains(HttpHeaders.Names.HOST)) {
+                        if (httpRequest.headers().contains(HttpHeaderNames.HOST)) {
                             HttpHeaders.setHost(httpRequest, modifiedHostAndPort);
                         }
                     }

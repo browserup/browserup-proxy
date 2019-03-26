@@ -98,8 +98,8 @@ public class InterceptorTest extends MockServerTest {
 
                             HttpRequest httpRequest = (HttpRequest) httpObject;
 
-                            if (httpRequest.getMethod().equals(HttpMethod.GET) && httpRequest.getUri().contains("/shortcircuit204")) {
-                                HttpResponse httpResponse = new DefaultHttpResponse(httpRequest.getProtocolVersion(), HttpResponseStatus.NO_CONTENT);
+                            if (httpRequest.getMethod().equals(HttpMethod.GET) && httpRequest.uri().contains("/shortcircuit204")) {
+                                HttpResponse httpResponse = new DefaultHttpResponse(httpRequest.protocolVersion(), HttpResponseStatus.NO_CONTENT);
 
                                 shortCircuitFired.set(true);
 
@@ -175,7 +175,7 @@ public class InterceptorTest extends MockServerTest {
                     public HttpResponse clientToProxyRequest(HttpObject httpObject) {
                         if (httpObject instanceof HttpRequest) {
                             HttpRequest httpRequest = (HttpRequest) httpObject;
-                            httpRequest.setUri(httpRequest.getUri().replace("/originalrequest", "/modifyrequest"));
+                            httpRequest.setUri(httpRequest.uri().replace("/originalrequest", "/modifyrequest"));
                         }
 
                         return super.clientToProxyRequest(httpObject);
@@ -252,17 +252,14 @@ public class InterceptorTest extends MockServerTest {
         proxy.setTrustAllServers(true);
         proxy.start();
 
-        proxy.addRequestFilter(new RequestFilter() {
-            @Override
-            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
-                if (contents.isText()) {
-                    if (contents.getTextContents().equals(originalText)) {
-                        contents.setTextContents(newText);
-                    }
+        proxy.addRequestFilter((request, contents, messageInfo) -> {
+            if (contents.isText()) {
+                if (contents.getTextContents().equals(originalText)) {
+                    contents.setTextContents(newText);
                 }
-
-                return null;
             }
+
+            return null;
         });
 
         try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
@@ -293,13 +290,10 @@ public class InterceptorTest extends MockServerTest {
         proxy = new BrowserUpProxyServer();
         proxy.start();
 
-        proxy.addResponseFilter(new ResponseFilter() {
-            @Override
-            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
-                if (!contents.isText()) {
-                    if (Arrays.equals(originalBytes, contents.getBinaryContents())) {
-                        contents.setBinaryContents(newBytes);
-                    }
+        proxy.addResponseFilter((response, contents, messageInfo) -> {
+            if (!contents.isText()) {
+                if (Arrays.equals(originalBytes, contents.getBinaryContents())) {
+                    contents.setBinaryContents(newBytes);
                 }
             }
         });
@@ -331,13 +325,10 @@ public class InterceptorTest extends MockServerTest {
         proxy = new BrowserUpProxyServer();
         proxy.start();
 
-        proxy.addResponseFilter(new ResponseFilter() {
-            @Override
-            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
-                if (contents.isText()) {
-                    if (contents.getTextContents().equals(originalText)) {
-                        contents.setTextContents(newText);
-                    }
+        proxy.addResponseFilter((response, contents, messageInfo) -> {
+            if (contents.isText()) {
+                if (contents.getTextContents().equals(originalText)) {
+                    contents.setTextContents(newText);
                 }
             }
         });
@@ -371,13 +362,10 @@ public class InterceptorTest extends MockServerTest {
         proxy.setTrustAllServers(true);
         proxy.start();
 
-        proxy.addResponseFilter(new ResponseFilter() {
-            @Override
-            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
-                if (contents.isText()) {
-                    if (contents.getTextContents().equals(originalText)) {
-                        contents.setTextContents(newText);
-                    }
+        proxy.addResponseFilter((response, contents, messageInfo) -> {
+            if (contents.isText()) {
+                if (contents.getTextContents().equals(originalText)) {
+                    contents.setTextContents(newText);
                 }
             }
         });
@@ -408,12 +396,7 @@ public class InterceptorTest extends MockServerTest {
 
         final AtomicReference<byte[]> responseContents = new AtomicReference<>();
 
-        proxy.addResponseFilter(new ResponseFilter() {
-            @Override
-            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
-                responseContents.set(contents.getBinaryContents());
-            }
-        });
+        proxy.addResponseFilter((response, contents, messageInfo) -> responseContents.set(contents.getBinaryContents()));
 
         try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             CloseableHttpResponse response = httpClient.execute(new HttpHead("http://localhost:" + mockServerPort + "/interceptortest"));
@@ -436,25 +419,17 @@ public class InterceptorTest extends MockServerTest {
         proxy = new BrowserUpProxyServer();
         proxy.start();
 
-        proxy.addRequestFilter(new RequestFilter() {
-            @Override
-            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
-                if (request.getUri().endsWith("/originalendpoint")) {
-                    request.setUri(request.getUri().replaceAll("originalendpoint", "modifiedendpoint"));
-                }
-
-                return null;
+        proxy.addRequestFilter((request, contents, messageInfo) -> {
+            if (request.uri().endsWith("/originalendpoint")) {
+                request.setUri(request.uri().replaceAll("originalendpoint", "modifiedendpoint"));
             }
+
+            return null;
         });
 
         final AtomicReference<String> originalRequestUri = new AtomicReference<>();
 
-        proxy.addResponseFilter(new ResponseFilter() {
-            @Override
-            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
-                originalRequestUri.set(messageInfo.getOriginalRequest().getUri());
-            }
-        });
+        proxy.addResponseFilter((response, contents, messageInfo) -> originalRequestUri.set(messageInfo.getOriginalRequest().uri()));
 
         try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             CloseableHttpResponse response = httpClient.execute(new HttpGet("http://localhost:" + mockServerPort + "/originalendpoint"));
@@ -480,15 +455,12 @@ public class InterceptorTest extends MockServerTest {
         final AtomicBoolean requestContentsNull = new AtomicBoolean(false);
         final AtomicBoolean responseContentsNull = new AtomicBoolean(false);
 
-        proxy.addFirstHttpFilterFactory(new RequestFilterAdapter.FilterSource(new RequestFilter() {
-            @Override
-            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
-                if (contents == null) {
-                    requestContentsNull.set(true);
-                }
-
-                return null;
+        proxy.addFirstHttpFilterFactory(new RequestFilterAdapter.FilterSource((request, contents, messageInfo) -> {
+            if (contents == null) {
+                requestContentsNull.set(true);
             }
+
+            return null;
         }, 0));
 
         proxy.addFirstHttpFilterFactory(new ResponseFilterAdapter.FilterSource(new ResponseFilter() {
@@ -719,16 +691,13 @@ public class InterceptorTest extends MockServerTest {
         final AtomicReference<String> requestFilterOriginalUrl = new AtomicReference<>();
         final AtomicReference<String> requestFilterUrl = new AtomicReference<>();
 
-        proxy.addRequestFilter(new RequestFilter() {
-            @Override
-            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
-                requestCtx.set(messageInfo.getChannelHandlerContext());
-                requestOriginalRequest.set(messageInfo.getOriginalRequest());
-                requestIsHttps.set(messageInfo.isHttps());
-                requestFilterOriginalUrl.set(messageInfo.getOriginalUrl());
-                requestFilterUrl.set(messageInfo.getUrl());
-                return null;
-            }
+        proxy.addRequestFilter((request, contents, messageInfo) -> {
+            requestCtx.set(messageInfo.getChannelHandlerContext());
+            requestOriginalRequest.set(messageInfo.getOriginalRequest());
+            requestIsHttps.set(messageInfo.isHttps());
+            requestFilterOriginalUrl.set(messageInfo.getOriginalUrl());
+            requestFilterUrl.set(messageInfo.getUrl());
+            return null;
         });
 
         final AtomicReference<ChannelHandlerContext> responseCtx = new AtomicReference<>();
@@ -737,15 +706,12 @@ public class InterceptorTest extends MockServerTest {
         final AtomicReference<String> responseFilterOriginalUrl = new AtomicReference<>();
         final AtomicReference<String> responseFilterUrl = new AtomicReference<>();
 
-        proxy.addResponseFilter(new ResponseFilter() {
-            @Override
-            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
-                responseCtx.set(messageInfo.getChannelHandlerContext());
-                responseOriginalRequest.set(messageInfo.getOriginalRequest());
-                responseIsHttps.set(messageInfo.isHttps());
-                responseFilterOriginalUrl.set(messageInfo.getOriginalUrl());
-                responseFilterUrl.set(messageInfo.getUrl());
-            }
+        proxy.addResponseFilter((response, contents, messageInfo) -> {
+            responseCtx.set(messageInfo.getChannelHandlerContext());
+            responseOriginalRequest.set(messageInfo.getOriginalRequest());
+            responseIsHttps.set(messageInfo.isHttps());
+            responseFilterOriginalUrl.set(messageInfo.getOriginalUrl());
+            responseFilterUrl.set(messageInfo.getUrl());
         });
 
         try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
@@ -783,37 +749,28 @@ public class InterceptorTest extends MockServerTest {
         final AtomicReference<String> requestFilterOriginalUrl = new AtomicReference<>();
         final AtomicReference<String> requestFilterUrl = new AtomicReference<>();
 
-        proxy.addRequestFilter(new RequestFilter() {
-            @Override
-            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
-                requestFilterOriginalUrl.set(messageInfo.getOriginalUrl());
-                requestFilterUrl.set(messageInfo.getUrl());
-                return null;
-            }
+        proxy.addRequestFilter((request, contents, messageInfo) -> {
+            requestFilterOriginalUrl.set(messageInfo.getOriginalUrl());
+            requestFilterUrl.set(messageInfo.getUrl());
+            return null;
         });
 
         // request filters get added to the beginning of the filter chain, so add this uri-modifying request filter after
         // adding the capturing request filter above.
-        proxy.addRequestFilter(new RequestFilter() {
-            @Override
-            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
-                if (request.getUri().endsWith("/originalurl")) {
-                    String newUrl = request.getUri().replaceAll("originalurl", "urlreflectsmodifications");
-                    request.setUri(newUrl);
-                }
-                return null;
+        proxy.addRequestFilter((request, contents, messageInfo) -> {
+            if (request.uri().endsWith("/originalurl")) {
+                String newUrl = request.uri().replaceAll("originalurl", "urlreflectsmodifications");
+                request.setUri(newUrl);
             }
+            return null;
         });
 
         final AtomicReference<String> responseFilterOriginalUrl = new AtomicReference<>();
         final AtomicReference<String> responseFilterUrl = new AtomicReference<>();
 
-        proxy.addResponseFilter(new ResponseFilter() {
-            @Override
-            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
-                responseFilterOriginalUrl.set(messageInfo.getOriginalUrl());
-                responseFilterUrl.set(messageInfo.getUrl());
-            }
+        proxy.addResponseFilter((response, contents, messageInfo) -> {
+            responseFilterOriginalUrl.set(messageInfo.getOriginalUrl());
+            responseFilterUrl.set(messageInfo.getUrl());
         });
 
         try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
@@ -847,37 +804,28 @@ public class InterceptorTest extends MockServerTest {
         final AtomicReference<String> requestFilterOriginalUrl = new AtomicReference<>();
         final AtomicReference<String> requestFilterUrl = new AtomicReference<>();
 
-        proxy.addRequestFilter(new RequestFilter() {
-            @Override
-            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
-                requestFilterOriginalUrl.set(messageInfo.getOriginalUrl());
-                requestFilterUrl.set(messageInfo.getUrl());
-                return null;
-            }
+        proxy.addRequestFilter((request, contents, messageInfo) -> {
+            requestFilterOriginalUrl.set(messageInfo.getOriginalUrl());
+            requestFilterUrl.set(messageInfo.getUrl());
+            return null;
         });
 
         // request filters get added to the beginning of the filter chain, so add this uri-modifying request filter after
         // adding the capturing request filter above.
-        proxy.addRequestFilter(new RequestFilter() {
-            @Override
-            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
-                if (request.getUri().endsWith("/originalurl")) {
-                    String newUrl = request.getUri().replaceAll("originalurl", "urlreflectsmodifications");
-                    request.setUri(newUrl);
-                }
-                return null;
+        proxy.addRequestFilter((request, contents, messageInfo) -> {
+            if (request.uri().endsWith("/originalurl")) {
+                String newUrl = request.uri().replaceAll("originalurl", "urlreflectsmodifications");
+                request.setUri(newUrl);
             }
+            return null;
         });
 
         final AtomicReference<String> responseFilterOriginalUrl = new AtomicReference<>();
         final AtomicReference<String> responseFilterUrl = new AtomicReference<>();
 
-        proxy.addResponseFilter(new ResponseFilter() {
-            @Override
-            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
-                responseFilterOriginalUrl.set(messageInfo.getOriginalUrl());
-                responseFilterUrl.set(messageInfo.getUrl());
-            }
+        proxy.addResponseFilter((response, contents, messageInfo) -> {
+            responseFilterOriginalUrl.set(messageInfo.getOriginalUrl());
+            responseFilterUrl.set(messageInfo.getUrl());
         });
 
         try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
@@ -914,15 +862,12 @@ public class InterceptorTest extends MockServerTest {
         final AtomicBoolean requestIsHttps = new AtomicBoolean(false);
         final AtomicReference<String> requestOriginalUrl = new AtomicReference<>();
 
-        proxy.addRequestFilter(new RequestFilter() {
-            @Override
-            public HttpResponse filterRequest(HttpRequest request, HttpMessageContents contents, HttpMessageInfo messageInfo) {
-                requestCtx.set(messageInfo.getChannelHandlerContext());
-                requestOriginalRequest.set(messageInfo.getOriginalRequest());
-                requestIsHttps.set(messageInfo.isHttps());
-                requestOriginalUrl.set(messageInfo.getOriginalUrl());
-                return null;
-            }
+        proxy.addRequestFilter((request, contents, messageInfo) -> {
+            requestCtx.set(messageInfo.getChannelHandlerContext());
+            requestOriginalRequest.set(messageInfo.getOriginalRequest());
+            requestIsHttps.set(messageInfo.isHttps());
+            requestOriginalUrl.set(messageInfo.getOriginalUrl());
+            return null;
         });
 
         final AtomicReference<ChannelHandlerContext> responseCtx = new AtomicReference<>();
@@ -930,14 +875,11 @@ public class InterceptorTest extends MockServerTest {
         final AtomicBoolean responseIsHttps = new AtomicBoolean(false);
         final AtomicReference<String> responseOriginalUrl = new AtomicReference<>();
 
-        proxy.addResponseFilter(new ResponseFilter() {
-            @Override
-            public void filterResponse(HttpResponse response, HttpMessageContents contents, HttpMessageInfo messageInfo) {
-                responseCtx.set(messageInfo.getChannelHandlerContext());
-                responseOriginalRequest.set(messageInfo.getOriginalRequest());
-                responseIsHttps.set(messageInfo.isHttps());
-                responseOriginalUrl.set(messageInfo.getOriginalUrl());
-            }
+        proxy.addResponseFilter((response, contents, messageInfo) -> {
+            responseCtx.set(messageInfo.getChannelHandlerContext());
+            responseOriginalRequest.set(messageInfo.getOriginalRequest());
+            responseIsHttps.set(messageInfo.isHttps());
+            responseOriginalUrl.set(messageInfo.getOriginalUrl());
         });
 
         try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {

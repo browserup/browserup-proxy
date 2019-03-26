@@ -1,6 +1,7 @@
 package com.browserup.bup.filters;
 
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
@@ -44,7 +45,7 @@ public class AutoBasicAuthFilter extends HttpsAwareFiltersAdapter {
             // if there is an entry in the credentials map matching this hostname, add the credentials to the request
             String base64CredentialsForHostname = credentialsByHostname.get(hostname);
             if (base64CredentialsForHostname != null) {
-                httpRequest.headers().add(HttpHeaders.Names.AUTHORIZATION, "Basic " + base64CredentialsForHostname);
+                httpRequest.headers().add(HttpHeaderNames.AUTHORIZATION, "Basic " + base64CredentialsForHostname);
             }
         }
 
