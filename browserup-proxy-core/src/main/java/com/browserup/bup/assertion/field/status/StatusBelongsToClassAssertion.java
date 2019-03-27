@@ -1,8 +1,7 @@
 package com.browserup.bup.assertion.field.status;
 
-import com.barchart.udt.EpollUDT;
 import com.browserup.bup.assertion.field.HarEntryPredicate;
-import io.netty.handler.codec.http.HttpStatusClass;
+import com.browserup.bup.util.HttpStatusClass;
 
 import java.util.Optional;
 

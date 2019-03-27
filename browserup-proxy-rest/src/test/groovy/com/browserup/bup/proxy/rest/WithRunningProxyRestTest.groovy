@@ -102,6 +102,9 @@ class WithRunningProxyRestTest {
             response.success = { _, reader ->
                 assertEquals(expectedResponse, reader.text)
             }
+            response.failure = { _, reader ->
+                assertEquals(expectedResponse, reader.text)
+            }
         }
     }
 

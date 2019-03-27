@@ -5,10 +5,10 @@ import com.browserup.harreader.model.HarEntry;
 
 import java.util.Optional;
 
-public class ResponseTimeWithinAssertion implements HarEntryAssertion {
+public class ResponseTimeUnderAssertion implements HarEntryAssertion {
     private final Long time;
 
-    public ResponseTimeWithinAssertion(Long time) {
+    public ResponseTimeUnderAssertion(Long time) {
         this.time = time;
     }
 

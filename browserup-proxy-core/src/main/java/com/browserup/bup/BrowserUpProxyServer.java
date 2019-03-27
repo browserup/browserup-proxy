@@ -1,7 +1,7 @@
 package com.browserup.bup;
 
 import com.browserup.bup.assertion.HarEntryAssertion;
-import com.browserup.bup.assertion.ResponseTimeWithinAssertion;
+import com.browserup.bup.assertion.ResponseTimeUnderAssertion;
 import com.browserup.bup.assertion.error.HarEntryAssertionError;
 import com.browserup.bup.assertion.field.content.ContentMatchesAssertion;
 import com.browserup.bup.assertion.field.content.ContentSizeUnderAssertion;
@@ -13,6 +13,7 @@ import com.browserup.bup.assertion.field.status.StatusEqualsAssertion;
 import com.browserup.bup.assertion.model.AssertionEntryResult;
 import com.browserup.bup.assertion.model.AssertionResult;
 import com.browserup.bup.assertion.supplier.*;
+import com.browserup.bup.util.HttpStatusClass;
 import com.browserup.harreader.model.Har;
 import com.browserup.harreader.model.HarCreatorBrowser;
 import com.browserup.harreader.model.HarEntry;
@@ -59,7 +60,6 @@ import com.browserup.bup.proxy.dns.AdvancedHostResolver;
 import com.browserup.bup.proxy.dns.DelegatingHostResolver;
 import com.browserup.bup.util.BrowserUpHttpUtil;
 import com.browserup.bup.util.BrowserUpProxyUtil;
-import io.netty.handler.codec.http.HttpStatusClass;
 import org.apache.commons.lang3.StringUtils;
 import org.littleshoot.proxy.ChainedProxy;
 import org.littleshoot.proxy.ChainedProxyAdapter;
@@ -1060,23 +1060,23 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     }
 
     @Override
-    public AssertionResult assertMostRecentUrlResponseTimeWithin(Pattern url, long time) {
+    public AssertionResult assertMostRecentResponseTimeUnder(Pattern url, long time) {
         HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
-        HarEntryAssertion assertion = new ResponseTimeWithinAssertion(time);
+        HarEntryAssertion assertion = new ResponseTimeUnderAssertion(time);
 
         return checkAssertion(supplier, assertion);
     }
 
     @Override
-    public AssertionResult assertAllUrlResponseTimesWithin(Pattern url, long time) {
+    public AssertionResult assertResponseTimeUnder(Pattern url, long time) {
         HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
-        HarEntryAssertion assertion = new ResponseTimeWithinAssertion(time);
+        HarEntryAssertion assertion = new ResponseTimeUnderAssertion(time);
 
         return checkAssertion(supplier, assertion);
     }
 
     @Override
-    public AssertionResult assertUrlContentContains(Pattern url, String text) {
+    public AssertionResult assertMostRecentResponseContentContains(Pattern url, String text) {
         HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
         HarEntryAssertion assertion = new ContentContainsStringAssertion(text);
 
@@ -1084,7 +1084,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     }
 
     @Override
-    public AssertionResult assertUrlContentDoesNotContain(Pattern url, String text) {
+    public AssertionResult assertMostRecentResponseContentDoesNotContain(Pattern url, String text) {
         HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
         HarEntryAssertion assertion = new ContentDoesNotContainStringAssertion(text);
 
@@ -1092,7 +1092,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     }
 
     @Override
-    public AssertionResult assertUrlContentMatches(Pattern url, Pattern contentPattern) {
+    public AssertionResult assertMostRecentResponseContentMatches(Pattern url, Pattern contentPattern) {
         HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
         HarEntryAssertion assertion = new ContentMatchesAssertion(contentPattern);
 
@@ -1165,7 +1165,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     }
 
     @Override
-    public AssertionResult assertUrlContentLengthUnder(Pattern url, Long max) {
+    public AssertionResult assertMostRecentResponseContentLengthUnder(Pattern url, Long max) {
         HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
         HarEntryAssertion assertion = new ContentSizeUnderAssertion(max);
 
@@ -1173,7 +1173,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     }
 
     @Override
-    public AssertionResult assertUrlResponseHeaderContains(Pattern url, String name, String value) {
+    public AssertionResult assertMostRecentResponseHeaderContains(Pattern url, String name, String value) {
         HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
         HarEntryAssertion assertion = StringUtils.isEmpty(name) ?
                 new HeadersContainStringAssertion(value) :
@@ -1183,7 +1183,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     }
 
     @Override
-    public AssertionResult assertUrlResponseHeaderDoesNotContain(Pattern url, String name, String value) {
+    public AssertionResult assertMostRecentResponseHeaderDoesNotContain(Pattern url, String name, String value) {
         HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
         HarEntryAssertion assertion = StringUtils.isEmpty(name) ?
                 new HeadersDoNotContainStringAssertion(value) :
@@ -1193,7 +1193,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     }
 
     @Override
-    public AssertionResult assertUrlResponseHeaderMatches(Pattern url, Pattern name, Pattern value) {
+    public AssertionResult assertMostRecentResponseHeaderMatches(Pattern url, Pattern name, Pattern value) {
         HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
         HarEntryAssertion assertion = name == null ?
                 new HeadersMatchAssertion(value) :

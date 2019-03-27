@@ -5,6 +5,7 @@ import com.browserup.bup.proxy.CaptureType
 import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
 import groovyx.net.http.Method
+import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
 import org.hamcrest.Matchers
 import org.junit.Test
@@ -25,7 +26,7 @@ class MostRecentEntryAssertContentContainsRestTest extends BaseRestTest {
     }
 
     @Test
-    void passAndFailAssertion() {
+    void contentContainsPasses() {
         sendRequestsToTargetServer()
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
@@ -41,6 +42,11 @@ class MostRecentEntryAssertContentContainsRestTest extends BaseRestTest {
                 assertFalse('Expected assertion entry result to have "false" failed flag', assertionResult.requests[0].failed)
             }
         }
+    }
+
+    @Test
+    void contentContainsFails() {
+        sendRequestsToTargetServer()
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             def urlPattern = ".*${urlPatternToMatchUrl}"
@@ -70,6 +76,19 @@ class MostRecentEntryAssertContentContainsRestTest extends BaseRestTest {
                 assertThat('Expected to get no assertion result entries', assertionResult.requests, Matchers.hasSize(0))
                 assertTrue('Expected assertion to pass', assertionResult.passed)
                 assertFalse('Expected assertion to pass', assertionResult.failed)
+            }
+        }
+    }
+
+    @Test
+    void getBadRequestIfUrlPatternNotProvided() {
+        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+            uri.path = "/proxy/${proxy.port}/${urlPath}"
+            response.failure = { resp, reader ->
+                assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
+            }
+            response.success = { resp, reader ->
+                throw new AssertionError('Expected to get bad request, got: ' + resp.status)
             }
         }
     }

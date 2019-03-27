@@ -24,9 +24,9 @@ import java.util.regex.Pattern;
 public class MostRecentEntryProxyResource extends BaseResource {
     private static final Logger LOG = LoggerFactory.getLogger(MostRecentEntryProxyResource.class);
 
-    protected ValidatedParam<BrowserUpProxyServer> proxy = ValidatedParam.empty();
-    protected ValidatedParam<Pattern> urlPattern = ValidatedParam.empty();
-    protected ValidatedParam<Long> milliseconds = ValidatedParam.empty();
+    protected ValidatedParam<BrowserUpProxyServer> proxy = ValidatedParam.empty("proxy");
+    protected ValidatedParam<Pattern> urlPattern = ValidatedParam.empty("urlPattern");
+    protected ValidatedParam<Long> milliseconds = ValidatedParam.empty("milliseconds");
 
     public void setUrlPattern(String urlPattern) {
         this.urlPattern = parsePatternParam(new StringRawParam("urlPattern", urlPattern));
@@ -46,7 +46,7 @@ public class MostRecentEntryProxyResource extends BaseResource {
         LOG.info("GET /" + port + "/har/mostRecentEntry");
 
         proxy = parseProxyServer(new IntRawParam("proxy port", port));
-        checkParams(urlPattern, proxy);
+        checkRequiredParams(urlPattern, proxy);
 
         HarEntry result = proxy.getParsedParam()
                 .findMostRecentEntry(urlPattern.getParsedParam())

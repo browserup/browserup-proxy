@@ -26,9 +26,7 @@ import java.util.regex.Pattern;
 public class EntriesProxyResource extends BaseResource {
     private static final Logger LOG = LoggerFactory.getLogger(EntriesProxyResource.class);
 
-    private ValidatedParam<BrowserUpProxyServer> proxy = ValidatedParam.empty();
-    private ValidatedParam<Pattern> urlPattern = ValidatedParam.empty();
-    private ValidatedParam<Long> milliseconds = ValidatedParam.empty();
+    private ValidatedParam<Pattern> urlPattern = ValidatedParam.empty("urlPattern");
 
     @Inject
     public EntriesProxyResource(ProxyManager proxyManager) {
@@ -39,37 +37,14 @@ public class EntriesProxyResource extends BaseResource {
         this.urlPattern = parsePatternParam(new StringRawParam("urlPattern", urlPattern));
     }
 
-    public void setMilliseconds(String milliseconds) {
-        this.milliseconds = parseLongParam(new StringRawParam("milliseconds", milliseconds));;
-    }
-
-    public void setPort(Integer port) {
-        System.out.println();
-    }
-
     @Get
     public Reply<?> findEntries(@Named("port") int port) {
         LOG.info("GET /" + port + "/har/entries");
 
-        proxy = parseProxyServer(new IntRawParam("proxy port", port));
-        checkParams(urlPattern, proxy);
+        ValidatedParam<BrowserUpProxyServer> proxy = parseProxyServer(new IntRawParam("proxy port", port));
+        checkRequiredParams(urlPattern, proxy);
 
         Collection<HarEntry> result = proxy.getParsedParam().findEntries(urlPattern.getParsedParam());
-
-        return Reply.with(result).as(Json.class);
-    }
-
-    @Get
-    @At("/assertResponseTimeWithin")
-    public Reply<?> findEntriesAndAssertResponseTimeWithin(@Named("port") int port) {
-        LOG.info("GET /" + port + "/har/entries/assertResponseTimeWithin");
-
-        proxy = parseProxyServer(new IntRawParam("proxy port", port));
-        checkParams(urlPattern, milliseconds, proxy);
-
-        AssertionResult result = proxy.getParsedParam().assertAllUrlResponseTimesWithin(
-                        urlPattern.getParsedParam(),
-                        milliseconds.getParsedParam());
 
         return Reply.with(result).as(Json.class);
     }

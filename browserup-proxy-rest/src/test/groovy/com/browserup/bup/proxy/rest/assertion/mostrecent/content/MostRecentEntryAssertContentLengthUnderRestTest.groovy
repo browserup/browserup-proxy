@@ -5,18 +5,12 @@ import com.browserup.bup.proxy.CaptureType
 import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
 import groovyx.net.http.Method
-import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
-import org.eclipse.jetty.http.HttpMethods
 import org.hamcrest.Matchers
 import org.junit.Test
-import org.mockserver.matchers.Times
-import org.mockserver.model.Header
 
 import static org.junit.Assert.*
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class MostRecentEntryAssertContentLengthUnderRestTest extends BaseRestTest {
     def urlOfMostRecentRequest = 'url-most-recent'
@@ -29,11 +23,52 @@ class MostRecentEntryAssertContentLengthUnderRestTest extends BaseRestTest {
 
     @Override
     String getUrlPath() {
-        return 'har/mostRecentEntry/assertContentLengthWithin'
+        return 'har/mostRecentEntry/assertContentLengthUnder'
     }
 
     @Test
-    void passAndFailAssertion() {
+    void getBadRequestIfLengthNotProvided() {
+        proxyManager.get()[0].newHar()
+
+        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+            def urlPattern = ".*${urlPatternToMatchUrl}"
+            uri.path = "/proxy/${proxy.port}/${urlPath}"
+            uri.query = [urlPattern: urlPattern]
+            response.failure = { resp, reader ->
+                assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
+            }
+        }
+    }
+
+    @Test
+    void getBadRequestIfUrlPatternNotProvided() {
+        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+            uri.path = "/proxy/${proxy.port}/${urlPath}"
+            response.failure = { resp, reader ->
+                assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
+            }
+            response.success = { resp, reader ->
+                throw new AssertionError('Expected to get bad request, got: ' + resp.status)
+            }
+        }
+    }
+
+    @Test
+    void getBadRequestIfLengthNotValid() {
+        proxyManager.get()[0].newHar()
+
+        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+            def urlPattern = ".*${urlPatternToMatchUrl}"
+            uri.path = "/proxy/${proxy.port}/${urlPath}"
+            uri.query = [urlPattern: urlPattern, length: 'invalidlength']
+            response.failure = { resp, reader ->
+                assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
+            }
+        }
+    }
+
+    @Test
+    void contentLengthUnderPasses() {
         sendRequestsToTargetServer()
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
@@ -49,6 +84,11 @@ class MostRecentEntryAssertContentLengthUnderRestTest extends BaseRestTest {
                 assertFalse('Expected assertion entry result to have "false" failed flag', assertionResult.requests[0].failed)
             }
         }
+    }
+
+    @Test
+    void contentLengthUnderFails() {
+        sendRequestsToTargetServer()
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             def urlPattern = ".*${urlPatternToMatchUrl}"

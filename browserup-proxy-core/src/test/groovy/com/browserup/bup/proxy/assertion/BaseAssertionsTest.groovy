@@ -35,9 +35,15 @@ abstract class BaseAssertionsTest extends MockServerTest {
     protected static final int TIME_DELTA_MILLISECONDS = 100
 
     protected String url
+    protected String mockedServerUrl
 
     protected BrowserUpProxy proxy
     protected CloseableHttpClient clientToProxy
+
+    void requestToMockedServer(String url, String response=SUCCESSFUL_RESPONSE_BODY) {
+        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet("${mockedServerUrl}/${url}".toString())).entity.content)
+        assertEquals("Did not receive expected response from mock server", response, respBody)
+    }
 
     @Before
     void startUp() {
@@ -47,8 +53,8 @@ abstract class BaseAssertionsTest extends MockServerTest {
         proxy.newHar()
 
         clientToProxy = NewProxyServerTestUtil.getNewHttpClient(proxy.port)
-
-        url = "http://localhost:${mockServerPort}/${URL_PATH}"
+        mockedServerUrl = "http://localhost:${mockServerPort}"
+        url = "${mockedServerUrl}/${URL_PATH}"
     }
 
     @After

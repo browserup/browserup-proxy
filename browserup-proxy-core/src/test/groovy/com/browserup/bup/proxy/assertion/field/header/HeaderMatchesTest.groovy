@@ -1,21 +1,19 @@
 package com.browserup.bup.proxy.assertion.field.header
 
-import org.apache.http.client.methods.HttpGet
+
 import org.junit.Test
 
 import java.util.regex.Pattern
 
-import static com.browserup.bup.proxy.test.util.NewProxyServerTestUtil.toStringAndClose
 import static org.junit.Assert.*
 
 class HeaderMatchesTest extends HeaderBaseTest {
 
     @Test
     void anyNameAndMatchingValue() {
-        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
-        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+        requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertUrlResponseHeaderMatches(
+        def result = proxy.assertMostRecentResponseHeaderMatches(
                 Pattern.compile(".*${URL_PATH}.*"),
                 Pattern.compile(".*"))
 
@@ -25,10 +23,9 @@ class HeaderMatchesTest extends HeaderBaseTest {
 
     @Test
     void anyNameAndNotMatchingValue() {
-        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
-        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+        requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertUrlResponseHeaderMatches(
+        def result = proxy.assertMostRecentResponseHeaderMatches(
                 Pattern.compile(".*${URL_PATH}.*"),
                 Pattern.compile(".*${NOT_MATCHING_HEADER_VALUE}.*"))
 
@@ -38,10 +35,9 @@ class HeaderMatchesTest extends HeaderBaseTest {
 
     @Test
     void emptyNameProvidedAndMatchingValue() {
-        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
-        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+        requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertUrlResponseHeaderMatches(
+        def result = proxy.assertMostRecentResponseHeaderMatches(
                 Pattern.compile(".*${URL_PATH}.*"),
                 null,
                 Pattern.compile(".*"))
@@ -52,10 +48,9 @@ class HeaderMatchesTest extends HeaderBaseTest {
 
     @Test
     void matchingNameAndMatchingValue() {
-        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
-        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+        requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertUrlResponseHeaderMatches(
+        def result = proxy.assertMostRecentResponseHeaderMatches(
                 Pattern.compile(".*${URL_PATH}.*"),
                 Pattern.compile(".*${HEADER_NAME}.*"),
                 Pattern.compile(".*${HEADER_VALUE}.*"))
@@ -66,11 +61,9 @@ class HeaderMatchesTest extends HeaderBaseTest {
 
     @Test
     void matchingNameAndNotMatchingValue() {
-        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
-        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+        requestToMockedServer(URL_PATH)
 
-
-        def result = proxy.assertUrlResponseHeaderMatches(
+        def result = proxy.assertMostRecentResponseHeaderMatches(
                 Pattern.compile(".*${URL_PATH}.*"),
                 Pattern.compile(".*${HEADER_NAME}.*"),
                 Pattern.compile(".*${NOT_MATCHING_HEADER_VALUE}.*"))
@@ -81,10 +74,9 @@ class HeaderMatchesTest extends HeaderBaseTest {
 
     @Test
     void notMatchingNameAndMatchingValue() {
-        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
-        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+        requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertUrlResponseHeaderMatches(
+        def result = proxy.assertMostRecentResponseHeaderMatches(
                 Pattern.compile(".*${URL_PATH}.*"),
                 Pattern.compile(".*${NOT_MATCHING_HEADER_NAME}.*"),
                 Pattern.compile(".*${HEADER_VALUE}.*"))
@@ -95,10 +87,9 @@ class HeaderMatchesTest extends HeaderBaseTest {
 
     @Test
     void notMatchingNameAndNotMatchingValue() {
-        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
-        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+        requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertUrlResponseHeaderMatches(
+        def result = proxy.assertMostRecentResponseHeaderMatches(
                 Pattern.compile(".*${URL_PATH}.*"),
                 Pattern.compile(".*${NOT_MATCHING_HEADER_NAME}.*"),
                 Pattern.compile(".*${NOT_MATCHING_HEADER_VALUE}.*"))

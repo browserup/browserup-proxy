@@ -84,11 +84,24 @@ public class BaseResource  {
         return new ValidatedParam<>(rawParam, result);
     }
 
-    protected void checkParams(ValidatedParam<?>... params) {
+    protected void checkRequiredParams(ValidatedParam<?>... params) {
         List<ValidatedParam<?>> failedParams = filterFailedParams(params);
         if (!failedParams.isEmpty()) {
             throw createValidationExceptionForFailedParams(failedParams);
         }
+    }
+
+    protected void checkOptionalParams(ValidatedParam<?>... params) {
+        List<ValidatedParam<?>> failedParams = filterFailedOptionalParams(params);
+        if (!failedParams.isEmpty()) {
+            throw createValidationExceptionForFailedParams(failedParams);
+        }
+    }
+
+    private List<ValidatedParam<?>> filterFailedOptionalParams(ValidatedParam<?>... params) {
+        return Arrays.stream(params)
+                .filter(validatedParam -> !validatedParam.isEmpty() && validatedParam.isFailedToParse())
+                .collect(Collectors.toList());
     }
 
     private List<ValidatedParam<?>> filterFailedParams(ValidatedParam<?>... params) {
@@ -106,6 +119,10 @@ public class BaseResource  {
     }
 
     private ConstraintViolation<?> createConstraintViolationFromFailedParam(ValidatedParam<?> param) {
-        return new ParamConstraintViolation(param.getErrorMessage().orElse(""));
+        String errMessage = String.format(
+                "Field: '%s' is invalid: %s",
+                param.getRawParam().getName(),
+                param.getErrorMessage().orElse(""));
+        return new ParamConstraintViolation(errMessage);
     }
 }

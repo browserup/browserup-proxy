@@ -1,8 +1,7 @@
 package com.browserup.bup;
 
-import com.browserup.bup.assertion.HarEntryAssertion;
 import com.browserup.bup.assertion.model.AssertionResult;
-import com.browserup.bup.assertion.supplier.HarEntriesSupplier;
+import com.browserup.bup.util.HttpStatusClass;
 import com.browserup.harreader.model.Har;
 import com.browserup.bup.filters.RequestFilter;
 import com.browserup.bup.filters.ResponseFilter;
@@ -12,7 +11,6 @@ import com.browserup.bup.proxy.CaptureType;
 import com.browserup.bup.proxy.auth.AuthType;
 import com.browserup.bup.proxy.dns.AdvancedHostResolver;
 import com.browserup.harreader.model.HarEntry;
-import io.netty.handler.codec.http.HttpStatusClass;
 import org.littleshoot.proxy.HttpFiltersSource;
 import org.littleshoot.proxy.MitmManager;
 
@@ -20,7 +18,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -682,35 +679,35 @@ public interface BrowserUpProxy {
      */
     Collection<HarEntry> findEntries(Pattern url);
 
-    AssertionResult assertMostRecentUrlResponseTimeWithin(Pattern url, long time);
+    AssertionResult assertMostRecentResponseTimeUnder(Pattern url, long time);
 
-    AssertionResult assertAllUrlResponseTimesWithin(Pattern url, long time);
+    AssertionResult assertResponseTimeUnder(Pattern url, long time);
 
-    AssertionResult assertUrlContentContains(Pattern url, String text);
+    AssertionResult assertMostRecentResponseContentContains(Pattern url, String text);
 
-    AssertionResult assertUrlContentDoesNotContain(Pattern url, String text);
+    AssertionResult assertMostRecentResponseContentDoesNotContain(Pattern url, String text);
 
-    AssertionResult assertUrlContentMatches(Pattern url, Pattern contentPattern);
+    AssertionResult assertMostRecentResponseContentMatches(Pattern url, Pattern contentPattern);
 
-    AssertionResult assertUrlResponseHeaderContains(Pattern url, String name, String value);
+    AssertionResult assertMostRecentResponseHeaderContains(Pattern url, String name, String value);
 
-    default AssertionResult assertUrlResponseHeaderContains(Pattern url, String value) {
-        return assertUrlResponseHeaderContains(url, null, value);
+    default AssertionResult assertMostRecentResponseHeaderContains(Pattern url, String value) {
+        return assertMostRecentResponseHeaderContains(url, null, value);
     }
 
-    AssertionResult assertUrlResponseHeaderDoesNotContain(Pattern url, String name, String value);
+    AssertionResult assertMostRecentResponseHeaderDoesNotContain(Pattern url, String name, String value);
 
-    default AssertionResult assertUrlResponseHeaderDoesNotContain(Pattern url, String value) {
-        return assertUrlResponseHeaderDoesNotContain(url, null, value);
+    default AssertionResult assertMostRecentResponseHeaderDoesNotContain(Pattern url, String value) {
+        return assertMostRecentResponseHeaderDoesNotContain(url, null, value);
     }
 
-    AssertionResult assertUrlResponseHeaderMatches(Pattern url, Pattern name, Pattern value);
+    AssertionResult assertMostRecentResponseHeaderMatches(Pattern url, Pattern name, Pattern value);
 
-    default AssertionResult assertUrlResponseHeaderMatches(Pattern url, Pattern value) {
-        return assertUrlResponseHeaderMatches(url, null, value);
+    default AssertionResult assertMostRecentResponseHeaderMatches(Pattern url, Pattern value) {
+        return assertMostRecentResponseHeaderMatches(url, null, value);
     }
 
-    AssertionResult assertUrlContentLengthUnder(Pattern url, Long max);
+    AssertionResult assertMostRecentResponseContentLengthUnder(Pattern url, Long max);
 
     AssertionResult assertResponseStatusCode(Integer status);
 

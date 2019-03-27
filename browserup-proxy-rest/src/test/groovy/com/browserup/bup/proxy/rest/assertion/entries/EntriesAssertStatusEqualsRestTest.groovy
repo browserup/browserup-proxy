@@ -1,39 +1,83 @@
-package com.browserup.bup.proxy.rest.assertion.mostrecent.content
+package com.browserup.bup.proxy.rest.assertion.entries
 
 import com.browserup.bup.assertion.model.AssertionResult
-import com.browserup.bup.proxy.CaptureType
 import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
 import groovyx.net.http.Method
+import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
+import org.eclipse.jetty.http.HttpMethods
 import org.hamcrest.Matchers
 import org.junit.Test
+import org.mockserver.matchers.Times
+import org.mockserver.model.Header
 
 import static org.junit.Assert.*
+import static org.mockserver.model.HttpRequest.request
+import static org.mockserver.model.HttpResponse.response
 
-class MostRecentEntryAssertContentDoesNotContainRestTest extends BaseRestTest {
+class EntriesAssertStatusEqualsRestTest extends BaseRestTest {
     def urlOfMostRecentRequest = 'url-most-recent'
     def urlOfOldRequest = 'url-old'
     def urlPatternToMatchUrl = '.*url-.*'
     def urlPatternNotToMatchUrl = '.*does_not_match-.*'
-    def responseNotToFind = 'will not find'
-    def responseToFind = 'middle body'
-    def responseBody = "begin body ${responseToFind} end body".toString()
+    def status = HttpStatus.SC_OK
+    def statusNotToMatch = HttpStatus.SC_NOT_FOUND
+    def responseBody = "success"
 
     @Override
     String getUrlPath() {
-        return 'har/mostRecentEntry/assertContentDoesNotContain'
+        return 'har/mostRecentEntry/assertStatusEquals'
     }
 
     @Test
-    void contentDoesNotContainPasses() {
+    void getBadRequestIfStatusValidButUrlPatternIsInvalid() {
+        proxyManager.get()[0].newHar()
+
+        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+            uri.path = "/proxy/${proxy.port}/${urlPath}"
+            uri.query = [urlPattern: '[', status: HttpStatus.SC_OK]
+            response.failure = { resp, reader ->
+                assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
+            }
+        }
+    }
+
+    @Test
+    void getBadRequestIfStatusNotProvided() {
+        proxyManager.get()[0].newHar()
+
+        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+            uri.path = "/proxy/${proxy.port}/${urlPath}"
+
+            response.failure = { resp, reader ->
+                assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
+            }
+        }
+    }
+
+    @Test
+    void getBadRequestIfUrlPatternIsInvalid() {
+        proxyManager.get()[0].newHar()
+
+        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+            uri.path = "/proxy/${proxy.port}/${urlPath}"
+            uri.query = [urlPattern: '[', status: status]
+            response.failure = { resp, reader ->
+                assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
+            }
+        }
+    }
+
+    @Test
+    void statusEqualsPasses() {
         sendRequestsToTargetServer()
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             def urlPattern = ".*${urlPatternToMatchUrl}"
             uri.path = "/proxy/${proxy.port}/${urlPath}"
-            uri.query = [urlPattern: urlPattern, contentText: responseNotToFind]
+            uri.query = [urlPattern: urlPattern, status: status]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
                 assertNotNull('Expected to get non null assertion result', assertionResult)
@@ -46,13 +90,13 @@ class MostRecentEntryAssertContentDoesNotContainRestTest extends BaseRestTest {
     }
 
     @Test
-    void contentDoesNotContainFails() {
+    void statusEqualsFails() {
         sendRequestsToTargetServer()
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             def urlPattern = ".*${urlPatternToMatchUrl}"
             uri.path = "/proxy/${proxy.port}/${urlPath}"
-            uri.query = [urlPattern: urlPattern, contentText: responseToFind]
+            uri.query = [urlPattern: urlPattern, status: statusNotToMatch]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
                 assertNotNull('Expected to get non null assertion result', assertionResult)
@@ -70,7 +114,7 @@ class MostRecentEntryAssertContentDoesNotContainRestTest extends BaseRestTest {
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             uri.path = "/proxy/${proxy.port}/${urlPath}"
-            uri.query = [urlPattern: urlPatternNotToMatchUrl, contentText: responseToFind]
+            uri.query = [urlPattern: urlPatternNotToMatchUrl, status: status]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
                 assertNotNull('Expected to get non null assertion result', assertionResult)
@@ -81,24 +125,9 @@ class MostRecentEntryAssertContentDoesNotContainRestTest extends BaseRestTest {
         }
     }
 
-    @Test
-    void getBadRequestIfUrlPatternNotProvided() {
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            uri.path = "/proxy/${proxy.port}/${urlPath}"
-            response.failure = { resp, reader ->
-                assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
-            }
-            response.success = { resp, reader ->
-                throw new AssertionError('Expected to get bad request, got: ' + resp.status)
-            }
-        }
-    }
-
     private void sendRequestsToTargetServer() {
-        proxy.enableHarCaptureTypes(CaptureType.RESPONSE_CONTENT)
-
-        mockTargetServerResponse(urlOfMostRecentRequest, responseBody)
-        mockTargetServerResponse(urlOfOldRequest, responseBody)
+        mockTargetServerResponse(urlOfMostRecentRequest, responseBody, status)
+        mockTargetServerResponse(urlOfOldRequest, responseBody, status)
 
         proxyManager.get()[0].newHar()
 
@@ -107,5 +136,16 @@ class MostRecentEntryAssertContentDoesNotContainRestTest extends BaseRestTest {
         sleep MILLISECONDS_BETWEEN_REQUESTS
 
         requestToTargetServer(urlOfMostRecentRequest, responseBody)
+    }
+
+    protected void mockTargetServerResponse(String url, String responseBody, int status) {
+        targetMockedServer.when(request()
+                .withMethod(HttpMethods.GET)
+                .withPath("/${url}"),
+                Times.exactly(1))
+                .respond(response()
+                .withStatusCode(status)
+                .withHeader(new Header(HttpHeaders.CONTENT_TYPE, 'text/plain'))
+                .withBody(responseBody))
     }
 }

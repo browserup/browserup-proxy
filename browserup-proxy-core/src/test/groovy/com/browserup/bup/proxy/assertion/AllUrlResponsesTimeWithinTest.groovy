@@ -29,7 +29,7 @@ class AllUrlResponsesTimeWithinTest extends BaseAssertionsTest {
 
         def assertionTime = MILLISECONDS.convert(DEFAULT_RESPONSE_DELAY.value, DEFAULT_RESPONSE_DELAY.timeUnit) - TIME_DELTA_MILLISECONDS
 
-        def result = proxy.assertAllUrlResponseTimesWithin(Pattern.compile(".*${URL_PATH}.*"), assertionTime)
+        def result = proxy.assertResponseTimeUnder(Pattern.compile(".*${URL_PATH}.*"), assertionTime)
 
         assertTrue("Expected failed flag to be true", result.failed)
         assertFalse("Expected passed flag to be true", result.passed)
@@ -67,7 +67,7 @@ class AllUrlResponsesTimeWithinTest extends BaseAssertionsTest {
 
         def assertionTime = MILLISECONDS.convert(DEFAULT_RESPONSE_DELAY.value, DEFAULT_RESPONSE_DELAY.timeUnit) - TIME_DELTA_MILLISECONDS
 
-        def result = proxy.assertAllUrlResponseTimesWithin(Pattern.compile(".*${URL_PATH}.*"), assertionTime)
+        def result = proxy.assertResponseTimeUnder(Pattern.compile(".*${URL_PATH}.*"), assertionTime)
 
         assertTrue("Expected failed flag to be true", result.failed)
         assertFalse("Expected passed flag to be true", result.passed)

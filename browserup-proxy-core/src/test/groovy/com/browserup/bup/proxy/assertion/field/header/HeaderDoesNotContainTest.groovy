@@ -1,22 +1,20 @@
 package com.browserup.bup.proxy.assertion.field.header
 
-
-import org.apache.http.client.methods.HttpGet
 import org.junit.Test
 
 import java.util.regex.Pattern
 
-import static com.browserup.bup.proxy.test.util.NewProxyServerTestUtil.toStringAndClose
-import static org.junit.Assert.*
+import static org.junit.Assert.assertFalse
+import static org.junit.Assert.assertTrue
 
 class HeaderDoesNotContainTest extends HeaderBaseTest {
+    private static final Pattern URL_PATTERN = Pattern.compile(".*${URL_PATH}.*")
 
     @Test
     void anyNameAndNotMatchingValue() {
-        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
-        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+        requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"), NOT_MATCHING_HEADER_VALUE)
+        def result = proxy.assertMostRecentResponseHeaderDoesNotContain(URL_PATTERN, NOT_MATCHING_HEADER_VALUE)
 
         assertTrue("Expected not to find header value", result.passed)
         assertFalse("Expected not to find header value", result.failed)
@@ -24,15 +22,14 @@ class HeaderDoesNotContainTest extends HeaderBaseTest {
 
     @Test
     void nameNotProvidedAndNotMatchingValue() {
-        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
-        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+        requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"), null, NOT_MATCHING_HEADER_VALUE)
+        def result = proxy.assertMostRecentResponseHeaderDoesNotContain(URL_PATTERN, null, NOT_MATCHING_HEADER_VALUE)
 
         assertTrue("Expected not to find header value", result.passed)
         assertFalse("Expected not to find header value", result.failed)
 
-        result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"), '', NOT_MATCHING_HEADER_VALUE)
+        result = proxy.assertMostRecentResponseHeaderDoesNotContain(URL_PATTERN, '', NOT_MATCHING_HEADER_VALUE)
 
         assertTrue("Expected not to find header value", result.passed)
         assertFalse("Expected not to find header value", result.failed)
@@ -40,15 +37,14 @@ class HeaderDoesNotContainTest extends HeaderBaseTest {
 
     @Test
     void nameNotProvidedAndMatchingValue() {
-        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
-        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+        requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"), null, HEADER_VALUE)
+        def result = proxy.assertMostRecentResponseHeaderDoesNotContain(URL_PATTERN, null, HEADER_VALUE)
 
         assertFalse("Expected to find header value", result.passed)
         assertTrue("Expected to find header value", result.failed)
 
-        result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"), '', HEADER_VALUE)
+        result = proxy.assertMostRecentResponseHeaderDoesNotContain(URL_PATTERN, '', HEADER_VALUE)
 
         assertFalse("Expected to find header value", result.passed)
         assertTrue("Expected to find header value", result.failed)
@@ -56,10 +52,9 @@ class HeaderDoesNotContainTest extends HeaderBaseTest {
 
     @Test
     void anyNameAndMatchingValue() {
-        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
-        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+        requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"), HEADER_VALUE)
+        def result = proxy.assertMostRecentResponseHeaderDoesNotContain(URL_PATTERN, HEADER_VALUE)
 
         assertFalse("Expected to find header value", result.passed)
         assertTrue("Expected to find header value", result.failed)
@@ -67,11 +62,9 @@ class HeaderDoesNotContainTest extends HeaderBaseTest {
 
     @Test
     void matchingNameAndNotMatchingValue() {
-        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
-        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+        requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"),
-                HEADER_NAME, NOT_MATCHING_HEADER_VALUE)
+        def result = proxy.assertMostRecentResponseHeaderDoesNotContain(URL_PATTERN, HEADER_NAME, NOT_MATCHING_HEADER_VALUE)
 
         assertTrue("Expected not to find header value", result.passed)
         assertFalse("Expected not to find header value", result.failed)
@@ -79,11 +72,9 @@ class HeaderDoesNotContainTest extends HeaderBaseTest {
 
     @Test
     void notMatchingNameAndMatchingValue() {
-        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
-        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+        requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"),
-                NOT_MATCHING_HEADER_NAME, HEADER_VALUE)
+        def result = proxy.assertMostRecentResponseHeaderDoesNotContain(URL_PATTERN, NOT_MATCHING_HEADER_NAME, HEADER_VALUE)
 
         assertTrue("Expected not to find header value", result.passed)
         assertFalse("Expected not to find header value", result.failed)
@@ -91,11 +82,9 @@ class HeaderDoesNotContainTest extends HeaderBaseTest {
 
     @Test
     void matchingNameAndMatchingValue() {
-        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
-        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+        requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertUrlResponseHeaderDoesNotContain(Pattern.compile(".*${URL_PATH}.*"),
-                HEADER_NAME, HEADER_VALUE)
+        def result = proxy.assertMostRecentResponseHeaderDoesNotContain(URL_PATTERN, HEADER_NAME, HEADER_VALUE)
 
         assertFalse("Expected to find header value", result.passed)
         assertTrue("Expected to find header value", result.failed)

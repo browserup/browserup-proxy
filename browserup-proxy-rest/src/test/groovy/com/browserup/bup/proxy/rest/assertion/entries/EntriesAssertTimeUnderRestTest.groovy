@@ -11,7 +11,7 @@ import org.junit.Test
 
 import static org.junit.Assert.*
 
-class AllFoundEntriesAssertTimeWithinRestTest extends BaseRestTest {
+class EntriesAssertTimeUnderRestTest extends BaseRestTest {
     def responseBody = 'success'
     def url = 'some-url'
     def urlPatternToMatchUrl = '.*url-.*'

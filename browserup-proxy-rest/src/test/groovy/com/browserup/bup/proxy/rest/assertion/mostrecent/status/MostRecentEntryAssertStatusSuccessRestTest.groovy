@@ -1,4 +1,4 @@
-package com.browserup.bup.proxy.rest.assertion.mostrecent
+package com.browserup.bup.proxy.rest.assertion.mostrecent.status
 
 import com.browserup.bup.assertion.model.AssertionResult
 import com.browserup.bup.proxy.rest.BaseRestTest
@@ -17,28 +17,41 @@ import static org.junit.Assert.*
 import static org.mockserver.model.HttpRequest.request
 import static org.mockserver.model.HttpResponse.response
 
-class MostRecentEntryAssertStatusEqualsRestTest extends BaseRestTest {
+class MostRecentEntryAssertStatusSuccessRestTest extends BaseRestTest {
     def urlOfMostRecentRequest = 'url-most-recent'
     def urlOfOldRequest = 'url-old'
     def urlPatternToMatchUrl = '.*url-.*'
     def urlPatternNotToMatchUrl = '.*does_not_match-.*'
-    def status = HttpStatus.SC_OK
-    def statusNotToMatch = HttpStatus.SC_NOT_FOUND
+    def successStatus = HttpStatus.SC_OK
+    def nonSuccessStatus = HttpStatus.SC_BAD_REQUEST
     def responseBody = "success"
 
     @Override
     String getUrlPath() {
-        return 'har/mostRecentEntry/assertStatusEquals'
+        return 'har/mostRecentEntry/assertStatusSuccess'
     }
 
     @Test
-    void passAndFailAssertion() {
-        sendRequestsToTargetServer()
+    void getBadRequestUrlPatternIsInvalid() {
+        proxyManager.get()[0].newHar()
+
+        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+            uri.path = "/proxy/${proxy.port}/${urlPath}"
+            uri.query = [urlPattern: '[']
+            response.failure = { resp, reader ->
+                assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
+            }
+        }
+    }
+
+    @Test
+    void statusSuccessPasses() {
+        sendRequestsToTargetServer(nonSuccessStatus, successStatus)
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             def urlPattern = ".*${urlPatternToMatchUrl}"
             uri.path = "/proxy/${proxy.port}/${urlPath}"
-            uri.query = [urlPattern: urlPattern, status: status]
+            uri.query = [urlPattern: urlPattern]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
                 assertNotNull('Expected to get non null assertion result', assertionResult)
@@ -48,11 +61,16 @@ class MostRecentEntryAssertStatusEqualsRestTest extends BaseRestTest {
                 assertFalse('Expected assertion entry result to have "false" failed flag', assertionResult.requests[0].failed)
             }
         }
+    }
+
+    @Test
+    void statusSuccessFails() {
+        sendRequestsToTargetServer(successStatus, nonSuccessStatus)
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             def urlPattern = ".*${urlPatternToMatchUrl}"
             uri.path = "/proxy/${proxy.port}/${urlPath}"
-            uri.query = [urlPattern: urlPattern, status: statusNotToMatch]
+            uri.query = [urlPattern: urlPattern]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
                 assertNotNull('Expected to get non null assertion result', assertionResult)
@@ -66,11 +84,11 @@ class MostRecentEntryAssertStatusEqualsRestTest extends BaseRestTest {
 
     @Test
     void getEmptyResultIfNoEntryFoundByUrlPattern() {
-        sendRequestsToTargetServer()
+        sendRequestsToTargetServer(successStatus, nonSuccessStatus)
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             uri.path = "/proxy/${proxy.port}/${urlPath}"
-            uri.query = [urlPattern: urlPatternNotToMatchUrl, status: status]
+            uri.query = [urlPattern: urlPatternNotToMatchUrl]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
                 assertNotNull('Expected to get non null assertion result', assertionResult)
@@ -81,9 +99,9 @@ class MostRecentEntryAssertStatusEqualsRestTest extends BaseRestTest {
         }
     }
 
-    private void sendRequestsToTargetServer() {
-        mockTargetServerResponse(urlOfMostRecentRequest, responseBody, status)
-        mockTargetServerResponse(urlOfOldRequest, responseBody, status)
+    private void sendRequestsToTargetServer(int oldStatus, int recentStatus) {
+        mockTargetServerResponse(urlOfMostRecentRequest, responseBody, recentStatus)
+        mockTargetServerResponse(urlOfOldRequest, responseBody, oldStatus)
 
         proxyManager.get()[0].newHar()
 

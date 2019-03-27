@@ -1,13 +1,11 @@
 package com.browserup.bup.proxy.assertion.field.content
 
-
-import org.apache.http.client.methods.HttpGet
 import org.junit.Test
 
 import java.util.regex.Pattern
 
-import static com.browserup.bup.proxy.test.util.NewProxyServerTestUtil.toStringAndClose
-import static org.junit.Assert.*
+import static org.junit.Assert.assertFalse
+import static org.junit.Assert.assertTrue
 
 class ContentMatchesTest extends ContentBaseTest {
 
@@ -18,10 +16,9 @@ class ContentMatchesTest extends ContentBaseTest {
 
         mockResponse(URL_PATH, body)
 
-        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
-        assertEquals("Did not receive expected response from mock server", body, respBody)
+        requestToMockedServer(URL_PATH, body)
 
-        def result = proxy.assertUrlContentMatches(Pattern.compile(".*${URL_PATH}.*"), Pattern.compile(pattern))
+        def result = proxy.assertMostRecentResponseContentMatches(Pattern.compile(".*${URL_PATH}.*"), Pattern.compile(pattern))
 
         assertTrue("Expected assertion to pass", result.passed)
         assertFalse("Expected assertion to pass", result.failed)
@@ -34,10 +31,9 @@ class ContentMatchesTest extends ContentBaseTest {
 
         mockResponse(URL_PATH, body)
 
-        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(url)).entity.content)
-        assertEquals("Did not receive expected response from mock server", body, respBody)
+        requestToMockedServer(URL_PATH, body)
 
-        def result = proxy.assertUrlContentMatches(Pattern.compile(".*${URL_PATH}.*"), Pattern.compile(pattern))
+        def result = proxy.assertMostRecentResponseContentMatches(Pattern.compile(".*${URL_PATH}.*"), Pattern.compile(pattern))
 
         assertFalse("Expected assertion to fail", result.passed)
         assertTrue("Expected assertion to fail", result.failed)
