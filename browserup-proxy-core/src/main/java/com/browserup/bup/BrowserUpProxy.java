@@ -679,49 +679,187 @@ public interface BrowserUpProxy {
      */
     Collection<HarEntry> findEntries(Pattern url);
 
-    AssertionResult assertMostRecentResponseTimeUnder(Pattern url, long time);
+    /**
+     * Assert that response time for the most recent request found by url pattern is under specified value.
+     * @param url Regular expression match of URL to find.
+     *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
+     * @param milliseconds Maximum time in milliseconds
+     * @return Assertion result
+     */
+    AssertionResult assertMostRecentResponseTimeUnder(Pattern url, long milliseconds);
 
-    AssertionResult assertResponseTimeUnder(Pattern url, long time);
+    /**
+     * Assert that responses time for all requests found by url pattern is under specified value.
+     * @param url Regular expression match of URL to find.
+     *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
+     * @param milliseconds Maximum time in milliseconds
+     * @return Assertion result
+     */
+    AssertionResult assertResponseTimeUnder(Pattern url, long milliseconds);
 
+    /**
+     * Assert that responses content for all requests found by url pattern contain specified value.
+     * @param url Regular expression match of URL to find.
+     *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
+     * @param text String to search in the content
+     * @return Assertion result
+     */
     AssertionResult assertMostRecentResponseContentContains(Pattern url, String text);
 
+    /**
+     * Assert that responses content for all requests found by url pattern don't contain specified value.
+     * @param url Regular expression match of URL to find.
+     *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
+     * @param text String to search in the content
+     * @return Assertion result
+     */
     AssertionResult assertMostRecentResponseContentDoesNotContain(Pattern url, String text);
 
+    /**
+     * Assert that responses content for all requests found by url pattern matches content pattern.
+     * @param url Regular expression match of URL to find.
+     *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
+     * @param contentPattern Regular expression match of content to find.
+     * @return Assertion result
+     */
     AssertionResult assertMostRecentResponseContentMatches(Pattern url, Pattern contentPattern);
 
+    /**
+     * Assert that if the most recent response found by url pattern has header with specified name
+     * - it's value must contain specified text.
+     * @param url Regular expression match of URL to find.
+     *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
+     * @param name Header name
+     * @param value Header value
+     * @return Assertion result
+     */
     AssertionResult assertMostRecentResponseHeaderContains(Pattern url, String name, String value);
 
+    /**
+     * Assert that headers of the most recent response found by url pattern contain specified value.
+     * @param url Regular expression match of URL to find.
+     *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
+     * @param value Header value
+     * @return Assertion result
+     */
     default AssertionResult assertMostRecentResponseHeaderContains(Pattern url, String value) {
         return assertMostRecentResponseHeaderContains(url, null, value);
     }
 
+    /**
+     * Assert that if the most recent response found by url pattern has header with specified name
+     * - it's value must not contain specified text.
+     * @param url Regular expression match of URL to find.
+     *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
+     * @param name Header name
+     * @param value Header value
+     * @return Assertion result
+     */
     AssertionResult assertMostRecentResponseHeaderDoesNotContain(Pattern url, String name, String value);
 
+    /**
+     * Assert that headers of the most recent response found by url pattern do not contain specified value.
+     * @param url Regular expression match of URL to find.
+     *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
+     * @param value Header value
+     * @return Assertion result
+     */
     default AssertionResult assertMostRecentResponseHeaderDoesNotContain(Pattern url, String value) {
         return assertMostRecentResponseHeaderDoesNotContain(url, null, value);
     }
 
+    /**
+     * Assert that if the most recent response found by url pattern has header with name
+     * found by name pattern - it's value should match value pattern.
+     * @param url Regular expression match of URL to find.
+     *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
+     * @param name Regular expression match of header name to find.
+     * @param value Regular expression match of header value.
+     * @return Assertion result
+     */
     AssertionResult assertMostRecentResponseHeaderMatches(Pattern url, Pattern name, Pattern value);
 
+    /**
+     * Assert that all headers of the most recent response found by url pattern have values matching value pattern.
+     * @param url Regular expression match of URL to find.
+     *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
+     * @param value Regular expression match of header value.
+     * @return Assertion result
+     */
     default AssertionResult assertMostRecentResponseHeaderMatches(Pattern url, Pattern value) {
         return assertMostRecentResponseHeaderMatches(url, null, value);
     }
 
+    /**
+     * Assert that content length of the most recent response found by url pattern does not exceed max value.
+     * @param url Regular expression match of URL to find.
+     *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
+     * @param max Max length of content
+     * @return Assertion result
+     */
     AssertionResult assertMostRecentResponseContentLengthUnder(Pattern url, Long max);
 
+    /**
+     * Assert that all responses of current step have specified status.
+     * @param status Expected http status
+     * @return Assertion result
+     */
     AssertionResult assertResponseStatusCode(Integer status);
 
+    /**
+     * Assert that all responses of current step have statuses belonging to the same class.
+     * @param clazz Http status class
+     * @return Assertion result
+     */
     AssertionResult assertResponseStatusCode(HttpStatusClass clazz);
 
+    /**
+     * Assert that all responses found by url pattern have specified http status.
+     * @param url Regular expression match of URL to find.
+     *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
+     * @param status Http status
+     * @return Assertion result
+     */
     AssertionResult assertResponseStatusCode(Pattern url, Integer status);
 
+    /**
+     * Assert that all responses found by url pattern have statuses belonging to the same class.
+     * @param url Regular expression match of URL to find.
+     *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
+     * @param clazz Http status class
+     * @return Assertion result
+     */
     AssertionResult assertResponseStatusCode(Pattern url, HttpStatusClass clazz);
 
+    /**
+     * Assert that the most recent response has specified status.
+     * @param status Http status
+     * @return Assertion result
+     */
     AssertionResult assertMostRecentResponseStatusCode(Integer status);
 
+    /**
+     * Assert that the most recent response has status belonging to specified class.
+     * @param clazz Http status class
+     * @return Assertion result
+     */
     AssertionResult assertMostRecentResponseStatusCode(HttpStatusClass clazz);
 
+    /**
+     * Assert that the most recent response found by url pattern has specified status.
+     * @param url Regular expression match of URL to find.
+     *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
+     * @param status Http status
+     * @return Assertion result
+     */
     AssertionResult assertMostRecentResponseStatusCode(Pattern url, Integer status);
 
+    /**
+     * Assert that the most recent response found by url pattern has status belonging to specified class.
+     * @param url Regular expression match of URL to find.
+     *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
+     * @param clazz Http status class
+     * @return Assertion result
+     */
     AssertionResult assertMostRecentResponseStatusCode(Pattern url, HttpStatusClass clazz);
 }

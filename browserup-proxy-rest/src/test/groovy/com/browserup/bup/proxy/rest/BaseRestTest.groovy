@@ -13,7 +13,7 @@ abstract class BaseRestTest extends WithRunningProxyRestTest {
     protected static final Delay TARGET_SERVER_SLOW_RESPONSE_DELAY = Delay.milliseconds(1000)
     protected static final long SUCCESSFUL_ASSERTION_TIME_WITHIN = TARGET_SERVER_RESPONSE_DELAY.value + 100
     protected static final long FAILED_ASSERTION_TIME_WITHIN = TARGET_SERVER_RESPONSE_DELAY.value - 100
-    protected static final int MILLISECONDS_BETWEEN_REQUESTS = 100
+    protected static final int MILLISECONDS_BETWEEN_REQUESTS = 50
 
     abstract String getUrlPath();
 

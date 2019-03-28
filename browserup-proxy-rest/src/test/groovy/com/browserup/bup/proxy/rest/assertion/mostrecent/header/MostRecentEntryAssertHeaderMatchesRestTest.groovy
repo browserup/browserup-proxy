@@ -5,13 +5,13 @@ import com.browserup.bup.proxy.CaptureType
 import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
 import groovyx.net.http.Method
-import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
 import org.eclipse.jetty.http.HttpMethods
 import org.hamcrest.Matchers
 import org.junit.Test
 import org.mockserver.matchers.Times
+import org.mockserver.model.ConnectionOptions
 import org.mockserver.model.Header
 
 import static org.junit.Assert.*
@@ -28,11 +28,11 @@ class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
     def headerValueNotToFind = 'will not find'
     def headerNameToFind = 'some-header-name'
     def headerNameNotToFind = 'some-header-name-not-to-find'
-    def headerValuePatternToMatch = ".*${headerValueToFind}.*" as String
+    def headerValuePatternToMatch = ".*(${headerValueToFind}|\\d+).*" as String
     def headerValuePatternNotToMatch = ".*${headerNameNotToFind}.*" as String
     def headerNamePatternToMatch = ".*${headerNameToFind}.*" as String
     def headerNamePatternNotToMatch = ".*${headerNameNotToFind}.*" as String
-    Header[] headers = [new Header('headerKey', "header value before ${headerValueToFind} header value after".toString())]
+    Header[] headers = [new Header(headerNameToFind, "header value before ${headerValueToFind} header value after".toString())]
 
     @Override
     String getUrlPath() {
@@ -40,7 +40,7 @@ class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
     }
 
     @Test
-    void anyNameAndMatchingValuePattern() {
+    void anyNameAndMatchingValuePatternPass() {
         sendRequestsToTargetServer()
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
@@ -59,7 +59,7 @@ class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
     }
 
     @Test
-    void anyNameAndNotMatchingValuePattern() {
+    void anyNameAndNotMatchingValuePatternFail() {
         sendRequestsToTargetServer()
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
@@ -78,7 +78,7 @@ class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
     }
 
     @Test
-    void matchingNameAndMatchingValue() {
+    void matchingNameAndMatchingValuePass() {
         sendRequestsToTargetServer()
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
@@ -100,7 +100,7 @@ class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
     }
 
     @Test
-    void notMatchingNameAndMatchingValue() {
+    void notMatchingNameAndMatchingValuePass() {
         sendRequestsToTargetServer()
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
@@ -114,15 +114,15 @@ class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
                 assertNotNull('Expected to get non null assertion result', assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
-                assertFalse('Expected assertion to fail', assertionResult.passed)
-                assertTrue('Expected assertion to fail', assertionResult.failed)
-                assertTrue('Expected assertion entry result to have "true" failed flag', assertionResult.requests[0].failed)
+                assertTrue('Expected assertion to pass', assertionResult.passed)
+                assertFalse('Expected assertion to pass', assertionResult.failed)
+                assertFalse('Expected assertion entry result to have "false" failed flag', assertionResult.requests[0].failed)
             }
         }
     }
 
     @Test
-    void matchingNameAndNotMatchingValue() {
+    void matchingNameAndNotMatchingValueFail() {
         sendRequestsToTargetServer()
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
@@ -144,7 +144,7 @@ class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
     }
 
     @Test
-    void notMatchingNameAndNotMatchingValue() {
+    void notMatchingNameAndNotMatchingValuePass() {
         sendRequestsToTargetServer()
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
@@ -158,9 +158,9 @@ class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
                 assertNotNull('Expected to get non null assertion result', assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
-                assertFalse('Expected assertion to fail', assertionResult.passed)
-                assertTrue('Expected assertion to fail', assertionResult.failed)
-                assertTrue('Expected assertion entry result to have "true" failed flag', assertionResult.requests[0].failed)
+                assertTrue('Expected assertion to pass', assertionResult.passed)
+                assertFalse('Expected assertion to pass', assertionResult.failed)
+                assertFalse('Expected assertion entry result to have "false" failed flag', assertionResult.requests[0].failed)
             }
         }
     }
@@ -171,7 +171,7 @@ class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             uri.path = "/proxy/${proxy.port}/${urlPath}"
-            uri.query = [urlPattern: urlPatternNotToMatchUrl, headerValue: headerValueNotToFind]
+            uri.query = [urlPattern: urlPatternNotToMatchUrl, headerValuePattern: headerValueNotToFind]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
                 assertNotNull('Expected to get non null assertion result', assertionResult)
@@ -198,6 +198,10 @@ class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
     }
 
     protected void mockTargetServerResponse(String url, String responseBody, Header[] headers) {
+        def connectionOptions = ConnectionOptions
+                .connectionOptions()
+                .withSuppressConnectionHeader(true)
+
         targetMockedServer.when(request()
                 .withMethod(HttpMethods.GET)
                 .withPath("/${url}"),
@@ -205,7 +209,7 @@ class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
                 .respond(response()
                 .withStatusCode(HttpStatus.SC_OK)
                 .withBody(responseBody)
-                .withHeader(new Header(HttpHeaders.CONTENT_TYPE, 'text/plain'))
+                .withConnectionOptions(connectionOptions)
                 .withHeaders(headers))
     }
 }

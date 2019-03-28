@@ -19,7 +19,7 @@ class EntriesAssertTimeUnderRestTest extends BaseRestTest {
 
     @Override
     String getUrlPath() {
-        return 'har/entries/assertResponseTimeWithin'
+        return 'har/entries/assertResponseTimeUnder'
     }
 
     @Test
