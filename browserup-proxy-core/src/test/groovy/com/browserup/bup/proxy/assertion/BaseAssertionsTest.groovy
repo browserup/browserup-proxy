@@ -2,6 +2,7 @@ package com.browserup.bup.proxy.assertion
 
 import com.browserup.bup.BrowserUpProxy
 import com.browserup.bup.BrowserUpProxyServer
+import com.browserup.bup.assertion.model.AssertionResult
 import com.browserup.bup.proxy.CaptureType
 import com.browserup.bup.proxy.test.util.MockServerTest
 import com.browserup.bup.proxy.test.util.NewProxyServerTestUtil
@@ -30,6 +31,7 @@ import static org.mockserver.model.HttpResponse.response
 abstract class BaseAssertionsTest extends MockServerTest {
     protected static final String SUCCESSFUL_RESPONSE_BODY = "success"
     protected static final String URL_PATH = "some-url"
+    protected static final Pattern URL_PATH_PATTERN = Pattern.compile(".*${URL_PATH}.*")
     protected static final Delay DEFAULT_RESPONSE_DELAY = new Delay(TimeUnit.SECONDS, 2)
     protected static final Delay FAST_RESPONSE_DELAY = new Delay(TimeUnit.SECONDS, 1)
     protected static final int TIME_DELTA_MILLISECONDS = 100
@@ -73,5 +75,15 @@ abstract class BaseAssertionsTest extends MockServerTest {
                 .withStatusCode(HttpStatus.SC_OK)
                 .withDelay(delay)
                 .withBody(SUCCESSFUL_RESPONSE_BODY))
+    }
+
+    static def assertAssertionPassed(AssertionResult assertion) {
+        assertTrue("Expected assertion to pass", assertion.passed)
+        assertFalse("Expected assertion to pass", assertion.failed)
+    }
+
+    static def assertAssertionFailed(AssertionResult assertion) {
+        assertFalse("Expected assertion to fail", assertion.passed)
+        assertTrue("Expected assertion to fail", assertion.failed)
     }
 }

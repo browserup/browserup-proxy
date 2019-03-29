@@ -1,4 +1,4 @@
-package com.browserup.bup.proxy.assertion.field.status
+package com.browserup.bup.proxy.assertion.field.status.mostrecent
 
 import com.browserup.bup.proxy.assertion.BaseAssertionsTest
 import com.browserup.bup.util.HttpStatusClass

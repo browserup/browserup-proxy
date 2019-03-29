@@ -726,6 +726,22 @@ public interface BrowserUpProxy {
      */
     AssertionResult assertMostRecentResponseContentMatches(Pattern url, Pattern contentPattern);
 
+    AssertionResult assertAnyUrlContentLengthUnder(Pattern url, Long maxSize);
+
+    AssertionResult assertAnyUrlContentMatches(Pattern url, Pattern contentPattern);
+
+    AssertionResult assertAnyUrlContentContains(Pattern url, String text);
+
+    AssertionResult assertAnyUrlContentDoesNotContain(Pattern url, String value);
+
+    AssertionResult assertAnyUrlResponseHeaderContains(Pattern url, String value);
+
+    AssertionResult assertAnyUrlResponseHeaderDoesNotContain(Pattern url, String value);
+
+    AssertionResult assertAnyUrlResponseHeaderMatches(Pattern url, Pattern valuePattern);
+
+    AssertionResult assertAnyUrlResponseHeaderMatches(Pattern url, Pattern namePattern, Pattern valuePattern);
+
     /**
      * Assert that if the most recent response found by url pattern has header with specified name
      * - it's value must contain specified text.

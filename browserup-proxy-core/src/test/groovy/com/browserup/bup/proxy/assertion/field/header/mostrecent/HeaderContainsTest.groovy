@@ -1,6 +1,6 @@
-package com.browserup.bup.proxy.assertion.field.header
+package com.browserup.bup.proxy.assertion.field.header.mostrecent
 
-
+import com.browserup.bup.proxy.assertion.field.header.HeaderBaseTest
 import org.junit.Test
 
 import java.util.regex.Pattern
