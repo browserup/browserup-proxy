@@ -1,14 +1,10 @@
 package com.browserup.bup.proxy.assertion.field.content.filtered
 
-import com.browserup.bup.proxy.assertion.field.content.ContentBaseTest
+
 import org.hamcrest.Matchers
 import org.junit.Test
 
-import java.util.regex.Pattern
-
-import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertThat
-import static org.junit.Assert.assertTrue
 
 class ContentContainsTest extends FilteredContentBaseTest {
 

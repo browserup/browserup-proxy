@@ -86,4 +86,8 @@ abstract class BaseAssertionsTest extends MockServerTest {
         assertFalse("Expected assertion to fail", assertion.passed)
         assertTrue("Expected assertion to fail", assertion.failed)
     }
+
+    static def assertAssertionHasNoEntries(AssertionResult assertion) {
+        assertThat('Expected assertion result has no entries', assertion.requests, Matchers.hasSize(0))
+    }
 }

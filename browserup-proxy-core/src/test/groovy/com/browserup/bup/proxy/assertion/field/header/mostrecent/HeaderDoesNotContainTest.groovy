@@ -17,8 +17,7 @@ class HeaderDoesNotContainTest extends HeaderBaseTest {
 
         def result = proxy.assertMostRecentResponseHeaderDoesNotContain(URL_PATTERN, NOT_MATCHING_HEADER_VALUE)
 
-        assertTrue("Expected not to find header value", result.passed)
-        assertFalse("Expected not to find header value", result.failed)
+        assertAssertionPassed(result)
     }
 
     @Test
@@ -27,13 +26,11 @@ class HeaderDoesNotContainTest extends HeaderBaseTest {
 
         def result = proxy.assertMostRecentResponseHeaderDoesNotContain(URL_PATTERN, null, NOT_MATCHING_HEADER_VALUE)
 
-        assertTrue("Expected not to find header value", result.passed)
-        assertFalse("Expected not to find header value", result.failed)
+        assertAssertionPassed(result)
 
         result = proxy.assertMostRecentResponseHeaderDoesNotContain(URL_PATTERN, '', NOT_MATCHING_HEADER_VALUE)
 
-        assertTrue("Expected not to find header value", result.passed)
-        assertFalse("Expected not to find header value", result.failed)
+        assertAssertionPassed(result)
     }
 
     @Test
@@ -42,13 +39,11 @@ class HeaderDoesNotContainTest extends HeaderBaseTest {
 
         def result = proxy.assertMostRecentResponseHeaderDoesNotContain(URL_PATTERN, null, HEADER_VALUE)
 
-        assertFalse("Expected to find header value", result.passed)
-        assertTrue("Expected to find header value", result.failed)
+        assertAssertionFailed(result)
 
         result = proxy.assertMostRecentResponseHeaderDoesNotContain(URL_PATTERN, '', HEADER_VALUE)
 
-        assertFalse("Expected to find header value", result.passed)
-        assertTrue("Expected to find header value", result.failed)
+        assertAssertionFailed(result)
     }
 
     @Test
@@ -57,8 +52,7 @@ class HeaderDoesNotContainTest extends HeaderBaseTest {
 
         def result = proxy.assertMostRecentResponseHeaderDoesNotContain(URL_PATTERN, HEADER_VALUE)
 
-        assertFalse("Expected to find header value", result.passed)
-        assertTrue("Expected to find header value", result.failed)
+        assertAssertionFailed(result)
     }
 
     @Test
@@ -67,8 +61,7 @@ class HeaderDoesNotContainTest extends HeaderBaseTest {
 
         def result = proxy.assertMostRecentResponseHeaderDoesNotContain(URL_PATTERN, HEADER_NAME, NOT_MATCHING_HEADER_VALUE)
 
-        assertTrue("Expected not to find header value", result.passed)
-        assertFalse("Expected not to find header value", result.failed)
+        assertAssertionPassed(result)
     }
 
     @Test
@@ -77,8 +70,7 @@ class HeaderDoesNotContainTest extends HeaderBaseTest {
 
         def result = proxy.assertMostRecentResponseHeaderDoesNotContain(URL_PATTERN, NOT_MATCHING_HEADER_NAME, HEADER_VALUE)
 
-        assertTrue("Expected not to find header value", result.passed)
-        assertFalse("Expected not to find header value", result.failed)
+        assertAssertionPassed(result)
     }
 
     @Test
@@ -87,7 +79,6 @@ class HeaderDoesNotContainTest extends HeaderBaseTest {
 
         def result = proxy.assertMostRecentResponseHeaderDoesNotContain(URL_PATTERN, HEADER_NAME, HEADER_VALUE)
 
-        assertFalse("Expected to find header value", result.passed)
-        assertTrue("Expected to find header value", result.failed)
+        assertAssertionFailed(result)
     }
 }

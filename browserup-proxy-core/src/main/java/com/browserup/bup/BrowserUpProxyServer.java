@@ -1101,12 +1101,10 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     }
 
     @Override
-    public AssertionResult assertAnyUrlContentLengthUnder(Pattern url, Long maxSize) {
+    public AssertionResult assertAnyUrlContentLengthLessThanOrEquals(Pattern url, Long maxSize) {
         HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
-        HarEntryAssertion assertion = new ContentSizeUnderAssertion(maxSize);
-        assertFilteredByUrl().haveContentSizeUnder()
-        assertFilteredByUrl().mostRecent()
-        assertThat().filteredByUrl().mostRecent().haveContentSizeUnder()
+        HarEntryAssertion assertion = new ContentSizeLessThanOrEqualAssertion(maxSize);
+
         return checkAssertion(supplier, assertion);
     }
 

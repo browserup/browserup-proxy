@@ -6,7 +6,7 @@ import org.junit.Test
 
 import static org.junit.Assert.assertThat
 
-class ContentLengthUnderTest extends FilteredContentBaseTest {
+class ContentLengthLessThanOrEqualTest extends FilteredContentBaseTest {
     private static final String BIG_BODY = (1..10).collect { 'big body' }.join(' ')
     private static final String SMALL_BODY = 'small body'
     private static final Long BIG_BODY_SIZE = BIG_BODY.bytes.length
@@ -16,7 +16,7 @@ class ContentLengthUnderTest extends FilteredContentBaseTest {
     void filterMatchesBothRequestsAndBothContentLengthAreUnderLimitPasses() {
         mockAndSendRequestsToMockedServer(BIG_BODY, SMALL_BODY)
 
-        def result = proxy.assertAnyUrlContentLengthUnder(URL_PATTERN_TO_MATCH_BOTH, BIG_BODY_SIZE)
+        def result = proxy.assertAnyUrlContentLengthLessThanOrEquals(URL_PATTERN_TO_MATCH_BOTH, BIG_BODY_SIZE)
 
         assertAssertionPassed(result)
     }
@@ -25,7 +25,7 @@ class ContentLengthUnderTest extends FilteredContentBaseTest {
     void filterMatchesFirstRequestAndOnlySecondContentLengthIsUnderLimitFails() {
         mockAndSendRequestsToMockedServer(BIG_BODY, SMALL_BODY)
 
-        def result = proxy.assertAnyUrlContentLengthUnder(URL_PATTERN_TO_MATCH_FIRST, SMALL_BODY_SIZE)
+        def result = proxy.assertAnyUrlContentLengthLessThanOrEquals(URL_PATTERN_TO_MATCH_FIRST, SMALL_BODY_SIZE)
 
         assertAssertionFailed(result)
 
@@ -41,7 +41,7 @@ class ContentLengthUnderTest extends FilteredContentBaseTest {
     void filterMatchesBothRequestsAndSomeContentIsNotUnderLimitFails() {
         mockAndSendRequestsToMockedServer(BIG_BODY, SMALL_BODY)
 
-        def result = proxy.assertAnyUrlContentLengthUnder(URL_PATTERN_TO_MATCH_BOTH, SMALL_BODY_SIZE)
+        def result = proxy.assertAnyUrlContentLengthLessThanOrEquals(URL_PATTERN_TO_MATCH_BOTH, SMALL_BODY_SIZE)
 
         assertAssertionFailed(result)
 
@@ -57,7 +57,7 @@ class ContentLengthUnderTest extends FilteredContentBaseTest {
     void filterMatchesBothRequestsAndAllContentIsNotUnderLimitFails() {
         mockAndSendRequestsToMockedServer(BIG_BODY, SMALL_BODY)
 
-        def result = proxy.assertAnyUrlContentLengthUnder(URL_PATTERN_TO_MATCH_BOTH, SMALL_BODY_SIZE - 1)
+        def result = proxy.assertAnyUrlContentLengthLessThanOrEquals(URL_PATTERN_TO_MATCH_BOTH, SMALL_BODY_SIZE - 1)
 
         assertAssertionFailed(result)
 

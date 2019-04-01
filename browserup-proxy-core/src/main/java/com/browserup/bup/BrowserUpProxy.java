@@ -726,7 +726,7 @@ public interface BrowserUpProxy {
      */
     AssertionResult assertMostRecentResponseContentMatches(Pattern url, Pattern contentPattern);
 
-    AssertionResult assertAnyUrlContentLengthUnder(Pattern url, Long maxSize);
+    AssertionResult assertAnyUrlContentLengthLessThanOrEquals(Pattern url, Long maxSize);
 
     AssertionResult assertAnyUrlContentMatches(Pattern url, Pattern contentPattern);
 
