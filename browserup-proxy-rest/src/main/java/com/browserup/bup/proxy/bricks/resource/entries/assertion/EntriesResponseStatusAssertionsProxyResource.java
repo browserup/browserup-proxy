@@ -3,6 +3,7 @@ package com.browserup.bup.proxy.bricks.resource.entries.assertion;
 import com.browserup.bup.BrowserUpProxyServer;
 import com.browserup.bup.assertion.model.AssertionResult;
 import com.browserup.bup.proxy.ProxyManager;
+import com.browserup.bup.proxy.bricks.resource.entries.EntriesProxyResource;
 import com.browserup.bup.proxy.bricks.resource.mostrecent.MostRecentEntryProxyResource;
 import com.browserup.bup.proxy.bricks.validation.param.ValidatedParam;
 import com.browserup.bup.proxy.bricks.validation.param.raw.IntRawParam;
@@ -21,7 +22,7 @@ import org.slf4j.LoggerFactory;
 
 @At("/proxy/:port/har/entries")
 @Service
-public class EntriesResponseStatusAssertionsProxyResource extends MostRecentEntryProxyResource {
+public class EntriesResponseStatusAssertionsProxyResource extends EntriesProxyResource {
     private static final Logger LOG = LoggerFactory.getLogger(EntriesResponseStatusAssertionsProxyResource.class);
 
     private ValidatedParam<Integer> status = ValidatedParam.empty("status");

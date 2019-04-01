@@ -680,22 +680,24 @@ public interface BrowserUpProxy {
     Collection<HarEntry> findEntries(Pattern url);
 
     /**
-     * Assert that response time for the most recent request found by url pattern is under specified value.
+     * Assert that the response time for the most recent request
+     * found by a given URL pattern is less than or equal to a given number of milliseconds.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param milliseconds Maximum time in milliseconds
+     * @param milliseconds Maximum time in milliseconds, inclusive.
      * @return Assertion result
      */
-    AssertionResult assertMostRecentResponseTimeUnder(Pattern url, long milliseconds);
+    AssertionResult assertMostRecentResponseTimeLessThanOrEqual(Pattern url, long milliseconds);
 
     /**
-     * Assert that responses time for all requests found by url pattern is under specified value.
+     * Assert that the response times for all requests
+     * found by a given URL pattern are less than or equal to a given number of milliseconds.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param milliseconds Maximum time in milliseconds
+     * @param milliseconds Maximum time in milliseconds, inclusive.
      * @return Assertion result
      */
-    AssertionResult assertResponseTimeUnder(Pattern url, long milliseconds);
+    AssertionResult assertResponseTimeLessThanOrEqual(Pattern url, long milliseconds);
 
     /**
      * Assert that responses content for all requests found by url pattern contain specified value.
@@ -794,10 +796,10 @@ public interface BrowserUpProxy {
      * Assert that content length of the most recent response found by url pattern does not exceed max value.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param max Max length of content
+     * @param max Max length of content, inclusive
      * @return Assertion result
      */
-    AssertionResult assertMostRecentResponseContentLengthUnder(Pattern url, Long max);
+    AssertionResult assertMostRecentResponseContentLengthLessThanOrEqual(Pattern url, Long max);
 
     /**
      * Assert that all responses of current step have specified status.

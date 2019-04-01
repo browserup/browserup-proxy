@@ -8,7 +8,7 @@ import java.util.regex.Pattern
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertTrue
 
-class ContentSizeUnderTest extends ContentBaseTest {
+class ContentSizeLessThanOrEqualTest extends ContentBaseTest {
 
     @Test
     void contentSizeWithinAssertionPasses() {
@@ -19,7 +19,7 @@ class ContentSizeUnderTest extends ContentBaseTest {
 
         requestToMockedServer(URL_PATH, body)
 
-        def result = proxy.assertMostRecentResponseContentLengthUnder(Pattern.compile(".*${URL_PATH}.*"), bodySize)
+        def result = proxy.assertMostRecentResponseContentLengthLessThanOrEqual(Pattern.compile(".*${URL_PATH}.*"), bodySize)
 
         assertTrue("Expected assertion to pass", result.passed)
         assertFalse("Expected assertion to pass", result.failed)
@@ -34,7 +34,7 @@ class ContentSizeUnderTest extends ContentBaseTest {
 
         requestToMockedServer(URL_PATH, body)
 
-        def result = proxy.assertMostRecentResponseContentLengthUnder(Pattern.compile(".*${URL_PATH}.*"), bodySize - 1)
+        def result = proxy.assertMostRecentResponseContentLengthLessThanOrEqual(Pattern.compile(".*${URL_PATH}.*"), bodySize - 1)
 
         assertFalse("Expected assertion to fail", result.passed)
         assertTrue("Expected assertion to fail", result.failed)

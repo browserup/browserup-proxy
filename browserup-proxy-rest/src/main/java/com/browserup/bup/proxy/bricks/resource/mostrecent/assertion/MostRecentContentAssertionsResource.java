@@ -91,14 +91,14 @@ public class MostRecentContentAssertionsResource extends MostRecentEntryProxyRes
     }
 
     @Get
-    @At("/assertContentLengthUnder")
-    public Reply<?> contentLengthUnder(@Named("port") int port) {
-        LOG.info("GET /" + port + "/har/mostRecentEntry/assertContentLengthUnder");
+    @At("/assertContentLengthLessThanOrEqual")
+    public Reply<?> contentLengthLessThanOrEqual(@Named("port") int port) {
+        LOG.info("GET /" + port + "/har/mostRecentEntry/assertContentLengthLessThanOrEqual");
 
         proxy = parseProxyServer(new IntRawParam("proxy port", port));
         checkRequiredParams(urlPattern, proxy, length);
 
-        AssertionResult result = proxy.getParsedParam().assertMostRecentResponseContentLengthUnder(
+        AssertionResult result = proxy.getParsedParam().assertMostRecentResponseContentLengthLessThanOrEqual(
                 urlPattern.getParsedParam(),
                 length.getParsedParam());
 

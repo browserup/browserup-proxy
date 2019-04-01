@@ -4,12 +4,12 @@ import com.browserup.harreader.model.HarEntry
 import org.junit.Assert;
 import org.junit.Test;
 
-class ResponseTimeUnderAssertionTest {
+class ResponseTimeLessThanOrEqualAssertionTest {
 
     @Test
     void testAssertionFailsIfTimeExceeds() {
         def expectedTime = 500
-        def assertion = new ResponseTimeUnderAssertion(expectedTime)
+        def assertion = new ResponseTimeLessThanOrEqualAssertion(expectedTime)
         def entry = new HarEntry()
         def time = 1000
         entry.setTime(time)
@@ -22,7 +22,7 @@ class ResponseTimeUnderAssertionTest {
     @Test
     void testAssertionDoesNotFailIfTimeDoesNotExceed() {
         def expectedTime = 2000
-        def assertion = new ResponseTimeUnderAssertion(expectedTime)
+        def assertion = new ResponseTimeLessThanOrEqualAssertion(expectedTime)
         def entry = new HarEntry()
         def time = 1000
         entry.setTime(time)

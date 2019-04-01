@@ -4,10 +4,10 @@ import com.browserup.bup.assertion.field.HarEntryPredicate;
 
 import java.util.Optional;
 
-public class ContentSizeUnderAssertion extends ContentSizePassesPredicateAssertion {
+public class ContentSizeLessThanOrEqualAssertion extends ContentSizePassesPredicateAssertion {
     private final Long size;
 
-    public ContentSizeUnderAssertion(Long size) {
+    public ContentSizeLessThanOrEqualAssertion(Long size) {
         this.size = size;
     }
 

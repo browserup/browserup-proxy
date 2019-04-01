@@ -12,7 +12,7 @@ import org.junit.Test
 
 import static org.junit.Assert.*
 
-class MostRecentEntryAssertContentLengthUnderRestTest extends BaseRestTest {
+class MostRecentEntryAssertContentLengthLessThanOrEqualRestTest extends BaseRestTest {
     def urlOfMostRecentRequest = 'url-most-recent'
     def urlOfOldRequest = 'url-old'
     def urlPatternToMatchUrl = '.*url-.*'
@@ -23,7 +23,7 @@ class MostRecentEntryAssertContentLengthUnderRestTest extends BaseRestTest {
 
     @Override
     String getUrlPath() {
-        return 'har/mostRecentEntry/assertContentLengthUnder'
+        return 'har/mostRecentEntry/assertContentLengthLessThanOrEqual'
     }
 
     @Test
@@ -68,7 +68,7 @@ class MostRecentEntryAssertContentLengthUnderRestTest extends BaseRestTest {
     }
 
     @Test
-    void contentLengthUnderPasses() {
+    void contentLengthLessThanOrEqualPasses() {
         sendRequestsToTargetServer()
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
@@ -87,7 +87,7 @@ class MostRecentEntryAssertContentLengthUnderRestTest extends BaseRestTest {
     }
 
     @Test
-    void contentLengthUnderFails() {
+    void contentLengthLessThanOrEqualFails() {
         sendRequestsToTargetServer()
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->

@@ -11,7 +11,7 @@ import org.junit.Test
 
 import static org.junit.Assert.*
 
-class EntriesAssertTimeUnderRestTest extends BaseRestTest {
+class EntriesAssertTimeLessThanOrEqualRestTest extends BaseRestTest {
     def responseBody = 'success'
     def url = 'some-url'
     def urlPatternToMatchUrl = '.*url-.*'
@@ -19,7 +19,7 @@ class EntriesAssertTimeUnderRestTest extends BaseRestTest {
 
     @Override
     String getUrlPath() {
-        return 'har/entries/assertResponseTimeUnder'
+        return 'har/entries/assertResponseTimeLessThanOrEqual'
     }
 
     @Test

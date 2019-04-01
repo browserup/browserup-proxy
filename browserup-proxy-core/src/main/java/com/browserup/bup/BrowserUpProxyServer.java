@@ -1,10 +1,10 @@
 package com.browserup.bup;
 
 import com.browserup.bup.assertion.HarEntryAssertion;
-import com.browserup.bup.assertion.ResponseTimeUnderAssertion;
+import com.browserup.bup.assertion.ResponseTimeLessThanOrEqualAssertion;
 import com.browserup.bup.assertion.error.HarEntryAssertionError;
 import com.browserup.bup.assertion.field.content.ContentMatchesAssertion;
-import com.browserup.bup.assertion.field.content.ContentSizeUnderAssertion;
+import com.browserup.bup.assertion.field.content.ContentSizeLessThanOrEqualAssertion;
 import com.browserup.bup.assertion.field.content.ContentContainsStringAssertion;
 import com.browserup.bup.assertion.field.content.ContentDoesNotContainStringAssertion;
 import com.browserup.bup.assertion.field.header.*;
@@ -1060,17 +1060,17 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     }
 
     @Override
-    public AssertionResult assertMostRecentResponseTimeUnder(Pattern url, long time) {
+    public AssertionResult assertMostRecentResponseTimeLessThanOrEqual(Pattern url, long time) {
         HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
-        HarEntryAssertion assertion = new ResponseTimeUnderAssertion(time);
+        HarEntryAssertion assertion = new ResponseTimeLessThanOrEqualAssertion(time);
 
         return checkAssertion(supplier, assertion);
     }
 
     @Override
-    public AssertionResult assertResponseTimeUnder(Pattern url, long time) {
+    public AssertionResult assertResponseTimeLessThanOrEqual(Pattern url, long time) {
         HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
-        HarEntryAssertion assertion = new ResponseTimeUnderAssertion(time);
+        HarEntryAssertion assertion = new ResponseTimeLessThanOrEqualAssertion(time);
 
         return checkAssertion(supplier, assertion);
     }
@@ -1165,9 +1165,9 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     }
 
     @Override
-    public AssertionResult assertMostRecentResponseContentLengthUnder(Pattern url, Long max) {
+    public AssertionResult assertMostRecentResponseContentLengthLessThanOrEqual(Pattern url, Long max) {
         HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
-        HarEntryAssertion assertion = new ContentSizeUnderAssertion(max);
+        HarEntryAssertion assertion = new ContentSizeLessThanOrEqualAssertion(max);
 
         return checkAssertion(supplier, assertion);
     }

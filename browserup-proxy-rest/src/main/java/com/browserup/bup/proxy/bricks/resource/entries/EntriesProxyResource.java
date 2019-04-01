@@ -26,7 +26,8 @@ import java.util.regex.Pattern;
 public class EntriesProxyResource extends BaseResource {
     private static final Logger LOG = LoggerFactory.getLogger(EntriesProxyResource.class);
 
-    private ValidatedParam<Pattern> urlPattern = ValidatedParam.empty("urlPattern");
+    protected ValidatedParam<Pattern> urlPattern = ValidatedParam.empty("urlPattern");
+    protected ValidatedParam<BrowserUpProxyServer> proxy = ValidatedParam.empty("proxy");
 
     @Inject
     public EntriesProxyResource(ProxyManager proxyManager) {
@@ -38,7 +39,7 @@ public class EntriesProxyResource extends BaseResource {
     }
 
     @Get
-    public Reply<?> findEntries(@Named("port") int port) {
+    public Reply<?> entries(@Named("port") int port) {
         LOG.info("GET /" + port + "/har/entries");
 
         ValidatedParam<BrowserUpProxyServer> proxy = parseProxyServer(new IntRawParam("proxy port", port));
@@ -46,6 +47,6 @@ public class EntriesProxyResource extends BaseResource {
 
         Collection<HarEntry> result = proxy.getParsedParam().findEntries(urlPattern.getParsedParam());
 
-        return Reply.with(result).as(Json.class);
+        return Reply.with(result.toArray()).as(Json.class);
     }
 }

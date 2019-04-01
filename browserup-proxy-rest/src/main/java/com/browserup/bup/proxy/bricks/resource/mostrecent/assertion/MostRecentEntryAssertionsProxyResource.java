@@ -3,7 +3,9 @@ package com.browserup.bup.proxy.bricks.resource.mostrecent.assertion;
 import com.browserup.bup.assertion.model.AssertionResult;
 import com.browserup.bup.proxy.ProxyManager;
 import com.browserup.bup.proxy.bricks.resource.mostrecent.MostRecentEntryProxyResource;
+import com.browserup.bup.proxy.bricks.validation.param.ValidatedParam;
 import com.browserup.bup.proxy.bricks.validation.param.raw.IntRawParam;
+import com.browserup.bup.proxy.bricks.validation.param.raw.StringRawParam;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.sitebricks.At;
@@ -20,20 +22,26 @@ import org.slf4j.LoggerFactory;
 public class MostRecentEntryAssertionsProxyResource extends MostRecentEntryProxyResource {
     private static final Logger LOG = LoggerFactory.getLogger(MostRecentEntryAssertionsProxyResource.class);
 
+    protected ValidatedParam<Long> milliseconds = ValidatedParam.empty("milliseconds");
+
     @Inject
     public MostRecentEntryAssertionsProxyResource(ProxyManager proxyManager) {
         super(proxyManager);
     }
 
+    public void setMilliseconds(String milliseconds) {
+        this.milliseconds = parseLongParam(new StringRawParam("milliseconds", milliseconds));;
+    }
+
     @Get
-    @At("/assertResponseTimeUnder")
-    public Reply<?> responseTimeUnder(@Named("port") int port) {
-        LOG.info("GET /" + port + "/har/mostRecentEntry/assertResponseTimeUnder");
+    @At("/assertResponseTimeLessThanOrEqual")
+    public Reply<?> responseTimeLessThanOrEqual(@Named("port") int port) {
+        LOG.info("GET /" + port + "/har/mostRecentEntry/assertResponseTimeLessThanOrEqual");
 
         proxy = parseProxyServer(new IntRawParam("proxy port", port));
         checkRequiredParams(urlPattern, milliseconds, proxy);
 
-        AssertionResult result = proxy.getParsedParam().assertMostRecentResponseTimeUnder(
+        AssertionResult result = proxy.getParsedParam().assertMostRecentResponseTimeLessThanOrEqual(
                 urlPattern.getParsedParam(),
                 milliseconds.getParsedParam());
 

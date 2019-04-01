@@ -26,14 +26,9 @@ public class MostRecentEntryProxyResource extends BaseResource {
 
     protected ValidatedParam<BrowserUpProxyServer> proxy = ValidatedParam.empty("proxy");
     protected ValidatedParam<Pattern> urlPattern = ValidatedParam.empty("urlPattern");
-    protected ValidatedParam<Long> milliseconds = ValidatedParam.empty("milliseconds");
 
     public void setUrlPattern(String urlPattern) {
         this.urlPattern = parsePatternParam(new StringRawParam("urlPattern", urlPattern));
-    }
-
-    public void setMilliseconds(String milliseconds) {
-        this.milliseconds = parseLongParam(new StringRawParam("milliseconds", milliseconds));;
     }
 
     @Inject
@@ -42,7 +37,7 @@ public class MostRecentEntryProxyResource extends BaseResource {
     }
 
     @Get
-    public Reply<?> get(@Named("port") int port) {
+    public Reply<?> mostRecentEntry(@Named("port") int port) {
         LOG.info("GET /" + port + "/har/mostRecentEntry");
 
         proxy = parseProxyServer(new IntRawParam("proxy port", port));

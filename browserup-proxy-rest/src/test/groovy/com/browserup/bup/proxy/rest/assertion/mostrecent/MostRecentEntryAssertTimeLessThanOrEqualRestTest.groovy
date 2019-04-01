@@ -11,7 +11,7 @@ import org.junit.Test
 
 import static org.junit.Assert.*
 
-class MostRecentEntryAssertTimeUnderRestTest extends BaseRestTest {
+class MostRecentEntryAssertTimeLessThanOrEqualRestTest extends BaseRestTest {
     def successfulAssertionMilliseconds = SUCCESSFUL_ASSERTION_TIME_WITHIN
     def failedAssertionMilliseconds = FAILED_ASSERTION_TIME_WITHIN
     def urlOfMostRecentRequest = 'url-most-recent'
@@ -23,7 +23,7 @@ class MostRecentEntryAssertTimeUnderRestTest extends BaseRestTest {
 
     @Override
     String getUrlPath() {
-        return 'har/mostRecentEntry/assertResponseTimeUnder'
+        return 'har/mostRecentEntry/assertResponseTimeLessThanOrEqual'
     }
 
     @Test

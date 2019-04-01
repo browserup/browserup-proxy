@@ -84,6 +84,23 @@ class WithRunningProxyRestTest {
 
         targetMockedServer = new ClientAndServer(0)
 
+        waitForProxyServer()
+    }
+
+    def waitForProxyServer() {
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until({ ->
+            def successful = false
+            proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+                uri.path = "/proxy"
+                response.success = { _, reader ->
+                    successful = true
+                }
+                response.failure = { _, reader ->
+                    successful = false
+                }
+            }
+            return successful
+        })
     }
 
     HTTPBuilder getTargetServerClient() {
