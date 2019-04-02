@@ -40,16 +40,16 @@ class EntriesAssertTimeLessThanOrEqualRestTest extends BaseRestTest {
 
         allUrls.forEach { requestToTargetServer(it, responseBody) }
 
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            uri.path = "/proxy/${proxy.port}/${urlPath}"
+        sendGetToProxyServer { req ->
+            uri.path = fullUrlPath
             uri.query = [urlPattern: urlPatternToMatchUrl, milliseconds: SUCCESSFUL_ASSERTION_TIME_WITHIN]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
-                assertNotNull('Expected to get non null assertion result', assertionResult)
+                assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get all assertion entries filtered by url pattern',
                         assertionResult.requests, Matchers.hasSize(allUrls.size()))
-                assertFalse('Expected assertion to fail', assertionResult.passed)
-                assertTrue('Expected assertion to fail', assertionResult.failed)
+                assertAssertionFailed(assertionResult)
+                
 
                 assertionResult.requests.forEach { e ->
                     if (fastUrls.find {e.url.contains(it)}) {
@@ -71,16 +71,16 @@ class EntriesAssertTimeLessThanOrEqualRestTest extends BaseRestTest {
 
         requestToTargetServer(url, responseBody)
 
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            uri.path = "/proxy/${proxy.port}/${urlPath}"
+        sendGetToProxyServer { req ->
+            uri.path = fullUrlPath
             uri.query = [urlPattern: urlPatternNotToMatchUrl, milliseconds: SUCCESSFUL_ASSERTION_TIME_WITHIN]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
-                assertNotNull('Expected to get non null assertion result', assertionResult)
+                assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get empty assertion entries found by url pattern',
                         assertionResult.requests, Matchers.hasSize(0))
-                assertTrue('Expected assertion to pass', assertionResult.passed)
-                assertFalse('Expected assertion to pass', assertionResult.failed)
+                assertAssertionPassed(assertionResult)
+                
             }
         }
     }
@@ -89,9 +89,9 @@ class EntriesAssertTimeLessThanOrEqualRestTest extends BaseRestTest {
     void getBadRequestIfMillisecondsNotValid() {
         proxyManager.get()[0].newHar()
 
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        sendGetToProxyServer { req ->
             uri.query = [urlPattern: '.*', milliseconds: 'abcd']
-            uri.path = "/proxy/${proxy.port}/${urlPath}"
+            uri.path = fullUrlPath
             response.failure = { resp, reader ->
                 assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
             }

@@ -30,30 +30,30 @@ class MostRecentEntryAssertTimeLessThanOrEqualRestTest extends BaseRestTest {
     void passAndFailTimeWithinAssertion() {
         sendRequestsToTargetServer()
 
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        sendGetToProxyServer { req ->
             def urlPattern = ".*${commonUrlPattern}"
-            uri.path = "/proxy/${proxy.port}/${urlPath}"
+            uri.path = fullUrlPath
             uri.query = [urlPattern: urlPattern, milliseconds: successfulAssertionMilliseconds]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
-                assertNotNull('Expected to get non null assertion result', assertionResult)
+                assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
-                assertTrue('Expected assertion to pass', assertionResult.passed)
-                assertFalse('Expected assertion to pass', assertionResult.failed)
+                assertAssertionPassed(assertionResult)
+                
                 assertFalse('Expected assertion entry result to have "false" failed flag', assertionResult.requests[0].failed)
             }
         }
 
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        sendGetToProxyServer { req ->
             def urlPattern = ".*${commonUrlPattern}"
-            uri.path = "/proxy/${proxy.port}/${urlPath}"
+            uri.path = fullUrlPath
             uri.query = [urlPattern: urlPattern, milliseconds: failedAssertionMilliseconds]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
-                assertNotNull('Expected to get non null assertion result', assertionResult)
+                assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
-                assertFalse('Expected assertion to fail', assertionResult.passed)
-                assertTrue('Expected assertion to fail', assertionResult.failed)
+                assertAssertionFailed(assertionResult)
+                
                 assertTrue('Expected assertion entry result to have "true" failed flag', assertionResult.requests[0].failed)
             }
         }
@@ -63,15 +63,15 @@ class MostRecentEntryAssertTimeLessThanOrEqualRestTest extends BaseRestTest {
     void getEmptyResultIfNoEntryFoundByUrlPattern() {
         sendRequestsToTargetServer()
 
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            uri.path = "/proxy/${proxy.port}/${urlPath}"
+        sendGetToProxyServer { req ->
+            uri.path = fullUrlPath
             uri.query = [urlPattern: urlPattern, milliseconds: assertionMilliseconds]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
-                assertNotNull('Expected to get non null assertion result', assertionResult)
+                assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get no assertion result entries', assertionResult.requests, Matchers.hasSize(0))
-                assertTrue('Expected assertion to pass', assertionResult.passed)
-                assertFalse('Expected assertion to pass', assertionResult.failed)
+                assertAssertionPassed(assertionResult)
+                
             }
         }
     }
@@ -80,9 +80,9 @@ class MostRecentEntryAssertTimeLessThanOrEqualRestTest extends BaseRestTest {
     void getBadRequestIfMillisecondsNotValid() {
         proxyManager.get()[0].newHar()
 
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        sendGetToProxyServer { req ->
             uri.query = [urlPattern: '.*', milliseconds: 'abcd']
-            uri.path = "/proxy/${proxy.port}/${urlPath}"
+            uri.path = fullUrlPath
             response.failure = { resp, reader ->
                 assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
             }

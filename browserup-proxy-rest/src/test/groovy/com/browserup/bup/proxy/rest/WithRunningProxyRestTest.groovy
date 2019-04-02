@@ -113,6 +113,10 @@ class WithRunningProxyRestTest {
         new HTTPBuilder("http://localhost:${restServer.connectors[0].localPort}")
     }
 
+    def sendGetToProxyServer(Closure configClosure) {
+        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN, configClosure)
+    }
+
     void requestToTargetServer(url, expectedResponse) {
         targetServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             uri.path = "/${url}"

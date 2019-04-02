@@ -15,9 +15,19 @@ class FilteredHeaderBaseTest extends HeaderBaseTest {
     protected static final def COMMON_HEADER_VALUE = 'HeaderValue'
     protected static final def FIRST_HEADER_VALUE = "first${COMMON_HEADER_VALUE}"
     protected static final def SECOND_HEADER_VALUE = "second${COMMON_HEADER_VALUE}"
+    protected static final def COMMON_HEADER_NAME = 'HeaderName'
+    protected static final def FIRST_HEADER_NAME = "first${COMMON_HEADER_NAME}"
+    protected static final def SECOND_HEADER_NAME = "second${COMMON_HEADER_NAME}"
+    protected static final def HEADER_VALUE_PATTERN_TO_MATCH_FIRST = Pattern.compile(".*${FIRST_HEADER_VALUE}.*")
+    protected static final def HEADER_VALUE_PATTERN_TO_MATCH_SECOND = Pattern.compile(".*${SECOND_HEADER_VALUE}.*")
+    protected static final def HEADER_NAME_PATTERN_TO_MATCH_FIRST = Pattern.compile(".*${FIRST_HEADER_NAME}.*")
+    protected static final def HEADER_NAME_PATTERN_TO_MATCH_SECOND = Pattern.compile(".*${SECOND_HEADER_NAME}.*")
+    protected static final def HEADER_VALUE_PATTERN_TO_MATCH_BOTH = Pattern.compile(".*${COMMON_HEADER_VALUE}.*")
+    protected static final def HEADER_NAME_PATTERN_TO_MATCH_BOTH = Pattern.compile(".*${COMMON_HEADER_NAME}.*")
+    protected static final def HEADER_NAME_PATTERN_TO_MATCH_NOTHING = Pattern.compile(".*nothing.*")
     protected static final def ABSENT_HEADER_VALUE = "something"
-    protected static final def FIRST_HEADER = Header.header('firstHeaderName', 'firstHeaderValue')
-    protected static final def SECOND_HEADER = Header.header('secondHeaderName', 'secondHeaderValue')
+    protected static final def FIRST_HEADER = Header.header('firstHeaderName', FIRST_HEADER_VALUE)
+    protected static final def SECOND_HEADER = Header.header('secondHeaderName', SECOND_HEADER_VALUE)
 
     protected mockAndSendRequestsToMockedServer(Header firstHeader, Header secondHeader) {
         mockResponse(FIRST_URL_PATH, firstHeader)

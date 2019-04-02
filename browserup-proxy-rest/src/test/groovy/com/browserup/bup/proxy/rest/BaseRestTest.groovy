@@ -1,12 +1,9 @@
 package com.browserup.bup.proxy.rest
 
-import groovyx.net.http.Method
-import org.apache.http.HttpStatus
-import org.apache.http.entity.ContentType
-import org.junit.Test
+import com.browserup.bup.assertion.model.AssertionResult
 import org.mockserver.model.Delay
 
-import static org.junit.Assert.assertEquals
+import static org.junit.Assert.*
 
 abstract class BaseRestTest extends WithRunningProxyRestTest {
     protected static final Delay TARGET_SERVER_RESPONSE_DELAY = Delay.milliseconds(500)
@@ -17,16 +14,21 @@ abstract class BaseRestTest extends WithRunningProxyRestTest {
 
     abstract String getUrlPath();
 
-    @Test
-    void getBadRequestIfUrlPatternIsInvalid() {
-        proxyManager.get()[0].newHar()
+    String getFullUrlPath() {
+        return "/proxy/${proxy.port}/${urlPath}"
+    }
 
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            uri.query = [urlPattern: '[', milliseconds: '123']
-            uri.path = "/proxy/${proxy.port}/${urlPath}"
-            response.failure = { resp, reader ->
-                assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
-            }
-        }
+    static def assertAssertionNotNull(AssertionResult assertion) {
+        assertNotNull('Expected to get non null assertion result', assertion)
+    }
+
+    static def assertAssertionPassed(AssertionResult assertion) {
+        assertTrue("Expected assertion to pass", assertion.passed)
+        assertFalse("Expected assertion to pass", assertion.failed)
+    }
+
+    static def assertAssertionFailed(AssertionResult assertion) {
+        assertFalse("Expected assertion to fail", assertion.passed)
+        assertTrue("Expected assertion to fail", assertion.failed)
     }
 }
