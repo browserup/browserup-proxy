@@ -749,16 +749,6 @@ public class ProxyResource {
             throw new IllegalArgumentException("URL parameter 'urlPattern' is mandatory");
         }
 
-        Pattern urlPattern;
-        try {
-            urlPattern = Pattern.compile(urlParam);
-        } catch (Exception ex) {
-            LOG.warn("Url parameter not valid", ex);
-            throw new IllegalArgumentException("URL parameter 'urlPattern' is not a valid regexp");
-        }
-        return urlPattern;
-    }
-
     private Optional<Long> getAssertionTimeFromRequest(Request request) {
         String timeParam = request.param("milliseconds");
         if (StringUtils.isEmpty(timeParam)) {
