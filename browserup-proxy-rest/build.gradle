@@ -71,6 +71,17 @@ dependencies {
     implementation 'org.slf4j:jcl-over-slf4j:1.7.26'
     implementation 'org.apache.commons:commons-lang3:3.9'
 
+    implementation 'org.glassfish.jersey.containers:jersey-container-servlet-core:2.28'
+    implementation 'org.glassfish.jersey.media:jersey-media-json-jackson:2.28'
+    implementation 'org.glassfish.jersey.inject:jersey-hk2:2.28'
+    implementation 'org.glassfish.jersey.ext:jersey-bean-validation:2.28'
+
+    implementation 'io.swagger.core.v3:swagger-jaxrs2:2.0.8'
+    implementation 'io.swagger.core.v3:swagger-core:2.0.8'
+    implementation 'io.swagger.core.v3:swagger-integration:2.0.8'
+    implementation 'io.swagger.core.v3:swagger-jaxrs2-servlet-initializer:2.0.8'
+    implementation 'io.swagger.core.v3:swagger-models:2.0.8'
+
     testImplementation project(':browserup-proxy-mitm')
 
     testImplementation 'junit:junit:4.12'
@@ -81,9 +92,9 @@ dependencies {
     testImplementation 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.2'
     testImplementation 'org.hamcrest:hamcrest:2.1'
     testImplementation 'org.hamcrest:hamcrest-library:2.1'
-    testImplementation 'org.mock-server:mockserver-netty:5.6.0'
     testImplementation 'org.mockito:mockito-core:3.0.0'
     testImplementation 'org.seleniumhq.selenium:selenium-api:3.4.0'
     testImplementation 'org.awaitility:awaitility:3.1.6'
     testImplementation 'xyz.rogfam:littleproxy:2.0.0-beta-3'
+    testImplementation 'com.github.tomakehurst:wiremock-jre8:2.22.0'
 }

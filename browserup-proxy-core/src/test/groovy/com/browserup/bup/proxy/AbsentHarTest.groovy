@@ -14,12 +14,13 @@ import org.hamcrest.Matchers
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import org.mockserver.matchers.Times
 
 import static com.browserup.bup.proxy.test.util.NewProxyServerTestUtil.toStringAndClose
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.junit.Assert.*
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class AbsentHarTest extends MockServerTest {
     private static final String SUCCESSFUL_RESPONSE_BODY = "success"
@@ -92,12 +93,6 @@ class AbsentHarTest extends MockServerTest {
     }
 
     private mockResponseForPath(String path) {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/${path}"),
-                Times.once())
-                .respond(response()
-                .withStatusCode(HttpStatus.SC_OK)
-                .withBody(SUCCESSFUL_RESPONSE_BODY))
+        stubFor(get(urlEqualTo("/${path}")).willReturn(ok().withBody(SUCCESSFUL_RESPONSE_BODY)))
     }
 }

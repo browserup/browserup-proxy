@@ -18,14 +18,15 @@ import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.junit.After
 import org.junit.Test
-import org.mockserver.matchers.Times
 
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.hamcrest.Matchers.isEmptyOrNullString
 import static org.junit.Assert.*
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.when
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class WhitelistTest extends MockServerTest {
     BrowserUpProxy proxy
@@ -71,13 +72,9 @@ class WhitelistTest extends MockServerTest {
 
     @Test
     void testNonWhitelistedHttpsRequestReturnsWhitelistStatusCode() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/nonwhitelistedresource"),
-                Times.unlimited())
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("should never be returned"))
+        String url = "/nonwhitelistedresource"
+
+        stubFor(get(urlEqualTo(url)).willReturn(ok().withBody("should never be returned")))
 
         proxy = new BrowserUpProxyServer()
         proxy.setTrustAllServers(true)
@@ -87,7 +84,7 @@ class WhitelistTest extends MockServerTest {
         proxy.whitelistRequests(["https://some-other-domain/.*"], 500)
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerPort}/nonwhitelistedresource"))
+            CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/nonwhitelistedresource"))
             assertEquals("Did not receive whitelist status code in response", 500, response.getStatusLine().getStatusCode())
 
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
@@ -97,13 +94,9 @@ class WhitelistTest extends MockServerTest {
 
     @Test
     void testWhitelistedHttpRequestNotShortCircuited() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/whitelistedresource"),
-                Times.unlimited())
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("whitelisted"))
+        String url = "/whitelistedresource"
+
+        stubFor(get(urlEqualTo(url)).willReturn(ok().withBody("whitelisted")))
 
         proxy = new BrowserUpProxyServer()
         proxy.start()
@@ -122,23 +115,19 @@ class WhitelistTest extends MockServerTest {
 
     @Test
     void testWhitelistedHttpsRequestNotShortCircuited() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/whitelistedresource"),
-                Times.unlimited())
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("whitelisted"))
+        String url = "/whitelistedresource"
+
+        stubFor(get(urlEqualTo(url)).willReturn(ok().withBody("whitelisted")))
 
         proxy = new BrowserUpProxyServer()
         proxy.setTrustAllServers(true)
         proxy.start()
         int proxyPort = proxy.getPort()
 
-        proxy.whitelistRequests(["https://localhost:${mockServerPort}/.*".toString()], 500)
+        proxy.whitelistRequests(["https://localhost:${mockServerHttpsPort}/.*".toString()], 500)
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerPort}/whitelistedresource"))
+            CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/whitelistedresource"))
             assertEquals("Did not receive expected response from mock server for whitelisted url", 200, response.getStatusLine().getStatusCode())
 
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
@@ -148,21 +137,13 @@ class WhitelistTest extends MockServerTest {
 
     @Test
     void testCanWhitelistSpecificHttpResource() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/whitelistedresource"),
-                Times.unlimited())
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("whitelisted"))
+        String url = "/whitelistedresource"
 
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/nonwhitelistedresource"),
-                Times.unlimited())
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("should never be returned"))
+        stubFor(get(urlEqualTo(url)).willReturn(ok().withBody("whitelisted")))
+
+        String url2 = "/nonwhitelistedresource"
+
+        stubFor(get(urlEqualTo(url2)).willReturn(ok().withBody("should never be returned")))
 
         proxy = new BrowserUpProxyServer()
         proxy.start()
@@ -187,37 +168,29 @@ class WhitelistTest extends MockServerTest {
 
     @Test
     void testCanWhitelistSpecificHttpsResource() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/whitelistedresource"),
-                Times.unlimited())
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("whitelisted"))
+        String url = "/whitelistedresource"
 
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/nonwhitelistedresource"),
-                Times.unlimited())
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("should never be returned"))
+        stubFor(get(urlEqualTo(url)).willReturn(ok().withBody("whitelisted")))
+
+        String url2 = "/nonwhitelistedresource"
+
+        stubFor(get(urlEqualTo(url2)).willReturn(ok().withBody("should never be returned")))
 
         proxy = new BrowserUpProxyServer()
         proxy.setTrustAllServers(true)
         proxy.start()
         int proxyPort = proxy.getPort()
 
-        proxy.whitelistRequests(["https://localhost:${mockServerPort}/whitelistedresource".toString()], 500)
+        proxy.whitelistRequests(["https://localhost:${mockServerHttpsPort}/whitelistedresource".toString()], 500)
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            CloseableHttpResponse nonWhitelistedResponse = it.execute(new HttpGet("https://localhost:${mockServerPort}/nonwhitelistedresource"))
+            CloseableHttpResponse nonWhitelistedResponse = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/nonwhitelistedresource"))
             assertEquals("Did not receive whitelist status code in response", 500, nonWhitelistedResponse.getStatusLine().getStatusCode())
 
             String nonWhitelistedResponseBody = NewProxyServerTestUtil.toStringAndClose(nonWhitelistedResponse.getEntity().getContent())
             assertThat("Expected whitelist response to contain 0-length body", nonWhitelistedResponseBody, isEmptyOrNullString())
 
-            CloseableHttpResponse whitelistedResponse = it.execute(new HttpGet("https://localhost:${mockServerPort}/whitelistedresource"))
+            CloseableHttpResponse whitelistedResponse = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/whitelistedresource"))
             assertEquals("Did not receive expected response from mock server for whitelisted url", 200, whitelistedResponse.getStatusLine().getStatusCode())
 
             String whitelistedResponseBody = NewProxyServerTestUtil.toStringAndClose(whitelistedResponse.getEntity().getContent())

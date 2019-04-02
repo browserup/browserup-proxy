@@ -4,6 +4,9 @@
 
 package com.browserup.bup.proxy;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.matching.EqualToPattern;
+import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.google.common.io.ByteStreams;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultHttpResponse;
@@ -36,8 +39,6 @@ import org.junit.Test;
 import org.littleshoot.proxy.HttpFilters;
 import org.littleshoot.proxy.HttpFiltersAdapter;
 import org.littleshoot.proxy.HttpFiltersSourceAdapter;
-import org.mockserver.matchers.Times;
-import org.mockserver.model.Header;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -45,6 +46,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
@@ -53,8 +56,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.response;
 
 public class InterceptorTest extends MockServerTest {
     private BrowserUpProxy proxy;
@@ -68,22 +69,11 @@ public class InterceptorTest extends MockServerTest {
 
     @Test
     public void testCanShortCircuitResponse() throws IOException {
-        mockServer.when(request()
-                        .withMethod("GET")
-                        .withPath("/regular200"),
-                Times.exactly(1))
-                .respond(response()
-                        .withStatusCode(200)
-                        .withBody("success"));
+        String url1 = "/regular200";
+        stubFor(get(urlMatching(url1)).willReturn(ok().withBody("success")));
 
-        // this response should be "short-circuited" by the interceptor
-        mockServer.when(request()
-                        .withMethod("GET")
-                        .withPath("/shortcircuit204"),
-                Times.exactly(1))
-                .respond(response()
-                        .withStatusCode(200)
-                        .withBody("success"));
+        String url2 = "/shortcircuit204";
+        stubFor(get(urlMatching(url2)).willReturn(ok().withBody("success")));
 
         proxy = new BrowserUpProxyServer();
         proxy.start();
@@ -126,6 +116,8 @@ public class InterceptorTest extends MockServerTest {
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
+
+            verify(1, getRequestedFor(urlEqualTo(url1)));
         }
 
         interceptorFired.set(false);
@@ -159,14 +151,12 @@ public class InterceptorTest extends MockServerTest {
 
     @Test
     public void testCanModifyRequest() throws IOException {
-        mockServer.when(request()
-                        .withMethod("GET")
-                        .withPath("/modifyrequest"),
-                Times.exactly(1))
-                .respond(response()
-                        .withStatusCode(200)
-                        .withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=utf-8"))
-                        .withBody("success"));
+        String url = "/modifyrequest";
+        stubFor(
+                get(urlEqualTo(url)).
+                        willReturn(ok().
+                                withBody("success").
+                                withHeader(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=utf-8")));
 
         proxy = new BrowserUpProxyServer();
         proxy.start();
@@ -194,6 +184,8 @@ public class InterceptorTest extends MockServerTest {
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
+
+            verify(1, getRequestedFor(urlEqualTo(url)));
         }
     }
 
@@ -202,14 +194,10 @@ public class InterceptorTest extends MockServerTest {
         final String originalText = "original body";
         final String newText = "modified body";
 
-        mockServer.when(request()
-                        .withMethod("PUT")
-                        .withPath("/modifyrequest")
-                        .withBody(newText),
-                Times.exactly(1))
-                .respond(response()
-                        .withStatusCode(200)
-                        .withBody("success"));
+        String url = "/modifyrequest";
+        stubFor(put(urlMatching(url)).
+                withRequestBody(WireMock.equalTo(newText)).
+                willReturn(ok().withBody("success")));
 
         proxy = new BrowserUpProxyServer();
         proxy.start();
@@ -235,6 +223,8 @@ public class InterceptorTest extends MockServerTest {
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
+
+            verify(1, putRequestedFor(urlEqualTo(url)));
         }
     }
 
@@ -243,14 +233,10 @@ public class InterceptorTest extends MockServerTest {
         final String originalText = "original body";
         final String newText = "modified body";
 
-        mockServer.when(request()
-                        .withMethod("PUT")
-                        .withPath("/modifyrequest")
-                        .withBody(newText),
-                Times.exactly(1))
-                .respond(response()
-                        .withStatusCode(200)
-                        .withBody("success"));
+        String url = "/modifyrequest";
+        stubFor(put(urlMatching(url)).
+                withRequestBody(WireMock.equalTo(newText)).
+                willReturn(ok().withBody("success")));
 
         proxy = new BrowserUpProxyServer();
         proxy.setTrustAllServers(true);
@@ -267,13 +253,15 @@ public class InterceptorTest extends MockServerTest {
         });
 
         try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
-            HttpPut request = new HttpPut("https://localhost:" + mockServerPort + "/modifyrequest");
+            HttpPut request = new HttpPut("https://localhost:" + mockServerHttpsPort + "/modifyrequest");
             request.setEntity(new StringEntity(originalText));
             CloseableHttpResponse response = httpClient.execute(request);
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertEquals("Did not receive expected response from mock server", "success", responseBody);
+
+            verify(1, putRequestedFor(urlEqualTo(url)));
         }
     }
 
@@ -282,14 +270,12 @@ public class InterceptorTest extends MockServerTest {
         final byte[] originalBytes = new byte[]{1, 2, 3, 4, 5};
         final byte[] newBytes = new byte[]{20, 30, 40, 50, 60};
 
-        mockServer.when(request()
-                        .withMethod("GET")
-                        .withPath("/modifyresponse"),
-                Times.exactly(1))
-                .respond(response()
-                        .withStatusCode(200)
-                        .withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, "application/octet-stream"))
-                        .withBody(originalBytes));
+        String url = "/modifyresponse";
+        stubFor(
+                get(urlEqualTo(url)).
+                        willReturn(ok().
+                                withBody(originalBytes).
+                                withHeader(HttpHeaders.Names.CONTENT_TYPE, "application/octet-stream")));
 
         proxy = new BrowserUpProxyServer();
         proxy.start();
@@ -309,6 +295,8 @@ public class InterceptorTest extends MockServerTest {
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertThat("Did not receive expected response from mock server", responseBytes, equalTo(newBytes));
+
+            verify(1, getRequestedFor(urlEqualTo(url)));
         }
     }
 
@@ -317,14 +305,12 @@ public class InterceptorTest extends MockServerTest {
         final String originalText = "The quick brown fox jumps over the lazy dog";
         final String newText = "The quick brown fox jumped.";
 
-        mockServer.when(request()
-                        .withMethod("GET")
-                        .withPath("/modifyresponse"),
-                Times.exactly(1))
-                .respond(response()
-                        .withStatusCode(200)
-                        .withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=utf-8"))
-                        .withBody(originalText));
+        String url = "/modifyresponse";
+        stubFor(
+                get(urlEqualTo(url)).
+                        willReturn(ok().
+                                withBody(originalText).
+                                withHeader(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=utf-8")));
 
         proxy = new BrowserUpProxyServer();
         proxy.start();
@@ -345,6 +331,8 @@ public class InterceptorTest extends MockServerTest {
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertEquals("Did not receive expected response from mock server", newText, responseBody);
+
+            verify(1, getRequestedFor(urlEqualTo(url)));
         }
     }
 
@@ -353,14 +341,12 @@ public class InterceptorTest extends MockServerTest {
         final String originalText = "The quick brown fox jumps over the lazy dog";
         final String newText = "The quick brown fox jumped.";
 
-        mockServer.when(request()
-                        .withMethod("GET")
-                        .withPath("/modifyresponse"),
-                Times.exactly(1))
-                .respond(response()
-                        .withStatusCode(200)
-                        .withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=utf-8"))
-                        .withBody(originalText));
+        String url = "/modifyresponse";
+        stubFor(
+                get(urlEqualTo(url)).
+                        willReturn(ok().
+                                withBody(originalText).
+                                withHeader(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=utf-8")));
 
         proxy = new BrowserUpProxyServer();
         proxy.setTrustAllServers(true);
@@ -375,25 +361,25 @@ public class InterceptorTest extends MockServerTest {
         });
 
         try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
-            HttpGet request = new HttpGet("https://localhost:" + mockServerPort + "/modifyresponse");
+            HttpGet request = new HttpGet("https://localhost:" + mockServerHttpsPort + "/modifyresponse");
             request.addHeader("Accept-Encoding", "gzip");
             CloseableHttpResponse response = httpClient.execute(request);
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent());
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertEquals("Did not receive expected response from mock server", newText, responseBody);
+
+            verify(1, getRequestedFor(urlEqualTo(url)));
         }
     }
 
     @Test
     public void testResponseInterceptorWithoutBody() throws IOException {
-        mockServer.when(request()
-                        .withMethod("HEAD")
-                        .withPath("/interceptortest"),
-                Times.exactly(1))
-                .respond(response()
-                        .withStatusCode(200)
-                        .withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, "application/octet-stream")));
+        String url = "/interceptortest";
+        stubFor(
+                head(urlMatching(url)).
+                        willReturn(ok().
+                                withHeader(HttpHeaders.Names.CONTENT_TYPE, "application/octet-stream")));
 
         proxy = new BrowserUpProxyServer();
         proxy.start();
@@ -407,18 +393,15 @@ public class InterceptorTest extends MockServerTest {
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertEquals("Expected binary contents captured in interceptor to be empty", 0, responseContents.get().length);
+
+            verify(1, headRequestedFor(urlEqualTo(url)));
         }
     }
 
     @Test
     public void testResponseFilterOriginalRequestNotModified() throws IOException {
-        mockServer.when(request()
-                        .withMethod("GET")
-                        .withPath("/modifiedendpoint"),
-                Times.exactly(1))
-                .respond(response()
-                        .withStatusCode(200)
-                        .withBody("success"));
+        String url = "/modifiedendpoint";
+        stubFor(get(urlMatching(url)).willReturn(ok().withBody("success")));
 
         proxy = new BrowserUpProxyServer();
         proxy.start();
@@ -440,18 +423,15 @@ public class InterceptorTest extends MockServerTest {
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertThat("Expected URI on originalRequest to match actual URI of original HTTP request", originalRequestUri.get(), endsWith("/originalendpoint"));
+
+            verify(1, getRequestedFor(urlEqualTo(url)));
         }
     }
 
     @Test
     public void testMessageContentsNotAvailableWithoutAggregation() throws IOException {
-        mockServer.when(request()
-                        .withMethod("GET")
-                        .withPath("/endpoint"),
-                Times.exactly(1))
-                .respond(response()
-                        .withStatusCode(200)
-                        .withBody("success"));
+        String url = "/endpoint";
+        stubFor(get(urlMatching(url)).willReturn(ok().withBody("success")));
 
         proxy = new BrowserUpProxyServer();
         proxy.start();
@@ -482,18 +462,15 @@ public class InterceptorTest extends MockServerTest {
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertTrue("Expected HttpMessageContents to be null in RequestFilter because HTTP message aggregation is disabled", requestContentsNull.get());
             assertTrue("Expected HttpMessageContents to be null in ResponseFilter because HTTP message aggregation is disabled", responseContentsNull.get());
+
+            verify(1, getRequestedFor(urlEqualTo(url)));
         }
     }
 
     @Test
     public void testMitmDisabledHttpsRequestFilterNotAvailable() throws IOException {
-        mockServer.when(request()
-                        .withMethod("GET")
-                        .withPath("/mitmdisabled"),
-                Times.exactly(1))
-                .respond(response()
-                        .withStatusCode(200)
-                        .withBody("success"));
+        String url = "/mitmdisabled";
+        stubFor(get(urlMatching(url)).willReturn(ok().withBody("success")));
 
         proxy = new BrowserUpProxyServer();
         proxy.setMitmDisabled(true);
@@ -516,24 +493,21 @@ public class InterceptorTest extends MockServerTest {
         });
 
         try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
-            CloseableHttpResponse response = httpClient.execute(new HttpGet("https://localhost:" + mockServerPort + "/mitmdisabled"));
+            CloseableHttpResponse response = httpClient.execute(new HttpGet("https://localhost:" + mockServerHttpsPort + "/mitmdisabled"));
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
 
             assertTrue("Expected request filter to fire on CONNECT", connectRequestFilterFired.get());
             assertFalse("Expected request filter to fail to fire on GET because MITM is disabled", getRequestFilterFired.get());
+
+            verify(1, getRequestedFor(urlEqualTo(url)));
         }
     }
 
     @Test
     public void testMitmDisabledHttpsResponseFilterNotAvailable() throws IOException {
-        mockServer.when(request()
-                        .withMethod("GET")
-                        .withPath("/mitmdisabled"),
-                Times.exactly(1))
-                .respond(response()
-                        .withStatusCode(200)
-                        .withBody("success"));
+        String url = "/mitmdisabled";
+        stubFor(get(urlMatching(url)).willReturn(ok().withBody("success")));
 
         proxy = new BrowserUpProxyServer();
         proxy.setMitmDisabled(true);
@@ -554,10 +528,12 @@ public class InterceptorTest extends MockServerTest {
         });
 
         try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
-            CloseableHttpResponse response = httpClient.execute(new HttpGet("https://localhost:" + mockServerPort + "/mitmdisabled"));
+            CloseableHttpResponse response = httpClient.execute(new HttpGet("https://localhost:" + mockServerHttpsPort + "/mitmdisabled"));
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertFalse("Expected response filter to fail to fire because MITM is disabled", responseFilterFired.get());
+
+            verify(1, getRequestedFor(urlEqualTo(url)));
         }
     }
 
@@ -565,14 +541,12 @@ public class InterceptorTest extends MockServerTest {
      * Helper method for executing response modification tests.
      */
     private void testModifiedResponse(final String originalText, final String newText) throws IOException {
-        mockServer.when(request()
-                        .withMethod("GET")
-                        .withPath("/modifyresponse"),
-                Times.exactly(1))
-                .respond(response()
-                        .withStatusCode(200)
-                        .withHeader(new Header(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=utf-8"))
-                        .withBody(originalText));
+        String url = "/modifyresponse";
+        stubFor(
+                get(urlMatching(url)).
+                        willReturn(ok().
+                                withBody(originalText).
+                                withHeader(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=utf-8")));
 
         proxy = new BrowserUpProxyServer();
         proxy.start();
@@ -610,18 +584,15 @@ public class InterceptorTest extends MockServerTest {
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
             assertEquals("Did not receive expected response from mock server", newText, responseBody);
+
+            verify(1, getRequestedFor(urlEqualTo(url)));
         }
     }
 
     @Test
     public void testCanBypassFilterForRequest() throws IOException, InterruptedException {
-        mockServer.when(request()
-                        .withMethod("GET")
-                        .withPath("/bypassfilter"),
-                Times.exactly(2))
-                .respond(response()
-                        .withStatusCode(200)
-                        .withBody("success"));
+        String url = "/bypassfilter";
+        stubFor(get(urlMatching(url)).willReturn(ok().withBody("success")));
 
         proxy = new BrowserUpProxyServer();
         proxy.start();
@@ -673,18 +644,17 @@ public class InterceptorTest extends MockServerTest {
 
         assertEquals("Expected filters source to be invoked again on second request", 2, filtersSourceHitCount.get());
         assertEquals("Expected filter instance to be invoked on second request (only)", 1, filterHitCount.get());
+
+        verify(2, getRequestedFor(urlEqualTo(url)));
     }
 
     @Test
     public void testHttpResponseFilterMessageInfoPopulated() throws IOException {
-        mockServer.when(request()
-                        .withMethod("GET")
-                        .withPath("/httpmessageinfopopulated")
-                        .withQueryStringParameter("param1", "value1"),
-                Times.exactly(1))
-                .respond(response()
-                        .withStatusCode(200)
-                        .withBody("success"));
+        String urlPattern = "/httpmessageinfopopulated.*";
+        stubFor(
+                get(urlMatching(urlPattern)).
+                        withQueryParam("param1", WireMock.equalTo("value1")).
+                        willReturn(ok().withBody("success")));
 
         proxy = new BrowserUpProxyServer();
         proxy.start();
@@ -734,18 +704,15 @@ public class InterceptorTest extends MockServerTest {
             assertFalse("Expected isHttps to return false in response filter", responseIsHttps.get());
             assertEquals("Expected originalUrl in response filter to match actual request URL", requestUrl, responseFilterOriginalUrl.get());
             assertEquals("Expected url in response filter to match actual request URL", requestUrl, responseFilterUrl.get());
+
+            verify(1, getRequestedFor(urlMatching(urlPattern)));
         }
     }
 
     @Test
     public void testHttpResponseFilterUrlReflectsModifications() throws IOException {
-        mockServer.when(request()
-                        .withMethod("GET")
-                        .withPath("/urlreflectsmodifications"),
-                Times.exactly(1))
-                .respond(response()
-                        .withStatusCode(200)
-                        .withBody("success"));
+        String url = "/urlreflectsmodifications";
+        stubFor(get(urlEqualTo(url)).willReturn(ok().withBody("success")));
 
         proxy = new BrowserUpProxyServer();
         proxy.start();
@@ -788,18 +755,15 @@ public class InterceptorTest extends MockServerTest {
 
             assertEquals("Expected originalUrl in response filter to match actual request URL", originalRequestUrl, responseFilterOriginalUrl.get());
             assertEquals("Expected url in response filter to match modified request URL", modifiedRequestUrl, responseFilterUrl.get());
+
+            verify(1, getRequestedFor(urlEqualTo(url)));
         }
     }
 
     @Test
     public void testHttpsResponseFilterUrlReflectsModifications() throws IOException {
-        mockServer.when(request()
-                        .withMethod("GET")
-                        .withPath("/urlreflectsmodifications"),
-                Times.exactly(1))
-                .respond(response()
-                        .withStatusCode(200)
-                        .withBody("success"));
+        String url = "/urlreflectsmodifications";
+        stubFor(get(urlEqualTo(url)).willReturn(ok().withBody("success")));
 
         proxy = new BrowserUpProxyServer();
         proxy.setTrustAllServers(true);
@@ -833,8 +797,8 @@ public class InterceptorTest extends MockServerTest {
         });
 
         try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
-            String originalRequestUrl = "https://localhost:" + mockServerPort + "/originalurl";
-            String modifiedRequestUrl = "https://localhost:" + mockServerPort + "/urlreflectsmodifications";
+            String originalRequestUrl = "https://localhost:" + mockServerHttpsPort + "/originalurl";
+            String modifiedRequestUrl = "https://localhost:" + mockServerHttpsPort + "/urlreflectsmodifications";
             CloseableHttpResponse response = httpClient.execute(new HttpGet(originalRequestUrl));
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
@@ -843,19 +807,18 @@ public class InterceptorTest extends MockServerTest {
 
             assertEquals("Expected originalUrl in response filter to match actual request URL", originalRequestUrl, responseFilterOriginalUrl.get());
             assertEquals("Expected url in response filter to match modified request URL", modifiedRequestUrl, responseFilterUrl.get());
+
+            verify(1, getRequestedFor(urlEqualTo(url)));
         }
     }
 
     @Test
     public void testHttpsResponseFilterMessageInfoPopulated() throws IOException {
-        mockServer.when(request()
-                        .withMethod("GET")
-                        .withPath("/httpmessageinfopopulated")
-                        .withQueryStringParameter("param1", "value1"),
-                Times.exactly(1))
-                .respond(response()
-                        .withStatusCode(200)
-                        .withBody("success"));
+        String urlPattern = "/httpmessageinfopopulated.*";
+        stubFor(
+                get(urlMatching(urlPattern)).
+                        withQueryParam("param1", WireMock.equalTo("value1")).
+                        willReturn(ok().withBody("success")));
 
         proxy = new BrowserUpProxyServer();
         proxy.setTrustAllServers(true);
@@ -887,7 +850,7 @@ public class InterceptorTest extends MockServerTest {
         });
 
         try (CloseableHttpClient httpClient = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
-            String requestUrl = "https://localhost:" + mockServerPort + "/httpmessageinfopopulated?param1=value1";
+            String requestUrl = "https://localhost:" + mockServerHttpsPort + "/httpmessageinfopopulated?param1=value1";
             CloseableHttpResponse response = httpClient.execute(new HttpGet(requestUrl));
 
             assertEquals("Expected server to return a 200", 200, response.getStatusLine().getStatusCode());
@@ -901,6 +864,8 @@ public class InterceptorTest extends MockServerTest {
             assertNotNull("Expected originalRequest to be populated in response filter", responseOriginalRequest.get());
             assertTrue("Expected isHttps to return true in response filter", responseIsHttps.get());
             assertEquals("Expected originalUrl in response filter to match actual request URL", requestUrl, responseOriginalUrl.get());
+
+            verify(1, getRequestedFor(urlMatching(urlPattern)));
         }
     }
 }

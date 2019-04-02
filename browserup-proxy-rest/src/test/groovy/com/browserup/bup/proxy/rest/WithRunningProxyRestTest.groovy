@@ -10,46 +10,49 @@ import com.browserup.bup.proxy.bricks.ProxyResource
 import com.browserup.bup.proxy.guice.ConfigModule
 import com.browserup.bup.proxy.guice.JettyModule
 import com.browserup.bup.util.BrowserUpProxyUtil
+import com.github.tomakehurst.wiremock.junit.WireMockRule
 import com.google.inject.Guice
 import com.google.inject.Injector
 import com.google.inject.servlet.GuiceServletContextListener
 import com.google.sitebricks.SitebricksModule
 import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.Method
-import org.apache.http.HttpHeaders
-import org.apache.http.HttpStatus
+import org.apache.http.entity.ContentType
 import org.awaitility.Awaitility
-import org.awaitility.Duration
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.junit.After
 import org.junit.Before
-import org.mockserver.integration.ClientAndServer
-import org.mockserver.matchers.Times
-import org.mockserver.model.Delay
-import org.mockserver.model.Header
+import org.junit.Rule
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import javax.servlet.ServletContextEvent
 import java.util.concurrent.TimeUnit
 
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
+import static org.junit.Assert.assertEquals
 
 class WithRunningProxyRestTest {
-    protected static final Duration WAIT_FOR_RESPONSE_DURATION = new Duration(5, TimeUnit.SECONDS)
-
     private static final Logger LOG = LoggerFactory.getLogger(ProxyManager)
 
     protected ProxyManager proxyManager
     protected BrowserUpProxyServer proxy
-    protected ClientAndServer targetMockedServer
     protected Server restServer
 
     protected String[] getArgs() {
         ['--port', '0'] as String[]
     }
+
+    protected int mockServerPort
+    protected int mockServerHttpsPort
+
+    @Rule
+    public WireMockRule wireMockRule = new WireMockRule(options().port(0).httpsPort(0))
 
     @Before
     void setUp() throws Exception {
@@ -85,18 +88,52 @@ class WithRunningProxyRestTest {
 
         LOG.debug("BrowserUp Proxy server is started successfully")
 
-        targetMockedServer = new ClientAndServer(0)
+        mockServerPort = wireMockRule.port();
+        mockServerHttpsPort = wireMockRule.httpsPort();
 
+        waitForProxyServer()
+    }
+
+    def waitForProxyServer() {
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until({ ->
+            def successful = false
+            proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+                uri.path = "/proxy"
+                response.success = { _, reader ->
+                    successful = true
+                }
+                response.failure = { _, reader ->
+                    successful = false
+                }
+            }
+            return successful
+        })
     }
 
     HTTPBuilder getTargetServerClient() {
-        def http = new HTTPBuilder("http://localhost:${targetMockedServer.port}")
+        def http = new HTTPBuilder("http://localhost:${mockServerPort}")
         http.setProxy('localhost', proxy.port, 'http')
         http
     }
 
     HTTPBuilder getProxyRestServerClient() {
         new HTTPBuilder("http://localhost:${restServer.connectors[0].localPort}")
+    }
+
+    def sendGetToProxyServer(Closure configClosure) {
+        proxyRestServerClient.request(Method.GET, ContentType.WILDCARD, configClosure)
+    }
+
+    void requestToTargetServer(url, expectedResponse) {
+        targetServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+            uri.path = "/${url}"
+            response.success = { _, reader ->
+                assertEquals(expectedResponse, reader.text)
+            }
+            response.failure = { _, reader ->
+                assertEquals(expectedResponse, reader.text)
+            }
+        }
     }
 
     @After
@@ -108,10 +145,6 @@ class WithRunningProxyRestTest {
             } catch (Exception ex) {
                 LOG.error('Error while stopping proxy servers', ex)
             }
-        }
-        if (targetMockedServer != null) {
-            LOG.debug('Stopping target mocked server')
-            targetMockedServer.stop()
         }
 
         if (restServer != null) {
@@ -142,15 +175,11 @@ class WithRunningProxyRestTest {
         }
     }
 
-    protected void mockTargetServerResponse(String url, String responseBody, Delay delay=Delay.milliseconds(0)) {
-        targetMockedServer.when(request()
-                .withMethod(Method.GET.toString())
-                .withPath("/${url}"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(HttpStatus.SC_OK)
-                .withDelay(delay)
-                .withHeader(new Header(HttpHeaders.CONTENT_TYPE, 'text/plain'))
-                .withBody(responseBody))
+    protected void mockTargetServerResponse(String url, String responseBody, int delayMilliseconds=0) {
+        def response = aResponse().withStatus(200)
+                .withBody(responseBody)
+                .withHeader('Content-Type', 'text/plain')
+                .withFixedDelay(delayMilliseconds)
+        stubFor(get(urlEqualTo("/${url}")).willReturn(response))
     }
 }

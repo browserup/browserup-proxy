@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -58,6 +59,12 @@ public class AssertionResult {
 
     public List<AssertionEntryResult> getRequests() {
         return this.requests;
+    }
+
+    public List<AssertionEntryResult> getFailedRequests() {
+        return getRequests().stream()
+                .filter(AssertionEntryResult::getFailed)
+                .collect(Collectors.toList());
     }
 
     public static class Builder {

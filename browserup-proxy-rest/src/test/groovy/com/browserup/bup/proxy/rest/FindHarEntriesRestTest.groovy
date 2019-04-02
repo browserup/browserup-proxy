@@ -6,53 +6,23 @@ package com.browserup.bup.proxy.rest
 
 import com.browserup.harreader.model.HarEntry
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.tomakehurst.wiremock.client.WireMock
+import groovyx.net.http.HttpResponseDecorator
 import groovyx.net.http.Method
-import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
 import org.hamcrest.Matchers
 import org.junit.Test
 
-import java.util.concurrent.atomic.AtomicInteger
-
-import static org.awaitility.Awaitility.await
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertThat
 
-class FindHarEntriesRestTest extends WithRunningProxyRestTest {
-    private static final String URL_PATH = 'har/entries'
+class FindHarEntriesRestTest extends BaseRestTest {
 
-    @Test
-    void getBadRequestIfUrlPatternNotProvided() {
-        proxyManager.get()[0].newHar()
-
-        def responsesCount = new AtomicInteger()
-
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            uri.path = "/proxy/${proxy.port}/${URL_PATH}"
-            response.failure = { resp, reader ->
-                responsesCount.incrementAndGet()
-                assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
-            }
-        }
-
-        await().atMost(WAIT_FOR_RESPONSE_DURATION).until({ -> responsesCount.get() == 1 })
-    }
-
-    @Test
-    void getBadRequestIfUrlPatternIsInvalid() {
-        proxyManager.get()[0].newHar()
-
-        def responsesCount = new AtomicInteger()
-
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            uri.query = [urlPattern: '[']
-            uri.path = "/proxy/${proxy.port}/${URL_PATH}"
-            response.failure = { resp, reader ->
-                responsesCount.incrementAndGet()
-                assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
-            }
-        }
-        await().atMost(WAIT_FOR_RESPONSE_DURATION).until({ -> responsesCount.get() == 1 })
+    @Override
+    String getUrlPath() {
+        return 'har/entries'
     }
 
     @Test
@@ -66,30 +36,15 @@ class FindHarEntriesRestTest extends WithRunningProxyRestTest {
 
         proxyManager.get()[0].newHar()
 
-        def responsesCount = new AtomicInteger()
+        requestToTargetServer(urlToCatch, responseBody)
+        requestToTargetServer(urlNotToCatch, responseBody)
 
-        targetServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            uri.path = "/${urlToCatch}"
-            response.success = { _, reader ->
-                assertEquals(responseBody, reader.text)
-                responsesCount.incrementAndGet()
-            }
-        }
-        targetServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            uri.path = "/${urlNotToCatch}"
-            response.success = { _, reader ->
-                assertEquals(responseBody, reader.text)
-                responsesCount.incrementAndGet()
-            }
-        }
-        await().atMost(WAIT_FOR_RESPONSE_DURATION).until({ -> responsesCount.get() == 2 })
-
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        proxyRestServerClient.request(Method.GET, ContentType.APPLICATION_JSON) { req ->
             def urlPattern = ".*${urlToCatch}"
-            uri.path = "/proxy/${proxy.port}/${URL_PATH}"
+            uri.path = "/proxy/${proxy.port}/${urlPath}"
             uri.query = [urlPattern: urlPattern]
-            response.success = { _, reader ->
-                HarEntry[] entries = new ObjectMapper().readValue(reader, HarEntry[]) as HarEntry[]
+            response.success = { HttpResponseDecorator resp ->
+                HarEntry[] entries = new ObjectMapper().readValue(resp.entity.content, HarEntry[]) as HarEntry[]
                 assertThat('Expected to find only one entry', entries, Matchers.arrayWithSize(1))
                 assertThat('Expected to find entry containing url from url filter pattern',
                         entries[0].request.url, Matchers.containsString(urlToCatch))
@@ -97,6 +52,9 @@ class FindHarEntriesRestTest extends WithRunningProxyRestTest {
                         entries[0].request.url, Matchers.not(Matchers.containsString(urlNotToCatch)))
             }
         }
+
+        WireMock.verify(1, getRequestedFor(urlEqualTo("/${urlToCatch}")))
+        WireMock.verify(1, getRequestedFor(urlEqualTo("/${urlNotToCatch}")))
     }
 
     @Test
@@ -109,25 +67,23 @@ class FindHarEntriesRestTest extends WithRunningProxyRestTest {
 
         proxyManager.get()[0].newHar()
 
-        def responsesCount = new AtomicInteger()
-
-        targetServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        targetServerClient.request(Method.GET, ContentType.WILDCARD) { req ->
             uri.path = "/${urlNotToCatch}"
             response.success = { _, reader ->
                 assertEquals(responseBody, reader.text)
-                responsesCount.incrementAndGet()
             }
         }
-        await().atMost(WAIT_FOR_RESPONSE_DURATION).until({ -> responsesCount.get() == 1 })
 
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        proxyRestServerClient.request(Method.GET, ContentType.APPLICATION_JSON) { req ->
             def urlPattern = ".*${urlToCatch}"
-            uri.path = "/proxy/${proxy.port}/${URL_PATH}"
+            uri.path = "/proxy/${proxy.port}/${urlPath}"
             uri.query = [urlPattern: urlPattern]
-            response.success = { _, reader ->
-                HarEntry[] entries = new ObjectMapper().readValue(reader, HarEntry[]) as HarEntry[]
+            response.success = { HttpResponseDecorator resp ->
+                HarEntry[] entries = new ObjectMapper().readValue(resp.entity.content, HarEntry[]) as HarEntry[]
                 assertThat('Expected get empty har entries array', entries, Matchers.arrayWithSize(0))
             }
         }
+
+        WireMock.verify(1, getRequestedFor(urlEqualTo("/${urlNotToCatch}")))
     }
 }

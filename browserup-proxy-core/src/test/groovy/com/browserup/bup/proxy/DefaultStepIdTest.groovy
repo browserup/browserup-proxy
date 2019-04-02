@@ -8,22 +8,22 @@ package com.browserup.bup.proxy
 import com.browserup.bup.BrowserUpProxyServer
 import com.browserup.bup.proxy.test.util.MockServerTest
 import com.browserup.bup.proxy.test.util.NewProxyServerTestUtil
-import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.CloseableHttpClient
 import org.hamcrest.Matchers
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import org.mockserver.matchers.Times
 
 import static com.browserup.bup.proxy.test.util.NewProxyServerTestUtil.toStringAndClose
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertNull
 import static org.junit.Assert.assertThat
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class DefaultStepIdTest extends MockServerTest {
     private static final String SUCCESSFUL_RESPONSE_BODY = "success"
@@ -132,12 +132,6 @@ class DefaultStepIdTest extends MockServerTest {
     }
 
     private mockResponseForPath(String path) {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/${path}"),
-                Times.once())
-                .respond(response()
-                .withStatusCode(HttpStatus.SC_OK)
-                .withBody(SUCCESSFUL_RESPONSE_BODY))
+        stubFor(get(urlEqualTo("/${path}")).willReturn(ok().withBody(SUCCESSFUL_RESPONSE_BODY)))
     }
 }

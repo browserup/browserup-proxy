@@ -19,15 +19,17 @@ import org.junit.Test
 import org.littleshoot.proxy.HttpFilters
 import org.littleshoot.proxy.HttpFiltersAdapter
 import org.littleshoot.proxy.HttpFiltersSourceAdapter
-import org.mockserver.matchers.Times
-
 import java.util.concurrent.atomic.AtomicBoolean
 
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import static com.github.tomakehurst.wiremock.client.WireMock.verify
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertTrue
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 /**
  * Tests for the {@link com.browserup.bup.filters.BrowserUpHttpFilterChain}.
@@ -46,13 +48,8 @@ class FilterChainTest extends MockServerTest {
     void testFilterExceptionDoesNotAbortRequest() {
         // tests that an exception in one filter does not prevent the request from completing
 
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/testfilterexceptionpreservesrequest"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success"))
+        def stubUrl = "/testfilterexceptionpreservesrequest"
+        stubFor(get(urlEqualTo(stubUrl)).willReturn(ok().withBody("success")))
 
         proxy = new BrowserUpProxyServer()
 
@@ -74,19 +71,16 @@ class FilterChainTest extends MockServerTest {
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", responseBody)
         }
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
     @Test
     void testFilterExceptionDoesNotAbortFilterChain() {
         // tests that an exception in the first filter in a filter chain does not prevent subsequent filters from being invoked
 
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/testfilterexceptionpreserveschain"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success"))
+        def stubUrl = "/testfilterexceptionpreserveschain"
+        stubFor(get(urlEqualTo(stubUrl)).willReturn(ok().withBody("success")))
 
         proxy = new BrowserUpProxyServer()
 
@@ -143,18 +137,16 @@ class FilterChainTest extends MockServerTest {
         assertTrue("Expected second filter method to be invoked after first filter threw exception", clientToProxyRequest.get())
         assertTrue("Expected second filter method to be invoked after first filter threw exception", serverToProxyResponse.get())
         assertTrue("Expected second filter method to be invoked after first filter threw exception", proxyToClientResponse.get())
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
     @Test
     void testRequestResponseFilterExceptionsDoNotAbortRequest() {
         // tests that exceptions thrown by the RequestFilter and ResponseFilter do not abort the request
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/testrequestresponsefilterpreservesrequest"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success"))
+
+        def stubUrl = "/testrequestresponsefilterpreservesrequest"
+        stubFor(get(urlEqualTo(stubUrl)).willReturn(ok().withBody("success")))
 
         proxy = new BrowserUpProxyServer()
 
@@ -177,18 +169,16 @@ class FilterChainTest extends MockServerTest {
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", responseBody)
         }
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
     @Test
     void testRequestResponseFilterExceptionsDoNotAbortFilterChain() {
         // tests that exceptions thrown by the RequestFilter and ResponseFilter do not prevent subsequent filters from being invoked
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/testrequestresponsefilterpreserveschain"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success"))
+
+        def stubUrl = "/testrequestresponsefilterpreserveschain"
+        stubFor(get(urlEqualTo(stubUrl)).willReturn(ok().withBody("success")))
 
         proxy = new BrowserUpProxyServer()
 
@@ -228,6 +218,8 @@ class FilterChainTest extends MockServerTest {
 
         assertTrue("Expected second request filter to be invoked", secondRequestFilterInvoked.get())
         assertTrue("Expected second response filter to be invoked", secondResponseFilterInvoked.get())
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
     /**

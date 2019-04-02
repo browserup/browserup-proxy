@@ -4,6 +4,7 @@
 
 package com.browserup.bup.proxy
 
+import com.github.tomakehurst.wiremock.client.WireMock
 import com.google.sitebricks.headless.Request
 import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.Method
@@ -14,9 +15,12 @@ import com.browserup.bup.proxy.bricks.ProxyResource
 import com.browserup.bup.proxy.test.util.ProxyResourceTest
 import org.apache.http.entity.ContentType
 import org.junit.Test
-import org.mockserver.matchers.Times
-import org.mockserver.model.Header
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.put
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.hamcrest.Matchers.endsWith
 import static org.hamcrest.Matchers.greaterThanOrEqualTo
 import static org.junit.Assert.assertEquals
@@ -29,8 +33,6 @@ import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.never
 import static org.mockito.Mockito.verify
 import static org.mockito.Mockito.when
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class FilterTest extends ProxyResourceTest {
     @Test
@@ -45,15 +47,12 @@ class FilterTest extends ProxyResourceTest {
 
         proxyResource.addRequestFilter(proxyPort, mockRestRequest)
 
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/modifyuseragent")
-                .withHeader(new Header("User-Agent", "My-Custom-User-Agent-String 1.0")),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(200)
-                .withHeader(new Header("Content-Type", "text/plain"))
-                .withBody("success"))
+        def stubUrl = "/modifyuseragent"
+        stubFor(get(urlEqualTo(stubUrl))
+                .withHeader("User-Agent", WireMock.equalTo("My-Custom-User-Agent-String 1.0"))
+                .willReturn(aResponse().withStatus(200)
+                .withBody("success")
+                .withHeader('Content-Type', 'text/plain')))
 
         HTTPBuilder http = getHttpBuilder()
 
@@ -83,15 +82,12 @@ class FilterTest extends ProxyResourceTest {
 
         proxyResource.addRequestFilter(proxyPort, mockRestRequest)
 
-        mockServer.when(request()
-                .withMethod("PUT")
-                .withPath("/modifyrequest")
-                .withBody("modified request text"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(200)
-                .withHeader(new Header("Content-Type", "text/plain; charset=UTF-8"))
-                .withBody("success"))
+        def stubUrl = "/modifyrequest"
+        stubFor(put(urlEqualTo(stubUrl))
+                .withRequestBody(WireMock.equalTo("modified request text"))
+                .willReturn(aResponse().withStatus(200)
+                .withBody("success")
+                .withHeader('Content-Type', 'text/plain; charset=UTF-8')))
 
         HTTPBuilder http = getHttpBuilder()
 
@@ -121,14 +117,11 @@ class FilterTest extends ProxyResourceTest {
 
         proxyResource.addResponseFilter(proxyPort, mockRestRequest)
 
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/modifyresponse"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(200)
-                .withHeader(new Header("Content-Type", "text/plain; charset=UTF-8"))
-                .withBody("original response text"))
+        def stubUrl = "/modifyresponse"
+        stubFor(get(urlEqualTo(stubUrl))
+                .willReturn(aResponse().withStatus(200)
+                .withBody("original response text")
+                .withHeader('Content-Type', 'text/plain; charset=UTF-8')))
 
         HTTPBuilder http = getHttpBuilder()
 
@@ -160,14 +153,11 @@ class FilterTest extends ProxyResourceTest {
         Request mockRestAddRespFilterRequest = createMockRestRequestWithEntity(responseFilterJavaScript)
         proxyResource.addResponseFilter(proxyPort, mockRestAddRespFilterRequest)
 
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/modifiedrequest"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(200)
-                .withHeader(new Header("Content-Type", "text/plain; charset=UTF-8"))
-                .withBody("should-be-replaced"))
+        def stubUrl = "/modifiedrequest"
+        stubFor(get(urlEqualTo(stubUrl))
+                .willReturn(aResponse().withStatus(200)
+                .withBody("should-be-replaced")
+                .withHeader('Content-Type', 'text/plain; charset=UTF-8')))
 
         HTTPBuilder http = getHttpBuilder()
 

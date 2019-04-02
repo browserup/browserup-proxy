@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 class MostRecentUrlFilteredHarEntrySupplierTest {
 
     @Test
-    void returnMostRecentEntryByUrl() {
+    void getMostRecentEntryByUrl() {
         def har = new Har()
         def harEntries = [] as List<HarEntry>
         def fromIndex = 1
