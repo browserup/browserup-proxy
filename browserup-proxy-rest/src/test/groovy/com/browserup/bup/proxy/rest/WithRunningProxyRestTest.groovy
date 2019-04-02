@@ -18,6 +18,7 @@ import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.Method
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
+import org.apache.http.entity.ContentType
 import org.awaitility.Awaitility
 import org.awaitility.Duration
 import org.eclipse.jetty.server.Server
@@ -34,12 +35,11 @@ import org.slf4j.LoggerFactory
 import javax.servlet.ServletContextEvent
 import java.util.concurrent.TimeUnit
 
+import static org.junit.Assert.assertEquals
 import static org.mockserver.model.HttpRequest.request
 import static org.mockserver.model.HttpResponse.response
 
 class WithRunningProxyRestTest {
-    protected static final Duration WAIT_FOR_RESPONSE_DURATION = new Duration(5, TimeUnit.SECONDS)
-
     private static final Logger LOG = LoggerFactory.getLogger(ProxyManager)
 
     protected ProxyManager proxyManager
@@ -87,6 +87,23 @@ class WithRunningProxyRestTest {
 
         targetMockedServer = new ClientAndServer(0)
 
+        waitForProxyServer()
+    }
+
+    def waitForProxyServer() {
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until({ ->
+            def successful = false
+            proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+                uri.path = "/proxy"
+                response.success = { _, reader ->
+                    successful = true
+                }
+                response.failure = { _, reader ->
+                    successful = false
+                }
+            }
+            return successful
+        })
     }
 
     HTTPBuilder getTargetServerClient() {
@@ -97,6 +114,18 @@ class WithRunningProxyRestTest {
 
     HTTPBuilder getProxyRestServerClient() {
         new HTTPBuilder("http://localhost:${restServer.connectors[0].localPort}")
+    }
+
+    void requestToTargetServer(url, expectedResponse) {
+        targetServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+            uri.path = "/${url}"
+            response.success = { _, reader ->
+                assertEquals(expectedResponse, reader.text)
+            }
+            response.failure = { _, reader ->
+                assertEquals(expectedResponse, reader.text)
+            }
+        }
     }
 
     @After

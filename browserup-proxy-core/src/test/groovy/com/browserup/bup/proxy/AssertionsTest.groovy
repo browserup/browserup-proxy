@@ -67,7 +67,7 @@ class AssertionsTest extends MockServerTest {
 
         def assertionTime = MILLISECONDS.convert(DEFAULT_RESPONSE_DELAY.value, DEFAULT_RESPONSE_DELAY.timeUnit) - TIME_DELTA_MILLISECONDS
 
-        def result = proxy.assertMostRecentUrlResponseTimeWithin(Pattern.compile(".*${URL_PATH}.*"), assertionTime)
+        def result = proxy.assertMostRecentResponseTimeLessThanOrEqual(Pattern.compile(".*${URL_PATH}.*"), assertionTime)
 
         assertTrue("Expected failed flag to be true", result.failed)
         assertFalse("Expected passed flag to be true", result.passed)
@@ -89,7 +89,7 @@ class AssertionsTest extends MockServerTest {
         def respBody = toStringAndClose(client.execute(new HttpGet(url)).getEntity().getContent())
         assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
 
-        def result = proxy.assertMostRecentUrlResponseTimeWithin(Pattern.compile("^does not match?"), 0)
+        def result = proxy.assertMostRecentResponseContentLengthLessThanOrEqual(Pattern.compile("^does not match?"), 0)
 
         assertTrue("Expected passed flag to be true", result.passed)
         assertFalse("Expected failed flag to be true", result.failed)
@@ -114,7 +114,7 @@ class AssertionsTest extends MockServerTest {
 
         def assertionTime = MILLISECONDS.convert(DEFAULT_RESPONSE_DELAY.value, DEFAULT_RESPONSE_DELAY.timeUnit) + TIME_DELTA_MILLISECONDS
 
-        def result = proxy.assertMostRecentUrlResponseTimeWithin(Pattern.compile(".*${URL_PATH}.*"), assertionTime)
+        def result = proxy.assertMostRecentResponseTimeLessThanOrEqual(Pattern.compile(".*${URL_PATH}.*"), assertionTime)
 
         assertTrue("Expected passed flag to be true", result.passed)
         assertFalse("Expected failed flag to be false", result.failed)
