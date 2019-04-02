@@ -1,7 +1,5 @@
 package com.browserup.bup.proxy.bricks;
 
-import com.browserup.bup.assertion.model.AssertionResult;
-import com.browserup.harreader.model.HarEntry;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.sitebricks.At;
@@ -27,7 +25,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 import javax.script.ScriptException;
 import com.browserup.bup.BrowserUpProxyServer;
 import com.browserup.harreader.model.Har;
@@ -40,7 +37,6 @@ import com.browserup.bup.proxy.ProxyManager;
 import com.browserup.bup.proxy.auth.AuthType;
 import com.browserup.bup.util.BrowserUpHttpUtil;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,70 +122,6 @@ public class ProxyResource {
         Har har = proxy.getHar();
 
         return Reply.with(har).as(Json.class);
-    }
-
-    @Get
-    @At("/:port/har/mostRecentEntry")
-    public Reply<?> findMostRecentEntry(@Named("port") int port, Request<String> request) {
-        LOG.info("GET /" + port + "/har/entry");
-        BrowserUpProxyServer proxy = proxyManager.get(port);
-        if (proxy == null) {
-            return Reply.saying().notFound();
-        }
-
-        Pattern pattern;
-        try {
-            pattern = getUrlPatternFromRequest(request);
-        } catch (IllegalArgumentException ex) {
-            return Reply.with(ex.getMessage()).badRequest();
-        }
-        return proxy.findMostRecentEntry(pattern)
-                .map(entry -> (Reply) Reply.with(entry).as(Json.class))
-                .orElse(Reply.with(new HarEntry()).as(Json.class));
-    }
-
-    @Get
-    @At("/:port/har/mostRecentEntry/assertResponseTimeWithin")
-    public Reply<?> mostRecentEntryAssertResponseTimeWithin(@Named("port") int port, Request<String> request) {
-        LOG.info("GET /" + port + "/har/mostRecentEntry/assertResponseTimeWithin");
-        BrowserUpProxyServer proxy = proxyManager.get(port);
-        if (proxy == null) {
-            return Reply.saying().notFound();
-        }
-
-        Pattern pattern;
-        try {
-            pattern = getUrlPatternFromRequest(request);
-        } catch (IllegalArgumentException ex) {
-            return Reply.with(ex.getMessage()).badRequest();
-        }
-
-        Optional<Long> time = getAssertionTimeFromRequest(request);
-        if (!time.isPresent()) {
-            return Reply.with("Invalid 'milliseconds' url parameter").badRequest();
-        }
-
-        AssertionResult result = proxy.assertMostRecentUrlResponseTimeWithin(pattern, time.get());
-        return Reply.with(result).status(HttpStatus.OK_200).as(Json.class);
-    }
-
-    @Get
-    @At("/:port/har/entries")
-    public Reply<?> findEntries(@Named("port") int port, Request<String> request) {
-        LOG.info("GET /" + port + "/har/entries");
-        BrowserUpProxyServer proxy = proxyManager.get(port);
-        if (proxy == null) {
-            return Reply.saying().notFound();
-        }
-
-        Pattern pattern;
-        try {
-            pattern = getUrlPatternFromRequest(request);
-        } catch (IllegalArgumentException ex) {
-            return Reply.with(ex.getMessage()).badRequest();
-        }
-
-        return Reply.with(proxy.findEntries(pattern)).as(Json.class);
     }
 
     @Put
@@ -737,22 +669,7 @@ public class ProxyResource {
         return new String(entityBodyBytes.toByteArray(), charset);
     }
 
-    private Pattern getUrlPatternFromRequest(Request<String> request) throws IllegalArgumentException {
-        String urlParam = request.param("urlPattern");
-        if (StringUtils.isEmpty(urlParam)) {
-            LOG.warn("Url parameter not present");
-            throw new IllegalArgumentException("URL parameter 'urlPattern' is mandatory");
-        }
 
-        Pattern urlPattern;
-        try {
-            urlPattern = Pattern.compile(urlParam);
-        } catch (Exception ex) {
-            LOG.warn("Url parameter not valid", ex);
-            throw new IllegalArgumentException("URL parameter 'urlPattern' is not a valid regexp");
-        }
-        return urlPattern;
-    }
 
     private Optional<Long> getAssertionTimeFromRequest(Request<String> request) {
         String timeParam = request.param("milliseconds");

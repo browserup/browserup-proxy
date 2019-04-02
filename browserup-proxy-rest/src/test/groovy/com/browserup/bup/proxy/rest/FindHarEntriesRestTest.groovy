@@ -3,52 +3,18 @@ package com.browserup.bup.proxy.rest
 import com.browserup.harreader.model.HarEntry
 import com.fasterxml.jackson.databind.ObjectMapper
 import groovyx.net.http.Method
-import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
 import org.hamcrest.Matchers
 import org.junit.Test
 
-import java.util.concurrent.atomic.AtomicInteger
-
-import static org.awaitility.Awaitility.await
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertThat
 
-class FindHarEntriesRestTest extends WithRunningProxyRestTest {
-    private static final String URL_PATH = 'har/entries'
+class FindHarEntriesRestTest extends BaseRestTest {
 
-    @Test
-    void getBadRequestIfUrlPatternNotProvided() {
-        proxyManager.get()[0].newHar()
-
-        def responsesCount = new AtomicInteger()
-
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            uri.path = "/proxy/${proxy.port}/${URL_PATH}"
-            response.failure = { resp, reader ->
-                responsesCount.incrementAndGet()
-                assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
-            }
-        }
-
-        await().atMost(WAIT_FOR_RESPONSE_DURATION).until({ -> responsesCount.get() == 1 })
-    }
-
-    @Test
-    void getBadRequestIfUrlPatternIsInvalid() {
-        proxyManager.get()[0].newHar()
-
-        def responsesCount = new AtomicInteger()
-
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            uri.query = [urlPattern: '[']
-            uri.path = "/proxy/${proxy.port}/${URL_PATH}"
-            response.failure = { resp, reader ->
-                responsesCount.incrementAndGet()
-                assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
-            }
-        }
-        await().atMost(WAIT_FOR_RESPONSE_DURATION).until({ -> responsesCount.get() == 1 })
+    @Override
+    String getUrlPath() {
+        return 'har/entries'
     }
 
     @Test
@@ -62,27 +28,12 @@ class FindHarEntriesRestTest extends WithRunningProxyRestTest {
 
         proxyManager.get()[0].newHar()
 
-        def responsesCount = new AtomicInteger()
-
-        targetServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            uri.path = "/${urlToCatch}"
-            response.success = { _, reader ->
-                assertEquals(responseBody, reader.text)
-                responsesCount.incrementAndGet()
-            }
-        }
-        targetServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            uri.path = "/${urlNotToCatch}"
-            response.success = { _, reader ->
-                assertEquals(responseBody, reader.text)
-                responsesCount.incrementAndGet()
-            }
-        }
-        await().atMost(WAIT_FOR_RESPONSE_DURATION).until({ -> responsesCount.get() == 2 })
+        requestToTargetServer(urlToCatch, responseBody)
+        requestToTargetServer(urlNotToCatch, responseBody)
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             def urlPattern = ".*${urlToCatch}"
-            uri.path = "/proxy/${proxy.port}/${URL_PATH}"
+            uri.path = "/proxy/${proxy.port}/${urlPath}"
             uri.query = [urlPattern: urlPattern]
             response.success = { _, reader ->
                 HarEntry[] entries = new ObjectMapper().readValue(reader, HarEntry[]) as HarEntry[]
@@ -105,20 +56,16 @@ class FindHarEntriesRestTest extends WithRunningProxyRestTest {
 
         proxyManager.get()[0].newHar()
 
-        def responsesCount = new AtomicInteger()
-
         targetServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             uri.path = "/${urlNotToCatch}"
             response.success = { _, reader ->
                 assertEquals(responseBody, reader.text)
-                responsesCount.incrementAndGet()
             }
         }
-        await().atMost(WAIT_FOR_RESPONSE_DURATION).until({ -> responsesCount.get() == 1 })
 
         proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             def urlPattern = ".*${urlToCatch}"
-            uri.path = "/proxy/${proxy.port}/${URL_PATH}"
+            uri.path = "/proxy/${proxy.port}/${urlPath}"
             uri.query = [urlPattern: urlPattern]
             response.success = { _, reader ->
                 HarEntry[] entries = new ObjectMapper().readValue(reader, HarEntry[]) as HarEntry[]
