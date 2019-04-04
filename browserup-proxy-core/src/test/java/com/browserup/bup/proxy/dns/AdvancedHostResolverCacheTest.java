@@ -33,7 +33,7 @@ public class AdvancedHostResolverCacheTest {
         });
     }
 
-    public final AdvancedHostResolver resolver;
+    private final AdvancedHostResolver resolver;
 
     public AdvancedHostResolverCacheTest(Class<AdvancedHostResolver> resolverClass) throws IllegalAccessException, InstantiationException {
         // this is a hacky way to allow us to test the ChainedHostResolver, even though it doesn't have a no-arg constructor
@@ -76,6 +76,7 @@ public class AdvancedHostResolverCacheTest {
     public void testCachedPositiveLookup() {
         long start = System.nanoTime();
         // must use an address that we haven't already resolved in another test
+        resolver.clearDNSCache();
         resolver.resolve("news.bing.com");
         long finish = System.nanoTime();
 

@@ -56,6 +56,7 @@ dependencies {
     implementation 'com.browserup:har-reader:3.0.0-SNAPSHOT'
     implementation 'com.browserup:littleproxy:2.0.0-SNAPSHOT'
 
+    implementation 'javax.xml.bind:jaxb-api:2.3.1'
     // Needed by org.littleshoot.proxy JAR
     implementation 'org.apache.commons:commons-lang3:3.5'
 
@@ -86,7 +87,7 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.22'
 
     testImplementation 'junit:junit:4.12'
-    testImplementation 'org.codehaus.groovy:groovy-all:2.4.8'
+    testImplementation 'org.codehaus.groovy:groovy-all:2.4.16'
     testImplementation 'org.apache.logging.log4j:log4j-api:2.8'
     testImplementation 'org.apache.logging.log4j:log4j-core:2.8'
     testImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.8'
