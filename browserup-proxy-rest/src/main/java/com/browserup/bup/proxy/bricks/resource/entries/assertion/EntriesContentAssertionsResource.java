@@ -2,7 +2,7 @@ package com.browserup.bup.proxy.bricks.resource.entries.assertion;
 
 import com.browserup.bup.assertion.model.AssertionResult;
 import com.browserup.bup.proxy.ProxyManager;
-import com.browserup.bup.proxy.bricks.resource.mostrecent.MostRecentEntryProxyResource;
+import com.browserup.bup.proxy.bricks.resource.entries.EntriesProxyResource;
 import com.browserup.bup.proxy.bricks.validation.param.ValidatedParam;
 import com.browserup.bup.proxy.bricks.validation.param.raw.IntRawParam;
 import com.browserup.bup.proxy.bricks.validation.param.raw.StringRawParam;
@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 
 @At("/proxy/:port/har/entries")
 @Service
-public class EntriesContentAssertionsResource extends MostRecentEntryProxyResource {
+public class EntriesContentAssertionsResource extends EntriesProxyResource {
     private static final Logger LOG = LoggerFactory.getLogger(EntriesContentAssertionsResource.class);
 
     private ValidatedParam<Pattern> contentPattern = ValidatedParam.empty("contentPattern");

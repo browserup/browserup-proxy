@@ -46,7 +46,8 @@ public class BaseResource  {
         try {
             result = Pattern.compile(rawParam.getValue());
         } catch (Exception ex) {
-            return new ValidatedParam<>(rawParam, "URL parameter '%s' is not a valid regexp");
+            return new ValidatedParam<>(rawParam,
+                    String.format("URL parameter '%s' is not a valid regexp", rawParam.getValue()));
         }
         return new ValidatedParam<>(rawParam, result);
     }

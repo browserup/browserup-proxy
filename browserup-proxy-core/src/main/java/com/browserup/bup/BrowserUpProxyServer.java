@@ -1141,6 +1141,26 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     }
 
     @Override
+    public AssertionResult assertAnyUrlResponseHeaderContains(Pattern url, String name, String value) {
+        HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
+        HarEntryAssertion assertion = StringUtils.isEmpty(name) ?
+                new HeadersContainStringAssertion(value) :
+                new FilteredHeadersContainStringAssertion(name, value);
+
+        return checkAssertion(supplier, assertion);
+    }
+
+    @Override
+    public AssertionResult assertAnyUrlResponseHeaderDoesNotContain(Pattern url, String name, String value) {
+        HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
+        HarEntryAssertion assertion = StringUtils.isEmpty(name) ?
+                new HeadersDoNotContainStringAssertion(value) :
+                new FilteredHeadersDoNotContainStringAssertion(name, value);
+
+        return checkAssertion(supplier, assertion);
+    }
+
+    @Override
     public AssertionResult assertAnyUrlResponseHeaderDoesNotContain(Pattern url, String value) {
         HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
         HarEntryAssertion assertion = new HeadersDoNotContainStringAssertion(value);
@@ -1149,17 +1169,11 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     }
 
     @Override
-    public AssertionResult assertAnyUrlResponseHeaderMatches(Pattern url, Pattern valuePattern) {
-        HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
-        HarEntryAssertion assertion = new HeadersMatchAssertion(valuePattern);
-
-        return checkAssertion(supplier, assertion);
-    }
-
-    @Override
     public AssertionResult assertAnyUrlResponseHeaderMatches(Pattern url, Pattern namePattern, Pattern valuePattern) {
         HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
-        HarEntryAssertion assertion = new FilteredHeadersMatchAssertion(namePattern, valuePattern);
+        HarEntryAssertion assertion = namePattern == null ?
+                new HeadersMatchAssertion(valuePattern) :
+                new FilteredHeadersMatchAssertion(namePattern, valuePattern);
 
         return checkAssertion(supplier, assertion);
     }

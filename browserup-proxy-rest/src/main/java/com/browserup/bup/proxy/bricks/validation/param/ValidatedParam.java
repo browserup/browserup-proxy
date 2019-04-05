@@ -6,8 +6,6 @@ import com.browserup.bup.proxy.bricks.validation.param.raw.StringRawParam;
 import java.util.Optional;
 
 public class ValidatedParam<ParamType> {
-    private static final ValidatedParam EMPTY = new ValidatedParam<>(null, null);
-
     private final boolean isEmpty;
     private final RawParam rawParam;
     private final ParamType parsedParam;

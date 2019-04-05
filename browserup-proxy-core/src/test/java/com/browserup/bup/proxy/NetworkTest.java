@@ -18,6 +18,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
 /**
  * Network manipulation tests using the new interface.
@@ -44,11 +45,8 @@ public class NetworkTest extends MockServerTest {
 
     @Test
     public void testIdleConnectionTimeout() throws IOException {
-        mockServer.when(
-                request().withMethod("GET")
-                        .withPath("/idleconnectiontimeout"),
-                Times.exactly(1)
-        ).respond(response().withDelay(new Delay(TimeUnit.SECONDS, 5)));
+        String url = "/idleconnectiontimeout";
+        stubFor(get(urlEqualTo(url)).willReturn(ok().withFixedDelay((int) TimeUnit.SECONDS.toMillis(5))));
 
         BrowserUpProxy proxy = new BrowserUpProxyServer();
         proxy.setIdleConnectionTimeout(1, TimeUnit.SECONDS);
@@ -65,15 +63,14 @@ public class NetworkTest extends MockServerTest {
         } finally {
             proxy.abort();
         }
+
+        verify(1, getRequestedFor(urlEqualTo(url)));
     }
 
     @Test
     public void testLatency() throws IOException {
-        mockServer.when(
-                request().withMethod("GET")
-                        .withPath("/latency"),
-                Times.exactly(1)
-        ).respond(response().withStatusCode(200));
+        String url = "/latency";
+        stubFor(get(urlEqualTo(url)).willReturn(ok()));
 
         BrowserUpProxy proxy = new BrowserUpProxyServer();
         proxy.setLatency(2, TimeUnit.SECONDS);
@@ -90,5 +87,7 @@ public class NetworkTest extends MockServerTest {
         } finally {
             proxy.abort();
         }
+
+        verify(1, getRequestedFor(urlEqualTo(url)));
     }
 }

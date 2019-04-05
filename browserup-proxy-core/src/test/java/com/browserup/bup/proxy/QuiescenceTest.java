@@ -19,23 +19,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.response;
 
 public class QuiescenceTest extends NewProxyServerTest {
     private static final Logger log = LoggerFactory.getLogger(QuiescenceTest.class);
 
     @Test
     public void testWaitForQuiescenceSuccessful() throws InterruptedException {
-        mockServer.when(
-                request().withMethod("GET")
-                        .withPath("/quiescencesuccessful"),
-                Times.exactly(1)
-        ).respond(response().withStatusCode(200).withDelay(new Delay(TimeUnit.SECONDS, 4)));
+        String url = "/quiescencesuccessful";
+
+        stubFor(get(urlEqualTo(url)).willReturn(ok().withFixedDelay((int) TimeUnit.SECONDS.toMillis(4))));
 
         final AtomicLong requestComplete = new AtomicLong();
 
@@ -67,15 +65,15 @@ public class QuiescenceTest extends NewProxyServerTest {
         long wait = TimeUnit.MILLISECONDS.convert(waitForQuiescenceFinished - requestComplete.get(), TimeUnit.NANOSECONDS);
 
         assertTrue("Expected time to wait for quiescence to be approximately 2s. Waited for: " + wait + "ms", wait < 3000);
+
+        verify(1, getRequestedFor(urlEqualTo(url)));
     }
 
     @Test
     public void testWaitForQuiescenceUnsuccessful() throws IOException, InterruptedException {
-        mockServer.when(
-                request().withMethod("GET")
-                        .withPath("/quiescenceunsuccessful"),
-                Times.exactly(1)
-        ).respond(response().withStatusCode(200).withDelay(new Delay(TimeUnit.MINUTES, 1)));
+        String url = "/quiescenceunsuccessful";
+
+        stubFor(get(urlEqualTo(url)).willReturn(ok().withFixedDelay((int) TimeUnit.MINUTES.toMillis(1))));
 
         final AtomicBoolean requestCompleted = new AtomicBoolean(false);
 
@@ -100,15 +98,15 @@ public class QuiescenceTest extends NewProxyServerTest {
         assertFalse("Expected waitForQuiescence to time out while waiting for traffic to stop", waitSuccessful);
 
         assertFalse("Did not expect request to complete", requestCompleted.get());
+
+        verify(1, getRequestedFor(urlEqualTo(url)));
     }
 
     @Test
     public void testWaitForQuiescenceAfterRequestCompleted() throws IOException {
-        mockServer.when(
-                request().withMethod("GET")
-                        .withPath("/quiescencecompleted"),
-                Times.exactly(1)
-        ).respond(response().withStatusCode(200));
+        String url = "/quiescencecompleted";
+
+        stubFor(get(urlEqualTo(url)).willReturn(ok()));
 
         try (CloseableHttpClient client = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             HttpResponse response = client.execute(new HttpGet("http://127.0.0.1:" + mockServerPort + "/quiescencecompleted"));
@@ -126,15 +124,15 @@ public class QuiescenceTest extends NewProxyServerTest {
 
         assertTrue("Expected to wait for quiescence for approximately 2s. Actual wait time was: " + TimeUnit.MILLISECONDS.convert(finish - start, TimeUnit.NANOSECONDS) + "ms",
                 TimeUnit.MILLISECONDS.convert(finish - start, TimeUnit.NANOSECONDS) >= 1500 && TimeUnit.MILLISECONDS.convert(finish - start, TimeUnit.NANOSECONDS) <= 2500);
+
+        verify(1, getRequestedFor(urlEqualTo(url)));
     }
 
     @Test
     public void testWaitForQuiescenceQuietPeriodAlreadySatisfied() throws IOException, InterruptedException {
-        mockServer.when(
-                request().withMethod("GET")
-                        .withPath("/quiescencesatisfied"),
-                Times.exactly(1)
-        ).respond(response().withStatusCode(200));
+        String url = "/quiescencesatisfied";
+
+        stubFor(get(urlEqualTo(url)).willReturn(ok()));
 
         try (CloseableHttpClient client = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             HttpResponse response = client.execute(new HttpGet("http://127.0.0.1:" + mockServerPort + "/quiescencesatisfied"));
@@ -154,15 +152,15 @@ public class QuiescenceTest extends NewProxyServerTest {
 
         assertTrue("Expected wait for quiescence to return immediately. Actual wait time was: " + TimeUnit.MILLISECONDS.convert(finish - start, TimeUnit.NANOSECONDS) + "ms",
                 TimeUnit.MILLISECONDS.convert(finish - start, TimeUnit.NANOSECONDS) <= 1);
+
+        verify(1, getRequestedFor(urlEqualTo(url)));
     }
 
     @Test
     public void testWaitForQuiescenceTimeoutLessThanQuietPeriodSuccessful() throws IOException, InterruptedException {
-        mockServer.when(
-                request().withMethod("GET")
-                        .withPath("/quiescencesmalltimeoutsuccess"),
-                Times.exactly(1)
-        ).respond(response().withStatusCode(200));
+        String url = "/quiescencesmalltimeoutsuccess";
+
+        stubFor(get(urlEqualTo(url)).willReturn(ok()));
 
         try (CloseableHttpClient client = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             HttpResponse response = client.execute(new HttpGet("http://127.0.0.1:" + mockServerPort + "/quiescencesmalltimeoutsuccess"));
@@ -183,15 +181,15 @@ public class QuiescenceTest extends NewProxyServerTest {
 
         assertTrue("Expected to wait for quiescence for approximately 500ms. Actual wait time was: " + TimeUnit.MILLISECONDS.convert(finish - start, TimeUnit.NANOSECONDS) + "ms",
                 TimeUnit.MILLISECONDS.convert(finish - start, TimeUnit.NANOSECONDS) >= 300 && TimeUnit.MILLISECONDS.convert(finish - start, TimeUnit.NANOSECONDS) <= 700);
+
+        verify(1, getRequestedFor(urlEqualTo(url)));
     }
 
     @Test
     public void testWaitForQuiescenceTimeoutLessThanQuietPeriodUnuccessful() throws IOException, InterruptedException {
-        mockServer.when(
-                request().withMethod("GET")
-                        .withPath("/quiescencesmalltimeoutunsuccessful"),
-                Times.exactly(1)
-        ).respond(response().withStatusCode(200));
+        String url = "/quiescencesmalltimeoutunsuccessful";
+
+        stubFor(get(urlEqualTo(url)).willReturn(ok()));
 
         try (CloseableHttpClient client = NewProxyServerTestUtil.getNewHttpClient(proxy.getPort())) {
             HttpResponse response = client.execute(new HttpGet("http://127.0.0.1:" + mockServerPort + "/quiescencesmalltimeoutunsuccessful"));
@@ -212,17 +210,15 @@ public class QuiescenceTest extends NewProxyServerTest {
 
         assertTrue("Expected wait for quiescence to return immediately. Actual wait time was: " + TimeUnit.MILLISECONDS.convert(finish - start, TimeUnit.NANOSECONDS) + "ms",
                 TimeUnit.MILLISECONDS.convert(finish - start, TimeUnit.NANOSECONDS) >= 0 && TimeUnit.MILLISECONDS.convert(finish - start, TimeUnit.NANOSECONDS) <= 10);
+
+        verify(1, getRequestedFor(urlEqualTo(url)));
     }
 
     @Test
     public void testWaitForQuiescenceInterruptedBySecondRequestSuccessful() throws InterruptedException {
-        mockServer.when(
-                request().withMethod("GET")
-                        .withPath("/successquiesence2s"),
-                Times.exactly(2)
-        ).respond(response()
-                .withStatusCode(200)
-                .withDelay(new Delay(TimeUnit.SECONDS, 2)));
+        String url = "/successquiesence2s";
+
+        stubFor(get(urlEqualTo(url)).willReturn(ok().withFixedDelay((int) TimeUnit.SECONDS.toMillis(2))));
 
         final AtomicLong secondRequestFinished = new AtomicLong();
 
@@ -273,21 +269,16 @@ public class QuiescenceTest extends NewProxyServerTest {
 
         assertTrue("Expected to wait for quiescence for approximately 6s. Actual wait time was: " + TimeUnit.MILLISECONDS.convert(finish - start, TimeUnit.NANOSECONDS) + "ms",
                 TimeUnit.MILLISECONDS.convert(finish - start, TimeUnit.NANOSECONDS) >= 5000 && TimeUnit.MILLISECONDS.convert(finish - start, TimeUnit.NANOSECONDS) <= 7000);
+
+        verify(2, getRequestedFor(urlEqualTo(url)));
     }
 
     @Test
     public void testWaitForQuiescenceInterruptedBySecondRequestUnsuccessful() throws InterruptedException {
-        mockServer.when(
-                request().withMethod("GET")
-                        .withPath("/quiesence2s"),
-                Times.unlimited()
-        ).respond(response().withStatusCode(200).withDelay(new Delay(TimeUnit.SECONDS, 2)));
-
-        mockServer.when(
-                request().withMethod("GET")
-                        .withPath("/quiesence5s"),
-                Times.unlimited()
-        ).respond(response().withStatusCode(200).withDelay(new Delay(TimeUnit.SECONDS, 5)));
+        String url1 = "/quiesence2s";
+        String url2 = "/quiesence5s";
+        stubFor(get(urlEqualTo(url1)).willReturn(ok().withFixedDelay((int) TimeUnit.SECONDS.toMillis(2))));
+        stubFor(get(urlEqualTo(url2)).willReturn(ok().withFixedDelay((int) TimeUnit.SECONDS.toMillis(5))));
 
         final AtomicInteger firstResponseStatusCode = new AtomicInteger();
         final AtomicBoolean secondRequestCompleted = new AtomicBoolean(false);

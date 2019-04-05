@@ -1,26 +1,27 @@
 package com.browserup.bup.proxy.test.util;
 
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.mockserver.integration.ClientAndServer;
+
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 
 /**
  * Tests can subclass this to get access to a ClientAndServer instance for creating mock responses.
  */
 public class MockServerTest {
-    protected ClientAndServer mockServer;
     protected int mockServerPort;
+    protected int mockServerHttpsPort;
+
+    @Rule
+    public WireMockRule wireMockRule = new WireMockRule(options().port(0).httpsPort(0));
 
     @Before
     public void setUpMockServer() {
-        mockServer = new ClientAndServer(0);
-        mockServerPort = mockServer.getPort();
-    }
-
-    @After
-    public void tearDownMockServer() {
-        if (mockServer != null) {
-            mockServer.stop();
-        }
+        mockServerPort = wireMockRule.port();
+        mockServerHttpsPort = wireMockRule.httpsPort();
     }
 }

@@ -1,4 +1,4 @@
-package com.browserup.bup.proxy.rest.assertion.entries
+package com.browserup.bup.proxy.rest.assertion.entries.status
 
 import com.browserup.bup.assertion.model.AssertionResult
 import com.browserup.bup.proxy.rest.BaseRestTest
@@ -37,8 +37,8 @@ class EntriesAssertStatusSuccessRestTest extends BaseRestTest {
     void getBadRequestIfUrlPatternIsInvalid() {
         proxyManager.get()[0].newHar()
 
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            uri.path = "/proxy/${proxy.port}/${urlPath}"
+        sendGetToProxyServer { req ->
+            uri.path = fullUrlPath
             uri.query = [urlPattern: '[']
             response.failure = { resp, reader ->
                 assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
@@ -50,16 +50,15 @@ class EntriesAssertStatusSuccessRestTest extends BaseRestTest {
     void statusSuccessForFilteredResponsesPasses() {
         sendRequestsToTargetServer(successStatus, successStatus, statusOfNotToMatchUrl)
 
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        sendGetToProxyServer { req ->
             def urlPattern = ".*${urlPatternToMatchUrl}"
-            uri.path = "/proxy/${proxy.port}/${urlPath}"
+            uri.path = fullUrlPath
             uri.query = [urlPattern: urlPattern]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
-                assertNotNull('Expected to get non null assertion result', assertionResult)
+                assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get all entries found by url pattern', assertionResult.requests, Matchers.hasSize(2))
-                assertTrue('Expected assertion to pass', assertionResult.passed)
-                assertFalse('Expected assertion to pass', assertionResult.failed)
+                assertAssertionPassed(assertionResult)
             }
         }
     }
@@ -68,14 +67,13 @@ class EntriesAssertStatusSuccessRestTest extends BaseRestTest {
     void statusSuccessForAllResponsesPasses() {
         sendRequestsToTargetServer(successStatus, successStatus, successStatus)
 
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            uri.path = "/proxy/${proxy.port}/${urlPath}"
+        sendGetToProxyServer { req ->
+            uri.path = fullUrlPath
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
-                assertNotNull('Expected to get non null assertion result', assertionResult)
+                assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get all assertion entries', assertionResult.requests, Matchers.hasSize(3))
-                assertTrue('Expected assertion to pass', assertionResult.passed)
-                assertFalse('Expected assertion to pass', assertionResult.failed)
+                assertAssertionPassed(assertionResult)
             }
         }
     }
@@ -84,14 +82,13 @@ class EntriesAssertStatusSuccessRestTest extends BaseRestTest {
     void statusSuccessForAllResponsesFails() {
         sendRequestsToTargetServer(successStatus, successStatus, statusOfNotToMatchUrl)
 
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            uri.path = "/proxy/${proxy.port}/${urlPath}"
+        sendGetToProxyServer { req ->
+            uri.path = fullUrlPath
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
-                assertNotNull('Expected to get non null assertion result', assertionResult)
+                assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get all assertion entries', assertionResult.requests, Matchers.hasSize(3))
-                assertFalse('Expected assertion to fail', assertionResult.passed)
-                assertTrue('Expected assertion to fail', assertionResult.failed)
+                assertAssertionFailed(assertionResult)
             }
         }
     }
@@ -100,16 +97,15 @@ class EntriesAssertStatusSuccessRestTest extends BaseRestTest {
     void statusSuccessForFilteredResponsesFails() {
         sendRequestsToTargetServer(successStatus, nonSuccessStatus, statusOfNotToMatchUrl)
 
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        sendGetToProxyServer { req ->
             def urlPattern = ".*${urlPatternToMatchUrl}"
-            uri.path = "/proxy/${proxy.port}/${urlPath}"
+            uri.path = fullUrlPath
             uri.query = [urlPattern: urlPattern]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
-                assertNotNull('Expected to get non null assertion result', assertionResult)
+                assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get all entries found by url pattern', assertionResult.requests, Matchers.hasSize(2))
-                assertFalse('Expected assertion to fail', assertionResult.passed)
-                assertTrue('Expected assertion to fail', assertionResult.failed)
+                assertAssertionFailed(assertionResult)
 
                 def failedRequest = assertionResult.requests.find { it.failed }
 
@@ -122,15 +118,14 @@ class EntriesAssertStatusSuccessRestTest extends BaseRestTest {
     void getEmptyResultIfNoEntryFoundByUrlPattern() {
         sendRequestsToTargetServer(successStatus, nonSuccessStatus, statusOfNotToMatchUrl)
 
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
-            uri.path = "/proxy/${proxy.port}/${urlPath}"
+        sendGetToProxyServer { req ->
+            uri.path = fullUrlPath
             uri.query = [urlPattern: urlPatternNotToMatchUrl]
             response.success = { _, reader ->
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
-                assertNotNull('Expected to get non null assertion result', assertionResult)
+                assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get no assertion result entries', assertionResult.requests, Matchers.hasSize(0))
-                assertTrue('Expected assertion to pass', assertionResult.passed)
-                assertFalse('Expected assertion to pass', assertionResult.failed)
+                assertAssertionPassed(assertionResult)
             }
         }
     }
