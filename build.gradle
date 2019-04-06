@@ -54,6 +54,8 @@ subprojects {
     }
 
     signing {
+        useGpgCmd()
+        sign configurations.archives
         if (project.hasProperty("signing.keyId")) {
             useGpgCmd()
             sign configurations.archives
