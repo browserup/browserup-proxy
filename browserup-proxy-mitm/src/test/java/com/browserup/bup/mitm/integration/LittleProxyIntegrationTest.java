@@ -1,3 +1,7 @@
+/*
+ * Modifications Copyright (c) 2019 BrowserUp, Inc.
+ */
+
 package com.browserup.bup.mitm.integration;
 
 import io.netty.handler.codec.http.HttpMethod;

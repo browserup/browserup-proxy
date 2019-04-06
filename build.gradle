@@ -1,3 +1,7 @@
+/*
+ * Modifications Copyright (c) 2019 BrowserUp, Inc.
+ */
+
 configurations.all {
     resolutionStrategy {
         // TODO Temporarily forcing guava to version 19 because upstream consumers

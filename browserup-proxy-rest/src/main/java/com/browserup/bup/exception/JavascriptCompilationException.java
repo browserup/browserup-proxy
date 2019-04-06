@@ -1,3 +1,7 @@
+/*
+ * Modifications Copyright (c) 2019 BrowserUp, Inc.
+ */
+
 package com.browserup.bup.exception;
 
 import com.google.sitebricks.headless.Request;

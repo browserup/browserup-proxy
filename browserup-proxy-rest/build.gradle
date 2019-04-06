@@ -1,3 +1,7 @@
+/*
+ * Modifications Copyright (c) 2019 BrowserUp, Inc.
+ */
+
 plugins {
     id 'java-library'
     id 'groovy'
