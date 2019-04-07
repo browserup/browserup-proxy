@@ -54,7 +54,7 @@ subprojects {
     }
 
     signing {
-        if (project.hasProperty("uploadArchives")) {
+        if (project.hasProperty("sign")) {
             useGpgCmd()
             sign configurations.archives
         }
