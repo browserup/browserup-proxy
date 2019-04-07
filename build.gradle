@@ -54,7 +54,7 @@ subprojects {
     }
 
     signing {
-        if (gradle.taskGraph.hasTask("uploadArchives")) {
+        if (project.hasProperty("uploadArchives")) {
             useGpgCmd()
             sign configurations.archives
         }
