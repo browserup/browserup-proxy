@@ -54,11 +54,8 @@ subprojects {
     }
 
     signing {
+        required { gradle.taskGraph.hasTask("uploadArchives") }
         useGpgCmd()
         sign configurations.archives
-//        if (project.hasProperty("signing.keyId")) {
-//            useGpgCmd()
-//            sign configurations.archives
-//        }
     }
 }
