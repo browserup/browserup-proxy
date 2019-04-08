@@ -4,12 +4,17 @@ import com.browserup.bup.BrowserUpProxy
 import com.browserup.bup.BrowserUpProxyServer
 import com.browserup.bup.proxy.test.util.MockServerTest
 import com.browserup.bup.proxy.test.util.NewProxyServerTestUtil
+import com.github.tomakehurst.wiremock.client.WireMock
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.junit.After
 import org.junit.Test
 import org.mockserver.matchers.Times
 
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import static org.junit.Assert.assertEquals
 import static org.mockserver.model.HttpRequest.request
 import static org.mockserver.model.HttpResponse.response
@@ -26,15 +31,26 @@ class RewriteRuleTest extends MockServerTest {
 
     @Test
     void testRewriteHttpUrl() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/")
-                .withQueryStringParameter("originalDomain", "yahoo")
-                .withQueryStringParameter("param1", "value1"),
-                Times.once())
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success"))
+//        mockServer.when(request()
+//                .withMethod("GET")
+//                .withPath("/")
+//                .withQueryStringParameter("originalDomain", "yahoo")
+//                .withQueryStringParameter("param1", "value1"),
+//                Times.once())
+//                .respond(response()
+//                .withStatusCode(200)
+//                .withBody("success"))
+
+        def url = '/'
+        stubFor(get(urlMatching(url)).
+                withQueryParam('originalDomain', WireMock.equalTo('yahoo')).
+                withQueryParam('param1', WireMock.equalTo('value1')).
+                willReturn(
+                        ok().
+                                withBody('success')
+                )
+        )
+
 
         proxy = new BrowserUpProxyServer()
         proxy.rewriteUrl('http://www\\.(yahoo|bing)\\.com/\\?(\\w+)=(\\w+)', 'http://localhost:' + mockServerPort + '/?originalDomain=$1&$2=$3')

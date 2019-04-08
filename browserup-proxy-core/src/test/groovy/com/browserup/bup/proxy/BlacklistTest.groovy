@@ -10,6 +10,11 @@ import org.junit.After
 import org.junit.Test
 import org.mockserver.matchers.Times
 
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.serverError
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.hamcrest.Matchers.isEmptyOrNullString
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertThat
@@ -46,23 +51,19 @@ class BlacklistTest extends MockServerTest {
     @Test
     void testBlacklistedHttpsRequestReturnsBlacklistStatusCode() {
         // need to set up a mock server to handle the CONNECT, since that is not blacklisted
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/thisrequestshouldnotoccur"),
-                Times.unlimited())
-                .respond(response()
-                .withStatusCode(500)
-                .withBody("this URL should never be called"))
+        def url = '/thisrequestshouldnotoccur'
+        stubFor(get(urlEqualTo(url)).
+                willReturn(serverError().withBody('this URL should never be called')))
 
         proxy = new BrowserUpProxyServer()
         proxy.setTrustAllServers(true)
         proxy.start()
         int proxyPort = proxy.getPort()
 
-        proxy.blacklistRequests("https://localhost:${mockServerPort}/.*", 405)
+        proxy.blacklistRequests("https://localhost:${mockServerHttpsPort}/.*", 405)
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerPort}/thisrequestshouldnotoccur"))
+            CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/thisrequestshouldnotoccur"))
             assertEquals("Did not receive blacklisted status code in response", 405, response.getStatusLine().getStatusCode())
 
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
@@ -72,21 +73,13 @@ class BlacklistTest extends MockServerTest {
 
     @Test
     void testCanBlacklistSingleHttpResource() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/blacklistedresource"),
-                Times.unlimited())
-                .respond(response()
-                .withStatusCode(500)
-                .withBody("this URL should never be called"))
+        def url1 = '/blacklistedresource'
+        stubFor(get(urlEqualTo(url1)).
+                willReturn(serverError().withBody('this URL should never be called')))
 
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/nonblacklistedresource"),
-                Times.unlimited())
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("not blacklisted"))
+        def url2 = '/nonblacklistedresource'
+        stubFor(get(urlEqualTo(url2)).
+                willReturn(ok().withBody('not blacklisted')))
 
         proxy = new BrowserUpProxyServer()
         proxy.start()
@@ -111,37 +104,29 @@ class BlacklistTest extends MockServerTest {
 
     @Test
     void testCanBlacklistSingleHttpsResource() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/blacklistedresource"),
-                Times.unlimited())
-                .respond(response()
-                .withStatusCode(500)
-                .withBody("this URL should never be called"))
+        def url1 = '/blacklistedresource'
+        stubFor(get(urlEqualTo(url1)).
+                willReturn(serverError().withBody('this URL should never be called')))
 
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/nonblacklistedresource"),
-                Times.unlimited())
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("not blacklisted"))
+        def url2 = '/nonblacklistedresource'
+        stubFor(get(urlEqualTo(url2)).
+                willReturn(ok().withBody('not blacklisted')))
 
         proxy = new BrowserUpProxyServer()
         proxy.setTrustAllServers(true)
         proxy.start()
         int proxyPort = proxy.getPort()
 
-        proxy.blacklistRequests("https://localhost:${mockServerPort}/blacklistedresource", 405)
+        proxy.blacklistRequests("https://localhost:${mockServerHttpsPort}/blacklistedresource", 405)
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            CloseableHttpResponse nonBlacklistedResourceResponse = it.execute(new HttpGet("https://localhost:${mockServerPort}/nonblacklistedresource"))
+            CloseableHttpResponse nonBlacklistedResourceResponse = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/nonblacklistedresource"))
             assertEquals("Did not receive blacklisted status code in response", 200, nonBlacklistedResourceResponse.getStatusLine().getStatusCode())
 
             String nonBlacklistedResponseBody = NewProxyServerTestUtil.toStringAndClose(nonBlacklistedResourceResponse.getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "not blacklisted", nonBlacklistedResponseBody)
 
-            CloseableHttpResponse blacklistedResourceResponse = it.execute(new HttpGet("https://localhost:${mockServerPort}/blacklistedresource"))
+            CloseableHttpResponse blacklistedResourceResponse = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/blacklistedresource"))
             assertEquals("Did not receive blacklisted status code in response", 405, blacklistedResourceResponse.getStatusLine().getStatusCode())
 
             String blacklistedResponseBody = NewProxyServerTestUtil.toStringAndClose(blacklistedResourceResponse.getEntity().getContent())
@@ -151,13 +136,9 @@ class BlacklistTest extends MockServerTest {
 
     @Test
     void testCanBlacklistConnectExplicitly() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/blacklistconnect"),
-                Times.unlimited())
-                .respond(response()
-                .withStatusCode(500)
-                .withBody("this URL should never be called"))
+        def url = '/blacklistconnect'
+        stubFor(get(urlEqualTo(url)).
+                willReturn(serverError().withBody('this URL should never be called')))
 
         proxy = new BrowserUpProxyServer()
         proxy.start()
@@ -177,13 +158,8 @@ class BlacklistTest extends MockServerTest {
 
     @Test
     void testBlacklistDoesNotApplyToCONNECT() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/connectNotBlacklisted"),
-                Times.unlimited())
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success"))
+        def url = '/connectNotBlacklisted'
+        stubFor(get(urlEqualTo(url)).willReturn(ok().withBody('success')))
 
         proxy = new BrowserUpProxyServer()
         proxy.setTrustAllServers(true)
@@ -191,10 +167,10 @@ class BlacklistTest extends MockServerTest {
         int proxyPort = proxy.getPort()
 
         // HTTP CONNECTs should not be blacklisted unless the method is explicitly specified
-        proxy.blacklistRequests("https://localhost:${mockServerPort}", 405)
+        proxy.blacklistRequests("https://localhost:${mockServerHttpsPort}", 405)
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerPort}/connectNotBlacklisted"))
+            CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/connectNotBlacklisted"))
             assertEquals("Expected to receive response from mock server after successful CONNECT", 200, response.getStatusLine().getStatusCode())
 
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())

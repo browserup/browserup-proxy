@@ -11,6 +11,11 @@ import org.junit.Before
 import org.junit.Test
 import org.mockserver.matchers.Times
 
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.junit.Assert.assertEquals
 import static org.junit.Assume.assumeNoException
 import static org.mockserver.model.HttpRequest.request
@@ -32,11 +37,8 @@ class BindAddressTest extends MockServerTest {
 
     @Test
     void testClientBindAddress() {
-        mockServer.when(
-                request().withMethod("GET")
-                        .withPath("/clientbind"),
-                Times.unlimited()
-        ).respond(response().withStatusCode(200))
+        def url = '/clientbind'
+        stubFor(get(urlEqualTo(url)).willReturn(ok().withBody('success')))
 
         // bind to loopback. ProxyServerTest.getNewHtpClient creates an HTTP client that connects to a proxy at 127.0.0.1
         proxy = new BrowserUpProxyServer()
@@ -50,11 +52,8 @@ class BindAddressTest extends MockServerTest {
 
     @Test(expected = HttpHostConnectException.class)
     void testClientBindAddressCannotConnect() {
-        mockServer.when(
-                request().withMethod("GET")
-                        .withPath("/clientbind"),
-                Times.unlimited()
-        ).respond(response().withStatusCode(200))
+        def url = '/clientbind'
+        stubFor(get(urlEqualTo(url)).willReturn(ok().withBody('success')))
 
         // find the local host address to bind to that isn't loopback. since ProxyServerTest.getNewHtpClient creates an HTTP client that
         // connects to a proxy at 127.0.0.1, the HTTP client should *not* be able to connect to the proxy
@@ -76,11 +75,8 @@ class BindAddressTest extends MockServerTest {
 
     @Test
     void testServerBindAddress() {
-        mockServer.when(
-                request().withMethod("GET")
-                        .withPath("/serverbind"),
-                Times.unlimited()
-        ).respond(response().withStatusCode(200))
+        def url = '/serverbind'
+        stubFor(get(urlEqualTo(url)).willReturn(ok().withBody('success')))
 
         // bind outgoing traffic to loopback. since the mockserver is running on localhost with a wildcard address, this should succeed.
         proxy = new BrowserUpProxyServer()

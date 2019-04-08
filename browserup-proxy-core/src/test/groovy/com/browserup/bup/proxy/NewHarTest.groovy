@@ -1,6 +1,7 @@
 package com.browserup.bup.proxy
 
 import com.browserup.harreader.model.HarHeader
+import com.github.tomakehurst.wiremock.client.WireMock
 import com.google.common.collect.Iterables
 import com.browserup.bup.BrowserUpProxy
 import com.browserup.bup.BrowserUpProxyServer
@@ -27,6 +28,15 @@ import org.mockserver.model.Header
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching
+import static com.github.tomakehurst.wiremock.client.WireMock.verify
 import static org.hamcrest.Matchers.empty
 import static org.hamcrest.Matchers.equalTo
 import static org.hamcrest.Matchers.greaterThan
@@ -70,13 +80,8 @@ class NewHarTest extends MockServerTest {
         })
 
         // mock up a response to serve
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/testDnsTimingPopulated"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success"))
+        def url = '/testDnsTimingPopulated'
+        stubFor(get(urlEqualTo(url)).willReturn(ok().withBody('success')))
 
         proxy = new BrowserUpProxyServer()
         proxy.setHostNameResolver(mockResolver)
@@ -102,19 +107,21 @@ class NewHarTest extends MockServerTest {
         HarEntry entry = Iterables.get(har.getLog().getEntries(), 0)
         assertThat("Expected at least 1 second DNS delay", entry.getTimings().getDns(), greaterThanOrEqualTo(1000))
         assertNotNull(har.log.entries[0].time)
+
+        verify(1, getRequestedFor(urlEqualTo(url)))
     }
 
     @Test
     void testCaptureResponseCookiesInHar() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/testCaptureResponseCookiesInHar"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success")
-                .withHeader("Set-Cookie", "max-age-cookie=mock-value; Max-Age=3153600000")
-                .withHeader("Set-Cookie", "expires-cookie=mock-value; Expires=Wed, 15 Mar 2022 12:00:00 GMT"))
+        def url = '/testCaptureResponseCookiesInHar'
+        stubFor(get(urlEqualTo(url)).
+                willReturn(
+                        ok().
+                                withBody('success').
+                                withHeader('Set-Cookie', 'max-age-cookie=mock-value; Max-Age=3153600000').
+                                withHeader('Set-Cookie', 'expires-cookie=mock-value; Expires=Wed, 15 Mar 2022 12:00:00 GMT')
+                )
+        )
 
         proxy = new BrowserUpProxyServer()
         proxy.setHarCaptureTypes([CaptureType.RESPONSE_COOKIES] as Set)
@@ -130,7 +137,7 @@ class NewHarTest extends MockServerTest {
         Date maxAgeCookieNotBefore = new Date(System.currentTimeMillis() + 3153600000L)
 
         NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://localhost:${mockServerPort}/testCaptureResponseCookiesInHar")).getEntity().getContent())
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/testCaptureResponseCookiesInHar")).getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", responseBody)
         }
 
@@ -151,18 +158,20 @@ class NewHarTest extends MockServerTest {
         assertEquals("Incorrect cookie value in HAR", "mock-value", expiresCookie.value)
 
         assertThat("Incorrect expiration date in cookie with Expires", expiresCookie.expires, equalTo(expiresDate))
+
+        verify(1, getRequestedFor(urlEqualTo(url)))
     }
 
     @Test
     void testCaptureResponseHeaderInHar() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/testCaptureResponseHeaderInHar"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success")
-                .withHeader(new Header("Mock-Header", "mock value")))
+        def url = '/testCaptureResponseHeaderInHar'
+        stubFor(get(urlEqualTo(url)).
+                willReturn(
+                        ok().
+                                withBody('success').
+                                withHeader('Mock-Header', 'mock value')
+                )
+        )
 
         proxy = new BrowserUpProxyServer()
         proxy.setHarCaptureTypes([CaptureType.RESPONSE_HEADERS] as Set)
@@ -186,21 +195,23 @@ class NewHarTest extends MockServerTest {
         HarHeader header = headers.find { it.name == "Mock-Header" }
         assertNotNull("Expected to find header with name Mock-Header in HAR", header)
         assertEquals("Incorrect header value for Mock-Header", "mock value", header.value)
+
+        verify(1, getRequestedFor(urlEqualTo(url)))
     }
 
     @Test
     void testCaptureResponseContentInHar() {
-        String expectedResponseBody = "success"
-        String responseContentType = "text/plain; charset=UTF-8"
+        String expectedResponseBody = 'success'
+        String responseContentType = 'text/plain;charset=utf-8'
 
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/testCaptureResponseContentInHar"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(200)
-                .withBody(expectedResponseBody)
-                .withHeader(new Header("Content-Type", responseContentType)))
+        def url = '/testCaptureResponseContentInHar'
+        stubFor(get(urlEqualTo(url)).
+                willReturn(
+                        ok().
+                                withBody(expectedResponseBody).
+                                withHeader('Content-Type', responseContentType)
+                )
+        )
 
         proxy = new BrowserUpProxyServer()
         proxy.setHarCaptureTypes(CaptureType.RESPONSE_CONTENT)
@@ -225,21 +236,23 @@ class NewHarTest extends MockServerTest {
 
         assertEquals("Expected to capture body content in HAR", expectedResponseBody, content.text)
         assertEquals("Unexpected response content length", expectedResponseBody.getBytes("UTF-8").length, content.size)
+
+        verify(1, getRequestedFor(urlEqualTo(url)))
     }
 
     @Test
     void testCaptureResponseInfoWhenResponseCaptureDisabled() {
         String expectedResponseBody = "success"
-        String responseContentType = "text/plain; charset=UTF-8"
+        String responseContentType = 'text/plain;charset=utf-8'
 
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/testCaptureResponseContentInHar"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(200)
-                .withBody(expectedResponseBody)
-                .withHeader(new Header("Content-Type", responseContentType)))
+        def url = '/testCaptureResponseContentInHar'
+        stubFor(get(urlEqualTo(url)).
+                willReturn(
+                        ok().
+                                withBody(expectedResponseBody).
+                                withHeader('Content-Type', responseContentType)
+                )
+        )
 
         proxy = new BrowserUpProxyServer()
         proxy.setHarCaptureTypes([] as Set)
@@ -263,18 +276,20 @@ class NewHarTest extends MockServerTest {
         assertEquals("Expected to capture response mimeType in HAR", responseContentType, content.mimeType)
 
         assertNull("Expected to not capture body content in HAR", content.text)
+
+        verify(1, getRequestedFor(urlEqualTo(url)))
     }
 
     @Test
     void testEndHar() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/testEndHar"),
-                Times.unlimited())
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success")
-                .withHeader(new Header("Content-Type", "text/plain; charset=UTF-8")))
+        def url = '/testEndHar'
+        stubFor(get(urlEqualTo(url)).
+                willReturn(
+                        ok().
+                                withBody('success').
+                                withHeader('Content-Type', 'text/plain; charset=UTF-8')
+                )
+        )
 
         proxy = new BrowserUpProxyServer()
         proxy.setHarCaptureTypes([CaptureType.RESPONSE_CONTENT] as Set)
@@ -343,18 +358,20 @@ class NewHarTest extends MockServerTest {
 
             assertEquals("Expected to capture body content in HAR", "success", newContent.text)
         }
+
+        verify(1, getRequestedFor(urlEqualTo(url)))
     }
 
     @Test
     void testNewPageReturnsHarInPreviousState() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/testEndHar"),
-                Times.unlimited())
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success")
-                .withHeader(new Header("Content-Type", "text/plain; charset=UTF-8")))
+        def url = '/testEndHar'
+        stubFor(get(urlEqualTo(url)).
+                willReturn(
+                        ok().
+                                withBody('success').
+                                withHeader('Content-Type', 'text/plain; charset=UTF-8')
+                )
+        )
 
         proxy = new BrowserUpProxyServer()
         proxy.setHarCaptureTypes([CaptureType.RESPONSE_CONTENT] as Set)
@@ -395,17 +412,19 @@ class NewHarTest extends MockServerTest {
 
         assertEquals("Expected HAR returned from newPage() not to contain second page", 1, harWithFirstPageOnly.log.pages.size())
         assertEquals("Expected id of HAR page to be 'first-page'", "first-page", harWithFirstPageOnly.log.pages.first().id)
+
+        verify(1, getRequestedFor(urlEqualTo(url)))
     }
 
     @Test
     void testCaptureHttpRequestUrlInHar() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/httprequesturlcaptured"),
-                Times.once())
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success"))
+        def url = '/httprequesturlcaptured'
+        stubFor(get(urlEqualTo(url)).
+                willReturn(
+                        ok().
+                                withBody('success')
+                )
+        )
 
         proxy = new BrowserUpProxyServer()
         proxy.start()
@@ -426,18 +445,19 @@ class NewHarTest extends MockServerTest {
 
         String capturedUrl = har.log.entries[0].request.url
         assertEquals("URL captured in HAR did not match request URL", requestUrl, capturedUrl)
+
+        verify(1, getRequestedFor(urlEqualTo(url)))
     }
 
     @Test
     void testCaptureHttpRequestUrlWithQueryParamInHar() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/httprequesturlcaptured")
-                .withQueryStringParameter("param1", "value1"),
-                Times.once())
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success"))
+        def url = '/httprequesturlcaptured.*'
+        stubFor(get(urlMatching(url)).withQueryParam('param1', WireMock.equalTo('value1')).
+                willReturn(
+                        ok().
+                                withBody('success')
+                )
+        )
 
         proxy = new BrowserUpProxyServer()
         proxy.start()
@@ -463,18 +483,19 @@ class NewHarTest extends MockServerTest {
 
         assertEquals("Expected first query parameter name to be param1", "param1", har.log.entries[0].request.queryString[0].name)
         assertEquals("Expected first query parameter value to be value1", "value1", har.log.entries[0].request.queryString[0].value)
+
+        verify(1, getRequestedFor(urlMatching(url)))
     }
 
     @Test
     void testCaptureHttpsRequestUrlInHar() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/httpsrequesturlcaptured")
-                .withQueryStringParameter("param1", "value1"),
-                Times.once())
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success"))
+        def url = '/httpsrequesturlcaptured.*'
+        stubFor(get(urlMatching(url)).withQueryParam('param1', WireMock.equalTo('value1')).
+                willReturn(
+                        ok().
+                                withBody('success')
+                )
+        )
 
         proxy = new BrowserUpProxyServer()
         proxy.setTrustAllServers(true)
@@ -483,7 +504,7 @@ class NewHarTest extends MockServerTest {
         proxy.newHar()
 
         // use HTTPS to force a CONNECT. subsequent requests through the tunnel will only contain the resource path, not the full hostname.
-        String requestUrl = "https://localhost:${mockServerPort}/httpsrequesturlcaptured?param1=value1"
+        String requestUrl = "https://localhost:${mockServerHttpsPort}/httpsrequesturlcaptured?param1=value1"
 
         NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
             String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(requestUrl)).getEntity().getContent())
@@ -502,28 +523,29 @@ class NewHarTest extends MockServerTest {
 
         assertEquals("Expected first query parameter name to be param1", "param1", har.log.entries[0].request.queryString[0].name)
         assertEquals("Expected first query parameter value to be value1", "value1", har.log.entries[0].request.queryString[0].value)
+
+        verify(1, getRequestedFor(urlMatching(url)))
     }
 
     @Test
     void testCaptureHttpsRewrittenUrlInHar() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/httpsrewrittenurlcaptured")
-                .withQueryStringParameter("param1", "value1"),
-                Times.once())
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success"))
+        def url = '/httpsrewrittenurlcaptured.*'
+        stubFor(get(urlMatching(url)).withQueryParam('param1', WireMock.equalTo('value1')).
+                willReturn(
+                        ok().
+                                withBody('success')
+                )
+        )
 
         proxy = new BrowserUpProxyServer()
-        proxy.rewriteUrl("https://localhost:${mockServerPort}/originalurl(.*)", "https://localhost:${mockServerPort}/httpsrewrittenurlcaptured\$1")
+        proxy.rewriteUrl("https://localhost:${mockServerHttpsPort}/originalurl(.*)", "https://localhost:${mockServerPort}/httpsrewrittenurlcaptured\$1")
         proxy.setTrustAllServers(true)
         proxy.start()
 
         proxy.newHar()
 
-        String requestUrl = "https://localhost:${mockServerPort}/originalurl?param1=value1"
-        String expectedRewrittenUrl = "https://localhost:${mockServerPort}/httpsrewrittenurlcaptured?param1=value1"
+        String requestUrl = "https://localhost:${mockServerHttpsPort}/originalurl?param1=value1"
+        String expectedRewrittenUrl = "https://localhost:${mockServerHttpsPort}/httpsrewrittenurlcaptured?param1=value1"
 
         NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
@@ -545,25 +567,25 @@ class NewHarTest extends MockServerTest {
 
         assertEquals("Expected first query parameter name to be param1", "param1", har.log.entries[0].request.queryString[0].name)
         assertEquals("Expected first query parameter value to be value1", "value1", har.log.entries[0].request.queryString[0].value)
+
+        verify(1, getRequestedFor(urlMatching(url)))
     }
 
     @Test
     void testMitmDisabledStopsHTTPCapture() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/httpmitmdisabled"),
-                Times.once())
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("Response over HTTP"))
+        def url1 = '/httpmitmdisabled'
+        stubFor(get(urlMatching(url1)).
+                willReturn(
+                        ok().withBody('Response over HTTP')
+                )
+        )
 
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/httpsmitmdisabled"),
-                Times.exactly(2))
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("Response over HTTPS"))
+        def url2 = '/httpsmitmdisabled'
+        stubFor(get(urlMatching(url2)).
+                willReturn(
+                        ok().withBody('Response over HTTPS')
+                )
+        )
 
         proxy = new BrowserUpProxyServer()
         proxy.setMitmDisabled(true)
@@ -572,7 +594,7 @@ class NewHarTest extends MockServerTest {
         proxy.newHar()
 
         httpsRequest: {
-            String httpsUrl = "https://localhost:${mockServerPort}/httpsmitmdisabled"
+            String httpsUrl = "https://localhost:${mockServerHttpsPort}/httpsmitmdisabled"
             NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
                 String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(httpsUrl)).getEntity().getContent())
                 assertEquals("Did not receive expected response from mock server", "Response over HTTPS", responseBody)
@@ -601,7 +623,7 @@ class NewHarTest extends MockServerTest {
         }
 
         secondHttpsRequest: {
-            String httpsUrl = "https://localhost:${mockServerPort}/httpsmitmdisabled"
+            String httpsUrl = "https://localhost:${mockServerHttpsPort}/httpsmitmdisabled"
             NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
                 String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(httpsUrl)).getEntity().getContent())
                 assertEquals("Did not receive expected response from mock server", "Response over HTTPS", responseBody)
@@ -613,6 +635,8 @@ class NewHarTest extends MockServerTest {
             assertThat("Expected to find only the HTTP entry in the HAR", har.getLog().getEntries(), hasSize(1))
         }
 
+        verify(1, getRequestedFor(urlMatching(url1)))
+        verify(2, getRequestedFor(urlMatching(url2)))
     }
 
     @Test
@@ -811,14 +835,14 @@ class NewHarTest extends MockServerTest {
 
     @Test
     void testHttpResponseTimeoutCapturedInHar() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/testResponseTimeoutCapturedInHar"),
-                Times.once())
-                .respond(response()
-                .withStatusCode(200)
-                .withDelay(TimeUnit.SECONDS, 10)
-                .withBody("success"))
+        def url = '/testResponseTimeoutCapturedInHar.*'
+        stubFor(get(urlMatching(url)).
+                willReturn(
+                        ok().
+                                withBody('success').
+                                withFixedDelay(TimeUnit.SECONDS.toMillis(10) as Integer)
+                )
+        )
 
         proxy = new BrowserUpProxyServer()
         proxy.setIdleConnectionTimeout(3, TimeUnit.SECONDS)
@@ -871,14 +895,14 @@ class NewHarTest extends MockServerTest {
 
     @Test
     void testHttpsResponseTimeoutCapturedInHar() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/testResponseTimeoutCapturedInHar"),
-                Times.once())
-                .respond(response()
-                .withStatusCode(200)
-                .withDelay(TimeUnit.SECONDS, 10)
-                .withBody("success"))
+        def url = '/testResponseTimeoutCapturedInHar.*'
+        stubFor(get(urlMatching(url)).
+                willReturn(
+                        ok().
+                                withBody('success').
+                                withFixedDelay(TimeUnit.SECONDS.toMillis(10) as Integer)
+                )
+        )
 
         proxy = new BrowserUpProxyServer()
         proxy.setTrustAllServers(true)
@@ -887,7 +911,7 @@ class NewHarTest extends MockServerTest {
 
         proxy.newHar()
 
-        String requestUrl = "https://localhost:${mockServerPort}/testResponseTimeoutCapturedInHar"
+        String requestUrl = "https://localhost:${mockServerHttpsPort}/testResponseTimeoutCapturedInHar"
 
         NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
             CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
@@ -932,53 +956,58 @@ class NewHarTest extends MockServerTest {
 
     @Test
     void testRedirectUrlCapturedForRedirects() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/test300"),
-                Times.once())
-                .respond(response()
-                .withStatusCode(300)
-                .withHeader("Location", "/redirected-location"))
+        def test300Url = '/test300'
+        stubFor(get(urlEqualTo(test300Url)).
+                willReturn(
+                        aResponse().withStatus(300).
+                                withBody('success').
+                                withHeader('Location', '/redirected-location')
+                )
+        )
 
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/test301"),
-                Times.once())
-                .respond(response()
-                .withStatusCode(301)
-                .withHeader("Location", "/redirected-location"))
+        def test301Url = '/test301'
+        stubFor(get(urlEqualTo(test301Url)).
+                willReturn(
+                        aResponse().withStatus(301).
+                                withBody('success').
+                                withHeader('Location', '/redirected-location')
+                )
+        )
 
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/test302"),
-                Times.once())
-                .respond(response()
-                .withStatusCode(302)
-                .withHeader("Location", "/redirected-location"))
+        def test302Url = '/test302'
+        stubFor(get(urlEqualTo(test302Url)).
+                willReturn(
+                        aResponse().withStatus(302).
+                                withBody('success').
+                                withHeader('Location', '/redirected-location')
+                )
+        )
 
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/test303"),
-                Times.once())
-                .respond(response()
-                .withStatusCode(303)
-                .withHeader("Location", "/redirected-location"))
+        def test303Url = '/test303'
+        stubFor(get(urlEqualTo(test303Url)).
+                willReturn(
+                        aResponse().withStatus(303).
+                                withBody('success').
+                                withHeader('Location', '/redirected-location')
+                )
+        )
 
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/test307"),
-                Times.once())
-                .respond(response()
-                .withStatusCode(307)
-                .withHeader("Location", "/redirected-location"))
+        def test307Url = '/test307'
+        stubFor(get(urlEqualTo(test307Url)).
+                willReturn(
+                        aResponse().withStatus(307).
+                                withBody('success').
+                                withHeader('Location', '/redirected-location')
+                )
+        )
 
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/test301-no-location-header"),
-                Times.once())
-                .respond(response()
-                .withStatusCode(301))
-
+        def test301UrlNoLocation = '/test301-no-location-header'
+        stubFor(get(urlEqualTo(test301UrlNoLocation)).
+                willReturn(
+                        aResponse().withStatus(301).
+                                withBody('success')
+                )
+        )
         proxy = new BrowserUpProxyServer()
         proxy.start()
 
@@ -1028,6 +1057,13 @@ class NewHarTest extends MockServerTest {
         proxy.newHar()
         // redirectURL should always be populated or an empty string, never null
         verifyRedirect("http://localhost:${mockServerPort}/test301-no-location-header", 301, "")
+
+        verify(1, getRequestedFor(urlMatching(test300Url)))
+        verify(1, getRequestedFor(urlMatching(test301Url)))
+        verify(1, getRequestedFor(urlMatching(test302Url)))
+        verify(1, getRequestedFor(urlMatching(test303Url)))
+        verify(1, getRequestedFor(urlMatching(test307Url)))
+        verify(1, getRequestedFor(urlMatching(test301UrlNoLocation)))
     }
 
     //TODO: Add Request Capture Type tests
