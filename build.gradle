@@ -30,7 +30,7 @@ subprojects {
     group = 'com.browserup'
     version = '1.0.0-SNAPSHOT'
 
-    sourceCompatibility=11
+    sourceCompatibility=1.8
 
     repositories {
         jcenter()
