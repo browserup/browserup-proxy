@@ -60,7 +60,7 @@ dependencies {
     implementation 'com.browserup:har-reader:3.0.0-SNAPSHOT'
 
     implementation 'com.google.guava:guava:27.0.1-jre'
-    implementation 'com.google.inject:guice:4.2.2'
+    implementation 'com.google.inject:guice:3.0'
     implementation 'com.google.inject.extensions:guice-servlet:3.0'
     implementation 'com.google.inject.extensions:guice-multibindings:3.0'
     implementation 'com.google.sitebricks:sitebricks:0.8.10'
