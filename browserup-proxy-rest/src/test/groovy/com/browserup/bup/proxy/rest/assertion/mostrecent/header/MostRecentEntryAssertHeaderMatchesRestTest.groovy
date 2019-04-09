@@ -4,19 +4,20 @@ import com.browserup.bup.assertion.model.AssertionResult
 import com.browserup.bup.proxy.CaptureType
 import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.tomakehurst.wiremock.http.HttpHeader
+import com.github.tomakehurst.wiremock.http.HttpHeaders
 import groovyx.net.http.Method
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
-import org.eclipse.jetty.http.HttpMethods
+import org.eclipse.jetty.http.HttpMethod
 import org.hamcrest.Matchers
 import org.junit.Test
-import org.mockserver.matchers.Times
-import org.mockserver.model.ConnectionOptions
-import org.mockserver.model.Header
 
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.junit.Assert.*
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
     def responseBody = 'success'
@@ -32,7 +33,7 @@ class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
     def headerValuePatternNotToMatch = ".*${headerNameNotToFind}.*" as String
     def headerNamePatternToMatch = ".*${headerNameToFind}.*" as String
     def headerNamePatternNotToMatch = ".*${headerNameNotToFind}.*" as String
-    Header[] headers = [new Header(headerNameToFind, "header value before ${headerValueToFind} header value after".toString())]
+    HttpHeader[] headers = [new HttpHeader(headerNameToFind, "header value before ${headerValueToFind} header value after".toString())]
 
     @Override
     String getUrlPath() {
@@ -40,7 +41,7 @@ class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
     }
 
     @Test
-    void anyNameAndMatchingValuePatternPass() {
+    void anyNameAndMatchingValuePatternFails() {
         sendRequestsToTargetServer()
 
         sendGetToProxyServer { req ->
@@ -51,9 +52,7 @@ class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
-                assertAssertionPassed(assertionResult)
-                
-                assertFalse('Expected assertion entry result to have "false" failed flag', assertionResult.requests[0].failed)
+                assertAssertionFailed(assertionResult)
             }
         }
     }
@@ -197,19 +196,14 @@ class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
         requestToTargetServer(urlOfMostRecentRequest, responseBody)
     }
 
-    protected void mockTargetServerResponse(String url, String responseBody, Header[] headers) {
-        def connectionOptions = ConnectionOptions
-                .connectionOptions()
-                .withSuppressConnectionHeader(true)
-
-        targetMockedServer.when(request()
-                .withMethod(HttpMethods.GET)
-                .withPath("/${url}"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(HttpStatus.SC_OK)
-                .withBody(responseBody)
-                .withConnectionOptions(connectionOptions)
-                .withHeaders(headers))
+    protected void mockTargetServerResponse(String url, String responseBody, HttpHeader... headers) {
+        stubFor(get(urlEqualTo("/${url}")).
+                willReturn(
+                        ok().
+                                withHeaders(
+                                        new HttpHeaders(headers) + new HttpHeader('Content-Type', 'text/plain')
+                                ).
+                                withBody(responseBody))
+        )
     }
 }

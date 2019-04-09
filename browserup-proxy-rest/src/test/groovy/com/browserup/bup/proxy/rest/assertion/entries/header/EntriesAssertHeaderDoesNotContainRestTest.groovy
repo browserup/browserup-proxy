@@ -6,16 +6,12 @@ import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
-import org.eclipse.jetty.http.HttpMethods
+import org.eclipse.jetty.http.HttpMethod
 import org.hamcrest.Matchers
 import org.junit.Test
-import org.mockserver.matchers.Times
-import org.mockserver.model.Header
 
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertThat
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class EntriesAssertHeaderDoesNotContainRestTest extends BaseEntriesAssertHeaderRestTest {
 

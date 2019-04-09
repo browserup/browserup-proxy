@@ -22,8 +22,6 @@ import org.junit.After
 import org.junit.Test
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
-import org.mockserver.matchers.Times
-import org.mockserver.model.Header
 
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
@@ -51,8 +49,6 @@ import static org.junit.Assert.assertThat
 import static org.junit.Assert.assertTrue
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.when
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 /**
  * HAR tests using the new interface. When the legacy interface is retired, these tests should be combined with the tests currently in HarTest.
@@ -359,7 +355,7 @@ class NewHarTest extends MockServerTest {
             assertEquals("Expected to capture body content in HAR", "success", newContent.text)
         }
 
-        verify(1, getRequestedFor(urlEqualTo(url)))
+        verify(3, getRequestedFor(urlEqualTo(url)))
     }
 
     @Test
@@ -413,7 +409,7 @@ class NewHarTest extends MockServerTest {
         assertEquals("Expected HAR returned from newPage() not to contain second page", 1, harWithFirstPageOnly.log.pages.size())
         assertEquals("Expected id of HAR page to be 'first-page'", "first-page", harWithFirstPageOnly.log.pages.first().id)
 
-        verify(1, getRequestedFor(urlEqualTo(url)))
+        verify(2, getRequestedFor(urlEqualTo(url)))
     }
 
     @Test

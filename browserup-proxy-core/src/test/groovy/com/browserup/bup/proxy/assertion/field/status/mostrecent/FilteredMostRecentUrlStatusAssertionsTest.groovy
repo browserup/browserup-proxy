@@ -5,13 +5,14 @@ import com.browserup.bup.util.HttpStatusClass
 import org.apache.http.HttpStatus
 import org.hamcrest.Matchers
 import org.junit.Test
-import org.mockserver.matchers.Times
 
 import java.util.regex.Pattern
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.junit.Assert.*
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class FilteredMostRecentUrlStatusAssertionsTest extends BaseAssertionsTest {
     protected static final Pattern COMMON_URL_PATTERN = Pattern.compile(".*some-url.*")
@@ -164,12 +165,13 @@ class FilteredMostRecentUrlStatusAssertionsTest extends BaseAssertionsTest {
     }
 
     protected mockResponse(String path, Integer status) {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/${path}"),
-                Times.once())
-                .respond(response()
-                .withStatusCode(status)
-                .withBody(SUCCESSFUL_RESPONSE_BODY))
+        stubFor(get(urlEqualTo("/${path}")).
+                willReturn(
+                        aResponse().
+                                withStatus(status).
+                                withBody(SUCCESSFUL_RESPONSE_BODY).
+                                withHeader('Content-Type', 'text/plain; charset=UTF-8')
+                )
+        )
     }
 }

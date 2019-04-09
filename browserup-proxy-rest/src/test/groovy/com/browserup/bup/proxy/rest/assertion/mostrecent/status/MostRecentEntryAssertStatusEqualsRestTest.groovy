@@ -7,15 +7,11 @@ import groovyx.net.http.Method
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
-import org.eclipse.jetty.http.HttpMethods
+import org.eclipse.jetty.http.HttpMethod
 import org.hamcrest.Matchers
 import org.junit.Test
-import org.mockserver.matchers.Times
-import org.mockserver.model.Header
 
 import static org.junit.Assert.*
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class MostRecentEntryAssertStatusEqualsRestTest extends BaseRestTest {
     def urlOfMostRecentRequest = 'url-most-recent'
@@ -123,16 +119,5 @@ class MostRecentEntryAssertStatusEqualsRestTest extends BaseRestTest {
         sleep MILLISECONDS_BETWEEN_REQUESTS
 
         requestToTargetServer(urlOfMostRecentRequest, responseBody)
-    }
-
-    protected void mockTargetServerResponse(String url, String responseBody, int status) {
-        targetMockedServer.when(request()
-                .withMethod(HttpMethods.GET)
-                .withPath("/${url}"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(status)
-                .withHeader(new Header(HttpHeaders.CONTENT_TYPE, 'text/plain'))
-                .withBody(responseBody))
     }
 }

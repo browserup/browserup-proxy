@@ -1,5 +1,6 @@
 package com.browserup.bup.filters
 
+import com.github.tomakehurst.wiremock.client.WireMock
 import com.google.common.collect.ImmutableList
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.HttpHeaderNames
@@ -16,17 +17,17 @@ import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.junit.After
 import org.junit.Test
-import org.mockserver.matchers.Times
-
-import java.nio.channels.Channel
 
 import static com.browserup.bup.filters.HttpsAwareFiltersAdapter.*
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.junit.Assert.assertEquals
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.verify
 import static org.mockito.Mockito.when
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class RewriteUrlFilterTest extends MockServerTest {
     BrowserUpProxy proxy
@@ -95,14 +96,13 @@ class RewriteUrlFilterTest extends MockServerTest {
 
     @Test
     void testRewriteHttpHost() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/testRewriteHttpHost")
-                .withHeader("Host", "localhost:${mockServerPort}"),
-                Times.exactly(2))
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success"))
+        def rewriteHttpHostUrl = '/testRewriteHttpHost'
+        stubFor(get(urlEqualTo(rewriteHttpHostUrl)).
+                withHeader('Host', WireMock.equalTo("localhost:${mockServerPort}")).
+                willReturn(
+                        ok().withBody('success')
+                )
+        )
 
         proxy = new BrowserUpProxyServer()
         proxy.rewriteUrl('http://www\\.someotherhost\\.com:(\\d+)/(\\w+)', 'http://localhost:$1/$2')
@@ -122,18 +122,19 @@ class RewriteUrlFilterTest extends MockServerTest {
 
             String secondResponseBody = NewProxyServerTestUtil.toStringAndClose(secondResponse.getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", secondResponseBody)
+
+            WireMock.verify(2, getRequestedFor(urlEqualTo(rewriteHttpHostUrl)))
         }
     }
 
     @Test
     void testRewriteHttpResource() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/rewrittenresource"),
-                Times.exactly(2))
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success"))
+        def rewriteHttpHostUrl = '/rewrittenresource'
+        stubFor(get(urlEqualTo(rewriteHttpHostUrl)).
+                willReturn(
+                        ok().withBody('success')
+                )
+        )
 
         proxy = new BrowserUpProxyServer()
         proxy.rewriteUrl('http://badhost:(\\d+)/badresource', 'http://localhost:$1/rewrittenresource')
@@ -147,18 +148,19 @@ class RewriteUrlFilterTest extends MockServerTest {
 
             String secondResponseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", secondResponseBody)
+
+            WireMock.verify(2, getRequestedFor(urlEqualTo(rewriteHttpHostUrl)))
         }
     }
 
     @Test
     void testRewriteHttpsResource() {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/rewrittenresource"),
-                Times.exactly(2))
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success"))
+        def rewriteHttpHostUrl = '/rewrittenresource'
+        stubFor(get(urlEqualTo(rewriteHttpHostUrl)).
+                willReturn(
+                        ok().withBody('success')
+                )
+        )
 
         proxy = new BrowserUpProxyServer()
         proxy.setTrustAllServers(true)
@@ -166,13 +168,15 @@ class RewriteUrlFilterTest extends MockServerTest {
 
         proxy.start()
 
-        String url = "https://localhost:${mockServerPort}/badresource"
+        String url = "https://localhost:${mockServerHttpsPort}/badresource"
         NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
             String firstResponseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", firstResponseBody)
 
             String secondResponseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", secondResponseBody)
+
+            WireMock.verify(2, getRequestedFor(urlEqualTo(rewriteHttpHostUrl)))
         }
     }
 }

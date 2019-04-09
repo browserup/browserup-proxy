@@ -9,7 +9,6 @@ import org.apache.http.conn.HttpHostConnectException
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import org.mockserver.matchers.Times
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import static com.github.tomakehurst.wiremock.client.WireMock.get
@@ -18,8 +17,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.junit.Assert.assertEquals
 import static org.junit.Assume.assumeNoException
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class BindAddressTest extends MockServerTest {
     private BrowserUpProxy proxy

@@ -7,15 +7,19 @@ import groovyx.net.http.Method
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
-import org.eclipse.jetty.http.HttpMethods
+import org.eclipse.jetty.http.HttpMethod
 import org.hamcrest.Matchers
 import org.junit.Test
-import org.mockserver.matchers.Times
-import org.mockserver.model.Header
 
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import static org.junit.Assert.*
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class MostRecentEntryAssertStatusServerErrorRestTest extends BaseRestTest {
     def urlOfMostRecentRequest = 'url-most-recent'
@@ -121,15 +125,14 @@ class MostRecentEntryAssertStatusServerErrorRestTest extends BaseRestTest {
     }
 
     protected void mockTargetServerResponse(String url, int status) {
-        targetMockedServer.when(request()
-                .withMethod(HttpMethods.GET)
-                .withPath("/${url}"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(status)
-                .withHeaders(
-                new Header(HttpHeaders.CONTENT_TYPE, 'text/plain'),
-                new Header(HttpHeaders.LOCATION, 'test.com')
-        ))
+        stubFor(get(urlMatching('.*test.com.*')).willReturn(ok()))
+        stubFor(get(urlEqualTo("/${url}")).
+                willReturn(
+                        ok().
+                                withStatus(status).
+                                withHeader(com.google.common.net.HttpHeaders.CONTENT_TYPE, 'text/plain').
+                                withHeader(com.google.common.net.HttpHeaders.LOCATION, 'test.com').
+                                withBody(responseBody))
+        )
     }
 }

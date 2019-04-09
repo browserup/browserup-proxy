@@ -10,8 +10,6 @@ import io.netty.handler.codec.http.HttpHeaders
 import org.apache.http.client.methods.HttpGet
 import org.junit.After
 import org.junit.Test
-import org.mockserver.matchers.Times
-import org.mockserver.model.NottableString
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import static com.github.tomakehurst.wiremock.client.WireMock.get
@@ -22,8 +20,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static com.github.tomakehurst.wiremock.client.WireMock.verify
 import static org.junit.Assert.assertEquals
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class AutoAuthTest extends MockServerTest {
     BrowserUpProxy proxy

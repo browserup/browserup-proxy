@@ -12,7 +12,6 @@ import org.junit.Test
 import org.littleshoot.proxy.HttpProxyServer
 import org.littleshoot.proxy.ProxyAuthenticator
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer
-import org.mockserver.matchers.Times
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
@@ -22,8 +21,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static com.github.tomakehurst.wiremock.client.WireMock.verify
 import static org.junit.Assert.assertEquals
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class ChainedProxyAuthTest extends MockServerTest {
     BrowserUpProxy proxy

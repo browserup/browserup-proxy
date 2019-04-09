@@ -1,14 +1,18 @@
 package com.browserup.bup.proxy.rest.assertion.entries
 
 import com.browserup.bup.assertion.model.AssertionResult
+import com.browserup.bup.proxy.CaptureType
 import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
-import groovyx.net.http.Method
+import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
-import org.apache.http.entity.ContentType
 import org.hamcrest.Matchers
 import org.junit.Test
 
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.junit.Assert.*
 
 class EntriesAssertTimeLessThanOrEqualRestTest extends BaseRestTest {
@@ -37,6 +41,8 @@ class EntriesAssertTimeLessThanOrEqualRestTest extends BaseRestTest {
         slowUrls.forEach { mockTargetServerResponse(it, responseBody, TARGET_SERVER_SLOW_RESPONSE_DELAY) }
 
         proxyManager.get()[0].newHar()
+
+        proxyManager.get()[0].setHarCaptureTypes(CaptureType.RESPONSE_CONTENT)
 
         allUrls.forEach { requestToTargetServer(it, responseBody) }
 
@@ -96,5 +102,16 @@ class EntriesAssertTimeLessThanOrEqualRestTest extends BaseRestTest {
                 assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
             }
         }
+    }
+
+    @Override
+    protected void mockTargetServerResponse(String url, String responseBody, Integer delayMilliseconds=0) {
+        stubFor(get(urlEqualTo("/${url}")).
+                willReturn(
+                        ok().
+                                withFixedDelay(delayMilliseconds).
+                                withHeader(HttpHeaders.CONTENT_TYPE, 'text/plain').
+                                withBody(responseBody))
+        )
     }
 }

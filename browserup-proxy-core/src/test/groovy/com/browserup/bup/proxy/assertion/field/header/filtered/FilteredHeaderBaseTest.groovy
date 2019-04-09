@@ -1,7 +1,7 @@
 package com.browserup.bup.proxy.assertion.field.header.filtered
 
 import com.browserup.bup.proxy.assertion.field.header.HeaderBaseTest
-import org.mockserver.model.Header
+import com.github.tomakehurst.wiremock.http.HttpHeader
 
 import java.util.regex.Pattern
 
@@ -26,10 +26,10 @@ class FilteredHeaderBaseTest extends HeaderBaseTest {
     protected static final def HEADER_NAME_PATTERN_TO_MATCH_BOTH = Pattern.compile(".*${COMMON_HEADER_NAME}.*")
     protected static final def HEADER_NAME_PATTERN_TO_MATCH_NOTHING = Pattern.compile(".*nothing.*")
     protected static final def ABSENT_HEADER_VALUE = "something"
-    protected static final def FIRST_HEADER = Header.header('firstHeaderName', FIRST_HEADER_VALUE)
-    protected static final def SECOND_HEADER = Header.header('secondHeaderName', SECOND_HEADER_VALUE)
+    protected static final def FIRST_HEADER = new HttpHeader('firstHeaderName', FIRST_HEADER_VALUE)
+    protected static final def SECOND_HEADER = new HttpHeader('secondHeaderName', SECOND_HEADER_VALUE)
 
-    protected mockAndSendRequestsToMockedServer(Header firstHeader, Header secondHeader) {
+    protected mockAndSendRequestsToMockedServer(HttpHeader firstHeader, HttpHeader secondHeader) {
         mockResponse(FIRST_URL_PATH, firstHeader)
         mockResponse(SECOND_URL_PATH, secondHeader)
 

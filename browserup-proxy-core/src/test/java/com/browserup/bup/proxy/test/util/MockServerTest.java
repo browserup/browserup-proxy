@@ -1,11 +1,8 @@
 package com.browserup.bup.proxy.test.util;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
-import org.mockserver.integration.ClientAndServer;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 

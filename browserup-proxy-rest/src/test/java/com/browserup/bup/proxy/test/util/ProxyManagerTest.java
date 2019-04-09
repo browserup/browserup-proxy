@@ -7,6 +7,7 @@ import com.browserup.bup.proxy.ProxyManager;
 import com.browserup.bup.proxy.guice.ConfigModule;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 
 public abstract class ProxyManagerTest {
     protected ProxyManager proxyManager;
@@ -29,5 +30,4 @@ public abstract class ProxyManagerTest {
             }catch(Exception e){ }
         }
     }
-
 }

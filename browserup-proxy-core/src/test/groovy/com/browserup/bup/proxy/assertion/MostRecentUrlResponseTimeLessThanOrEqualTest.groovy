@@ -3,7 +3,6 @@ package com.browserup.bup.proxy.assertion
 
 import org.hamcrest.Matchers
 import org.junit.Test
-import org.mockserver.model.Delay
 
 import java.util.regex.Pattern
 
@@ -18,7 +17,7 @@ class MostRecentUrlResponseTimeLessThanOrEqualTest extends BaseAssertionsTest {
 
         requestToMockedServer(URL_PATH)
 
-        def assertionTime = MILLISECONDS.convert(DEFAULT_RESPONSE_DELAY.value, DEFAULT_RESPONSE_DELAY.timeUnit) - TIME_DELTA_MILLISECONDS
+        def assertionTime = DEFAULT_RESPONSE_DELAY - TIME_DELTA_MILLISECONDS
 
         def result = proxy.assertMostRecentResponseTimeLessThanOrEqual(Pattern.compile(".*${URL_PATH}.*"), assertionTime)
 
@@ -28,7 +27,7 @@ class MostRecentUrlResponseTimeLessThanOrEqualTest extends BaseAssertionsTest {
 
     @Test
     void passesIfNoEntriesFound() {
-        mockResponseForPathWithDelay(URL_PATH, new Delay(MILLISECONDS, 0))
+        mockResponseForPathWithDelay(URL_PATH, 0)
 
         requestToMockedServer(URL_PATH)
 
@@ -45,7 +44,7 @@ class MostRecentUrlResponseTimeLessThanOrEqualTest extends BaseAssertionsTest {
 
         requestToMockedServer(URL_PATH)
 
-        def assertionTime = MILLISECONDS.convert(DEFAULT_RESPONSE_DELAY.value, DEFAULT_RESPONSE_DELAY.timeUnit) + TIME_DELTA_MILLISECONDS
+        def assertionTime = DEFAULT_RESPONSE_DELAY + TIME_DELTA_MILLISECONDS
 
         def result = proxy.assertMostRecentResponseTimeLessThanOrEqual(Pattern.compile(".*${URL_PATH}.*"), assertionTime)
 

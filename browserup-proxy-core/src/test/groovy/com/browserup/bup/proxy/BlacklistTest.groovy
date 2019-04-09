@@ -8,7 +8,6 @@ import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.junit.After
 import org.junit.Test
-import org.mockserver.matchers.Times
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get
 import static com.github.tomakehurst.wiremock.client.WireMock.ok
@@ -18,8 +17,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.hamcrest.Matchers.isEmptyOrNullString
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertThat
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class BlacklistTest extends MockServerTest {
     BrowserUpProxy proxy

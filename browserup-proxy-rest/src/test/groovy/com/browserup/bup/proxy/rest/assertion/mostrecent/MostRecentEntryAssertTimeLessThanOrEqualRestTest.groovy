@@ -4,11 +4,16 @@ import com.browserup.bup.assertion.model.AssertionResult
 import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
 import groovyx.net.http.Method
+import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
 import org.hamcrest.Matchers
 import org.junit.Test
 
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.junit.Assert.*
 
 class MostRecentEntryAssertTimeLessThanOrEqualRestTest extends BaseRestTest {
@@ -100,5 +105,15 @@ class MostRecentEntryAssertTimeLessThanOrEqualRestTest extends BaseRestTest {
         sleep MILLISECONDS_BETWEEN_REQUESTS
 
         requestToTargetServer(urlOfMostRecentRequest, responseBody)
+    }
+
+    protected void mockTargetServerResponse(String url, String responseBody, Integer delayMilliseconds=0) {
+        stubFor(get(urlEqualTo("/${url}")).
+                willReturn(
+                        ok().
+                                withFixedDelay(delayMilliseconds).
+                                withHeader(HttpHeaders.CONTENT_TYPE, 'text/plain').
+                                withBody(responseBody))
+        )
     }
 }

@@ -27,7 +27,7 @@ class AllUrlResponsesTimeWithinTest extends BaseAssertionsTest {
         }
 
 
-        def assertionTime = MILLISECONDS.convert(DEFAULT_RESPONSE_DELAY.value, DEFAULT_RESPONSE_DELAY.timeUnit) - TIME_DELTA_MILLISECONDS
+        def assertionTime = DEFAULT_RESPONSE_DELAY - TIME_DELTA_MILLISECONDS
 
         def result = proxy.assertResponseTimeLessThanOrEqual(Pattern.compile(".*${URL_PATH}.*"), assertionTime)
 
@@ -65,7 +65,7 @@ class AllUrlResponsesTimeWithinTest extends BaseAssertionsTest {
             assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
         }
 
-        def assertionTime = MILLISECONDS.convert(DEFAULT_RESPONSE_DELAY.value, DEFAULT_RESPONSE_DELAY.timeUnit) - TIME_DELTA_MILLISECONDS
+        def assertionTime = DEFAULT_RESPONSE_DELAY - TIME_DELTA_MILLISECONDS
 
         def result = proxy.assertResponseTimeLessThanOrEqual(Pattern.compile(".*${URL_PATH}.*"), assertionTime)
 
