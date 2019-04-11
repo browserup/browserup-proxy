@@ -800,8 +800,10 @@ public interface BrowserUpProxy {
      * a given header name whose value does not contain a given text string.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param name Header name
-     * @param value Header value
+     * @param name Exact, case-sensitive name of a header to find in the request.
+     *            If <code>name</code> is <code>null</code>, then any request header
+     *            whose value contains the given <code>value</code> text string will satisfy the assertion.
+     * @param value Case-sensitive text string that the header value must not contain.
      * @return Assertion result
      */
     AssertionResult assertAnyUrlResponseHeaderDoesNotContain(Pattern url, String name, String value);
