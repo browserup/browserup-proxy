@@ -41,7 +41,7 @@ class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
     }
 
     @Test
-    void anyNameAndMatchingValuePatternFails() {
+    void anyNameAndMatchingValuePatternPasses() {
         sendRequestsToTargetServer()
 
         sendGetToProxyServer { req ->
@@ -52,7 +52,7 @@ class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
                 def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
-                assertAssertionFailed(assertionResult)
+                assertAssertionPassed(assertionResult)
             }
         }
     }

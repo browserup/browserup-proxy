@@ -700,27 +700,25 @@ public interface BrowserUpProxy {
     AssertionResult assertResponseTimeLessThanOrEqual(Pattern url, long milliseconds);
 
     /**
-     * Assert that response content for the most recent request found by a given URL pattern contains specified value.
+     * Assert that the response content for the most recent request found by a given URL pattern contains a given text string.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param text String to search in the content
+     * @param text String to search in the response content.
      * @return Assertion result
      */
     AssertionResult assertMostRecentResponseContentContains(Pattern url, String text);
 
     /**
-     * Assert that response content for the most recent request
-     * found by a given URL pattern doesn't contain specified value.
+     * Assert that the response content for the most recent request found by a given URL pattern does not contain a given text string.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param text String to search in the content
+     * @param text String to search in the response content.
      * @return Assertion result
      */
     AssertionResult assertMostRecentResponseContentDoesNotContain(Pattern url, String text);
 
     /**
-     * Assert that response content for the most recent request
-     * found by a given URL pattern matches content pattern.
+     * Assert that the response content for the most recent request found by a given URL pattern matches a given regular expression.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
      * @param contentPattern Regular expression match of content to find.
@@ -729,10 +727,11 @@ public interface BrowserUpProxy {
     AssertionResult assertMostRecentResponseContentMatches(Pattern url, Pattern contentPattern);
 
     /**
-     * Assert that content length of all responses found by url pattern do not exceed max value.
+     * Assert that the responses content length of all requests
+     * found by a given URL pattern are less than or equal to a given number of bytes.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param max Max length of content, inclusive
+     * @param max Max length of content, inclusive.
      * @return Assertion result
      */
     AssertionResult assertAnyUrlContentLengthLessThanOrEquals(Pattern url, Long max);
@@ -747,55 +746,58 @@ public interface BrowserUpProxy {
     AssertionResult assertAnyUrlContentMatches(Pattern url, Pattern contentPattern);
 
     /**
-     * Assert that responses content for all requests found by a given URL pattern contain specified value.
+     * Assert that the responses content for all requests found by a given URL pattern contain a given text string.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param text String to search in the content
+     * @param text String to search in the response content.
      * @return Assertion result
      */
     AssertionResult assertAnyUrlContentContains(Pattern url, String text);
 
     /**
-     * Assert that responses content for all requests found by a given URL pattern don't contain specified value.
+     * Assert that the responses content for all requests found by a given URL pattern do not contain a given text string.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param text String to search in the content
+     * @param text String to search in the response content.
      * @return Assertion result
      */
     AssertionResult assertAnyUrlContentDoesNotContain(Pattern url, String text);
 
     /**
-     * Assert that headers of all responses found by url pattern contain specified value.
+     * Assert that any response header value for all requests found by a given URL pattern contains a given text string.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param value Header value
+     * @param value Case-sensitive text string that the header value must partially or completely contain.
      * @return Assertion result
      */
     AssertionResult assertAnyUrlResponseHeaderContains(Pattern url, String value);
 
     /**
-     * Assert that if responses found by url pattern have headers with specified name
-     * - among them must be one header with value containing specified text.
+     * Assert that responses headers for all requests found by a given URL
+     * pattern contains a given header name whose value contains a given text string.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param name Header name
-     * @param value Header value
+     * @param name Exact, case-sensitive name of a header to find in the request.
+     *             If <code>name</code> is <code>null</code>, then any request header
+     *             whose value contains the given <code>value</code> text string will satisfy the assertion.
+     * @param value Case-sensitive text string that the header value must partially or completely contain.
      * @return Assertion result
      */
     AssertionResult assertAnyUrlResponseHeaderContains(Pattern url, String name, String value);
 
     /**
-     * Assert that headers of all responses found by url pattern don't contain specified value.
+     * Assert that responses headers for all requests found by a given URL pattern
+     * have no values that contain a given text string.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param value Header value
+     * @param value Case-sensitive text string that the header value must not contain.
      * @return Assertion result
      */
     AssertionResult assertAnyUrlResponseHeaderDoesNotContain(Pattern url, String value);
 
     /**
-     * Assert that if responses found by url pattern have headers with specified name
-     * - their values must not contain specified value.
+     * Assert that responses headers for all requests found by a given URL pattern contain
+     * a given header name whose value does not contain a given text string.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
      * @param name Header name
@@ -805,7 +807,8 @@ public interface BrowserUpProxy {
     AssertionResult assertAnyUrlResponseHeaderDoesNotContain(Pattern url, String name, String value);
 
     /**
-     * Assert that all headers of all responses found by url pattern have values matching value pattern.
+     * Assert that responses headers for all requests found by a given URL pattern contain
+     * a given header name whose header value matches a given pattern.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
      * @param valuePattern Regular expression match of header value.
@@ -816,32 +819,38 @@ public interface BrowserUpProxy {
     }
 
     /**
-     * Assert that if responses found by url pattern have headers with name
-     * found by name pattern - their values should match value pattern.
+     * Assert that responses headers for all requests found
+     * by a given URL pattern contain at least one header value that matches a given pattern.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param namePattern Regular expression match of header name to find.
+     * @param namePattern Regular expression match of header name to find in the request.
+     *            If <code>name</code> is <code>null</code>, then any request header whose value matches
+     *            the given <code>value</code> pattern will satisfy the assertion.
+     *            If multiple header names are found, then any single matching request
+     *            header whose value matches the given <code>value</code> pattern will satisfy the assertion.
      * @param valuePattern Regular expression match of header value.
      * @return Assertion result
      */
     AssertionResult assertAnyUrlResponseHeaderMatches(Pattern url, Pattern namePattern, Pattern valuePattern);
 
     /**
-     * Assert that if the most recent response found by url pattern has header with specified name
-     * - it's value must contain specified text.
+     * Assert that the response header for the most recent request found by a given URL
+     * pattern contains a given header name whose value contains a given text string.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param name Header name
-     * @param value Header value
+     * @param name Exact, case-sensitive name of a header to find in the request.
+     *             If <code>name</code> is <code>null</code>, then any request header
+     *             whose value contains the given <code>value</code> text string will satisfy the assertion.
+     * @param value Case-sensitive text string that the header value must partially or completely contain.
      * @return Assertion result
      */
     AssertionResult assertMostRecentResponseHeaderContains(Pattern url, String name, String value);
 
     /**
-     * Assert that headers of the most recent response found by url pattern contain specified value.
+     * Assert that any response header value for the most recent request found by a given URL pattern contains a given text string.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param value Header value
+     * @param value Case-sensitive text string that any header value must partially or completely contain.
      * @return Assertion result
      */
     default AssertionResult assertMostRecentResponseHeaderContains(Pattern url, String value) {
@@ -849,21 +858,24 @@ public interface BrowserUpProxy {
     }
 
     /**
-     * Assert that if the most recent response found by url pattern has header with specified name
-     * - it's value must not contain specified text.
+     * Assert that the response header for the most recent request found by a given URL pattern contains
+     * a given header name whose value does not contain a given text string.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param name Header name
-     * @param value Header value
+     * @param name Header Exact, case-sensitive name of a header to find in the request.
+     *             If <code>name</code> is <code>null</code>, then the assertion will fail
+     *             if any header value contains <code>value</code>.
+     * @param value Case-sensitive text string that the header value must not contain.
      * @return Assertion result
      */
     AssertionResult assertMostRecentResponseHeaderDoesNotContain(Pattern url, String name, String value);
 
     /**
-     * Assert that headers of the most recent response found by url pattern do not contain specified value.
+     * Assert that the response header for the most recent request found by a given URL pattern
+     * have no values that contain a given text string.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param value Header value
+     * @param value Case-sensitive text string that no header value may contain.
      * @return Assertion result
      */
     default AssertionResult assertMostRecentResponseHeaderDoesNotContain(Pattern url, String value) {
@@ -871,29 +883,35 @@ public interface BrowserUpProxy {
     }
 
     /**
-     * Assert that if the most recent response found by url pattern has header with name
-     * found by name pattern - it's value should match value pattern.
+     * Assert that the response header for the most recent request found by a given URL pattern contains
+     * a given header name whose header value matches a given pattern.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param name Regular expression match of header name to find.
-     * @param value Regular expression match of header value.
+     * @param namePattern Regular expression match of header name to find in the request.
+     *             If <code>name</code> is <code>null</code>, then any request header whose value matches
+     *             the given <code>value</code> pattern will satisfy the assertion.
+     *             If multiple header names are found, then any single matching request
+     *             header whose value matches the given <code>value</code> pattern will satisfy the assertion.
+     * @param valuePattern Regular expression match of header value.
      * @return Assertion result
      */
-    AssertionResult assertMostRecentResponseHeaderMatches(Pattern url, Pattern name, Pattern value);
+    AssertionResult assertMostRecentResponseHeaderMatches(Pattern url, Pattern namePattern, Pattern valuePattern);
 
     /**
-     * Assert that all headers of the most recent response found by url pattern have values matching value pattern.
+     * Assert that the response header for the most recent request found
+     * by a given URL pattern contains at least one header value that matches a given pattern.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param value Regular expression match of header value.
+     * @param valuePattern Regular expression match of header value.
      * @return Assertion result
      */
-    default AssertionResult assertMostRecentResponseHeaderMatches(Pattern url, Pattern value) {
-        return assertMostRecentResponseHeaderMatches(url, null, value);
+    default AssertionResult assertMostRecentResponseHeaderMatches(Pattern url, Pattern valuePattern) {
+        return assertMostRecentResponseHeaderMatches(url, null, valuePattern);
     }
 
     /**
-     * Assert that content length of the most recent response found by url pattern does not exceed max value.
+     * Assert that the response content length of the most recent request
+     * found by a given URL pattern is less than or equal to a given number of bytes.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
      * @param max Max length of content, inclusive
@@ -903,14 +921,14 @@ public interface BrowserUpProxy {
 
     /**
      * Assert that all responses of current step have specified status.
-     * @param status Expected http status
+     * @param status Exact HTTP response status code. For example, <code>200</code>.
      * @return Assertion result
      */
     AssertionResult assertResponseStatusCode(Integer status);
 
     /**
      * Assert that all responses of current step have statuses belonging to the same class.
-     * @param clazz Http status class
+     * @param clazz HTTP status class
      * @return Assertion result
      */
     AssertionResult assertResponseStatusCode(HttpStatusClass clazz);
@@ -919,7 +937,7 @@ public interface BrowserUpProxy {
      * Assert that all responses found by url pattern have specified http status.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param status Http status
+     * @param status Exact HTTP response status code. For example, <code>200</code>.
      * @return Assertion result
      */
     AssertionResult assertResponseStatusCode(Pattern url, Integer status);
@@ -928,39 +946,40 @@ public interface BrowserUpProxy {
      * Assert that all responses found by url pattern have statuses belonging to the same class.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param clazz Http status class
+     * @param clazz HTTP status class
      * @return Assertion result
      */
     AssertionResult assertResponseStatusCode(Pattern url, HttpStatusClass clazz);
 
     /**
-     * Assert that the most recent response has specified status.
-     * @param status Http status
+     * Assert that the response of the most recent request found by a given URL pattern has a given HTTP status code.
+     * @param status Exact HTTP response status code. For example, <code>200</code>.
      * @return Assertion result
      */
     AssertionResult assertMostRecentResponseStatusCode(Integer status);
 
     /**
-     * Assert that the most recent response has status belonging to specified class.
-     * @param clazz Http status class
+     * Assert that the most recent response found by a given URL pattern has status belonging to HTTP status class.
+     * @param clazz HTTP status class
      * @return Assertion result
      */
     AssertionResult assertMostRecentResponseStatusCode(HttpStatusClass clazz);
 
     /**
-     * Assert that the most recent response found by url pattern has specified status.
+     * Assert that the most recent response has a given HTTP status code.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param status Http status
+     * @param status Exact HTTP response status code. For example, <code>200</code>.
      * @return Assertion result
      */
     AssertionResult assertMostRecentResponseStatusCode(Pattern url, Integer status);
 
     /**
-     * Assert that the most recent response found by url pattern has status belonging to specified class.
+     * Assert that the response of the most recent request found by a given URL pattern
+     * has an HTTP status code belonging to a given HTTP status class.
      * @param url Regular expression match of URL to find.
      *            See examples {@link com.browserup.bup.BrowserUpProxy#findEntries(java.util.regex.Pattern)}
-     * @param clazz Http status class
+     * @param clazz HTTP status class
      * @return Assertion result
      */
     AssertionResult assertMostRecentResponseStatusCode(Pattern url, HttpStatusClass clazz);

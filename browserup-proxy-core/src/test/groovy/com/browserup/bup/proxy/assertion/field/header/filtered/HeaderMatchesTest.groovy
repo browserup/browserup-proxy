@@ -36,32 +36,21 @@ class HeaderMatchesTest extends FilteredHeaderBaseTest {
 
         def failedRequests = result.failedRequests
 
-        assertThat('Expected to get both assertion entries', failedRequests, Matchers.hasSize(2))
+        assertThat('Expected to get one assertion entry', failedRequests, Matchers.hasSize(1))
 
-        def entryCorrespondingSecondRequest = failedRequests.find { it.url.contains(SECOND_URL_PATH) }
-
-        assertThat(
-                'Expected assertion entry corresponding second request to have second header name mentioned in message',
-                entryCorrespondingSecondRequest.message, containsString(SECOND_HEADER_NAME))
+        assertThat('Expected failed assertion entry to contain second url path',
+                failedRequests.get(0).url, containsString(SECOND_URL_PATH))
     }
 
     @Test
-    void urlFilterMatchesFirstAndAnyHeaderNameIsUsedAndHeaderValueFilterMatchesFirstFails() {
+    void urlFilterMatchesFirstAndAnyHeaderNameIsUsedAndHeaderValueFilterMatchesFirstPasses() {
         mockAndSendRequestsToMockedServer(FIRST_HEADER, SECOND_HEADER)
 
         def result = proxy.assertAnyUrlResponseHeaderMatches(
                 URL_PATTERN_TO_MATCH_FIRST,
                 HEADER_VALUE_PATTERN_TO_MATCH_FIRST)
 
-        assertAssertionFailed(result)
-
-        def failedRequests = result.failedRequests
-
-        assertThat('Expected to get one assertion entry', failedRequests, Matchers.hasSize(1))
-
-        assertThat(
-                'Expected assertion entry corresponding first request not to have first header name mentioned in message',
-                failedRequests.get(0).message, not(containsString(FIRST_HEADER_NAME)))
+        assertAssertionPassed(result)
     }
 
     @Test

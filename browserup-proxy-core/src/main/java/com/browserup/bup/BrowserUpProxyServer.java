@@ -1172,7 +1172,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     public AssertionResult assertAnyUrlResponseHeaderMatches(Pattern url, Pattern namePattern, Pattern valuePattern) {
         HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
         HarEntryAssertion assertion = namePattern == null ?
-                new HeadersMatchAssertion(valuePattern) :
+                new AtLeastOneHeaderMatchesAssertion(valuePattern) :
                 new FilteredHeadersMatchAssertion(namePattern, valuePattern);
 
         return checkAssertion(supplier, assertion);
@@ -1275,7 +1275,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     public AssertionResult assertMostRecentResponseHeaderMatches(Pattern url, Pattern name, Pattern value) {
         HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
         HarEntryAssertion assertion = name == null ?
-                new HeadersMatchAssertion(value) :
+                new AtLeastOneHeaderMatchesAssertion(value) :
                 new FilteredHeadersMatchAssertion(name, value);
 
         return checkAssertion(supplier, assertion);
