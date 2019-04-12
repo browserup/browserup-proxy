@@ -95,6 +95,24 @@ class WithRunningProxyRestTest {
         Awaitility.await().atMost(5, TimeUnit.SECONDS).until({ -> proxyManager.get().size() > 0 })
 
         LOG.debug("BrowserUp Proxy server is started successfully")
+
+        waitForProxyServer()
+    }
+
+    def waitForProxyServer() {
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until({ ->
+            def successful = false
+            proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+                uri.path = "/proxy"
+                response.success = { _, reader ->
+                    successful = true
+                }
+                response.failure = { _, reader ->
+                    successful = false
+                }
+            }
+            return successful
+        })
     }
 
     HTTPBuilder getTargetServerClient() {

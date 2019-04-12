@@ -39,8 +39,6 @@ abstract class ProxyResourceTest extends ProxyManagerTest {
     void setUpProxyResource() {
         setUpMockServer()
 
-        sleep(2000)
-
         BrowserUpProxyServer proxy = proxyManager.create(0)
         proxyPort = proxy.port
 
