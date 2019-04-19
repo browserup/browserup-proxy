@@ -57,22 +57,7 @@ uploadArchives {
 dependencies {
     implementation project(':browserup-proxy-mitm')
 
-    implementation 'com.browserup:har-reader:3.0.0-SNAPSHOT'
-    implementation 'com.browserup:littleproxy:2.0.0-SNAPSHOT'
-
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
-    // Needed by org.littleshoot.proxy JAR
-    implementation 'org.apache.commons:commons-lang3:3.5'
-
-    // We haven't upgraded to this:
-    // implementation('org.littleshoot:littleproxy:1.1.2')
-    // because it still uses Guava 23. We should fork it some day.
-    //implementation('com.browserup.bup:littleproxy:1.1.0-beta-bup-15') {
-    // Using our own fork now, build it and put it in the lib/ dir
-    //    implementation('org.littleshoot:littleproxy:1.1.2') {
-    //        exclude(module: 'barchart-udt-bundle')
-    //        exclude(module: 'commons-cli')
-    //    }
 
     implementation 'com.fasterxml.jackson.core:jackson-core:2.8.6'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.8.6'
@@ -89,6 +74,7 @@ dependencies {
     implementation 'org.seleniumhq.selenium:selenium-api:3.141.59'
     implementation 'org.slf4j:jcl-over-slf4j:1.7.22'
     implementation 'org.slf4j:slf4j-api:1.7.22'
+    implementation 'xyz.rogfam:littleproxy:2.0.0-beta-3'
 
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.codehaus.groovy:groovy-all:2.4.16'

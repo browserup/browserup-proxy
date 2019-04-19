@@ -48,6 +48,7 @@ public class ClientUtil {
      * @return a new DnsJavaResolver
      * @deprecated The dnsjava resolver has been deprecated in favor of the standard JVM resolver and will be removed in BUP &gt;2.1.
      */
+    @Deprecated
     public static AdvancedHostResolver createDnsJavaResolver() {
         return new DnsJavaResolver();
     }
@@ -60,6 +61,7 @@ public class ClientUtil {
      * @return a new ChainedHostResolver that resolves addresses first using a DnsJavaResolver, then using a NativeCacheManipulatingResolver
      * @deprecated The dnsjava resolver has been deprecated in favor of the standard JVM resolver and will be removed in BUP &gt;2.1.
      */
+    @Deprecated
     public static AdvancedHostResolver createDnsJavaWithNativeFallbackResolver() {
         return new ChainedHostResolver(ImmutableList.of(new DnsJavaResolver(), new NativeCacheManipulatingResolver()));
     }
