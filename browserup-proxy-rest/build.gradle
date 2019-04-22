@@ -57,8 +57,6 @@ uploadArchives {
 dependencies {
     implementation project(':browserup-proxy-core')
 
-    implementation 'com.browserup:har-reader:3.0.0-SNAPSHOT'
-
     implementation 'com.google.guava:guava:27.0.1-jre'
     implementation 'com.google.inject:guice:4.2.2'
     implementation 'com.google.inject.extensions:guice-servlet:4.2.2'
@@ -72,7 +70,6 @@ dependencies {
     implementation 'org.apache.commons:commons-lang3:3.8.1'
 
     testImplementation project(':browserup-proxy-mitm')
-    testImplementation 'com.browserup:littleproxy:2.0.0-SNAPSHOT'
 
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.apache.logging.log4j:log4j-api:2.8.2'
@@ -85,4 +82,5 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:2.23.4'
     testImplementation 'org.seleniumhq.selenium:selenium-api:3.4.0'
     testImplementation 'org.awaitility:awaitility:3.1.6'
+    testImplementation 'xyz.rogfam:littleproxy:2.0.0-beta-3'
 }

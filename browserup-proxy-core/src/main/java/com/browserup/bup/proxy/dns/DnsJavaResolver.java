@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @deprecated The dnsjava resolver has been deprecated in favor of the standard JVM resolver and will be removed in BUP &gt;2.1.
  */
+@Deprecated
 public class DnsJavaResolver extends AbstractHostNameRemapper implements AdvancedHostResolver {
     private static final Logger log = LoggerFactory.getLogger(DnsJavaResolver.class);
 
