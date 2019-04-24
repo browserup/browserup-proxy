@@ -378,18 +378,22 @@ The BrowserUpProxyServer implementation uses native DNS resolution by default, b
 
 ## Building the latest from source
 
-You'll need maven (`brew install maven` if you're on OS X):
+You'll need `gradle`. Please see [here](https://docs.gradle.org/current/userguide/installation.html) how to install gradle on your system.  
+    `[~]$ gradle build --info`
 
-    [~]$ mvn -DskipTests
+Also you can use gradle wrapper:  
+    `[~]$ ./gradlew build --info`
 
-You'll find the standalone BrowserUp Proxy distributable zip at `browserup-dist/target/browserup-proxy-3.0.0-beta-bin.zip`. Unzip the contents and run the `browserup-proxy` or `browserup-proxy.bat` files in the `bin` directory.
-
-When you build the latest code from source, you'll have access to the latest snapshot release. To use the SNAPSHOT version in your code, modify the version in your pom:
+When you build the latest code from source, you'll have access to the latest snapshot release. To use the SNAPSHOT version in your code, modify the version in your maven pom:
 ```xml
     <dependency>
-        <groupId>com.browserup.bup</groupId>
-        <artifactId>browserup-core</artifactId>
-        <version>3.0.0-beta</version>
+        <groupId>com.browserup</groupId>
+        <artifactId>browserup-proxy-core</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
         <scope>test</scope>
     </dependency>
+```
+Or for gradle:
+```yml
+testImplementation 'com.browserup:browserup-proxy-core:1.0.0-SNAPSHOT'
 ```
