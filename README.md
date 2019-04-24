@@ -153,6 +153,7 @@ system properties will be used to specify the upstream proxy.
 
 ### Embedded Mode
 
+**New in 2.1:** New Embedded Mode module
 
 BrowserUp Proxy separates the Embedded Mode and REST API into two modules. If you only need Embedded Mode functionality, add the `BrowserUp-core` artifact as a dependency. The REST API artifact is `BrowserUp-rest`.
 
