@@ -3,7 +3,7 @@
 BrowserUp Proxy allows you to manipulate HTTP requests and responses, capture HTTP content, and export performance data as a [HAR file](http://www.softwareishard.com/blog/har-12-spec/).
 BrowserUp Proxy works well as a standalone proxy server, but it is especially useful when embedded in Selenium tests.
 
-BrowserUp Proxy is originally forked from [BrowserMobProxy](https://github.com/lightbody/browsermob-proxy) and is powered by [LittleProxy](https://github.com/adamfisk/LittleProxy). 
+BrowserUp Proxy is originally forked from [BrowserMobProxy](https://github.com/lightbody/browsermob-proxy) and is powered by [LittleProxy](https://github.com/mrog/LittleProxy). 
 See [CHANGELOG.md] for updates.
 
 If you're running BrowserUp Proxy within a Java application or Selenium test, get started with [Embedded Mode](#getting-started-embedded-mode). If you want to run BUP from the
@@ -13,9 +13,9 @@ command line as a standalone proxy, start with [Standalone](#getting-started-sta
 To use BrowserUp Proxy in your tests or application, add the `browserup-proxy-core` dependency to your pom:
 ```xml
     <dependency>
-        <groupId>com.browserup.bup</groupId>
+        <groupId>com.browserup</groupId>
         <artifactId>browserup-proxy-core</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.0</version>
         <scope>test</scope>
     </dependency>
 ```
@@ -23,7 +23,7 @@ To use BrowserUp Proxy in your tests or application, add the `browserup-proxy-co
 Start the proxy:
 ```java
     BrowserUpProxy proxy = new BrowserUpProxyServer();
-    proxy.start(0);
+    proxy.start();
     int port = proxy.getPort(); // get the JVM-assigned port
     // Selenium or HTTP client configuration goes here
 ```
@@ -63,9 +63,9 @@ The proxy is programmatically controlled via a REST interface or by being embedd
 
 ### REST API
 
-To get started, first start the proxy by running `BrowserUp-proxy` or `BrowserUp-proxy.bat` in the bin directory:
+To get started, first start the proxy by running `browserup-proxy` or `browserup-proxy.bat` in the bin directory:
 
-    $ sh BrowserUp-proxy -port 8080
+    $ sh browserup-proxy -port 8080
     INFO 05/31 03:12:48 o.b.p.Main           - Starting up...
     2011-05-30 20:12:49.517:INFO::jetty-7.3.0.v20110203
     2011-05-30 20:12:49.689:INFO::started o.e.j.s.ServletContextHandler{/,null}
@@ -153,12 +153,12 @@ system properties will be used to specify the upstream proxy.
 
 ### Embedded Mode
 
-BrowserUp Proxy separates the Embedded Mode and REST API into two modules. If you only need Embedded Mode functionality, add the `BrowserUp-core` artifact as a dependency. The REST API artifact is `BrowserUp-rest`.
+BrowserUp Proxy separates the Embedded Mode and REST API into two modules. If you only need Embedded Mode functionality, add the `browserup-core` artifact as a dependency. The REST API artifact is `browserup-rest`.
 
 If you're using Java and Selenium, the easiest way to get started is to embed the project directly in your test. First, you'll need to make sure that all the dependencies are imported in to the project. You can find them in the *lib* directory. Or, if you're using Maven, you can add this to your pom:
 ```xml
     <dependency>
-        <groupId>com.browserup.bup</groupId>
+        <groupId>com.browserup</groupId>
         <artifactId>browserup-proxy-core</artifactId>
         <version>1.0.0/version>
         <scope>test</scope>
@@ -168,7 +168,7 @@ If you're using Java and Selenium, the easiest way to get started is to embed th
 Once done, you can start a proxy using `com.browserup.bup.BrowserUpProxy`:
 ```java
     BrowserUpProxy proxy = new BrowserUpProxyServer();
-    proxy.start(0);
+    proxy.start();
     // get the JVM-assigned port and get to work!
     int port = proxy.getPort();
     //...
@@ -184,7 +184,7 @@ BrowserUp Proxy makes it easy to use a proxy in Selenium tests:
 ```java
     // start the proxy
     BrowserUpProxy proxy = new BrowserUpProxyServer();
-    proxy.start(0);
+    proxy.start();
 
     // get the Selenium proxy object
     Proxy seleniumProxy = ClientUtil.createSeleniumProxy(proxy);
