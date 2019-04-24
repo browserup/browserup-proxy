@@ -26,6 +26,8 @@ uploadArchives {
 
             pom.project {
                 name 'browserup-proxy-rest'
+                description 'BrowserUp Proxy - REST'
+                url 'https://github.com/browserup/browserup-proxy'
                 packaging 'jar'
 
                 scm {
