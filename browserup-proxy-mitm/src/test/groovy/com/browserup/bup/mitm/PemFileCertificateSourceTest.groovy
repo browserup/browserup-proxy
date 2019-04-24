@@ -15,6 +15,7 @@ import org.junit.rules.TemporaryFolder
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
+import static com.browserup.bup.mitm.test.util.CertificateTestUtil.*
 import static org.junit.Assert.assertNotNull
 import static org.junit.Assume.assumeTrue
 
@@ -33,9 +34,9 @@ class PemFileCertificateSourceTest {
         encryptedPrivateKeyFile = tmpDir.newFile("encrypted-private-key.key")
         unencryptedPrivateKeyFile = tmpDir.newFile("unencrypted-private-key.key")
 
-        Files.copy(KeyStoreFileCertificateSourceTest.getResourceAsStream("/net/lightbody/bup/mitm/certificate.crt"), certificateFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
-        Files.copy(KeyStoreFileCertificateSourceTest.getResourceAsStream("/net/lightbody/bup/mitm/encrypted-private-key.key"), encryptedPrivateKeyFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
-        Files.copy(KeyStoreFileCertificateSourceTest.getResourceAsStream("/net/lightbody/bup/mitm/unencrypted-private-key.key"), unencryptedPrivateKeyFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+        Files.copy(KeyStoreFileCertificateSourceTest.getResourceAsStream("/com/browserup/bup/mitm/certificate.crt"), certificateFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+        Files.copy(KeyStoreFileCertificateSourceTest.getResourceAsStream("/com/browserup/bup/mitm/encrypted-private-key.key"), encryptedPrivateKeyFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+        Files.copy(KeyStoreFileCertificateSourceTest.getResourceAsStream("/com/browserup/bup/mitm/unencrypted-private-key.key"), unencryptedPrivateKeyFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
     }
 
     @Test
@@ -47,7 +48,7 @@ class PemFileCertificateSourceTest {
         CertificateAndKey certificateAndKey = pemFileCertificateSource.load()
         assertNotNull(certificateAndKey)
 
-        CertificateTestUtil.verifyTestRSACertWithCNandO(certificateAndKey)
+        verifyTestRSACertWithCNandO(certificateAndKey)
     }
 
     @Test
@@ -57,7 +58,7 @@ class PemFileCertificateSourceTest {
         CertificateAndKey certificateAndKey = pemFileCertificateSource.load()
         assertNotNull(certificateAndKey)
 
-        CertificateTestUtil.verifyTestRSACertWithCNandO(certificateAndKey)
+        verifyTestRSACertWithCNandO(certificateAndKey)
     }
 
     @Test(expected = ImportException)
