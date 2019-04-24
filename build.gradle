@@ -10,8 +10,8 @@ configurations.all {
         // it uses org.littleshoot.proxy.impl.ProxyToServerConnection.addressFor
         // which calls com.google.common.net.HostAndPort.getHost(),
         // which is not in 19.
-        // https://github.com/lightbody/browsermob-proxy/issues/638
-        // https://github.com/lightbody/browsermob-proxy/issues/398
+        // https://github.com/lightbody/BrowserMob-proxy/issues/638
+        // https://github.com/lightbody/BrowserMob-proxy/issues/398
         // .....
         // UPDATE Jan 21 2019: I'm upgrading to Guava 22, and will sort out upstream Minion
         // conflicts later. BrowserUpDriver _should_ be allowed to use whatever libs it wants.

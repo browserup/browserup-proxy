@@ -784,7 +784,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         long responseReceivedNanos = System.nanoTime();
 
         // like the wait time, the receive time requires that the serverToProxyResponseReceiving() method be called before this method is invoked.
-        // typically that should happen, but it has been reported (https://github.com/lightbody/browsermob-proxy/issues/288) that it
+        // typically that should happen, but it has been reported (https://github.com/lightbody/BrowserMob-proxy/issues/288) that it
         // sometimes does not. therefore, to be safe, make sure responseReceiveStartedNanos is populated before setting the receive time.
         if (responseReceiveStartedNanos > 0L) {
             this.harEntry.getTimings().setReceive(responseReceivedNanos - responseReceiveStartedNanos, NANOSECONDS);

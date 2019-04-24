@@ -153,8 +153,6 @@ system properties will be used to specify the upstream proxy.
 
 ### Embedded Mode
 
-**New in 2.1:** New Embedded Mode module
-
 BrowserUp Proxy separates the Embedded Mode and REST API into two modules. If you only need Embedded Mode functionality, add the `BrowserUp-core` artifact as a dependency. The REST API artifact is `BrowserUp-rest`.
 
 If you're using Java and Selenium, the easiest way to get started is to embed the project directly in your test. First, you'll need to make sure that all the dependencies are imported in to the project. You can find them in the *lib* directory. Or, if you're using Maven, you can add this to your pom:
