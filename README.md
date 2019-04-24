@@ -9,7 +9,7 @@ If you're running BrowserUp Proxy within a Java application or Selenium test, ge
 command line as a standalone proxy, start with [Standalone](#getting-started-standalone).
 
 ### Getting started: Embedded Mode
-To use BrowserUp Proxy in your tests or application, add the `BrowserUp-core` dependency to your pom:
+To use BrowserUp Proxy in your tests or application, add the `browserup-proxy-core` dependency to your pom:
 ```xml
     <dependency>
         <groupId>com.browserup.bup</groupId>
@@ -50,17 +50,17 @@ For more information on the features available in the REST API, see [the REST AP
 
 ## Changes since 2.0.0
 
-The new [BrowserUpProxyServer class](BrowserUp-core/src/main/java/net/lightbody/bup/BrowserUpProxyServer.java) has replaced the legacy ProxyServer implementation. The legacy implementation is no longer actively supported; all new code should use `BrowserUpProxyServer`. We highly recommend that existing code migrate to the new implementation.
+The new [BrowserUpProxyServer class](browserup-proxy-core/src/main/java/com/browserup/bup/BrowserUpProxyServer.java) has replaced the legacy ProxyServer implementation. The legacy implementation is no longer actively supported; all new code should use `BrowserUpProxyServer`. We highly recommend that existing code migrate to the new implementation.
 
 The most important changes from 2.0 are:
 
 - [Separate REST API and Embedded Mode modules](#embedded-mode). Include only the functionality you need.
-- [New BrowserUpProxy interface](BrowserUp-core/src/main/java/net/lightbody/bup/BrowserUpProxy.java). The new interface will completely replace the legacy 2.0 ProxyServer contract in version 3.0 and higher.
+- [New BrowserUpProxy interface](browserup-proxy-core/src/main/java/com/browserup/bup/BrowserUpProxy.java). The new interface will completely replace the legacy 2.0 ProxyServer contract in version 3.0 and higher.
 - [LittleProxy support](#littleproxy-support). More stable and more powerful than the legacy Jetty back-end.
 
 ### New BrowserUpProxy API
 
-BrowserUp Proxy 2.1 includes a [new BrowserUpProxy interface](BrowserUp-core/src/main/java/net/lightbody/bup/BrowserUpProxy.java) to interact with BrowserUp Proxy programmatically. The new interface defines the functionality that BrowserUp Proxy will support in future releases (including 3.0+). To ease migration, both the legacy (Jetty-based) ProxyServer class and the new, LittleProxy-powered BrowserUpProxy class support the new BrowserUpProxy interface.
+BrowserUp Proxy 2.1 includes a [new BrowserUpProxy interface](browserup-proxy-core/src/main/java/com/browserup/bup/BrowserUpProxy.java) to interact with BrowserUp Proxy programmatically. The new interface defines the functionality that BrowserUp Proxy will support in future releases (including 3.0+). To ease migration, both the legacy (Jetty-based) ProxyServer class and the new, LittleProxy-powered BrowserUpProxy class support the new BrowserUpProxy interface.
 
 We _highly_ recommend migrating existing code to the BrowserUpProxy interface using the `BrowserUpProxyServer` class.
 
@@ -86,7 +86,7 @@ The legacy interface, implicitly defined by the ProxyServer class, has been extr
 
 LegacyProxyServer will not be supported after 3.0 is released, so we recommend migrating to the `BrowserUpProxy` interface as soon as possible. The new interface provides additional functionality and is compatible with both the legacy Jetty-based ProxyServer implementation [(with some exceptions)](new-interface-compatibility.md) and the new LittleProxy implementation.
 
-If you must continue using the legacy Jetty-based implementation, include the `BrowserUp-core-legacy` artifact instead of `BrowserUp-core`.
+If you must continue using the legacy Jetty-based implementation, include the `browserup-proxy-core-legacy` artifact instead of `browserup-proxy-core`.
 
 ## Features and Usage
 
@@ -198,13 +198,13 @@ system properties will be used to specify the upstream proxy.
 
 **New in 2.1:** New [BrowserUpProxy interface](#new-BrowserUpproxy-api) for Embedded Mode
 
-BrowserUp Proxy 2.1 separates the Embedded Mode and REST API into two modules. If you only need Embedded Mode functionality, add the `BrowserUp-core` artifact as a dependency. The REST API artifact is `BrowserUp-rest`.
+BrowserUp Proxy 2.1 separates the Embedded Mode and REST API into two modules. If you only need Embedded Mode functionality, add the `browserup-proxy-core` artifact as a dependency. The REST API artifact is `BrowserUp-rest`.
 
 If you're using Java and Selenium, the easiest way to get started is to embed the project directly in your test. First, you'll need to make sure that all the dependencies are imported in to the project. You can find them in the *lib* directory. Or, if you're using Maven, you can add this to your pom:
 ```xml
     <dependency>
         <groupId>com.browserup.bup</groupId>
-        <artifactId>BrowserUp-core</artifactId>
+        <artifactId>browserup-proxy-core</artifactId>
         <version>2.1.4</version>
         <scope>test</scope>
     </dependency>
@@ -358,7 +358,7 @@ Consult the Java API docs for more info.
 
 ### SSL Support
 
-**BrowserUp Proxy 2.1.0+ now supports full MITM:** For most users, MITM will work out-of-the-box with default settings. Install the [ca-certificate-rsa.cer](/BrowserUp-core/src/main/resources/sslSupport/ca-certificate-rsa.cer) file in your browser or HTTP client to avoid untrusted certificate warnings. Generally, it is safer to generate your own private key, rather than using the .cer files distributed with BrowserUp Proxy. See the [README file in the `mitm` module](/mitm/README.md) for instructions on generating or using your own root certificate and private key with MITM.
+**BrowserUp Proxy 2.1.0+ now supports full MITM:** For most users, MITM will work out-of-the-box with default settings. Install the [ca-certificate-rsa.cer](/browserup-proxy-core/src/main/resources/sslSupport/ca-certificate-rsa.cer) file in your browser or HTTP client to avoid untrusted certificate warnings. Generally, it is safer to generate your own private key, rather than using the .cer files distributed with BrowserUp Proxy. See the [README file in the `mitm` module](/mitm/README.md) for instructions on generating or using your own root certificate and private key with MITM.
 
 **Note: DO NOT** permanently install the .cer files distributed with BrowserUp Proxy in users' browsers. They should be used for testing only and must not be used with general web browsing.
 
@@ -374,7 +374,7 @@ When running in stand-alone mode, the proxy loads the default logging configurat
 
 ### DNS Resolution
 
-The BrowserUpProxyServer implementation uses native DNS resolution by default, but supports custom DNS resolution and advanced DNS manipulation. See the [ClientUtil](BrowserUp-proxy/BrowserUp-core/src/main/java/net/lightbody/bup/client/ClientUtil.java) class for information on DNS manipulation using the dnsjava resolver.
+The BrowserUpProxyServer implementation uses native DNS resolution by default, but supports custom DNS resolution and advanced DNS manipulation. See the [ClientUtil](browserup-proxy-core/src/main/java/com/browserup/bup/client/ClientUtil.java) class for information on DNS manipulation using the dnsjava resolver.
 
 ## Building the latest from source
 
