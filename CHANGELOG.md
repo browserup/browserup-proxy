@@ -16,3 +16,4 @@ Performance, Page, and Network Assertions against the HAR.
 - Modify every existing file by adding a header to ensure compliance with Apache License
 - Rename our fork to our own name, BrowserUp, as we will be investing in it heavily. 
     We have no relation to BrowserMob, which was a company acquired by Neustar in 2010.
+- Updates to the Readme to remove legacy proxyserver information
