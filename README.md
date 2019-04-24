@@ -3,7 +3,8 @@
 BrowserUp Proxy allows you to manipulate HTTP requests and responses, capture HTTP content, and export performance data as a [HAR file](http://www.softwareishard.com/blog/har-12-spec/).
 BrowserUp Proxy works well as a standalone proxy server, but it is especially useful when embedded in Selenium tests.
 
-The latest version of BrowserUp Proxy is 3.0.0-beta. BrowserUp Proxy is originally forked from [BrowserMobProxy](https://github.com/lightbody/browsermob-proxy) and is powered by [LittleProxy](https://github.com/adamfisk/LittleProxy).
+BrowserUp Proxy is originally forked from [BrowserMobProxy](https://github.com/lightbody/browsermob-proxy) and is powered by [LittleProxy](https://github.com/adamfisk/LittleProxy). 
+See [CHANGELOG.md] for updates.
 
 If you're running BrowserUp Proxy within a Java application or Selenium test, get started with [Embedded Mode](#getting-started-embedded-mode). If you want to run BUP from the
 command line as a standalone proxy, start with [Standalone](#getting-started-standalone).
@@ -32,7 +33,7 @@ Then configure your HTTP client to use a proxy running at the specified port.
 **Using with Selenium?** See the [Using with Selenium](#using-with-selenium) section.
 
 ### Getting started: Standalone
-To run in standalone mode from the command line, first download the latest release from the [releases page](https://github.com/lightbody/BrowserUp-proxy/releases), or [build the latest from source](#building-the-latest-from-source).
+To run in standalone mode from the command line, first download the latest release from the [releases page](https://github.com/browserup/browserup-proxy/releases), or [build the latest from source](#building-the-latest-from-source).
 
 Start the REST API:
 ```sh
@@ -48,45 +49,6 @@ Then create a proxy server instance:
 The "port" is the port of the newly-created proxy instance, so configure your HTTP client or web browser to use a proxy on the returned port.
 For more information on the features available in the REST API, see [the REST API documentation](#rest-api).
 
-## Changes since 2.0.0
-
-The new [BrowserUpProxyServer class](BrowserUp-core/src/main/java/net/lightbody/bup/BrowserUpProxyServer.java) has replaced the legacy ProxyServer implementation. The legacy implementation is no longer actively supported; all new code should use `BrowserUpProxyServer`. We highly recommend that existing code migrate to the new implementation.
-
-The most important changes from 2.0 are:
-
-- [Separate REST API and Embedded Mode modules](#embedded-mode). Include only the functionality you need.
-- [New BrowserUpProxy interface](BrowserUp-core/src/main/java/net/lightbody/bup/BrowserUpProxy.java). The new interface will completely replace the legacy 2.0 ProxyServer contract in version 3.0 and higher.
-- [LittleProxy support](#littleproxy-support). More stable and more powerful than the legacy Jetty back-end.
-
-### New BrowserUpProxy API
-
-BrowserUp Proxy 2.1 includes a [new BrowserUpProxy interface](BrowserUp-core/src/main/java/net/lightbody/bup/BrowserUpProxy.java) to interact with BrowserUp Proxy programmatically. The new interface defines the functionality that BrowserUp Proxy will support in future releases (including 3.0+). To ease migration, both the legacy (Jetty-based) ProxyServer class and the new, LittleProxy-powered BrowserUpProxy class support the new BrowserUpProxy interface.
-
-We _highly_ recommend migrating existing code to the BrowserUpProxy interface using the `BrowserUpProxyServer` class.
-
-### Using the LittleProxy implementation with 2.0.0 code
-
-The legacy interface, implicitly defined by the ProxyServer class, has been extracted into `com.browserup.bup.proxy.LegacyProxyServer` and is now officially deprecated. The new LittleProxy-based implementation will implement LegacyProxyServer for all 2.1.x releases. This means you can switch to the LittleProxy-powered implementation with minimal change to existing code ([with the exception of interceptors](#http-request-manipulation)):
-
-```java
-    // With the Jetty-based 2.0.0 release, BUP was created like this:
-    ProxyServer proxyServer = new ProxyServer();
-    proxyServer.start();
-    // [...]
-
-    // To use the LittleProxy-powered 2.1.4 release, simply change to
-    // the LegacyProxyServer interface and the adapter for the new
-    // LittleProxy-based implementation:
-    LegacyProxyServer proxyServer = new BrowserUpProxyServerLegacyAdapter();
-    proxyServer.start();
-    // Almost all deprecated 2.0.0 methods are supported by the
-    // new BrowserUpProxyServerLegacyAdapter implementation, so in most cases,
-    // no further code changes are necessary
-```
-
-LegacyProxyServer will not be supported after 3.0 is released, so we recommend migrating to the `BrowserUpProxy` interface as soon as possible. The new interface provides additional functionality and is compatible with both the legacy Jetty-based ProxyServer implementation [(with some exceptions)](new-interface-compatibility.md) and the new LittleProxy implementation.
-
-If you must continue using the legacy Jetty-based implementation, include the `BrowserUp-core-legacy` artifact instead of `BrowserUp-core`.
 
 ## Features and Usage
 
@@ -100,8 +62,6 @@ The proxy is programmatically controlled via a REST interface or by being embedd
  - automatic BASIC authorization
 
 ### REST API
-
-**New in 2.1:** LittleProxy is the default implementation of the REST API. You may specify `--use-littleproxy false` to disable LittleProxy in favor of the legacy Jetty 5-based implementation.
 
 To get started, first start the proxy by running `BrowserUp-proxy` or `BrowserUp-proxy.bat` in the bin directory:
 
@@ -156,7 +116,6 @@ Empties the DNS cache | DELETE | */proxy/[port]/dns/cache* ||
 | [REST API interceptors with LittleProxy](#interceptorsRESTapiLP) |||
 |Describe your own request interception | POST | */proxy/[port]/filter/request* | A string which determinates interceptor rules. See more [here](#interceptorsRESTapiLPRequestFilter) |
 |Describe your own response interception | POST | */proxy/[port]/filter/response* | A string which determinates interceptor rules. See more [here](#interceptorsRESTapiLPResponseFilter) |
-| [REST API with Legacy interceptors](#interceptorsRESTapiLegacy) ||||
 |Describe your own request interception | POST | */proxy/[port]/interceptor/request* | A string which determinates interceptor rules. See more [here](#interceptorsRESTapiLegacy) |
 |Describe your own response interception | POST | */proxy/[port]/interceptor/response* | A string which determinates interceptor rules. See more [here](#interceptorsRESTapiLegacy) |
 
@@ -194,18 +153,15 @@ system properties will be used to specify the upstream proxy.
 
 ### Embedded Mode
 
-**New in 2.1:** New Embedded Mode module
 
-**New in 2.1:** New [BrowserUpProxy interface](#new-BrowserUpproxy-api) for Embedded Mode
-
-BrowserUp Proxy 2.1 separates the Embedded Mode and REST API into two modules. If you only need Embedded Mode functionality, add the `BrowserUp-core` artifact as a dependency. The REST API artifact is `BrowserUp-rest`.
+BrowserUp Proxy separates the Embedded Mode and REST API into two modules. If you only need Embedded Mode functionality, add the `BrowserUp-core` artifact as a dependency. The REST API artifact is `BrowserUp-rest`.
 
 If you're using Java and Selenium, the easiest way to get started is to embed the project directly in your test. First, you'll need to make sure that all the dependencies are imported in to the project. You can find them in the *lib* directory. Or, if you're using Maven, you can add this to your pom:
 ```xml
     <dependency>
         <groupId>com.browserup.bup</groupId>
         <artifactId>BrowserUp-core</artifactId>
-        <version>2.1.4</version>
+        <version>1.0.0/version>
         <scope>test</scope>
     </dependency>
 ```
@@ -258,9 +214,9 @@ BrowserUp Proxy makes it easy to use a proxy in Selenium tests:
 created by `createSeleniumProxy()` to point to the hostname of the machine that your test is running on. You can also run a standalone
 BrowserUp Proxy instance on a separate machine and configure the Selenium Proxy object to use that proxy.
 
-#### 2.1.0+ (LittleProxy) interceptors
+#### (LittleProxy) interceptors
 
-There are four new methods to support request and response interception in LittleProxy:
+There are four methods to support request and response interception in LittleProxy:
 
   - `addRequestFilter`
   - `addResponseFilter`
@@ -300,7 +256,7 @@ For most use cases, including inspecting and modifying requests/responses, `addR
         });
 ```
 
-With Java 8, the syntax is even more concise:
+With Java 8, the syntax is more concise:
 ```java
         proxy.addResponseFilter((response, contents, messageInfo) -> {
             if (/*...some filtering criteria...*/) {
@@ -337,28 +293,9 @@ Javascript response filters have access to the variables `response` (type `io.ne
 curl -i -X POST -H 'Content-Type: text/plain' -d "contents.setTextContents('<html><body>Response successfully intercepted</body></html>');" http://localhost:8080/proxy/8081/filter/response
 ```
 
-#### Legacy interceptors
-
-If you are using the legacy ProxyServer implementation, you can manipulate the requests like so:
-```java
-    BrowserUpProxy server = new ProxyServer();
-    ((LegacyProxyServer)server).addRequestInterceptor(new RequestInterceptor() {
-        @Override
-        public void process(BrowserUpHttpRequest request, Har har) {
-            request.getMethod().removeHeaders("User-Agent");
-            request.getMethod().addHeader("User-Agent", "Bananabot/1.0");
-        }
-    });
-```
-<a name="interceptorsRESTapiLegacy"></a>You can also POST a JavaScript payload to `/:port/interceptor/request` and `/:port/interceptor/response` using the REST interface. The functions will have a `request`/`response` variable, respectively, and a `har` variable (which may be null if a HAR isn't set up yet). The JavaScript code will be run by [Rhino](https://github.com/mozilla/rhino) and have access to the same Java API in the example above:
-
-    [~]$ curl -X POST -H 'Content-Type: text/plain' -d 'request.getMethod().removeHeaders("User-Agent");' http://localhost:8080/proxy/8081/interceptor/request
-
-Consult the Java API docs for more info.
-
 ### SSL Support
 
-**BrowserUp Proxy 2.1.0+ now supports full MITM:** For most users, MITM will work out-of-the-box with default settings. Install the [ca-certificate-rsa.cer](/BrowserUp-core/src/main/resources/sslSupport/ca-certificate-rsa.cer) file in your browser or HTTP client to avoid untrusted certificate warnings. Generally, it is safer to generate your own private key, rather than using the .cer files distributed with BrowserUp Proxy. See the [README file in the `mitm` module](/mitm/README.md) for instructions on generating or using your own root certificate and private key with MITM.
+**BrowserUp Proxy supports full MITM:** For most users, MITM will work out-of-the-box with default settings. Install the [ca-certificate-rsa.cer](/BrowserUp-core/src/main/resources/sslSupport/ca-certificate-rsa.cer) file in your browser or HTTP client to avoid untrusted certificate warnings. Generally, it is safer to generate your own private key, rather than using the .cer files distributed with BrowserUp Proxy. See the [README file in the `mitm` module](/mitm/README.md) for instructions on generating or using your own root certificate and private key with MITM.
 
 **Note: DO NOT** permanently install the .cer files distributed with BrowserUp Proxy in users' browsers. They should be used for testing only and must not be used with general web browsing.
 
@@ -366,7 +303,10 @@ If you're doing testing with Selenium, you'll want to make sure that the browser
 
 ### NodeJS Support
 
-NodeJS bindings for browswerup-proxy are available [here](https://github.com/zzo/BrowserUp-node).  Built-in support for [Selenium](http://seleniumhq.org) or use [CapserJS-on-PhantomJS](http://casperjs.org) or anything else to drive traffic for HAR generation.
+We are compatible with the browsermob proxy, so you could probably fork this and get it going
+[https://www.npmjs.com/package/browsermob-proxy-api]
+
+
 
 ### Logging
 
@@ -374,22 +314,8 @@ When running in stand-alone mode, the proxy loads the default logging configurat
 
 ### DNS Resolution
 
-The BrowserUpProxyServer implementation uses native DNS resolution by default, but supports custom DNS resolution and advanced DNS manipulation. See the [ClientUtil](BrowserUp-proxy/BrowserUp-core/src/main/java/net/lightbody/bup/client/ClientUtil.java) class for information on DNS manipulation using the dnsjava resolver.
+The BrowserUpProxyServer implementation uses native DNS resolution by default, but supports custom DNS resolution and advanced DNS manipulation. See the [ClientUtil](BrowserUp-proxy/BrowserUp-core/src/main/java/com/browserup/bup/client/ClientUtil.java) class for information on DNS manipulation using the dnsjava resolver.
 
 ## Building the latest from source
 
-You'll need maven (`brew install maven` if you're on OS X):
-
-    [~]$ mvn -DskipTests
-
-You'll find the standalone BrowserUp Proxy distributable zip at `browserup-dist/target/browserup-proxy-3.0.0-beta-bin.zip`. Unzip the contents and run the `browserup-proxy` or `browserup-proxy.bat` files in the `bin` directory.
-
-When you build the latest code from source, you'll have access to the latest snapshot release. To use the SNAPSHOT version in your code, modify the version in your pom:
-```xml
-    <dependency>
-        <groupId>com.browserup.bup</groupId>
-        <artifactId>browserup-core</artifactId>
-        <version>3.0.0-beta</version>
-        <scope>test</scope>
-    </dependency>
-```
+TODO: ADD ME
