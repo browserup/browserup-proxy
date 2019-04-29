@@ -83,7 +83,7 @@ dependencies {
     testImplementation 'org.apache.logging.log4j:log4j-api:2.8'
     testImplementation 'org.apache.logging.log4j:log4j-core:2.8'
     testImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.8'
-    testImplementation 'org.eclipse.jetty:jetty-server:7.6.16.v20140903'
+    testImplementation 'org.eclipse.jetty:jetty-server:9.4.17.v20190418'
     testImplementation 'org.eclipse.jetty:jetty-servlet:7.6.16.v20140903'
     testImplementation 'org.eclipse.jetty:jetty-servlets:7.6.16.v20140903'
     testImplementation 'org.hamcrest:hamcrest:2.1'    
