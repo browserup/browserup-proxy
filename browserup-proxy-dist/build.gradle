@@ -72,7 +72,7 @@ dependencies {
     implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.8'
     implementation 'org.eclipse.jetty:jetty-server:7.3.0.v20110203'
     implementation 'org.eclipse.jetty:jetty-servlet:7.3.0.v20110203'
-    implementation 'org.javassist:javassist:3.21.0-GA'
+    implementation 'org.javassist:javassist:3.25.0-GA'
 }
 
 mainClassName = 'com.browserup.bup.proxy.Main'
