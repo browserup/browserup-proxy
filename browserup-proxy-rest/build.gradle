@@ -68,7 +68,7 @@ dependencies {
     implementation 'net.sf.jopt-simple:jopt-simple:5.0.4'
     implementation 'org.eclipse.jetty:jetty-server:7.3.0.v20110203'
     implementation 'org.eclipse.jetty:jetty-servlet:7.3.0.v20110203'
-    implementation 'org.slf4j:jcl-over-slf4j:1.7.25'
+    implementation 'org.slf4j:jcl-over-slf4j:1.7.26'
     implementation 'org.apache.commons:commons-lang3:3.9'
 
     testImplementation project(':browserup-proxy-mitm')
