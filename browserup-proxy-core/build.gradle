@@ -81,7 +81,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.codehaus.groovy:groovy-all:2.5.6'
     testImplementation 'org.apache.logging.log4j:log4j-api:2.8'
-    testImplementation 'org.apache.logging.log4j:log4j-core:2.8'
+    testImplementation 'org.apache.logging.log4j:log4j-core:2.11.2'
     testImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.8'
     testImplementation 'org.eclipse.jetty:jetty-server:7.6.16.v20140903'
     testImplementation 'org.eclipse.jetty:jetty-servlet:7.6.16.v20140903'

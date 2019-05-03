@@ -68,7 +68,7 @@ dependencies {
     implementation 'com.google.inject.extensions:guice-multibindings:4.2.2'
     implementation 'com.google.sitebricks:sitebricks:0.8.10'
     implementation 'org.apache.logging.log4j:log4j-api:2.8'
-    implementation 'org.apache.logging.log4j:log4j-core:2.8'
+    implementation 'org.apache.logging.log4j:log4j-core:2.11.2'
     implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.8'
     implementation 'org.eclipse.jetty:jetty-server:7.3.0.v20110203'
     implementation 'org.eclipse.jetty:jetty-servlet:7.3.0.v20110203'
