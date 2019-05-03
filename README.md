@@ -1,6 +1,6 @@
 # BrowserUp Proxy
 
-BrowserUp Proxy allows you to manipulate HTTP requests and responses, capture HTTP content, and export performance data as a [HAR file](http://www.softwareishard.com/blog/har-12-spec/).
+The BrowserUp Proxy allows you to manipulate HTTP requests and responses, capture HTTP content, and export performance data as a [HAR file](http://www.softwareishard.com/blog/har-12-spec/).
 BrowserUp Proxy works well as a standalone proxy server, but it is especially useful when embedded in Selenium tests.
 
 BrowserUp Proxy is originally forked from [BrowserMobProxy](https://github.com/lightbody/browsermob-proxy) and is powered by [LittleProxy](https://github.com/mrog/LittleProxy). 
