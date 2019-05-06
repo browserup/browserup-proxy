@@ -81,7 +81,7 @@ dependencies {
     testImplementation 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.2'
     testImplementation 'org.hamcrest:hamcrest:2.1'
     testImplementation 'org.hamcrest:hamcrest-library:2.1'
-    testImplementation 'org.mock-server:mockserver-netty:3.10.8'
+    testImplementation 'org.mock-server:mockserver-netty:5.5.4'
     testImplementation 'org.mockito:mockito-core:2.27.0'
     testImplementation 'org.seleniumhq.selenium:selenium-api:3.4.0'
     testImplementation 'org.awaitility:awaitility:3.1.6'
