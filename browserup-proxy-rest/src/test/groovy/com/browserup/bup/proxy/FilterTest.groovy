@@ -41,7 +41,7 @@ class FilterTest extends ProxyResourceTest {
                 request.headers().add('User-Agent', 'My-Custom-User-Agent-String 1.0');
                 '''
 
-        Request<String> mockRestRequest = createMockRestRequestWithEntity(requestFilterJavaScript)
+        Request mockRestRequest = createMockRestRequestWithEntity(requestFilterJavaScript)
 
         proxyResource.addRequestFilter(proxyPort, mockRestRequest)
 
@@ -79,7 +79,7 @@ class FilterTest extends ProxyResourceTest {
                 }
                 '''
 
-        Request<String> mockRestRequest = createMockRestRequestWithEntity(requestFilterJavaScript)
+        Request mockRestRequest = createMockRestRequestWithEntity(requestFilterJavaScript)
 
         proxyResource.addRequestFilter(proxyPort, mockRestRequest)
 
@@ -117,7 +117,7 @@ class FilterTest extends ProxyResourceTest {
                 }
                 '''
 
-        Request<String> mockRestRequest = createMockRestRequestWithEntity(responseFilterJavaScript)
+        Request mockRestRequest = createMockRestRequestWithEntity(responseFilterJavaScript)
 
         proxyResource.addResponseFilter(proxyPort, mockRestRequest)
 
@@ -150,14 +150,14 @@ class FilterTest extends ProxyResourceTest {
                 }
                 '''
 
-        Request<String> mockRestAddReqFilterRequest = createMockRestRequestWithEntity(requestFilterJavaScript)
+        Request mockRestAddReqFilterRequest = createMockRestRequestWithEntity(requestFilterJavaScript)
         proxyResource.addRequestFilter(proxyPort, mockRestAddReqFilterRequest)
 
         final String responseFilterJavaScript =
                 '''
                 contents.setTextContents(messageInfo.getOriginalRequest().getUri());
                 '''
-        Request<String> mockRestAddRespFilterRequest = createMockRestRequestWithEntity(responseFilterJavaScript)
+        Request mockRestAddRespFilterRequest = createMockRestRequestWithEntity(responseFilterJavaScript)
         proxyResource.addResponseFilter(proxyPort, mockRestAddRespFilterRequest)
 
         mockServer.when(request()
@@ -187,7 +187,7 @@ class FilterTest extends ProxyResourceTest {
                 this javascript won't compile!
                 '''
 
-        Request<String> mockRestAddReqFilterRequest = createMockRestRequestWithEntity(requestFilterJavaScript)
+        Request mockRestAddReqFilterRequest = createMockRestRequestWithEntity(requestFilterJavaScript)
 
         // mock the proxy so we can verify the addRequestFilter() method is never called
         def mockProxy = mock(BrowserUpProxyServer)
@@ -219,7 +219,7 @@ class FilterTest extends ProxyResourceTest {
                 this javascript won't compile!
                 '''
 
-        Request<String> mockRestAddRespFilterRequest = createMockRestRequestWithEntity(responseFilterJavaScript)
+        Request mockRestAddRespFilterRequest = createMockRestRequestWithEntity(responseFilterJavaScript)
 
         // mock the proxy so we can verify the addResponseFilter() method is never called
         def mockProxy = mock(BrowserUpProxyServer)
@@ -267,7 +267,7 @@ class FilterTest extends ProxyResourceTest {
                 shortCircuitRequest;
                 '''
 
-        Request<String> mockRestRequest = createMockRestRequestWithEntity(requestFilterJavaScript)
+        Request mockRestRequest = createMockRestRequestWithEntity(requestFilterJavaScript)
 
         proxyResource.addRequestFilter(proxyPort, mockRestRequest)
 

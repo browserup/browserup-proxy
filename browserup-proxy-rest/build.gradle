@@ -63,7 +63,7 @@ dependencies {
     implementation 'com.google.inject:guice:4.2.2'
     implementation 'com.google.inject.extensions:guice-servlet:4.2.2'
     implementation 'com.google.inject.extensions:guice-multibindings:4.2.2'
-    implementation 'com.google.sitebricks:sitebricks:0.8.10'
+    implementation 'com.google.sitebricks:sitebricks:0.8.11'
     implementation 'io.netty:netty-all:4.1.36.Final'
     implementation 'net.sf.jopt-simple:jopt-simple:5.0.4'
     implementation 'org.eclipse.jetty:jetty-server:7.3.0.v20110203'
