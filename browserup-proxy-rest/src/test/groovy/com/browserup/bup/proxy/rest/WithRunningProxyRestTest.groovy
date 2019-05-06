@@ -15,11 +15,11 @@ import com.google.inject.Injector
 import com.google.inject.servlet.GuiceServletContextListener
 import com.google.sitebricks.SitebricksModule
 import groovyx.net.http.HTTPBuilder
+import groovyx.net.http.Method
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.awaitility.Awaitility
 import org.awaitility.Duration
-import org.eclipse.jetty.http.HttpMethods
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.junit.After
@@ -144,7 +144,7 @@ class WithRunningProxyRestTest {
 
     protected void mockTargetServerResponse(String url, String responseBody, Delay delay=Delay.milliseconds(0)) {
         targetMockedServer.when(request()
-                .withMethod(HttpMethods.GET)
+                .withMethod(Method.GET.toString())
                 .withPath("/${url}"),
                 Times.exactly(1))
                 .respond(response()
