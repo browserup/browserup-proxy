@@ -57,8 +57,8 @@ abstract class ProxyResourceTest extends ProxyManagerTest {
     /**
      * Creates a mock sitebricks REST request with the specified entity body.
      */
-    static Request<String> createMockRestRequestWithEntity(String entityBody) {
-        Request<String> mockRestRequest = mock(Request)
+    static Request createMockRestRequestWithEntity(String entityBody) {
+        Request mockRestRequest = mock(Request)
         when(mockRestRequest.header("Content-Type")).thenReturn("text/plain; charset=utf-8")
         when(mockRestRequest.readTo(any(OutputStream))).then(new Answer<Object>() {
             @Override
