@@ -6,8 +6,6 @@ plugins {
     id 'application'
 }
 
-archivesBaseName = 'browserup-proxy-dist'
-
 uploadArchives {
     repositories {
         mavenDeployer {
@@ -23,16 +21,19 @@ uploadArchives {
                 }
             }
 
-            pom.project {
-                name 'browserup-proxy-dist'
-                description 'BrowserUp Proxy - Dist'
+            addFilter('distribution') {artifact, file ->
+                file.name.contains('.zip') || file.name.contains('.tar')
+            }
+            pom('distribution').artifactId = 'browserup-proxy'
+            pom('distribution').project {
+                name 'browserup-proxy'
+                description 'BrowserUp Proxy'
                 url 'https://github.com/browserup/browserup-proxy'
-                packaging 'jar'
 
                 scm {
                     connection 'scm:git:git@github.com:browserup/browserup-proxy.git'
                     developerConnection 'scm:git:git@github.com:browserup/browserup-proxy.git'
-                    url 'https://github.com/browserup/browserup-proxy/tree/master/browserup-proxy-dist'
+                    url 'https://github.com/browserup/browserup-proxy'
                 }
 
                 licenses {
@@ -75,4 +76,19 @@ dependencies {
     implementation 'org.javassist:javassist:3.25.0-GA'
 }
 
+applicationName = 'browserup-proxy'
 mainClassName = 'com.browserup.bup.proxy.Main'
+
+distributions {
+    main {
+        baseName = 'browserup-proxy'
+        contents {
+            from '../LICENSE'
+            from '../README.md'
+            into ('ssl') {
+                from '../browserup-proxy-core/src/main/resources/sslSupport'
+            }
+        }
+    }
+}
+
