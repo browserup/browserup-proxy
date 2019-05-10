@@ -8,8 +8,10 @@ plugins {
 
 archivesBaseName = 'browserup-proxy-dist'
 
+evaluationDependsOn(':browserup-proxy-rest')
+
 task customZip(type: Zip) {
-    baseName = archivesBaseName
+    baseName = 'browserup-proxy-dist-custom'
     from '../LICENSE'
     from '../README.md'
     from('../browserup-proxy-core/build/libs') {
