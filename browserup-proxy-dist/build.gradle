@@ -11,7 +11,7 @@ archivesBaseName = 'browserup-proxy-dist'
 evaluationDependsOn(':browserup-proxy-rest')
 
 task customZip(type: Zip) {
-    baseName = 'browserup-proxy-dist-custom'
+    baseName = 'browserup-proxy'
     from '../LICENSE'
     from '../README.md'
     from('../browserup-proxy-core/build/libs') {
