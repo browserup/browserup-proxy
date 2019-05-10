@@ -4,10 +4,39 @@
 
 plugins {
     id 'application'
-    id 'distribution'
 }
 
 archivesBaseName = 'browserup-proxy-dist'
+
+task customZip(type: Zip) {
+    baseName = archivesBaseName
+    from '../LICENSE'
+    from '../README.md'
+    from('../browserup-proxy-core/build/libs') {
+        include "*-sources.jar"
+        include "*-javadoc.jar"
+    }
+    from('../browserup-proxy-rest/build/libs') {
+        include "*-sources.jar"
+        include "*-javadoc.jar"
+    }
+    from ('../browserup-proxy-core/src/main/resources/sslSupport') {
+        into 'ssl-support'
+    }
+    from ('src/main/resources') {
+        into 'bin/conf'
+    }
+    from ('build/libs') {
+        include "*.jar"
+        exclude "*-sources.jar"
+        exclude "*-javadoc.jar"
+        into 'lib'
+    }
+}
+
+artifacts {
+    archives javadocJar, sourcesJar, customZip
+}
 
 uploadArchives {
     repositories {
@@ -51,31 +80,6 @@ uploadArchives {
                         email 'developers@browserup.com'
                     }
                 }
-            }
-        }
-    }
-}
-
-distributions {
-    custom {
-        contents {
-            from '../LICENSE'
-            from '../README.md'
-            from '../CHANGELOG.md'
-            from('../browserup-proxy-core/build/libs') {
-                include "*-sources.jar"
-                include "*-javadoc.jar"
-            }
-            from('../browserup-proxy-rest/build/libs') {
-                include "*-sources.jar"
-                include "*-javadoc.jar"
-            }
-            from('../browserup-proxy-rest/build/libs') {
-                include "*-sources.jar"
-                include "*-javadoc.jar"
-            }
-            from ('../browserup-proxy-core/src/main/resources/sslSupport') {
-                into 'ssl-support'
             }
         }
     }
