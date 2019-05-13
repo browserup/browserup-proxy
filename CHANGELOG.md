@@ -4,6 +4,10 @@
 
 Performance, Page, and Network Assertions against the HAR.
 
+# [1.1.0]
+- ZIP distribution with launch scripts, SSL certificates and keys
+- Dependency updates
+
 # [1.0.0]
 - Initial fork based on BrowserMob Proxy
 - HTTP/2 support via Netty 4.1.34 upgrade
