@@ -5,8 +5,6 @@
 package com.browserup.bup;
 
 import com.browserup.bup.assertion.model.AssertionResult;
-import com.browserup.bup.util.HttpStatusClass;
-import com.browserup.harreader.model.Har;
 import com.browserup.bup.filters.RequestFilter;
 import com.browserup.bup.filters.ResponseFilter;
 import com.browserup.bup.mitm.TrustSource;
@@ -14,6 +12,8 @@ import com.browserup.bup.proxy.BlacklistEntry;
 import com.browserup.bup.proxy.CaptureType;
 import com.browserup.bup.proxy.auth.AuthType;
 import com.browserup.bup.proxy.dns.AdvancedHostResolver;
+import com.browserup.bup.util.HttpStatusClass;
+import com.browserup.harreader.model.Har;
 import com.browserup.harreader.model.HarEntry;
 import org.littleshoot.proxy.HttpFiltersSource;
 import org.littleshoot.proxy.MitmManager;
@@ -870,14 +870,28 @@ public interface BrowserUpProxy {
     AssertionResult assertMostRecentResponseStatusCode(Pattern url, HttpStatusClass clazz);
 
     /**
-     * Assert that all images found on a page are not broken (have response status 200 OK).
+     * Assert that all images found on a page are not broken (have response status code < 400).
      * @return Assertion result
      */
     AssertionResult assertNoBrokenImages();
 
     /**
-     * Assert that all JavaScript links found on a page are not broken (have response status 200 OK).
+     * Assert that all JavaScript links found on a page are not broken (have response status code < 400).
      * @return Assertion result
      */
     AssertionResult assertNoBrokenJavaScriptLinks();
+
+    /**
+     * Assert that all Style Sheets (CSS) links found on a page are not broken (have response status code < 400).
+     * @return Assertion result
+     */
+    AssertionResult assertNoBrokenStyleSheets();
+
+    /**
+     * Assert that all media resources for provided Media Type regular expression
+     * which found on a page are not broken (have response status code < 400).
+     * @param mediaTypeRegex Media Type regular expression
+     * @return Assertion result
+     */
+    AssertionResult assertNoBrokenMediaType(String mediaTypeRegex);
 }

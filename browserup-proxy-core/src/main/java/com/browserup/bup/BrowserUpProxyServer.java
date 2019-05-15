@@ -19,9 +19,10 @@ import com.browserup.bup.assertion.field.header.HeadersDoNotContainStringAsserti
 import com.browserup.bup.assertion.field.header.HeadersMatchAssertion;
 import com.browserup.bup.assertion.field.status.StatusBelongsToClassAssertion;
 import com.browserup.bup.assertion.field.status.StatusEqualsAssertion;
+import com.browserup.bup.assertion.field.status.NoBrokenStatusAssertion;
 import com.browserup.bup.assertion.model.AssertionEntryResult;
 import com.browserup.bup.assertion.model.AssertionResult;
-import com.browserup.bup.assertion.supplier.MimeTypeFilteredSupplier;
+import com.browserup.bup.assertion.supplier.MediaTypeFilteredSupplier;
 import com.browserup.bup.assertion.supplier.CurrentStepHarEntriesSupplier;
 import com.browserup.bup.assertion.supplier.HarEntriesSupplier;
 import com.browserup.bup.assertion.supplier.MostRecentHarEntrySupplier;
@@ -1220,16 +1221,23 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
 
     @Override
     public AssertionResult assertNoBrokenImages() {
-        HarEntriesSupplier supplier = new MimeTypeFilteredSupplier(getHar(), "image");
-        HarEntryAssertion assertion = new StatusEqualsAssertion(200);
-
-        return checkHarEntryAssertion(supplier, assertion);
+        return assertNoBrokenMediaType("image/.*");
     }
 
     @Override
     public AssertionResult assertNoBrokenJavaScriptLinks() {
-        HarEntriesSupplier supplier = new MimeTypeFilteredSupplier(getHar(), "javascript");
-        HarEntryAssertion assertion = new StatusEqualsAssertion(200);
+        return assertNoBrokenMediaType("text/javascript");
+    }
+
+    @Override
+    public AssertionResult assertNoBrokenStyleSheets() {
+        return assertNoBrokenMediaType("text/css");
+    }
+
+    @Override
+    public AssertionResult assertNoBrokenMediaType(String mediaTypeRegex) {
+        HarEntriesSupplier supplier = new MediaTypeFilteredSupplier(getHar(), mediaTypeRegex);
+        HarEntryAssertion assertion = new NoBrokenStatusAssertion();
 
         return checkHarEntryAssertion(supplier, assertion);
     }

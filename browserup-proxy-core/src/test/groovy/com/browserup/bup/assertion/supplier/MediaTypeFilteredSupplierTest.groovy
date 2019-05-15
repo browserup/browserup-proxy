@@ -9,15 +9,15 @@ import org.junit.Test
 
 import static org.junit.Assert.assertThat
 
-class MimeTypeFilteredSupplierTest {
+class MediaTypeFilteredSupplierTest {
     @Test
-    void getFilteredContentTypeEntries() {
+    void getFilteredMediaTypeEntries() {
         def har = new Har()
         def harEntries = [] as List<HarEntry>
         def harEntry1 = new HarEntry()
         def harResponse1 = new HarResponse()
         def harContent1 = new HarContent()
-        harContent1.setMimeType("text/javascript")
+        harContent1.setMimeType("image/png")
         harResponse1.setContent(harContent1)
         harEntry1.setResponse(harResponse1)
         harEntries.add(harEntry1)
@@ -25,7 +25,7 @@ class MimeTypeFilteredSupplierTest {
         def harEntry2 = new HarEntry()
         def harResponse2 = new HarResponse()
         def harContent2 = new HarContent()
-        harContent2.setMimeType("javascript")
+        harContent2.setMimeType("image/jpg")
         harResponse2.setContent(harContent2)
         harEntry2.setResponse(harResponse2)
         harEntries.add(harEntry2)
@@ -40,7 +40,7 @@ class MimeTypeFilteredSupplierTest {
 
         har.getLog().setEntries(harEntries)
 
-        def supplier = new MimeTypeFilteredSupplier(har, "javascript")
+        def supplier = new MediaTypeFilteredSupplier(har, "image/.*")
         def result = supplier.get()
 
         assertThat("Expected to get 2 entries", result, Matchers.hasSize(2))
@@ -62,7 +62,7 @@ class MimeTypeFilteredSupplierTest {
         })
         har.getLog().setEntries(harEntries)
 
-        def supplier = new MimeTypeFilteredSupplier(har, "javascript")
+        def supplier = new MediaTypeFilteredSupplier(har, "text/javascript")
         def result = supplier.get()
 
         assertThat("Expected to get empty array", result, Matchers.hasSize(0))

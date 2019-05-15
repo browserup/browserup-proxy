@@ -77,6 +77,7 @@ dependencies {
     implementation 'org.slf4j:jcl-over-slf4j:1.7.26'
     implementation 'org.slf4j:slf4j-api:1.7.26'
     implementation 'xyz.rogfam:littleproxy:2.0.0-beta-3'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.8'
 
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.codehaus.groovy:groovy-all:2.5.7'
@@ -100,5 +101,4 @@ dependencies {
     }
     testImplementation 'org.mockito:mockito-core:2.27.0'
     testImplementation 'org.seleniumhq.selenium:selenium-firefox-driver:3.141.59'
-    testImplementation 'org.apache.httpcomponents:httpclient:4.5.8'
 }
