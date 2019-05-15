@@ -7,30 +7,26 @@ package com.browserup.bup;
 import com.browserup.bup.assertion.HarEntryAssertion;
 import com.browserup.bup.assertion.ResponseTimeLessThanOrEqualAssertion;
 import com.browserup.bup.assertion.error.HarEntryAssertionError;
-import com.browserup.bup.assertion.field.content.ContentMatchesAssertion;
-import com.browserup.bup.assertion.field.content.ContentSizeLessThanOrEqualAssertion;
 import com.browserup.bup.assertion.field.content.ContentContainsStringAssertion;
 import com.browserup.bup.assertion.field.content.ContentDoesNotContainStringAssertion;
-import com.browserup.bup.assertion.field.header.*;
+import com.browserup.bup.assertion.field.content.ContentMatchesAssertion;
+import com.browserup.bup.assertion.field.content.ContentSizeLessThanOrEqualAssertion;
+import com.browserup.bup.assertion.field.header.FilteredHeadersContainStringAssertion;
+import com.browserup.bup.assertion.field.header.FilteredHeadersDoNotContainStringAssertion;
+import com.browserup.bup.assertion.field.header.FilteredHeadersMatchAssertion;
+import com.browserup.bup.assertion.field.header.HeadersContainStringAssertion;
+import com.browserup.bup.assertion.field.header.HeadersDoNotContainStringAssertion;
+import com.browserup.bup.assertion.field.header.HeadersMatchAssertion;
 import com.browserup.bup.assertion.field.status.StatusBelongsToClassAssertion;
 import com.browserup.bup.assertion.field.status.StatusEqualsAssertion;
 import com.browserup.bup.assertion.model.AssertionEntryResult;
 import com.browserup.bup.assertion.model.AssertionResult;
-import com.browserup.bup.assertion.supplier.*;
-import com.browserup.bup.util.HttpStatusClass;
-import com.browserup.harreader.model.Har;
-import com.browserup.harreader.model.HarCreatorBrowser;
-import com.browserup.harreader.model.HarEntry;
-import com.browserup.harreader.model.HarLog;
-import com.browserup.harreader.model.HarPage;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.MapMaker;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.HttpObject;
-import io.netty.handler.codec.http.HttpRequest;
+import com.browserup.bup.assertion.supplier.MimeTypeFilteredSupplier;
+import com.browserup.bup.assertion.supplier.CurrentStepHarEntriesSupplier;
+import com.browserup.bup.assertion.supplier.HarEntriesSupplier;
+import com.browserup.bup.assertion.supplier.MostRecentHarEntrySupplier;
+import com.browserup.bup.assertion.supplier.MostRecentUrlFilteredHarEntrySupplier;
+import com.browserup.bup.assertion.supplier.UrlFilteredHarEntriesSupplier;
 import com.browserup.bup.client.ClientUtil;
 import com.browserup.bup.filters.AddHeadersFilter;
 import com.browserup.bup.filters.AutoBasicAuthFilter;
@@ -65,6 +61,20 @@ import com.browserup.bup.proxy.dns.AdvancedHostResolver;
 import com.browserup.bup.proxy.dns.DelegatingHostResolver;
 import com.browserup.bup.util.BrowserUpHttpUtil;
 import com.browserup.bup.util.BrowserUpProxyUtil;
+import com.browserup.bup.util.HttpStatusClass;
+import com.browserup.harreader.model.Har;
+import com.browserup.harreader.model.HarCreatorBrowser;
+import com.browserup.harreader.model.HarEntry;
+import com.browserup.harreader.model.HarLog;
+import com.browserup.harreader.model.HarPage;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.MapMaker;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpObject;
+import io.netty.handler.codec.http.HttpRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.littleshoot.proxy.ChainedProxy;
 import org.littleshoot.proxy.ChainedProxyAdapter;
@@ -111,8 +121,8 @@ import static java.util.stream.Collectors.toCollection;
 public class BrowserUpProxyServer implements BrowserUpProxy {
     private static final Logger log = LoggerFactory.getLogger(BrowserUpProxyServer.class);
 
-    private static final HarCreatorBrowser HAR_CREATOR_VERSION =
-        new HarCreatorBrowser();
+    private static final HarCreatorBrowser HAR_CREATOR_VERSION = new HarCreatorBrowser();
+
     static {
         HAR_CREATOR_VERSION.setName("BrowserUp Proxy");
         HAR_CREATOR_VERSION.setVersion(BrowserUpProxyUtil.getVersionString());
@@ -1070,7 +1080,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
         HarEntryAssertion assertion = new ResponseTimeLessThanOrEqualAssertion(time);
 
-        return checkAssertion(supplier, assertion);
+        return checkHarEntryAssertion(supplier, assertion);
     }
 
     @Override
@@ -1078,7 +1088,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
         HarEntryAssertion assertion = new ResponseTimeLessThanOrEqualAssertion(time);
 
-        return checkAssertion(supplier, assertion);
+        return checkHarEntryAssertion(supplier, assertion);
     }
 
     @Override
@@ -1086,7 +1096,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
         HarEntryAssertion assertion = new ContentContainsStringAssertion(text);
 
-        return checkAssertion(supplier, assertion);
+        return checkHarEntryAssertion(supplier, assertion);
     }
 
     @Override
@@ -1094,7 +1104,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
         HarEntryAssertion assertion = new ContentDoesNotContainStringAssertion(text);
 
-        return checkAssertion(supplier, assertion);
+        return checkHarEntryAssertion(supplier, assertion);
     }
 
     @Override
@@ -1102,7 +1112,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
         HarEntryAssertion assertion = new ContentMatchesAssertion(contentPattern);
 
-        return checkAssertion(supplier, assertion);
+        return checkHarEntryAssertion(supplier, assertion);
     }
 
     @Override
@@ -1110,7 +1120,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         HarEntriesSupplier supplier = new CurrentStepHarEntriesSupplier(getHar());
         HarEntryAssertion assertion = new StatusEqualsAssertion(status);
 
-        return checkAssertion(supplier, assertion);
+        return checkHarEntryAssertion(supplier, assertion);
     }
 
     @Override
@@ -1118,7 +1128,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         HarEntriesSupplier supplier = new CurrentStepHarEntriesSupplier(getHar());
         HarEntryAssertion assertion = new StatusBelongsToClassAssertion(clazz);
 
-        return checkAssertion(supplier, assertion);
+        return checkHarEntryAssertion(supplier, assertion);
     }
 
     @Override
@@ -1126,7 +1136,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
         HarEntryAssertion assertion = new StatusEqualsAssertion(status);
 
-        return checkAssertion(supplier, assertion);
+        return checkHarEntryAssertion(supplier, assertion);
     }
 
     @Override
@@ -1134,7 +1144,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
         HarEntryAssertion assertion = new StatusBelongsToClassAssertion(clazz);
 
-        return checkAssertion(supplier, assertion);
+        return checkHarEntryAssertion(supplier, assertion);
     }
 
     @Override
@@ -1142,7 +1152,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         HarEntriesSupplier supplier = new MostRecentHarEntrySupplier(getHar());
         HarEntryAssertion assertion = new StatusEqualsAssertion(status);
 
-        return checkAssertion(supplier, assertion);
+        return checkHarEntryAssertion(supplier, assertion);
     }
 
 
@@ -1151,7 +1161,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         HarEntriesSupplier supplier = new MostRecentHarEntrySupplier(getHar());
         HarEntryAssertion assertion = new StatusBelongsToClassAssertion(clazz);
 
-        return checkAssertion(supplier, assertion);
+        return checkHarEntryAssertion(supplier, assertion);
     }
 
     @Override
@@ -1159,7 +1169,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
         HarEntryAssertion assertion = new StatusEqualsAssertion(status);
 
-        return checkAssertion(supplier, assertion);
+        return checkHarEntryAssertion(supplier, assertion);
     }
 
     @Override
@@ -1167,7 +1177,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
         HarEntryAssertion assertion = new StatusBelongsToClassAssertion(clazz);
 
-        return checkAssertion(supplier, assertion);
+        return checkHarEntryAssertion(supplier, assertion);
     }
 
     @Override
@@ -1175,7 +1185,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
         HarEntryAssertion assertion = new ContentSizeLessThanOrEqualAssertion(max);
 
-        return checkAssertion(supplier, assertion);
+        return checkHarEntryAssertion(supplier, assertion);
     }
 
     @Override
@@ -1185,7 +1195,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
                 new HeadersContainStringAssertion(value) :
                 new FilteredHeadersContainStringAssertion(name, value);
 
-        return checkAssertion(supplier, assertion);
+        return checkHarEntryAssertion(supplier, assertion);
     }
 
     @Override
@@ -1195,7 +1205,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
                 new HeadersDoNotContainStringAssertion(value) :
                 new FilteredHeadersDoNotContainStringAssertion(name, value);
 
-        return checkAssertion(supplier, assertion);
+        return checkHarEntryAssertion(supplier, assertion);
     }
 
     @Override
@@ -1205,10 +1215,26 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
                 new HeadersMatchAssertion(value) :
                 new FilteredHeadersMatchAssertion(name, value);
 
-        return checkAssertion(supplier, assertion);
+        return checkHarEntryAssertion(supplier, assertion);
     }
 
-    private AssertionResult checkAssertion(HarEntriesSupplier harEntriesSupplier, HarEntryAssertion assertion) {
+    @Override
+    public AssertionResult assertNoBrokenImages() {
+        HarEntriesSupplier supplier = new MimeTypeFilteredSupplier(getHar(), "image");
+        HarEntryAssertion assertion = new StatusEqualsAssertion(200);
+
+        return checkHarEntryAssertion(supplier, assertion);
+    }
+
+    @Override
+    public AssertionResult assertNoBrokenJavaScriptLinks() {
+        HarEntriesSupplier supplier = new MimeTypeFilteredSupplier(getHar(), "javascript");
+        HarEntryAssertion assertion = new StatusEqualsAssertion(200);
+
+        return checkHarEntryAssertion(supplier, assertion);
+    }
+
+    private AssertionResult checkHarEntryAssertion(HarEntriesSupplier harEntriesSupplier, HarEntryAssertion assertion) {
         AssertionResult.Builder result = new AssertionResult.Builder();
 
         List<HarEntry> entries = harEntriesSupplier.get();

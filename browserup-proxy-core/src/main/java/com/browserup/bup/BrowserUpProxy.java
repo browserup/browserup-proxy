@@ -868,4 +868,16 @@ public interface BrowserUpProxy {
      * @return Assertion result
      */
     AssertionResult assertMostRecentResponseStatusCode(Pattern url, HttpStatusClass clazz);
+
+    /**
+     * Assert that all images found on a page are not broken (have response status 200 OK).
+     * @return Assertion result
+     */
+    AssertionResult assertNoBrokenImages();
+
+    /**
+     * Assert that all JavaScript links found on a page are not broken (have response status 200 OK).
+     * @return Assertion result
+     */
+    AssertionResult assertNoBrokenJavaScriptLinks();
 }
