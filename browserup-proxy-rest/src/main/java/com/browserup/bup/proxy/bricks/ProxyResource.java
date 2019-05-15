@@ -174,7 +174,7 @@ public class ProxyResource {
             return Reply.with("Invalid 'milliseconds' url parameter").badRequest();
         }
 
-        AssertionResult result = proxy.assertMostRecentResponseContentLengthLessThanOrEqual(pattern, time.get());
+        AssertionResult result = proxy.assertMostRecentResponseTimeLessThanOrEqual(pattern, time.get());
         return Reply.with(result).status(HttpStatus.OK_200).as(Json.class);
     }
 
@@ -748,6 +748,16 @@ public class ProxyResource {
             LOG.warn("Url parameter not present");
             throw new IllegalArgumentException("URL parameter 'urlPattern' is mandatory");
         }
+
+        Pattern urlPattern;
+        try {
+            urlPattern = Pattern.compile(urlParam);
+        } catch (Exception ex) {
+            LOG.warn("Url parameter not valid", ex);
+            throw new IllegalArgumentException("URL parameter 'urlPattern' is not a valid regexp");
+        }
+        return urlPattern;
+    }
 
     private Optional<Long> getAssertionTimeFromRequest(Request request) {
         String timeParam = request.param("milliseconds");
