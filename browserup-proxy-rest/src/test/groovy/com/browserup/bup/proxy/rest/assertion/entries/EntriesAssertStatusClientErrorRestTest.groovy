@@ -7,7 +7,7 @@ import groovyx.net.http.Method
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
-import org.eclipse.jetty.http.HttpMethods
+import org.eclipse.jetty.http.HttpMethod
 import org.hamcrest.Matchers
 import org.junit.Test
 import org.mockserver.matchers.Times
@@ -149,7 +149,7 @@ class EntriesAssertStatusClientErrorRestTest extends BaseRestTest {
 
     protected void mockTargetServerResponse(String url, String responseBody, int status) {
         targetMockedServer.when(request()
-                .withMethod(HttpMethods.GET)
+                .withMethod(HttpMethod.GET)
                 .withPath("/${url}"),
                 Times.exactly(1))
                 .respond(response()

@@ -10,7 +10,6 @@ import static org.mockserver.model.HttpRequest.request
 import static org.mockserver.model.HttpResponse.response
 
 class ContentBaseTest extends BaseAssertionsTest {
-
     @Before
     void setUp() {
         proxy.enableHarCaptureTypes(CaptureType.RESPONSE_CONTENT)
@@ -22,7 +21,8 @@ class ContentBaseTest extends BaseAssertionsTest {
                 .withPath("/${path}"),
                 Times.once())
                 .respond(response()
-                .withStatusCode(HttpStatus.SC_OK)
-                .withBody(body))
+                        .withStatusCode(HttpStatus.SC_OK)
+                        .withBody(body)
+                )
     }
 }
