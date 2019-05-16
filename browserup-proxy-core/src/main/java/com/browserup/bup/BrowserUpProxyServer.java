@@ -1220,23 +1220,32 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     }
 
     @Override
-    public AssertionResult assertNoBrokenImages() {
-        return assertNoBrokenMediaType("image/.*");
+    public AssertionResult assertImageResponsesSuccessful() {
+        HarEntriesSupplier supplier = new MediaTypeFilteredSupplier(getHar(), "image/.*");
+        HarEntryAssertion assertion = new NoBrokenStatusAssertion();
+
+        return checkHarEntryAssertion(supplier, assertion);
     }
 
     @Override
-    public AssertionResult assertNoBrokenJavaScriptLinks() {
-        return assertNoBrokenMediaType("text/javascript");
+    public AssertionResult assertJavaScriptResponsesSuccessful() {
+        HarEntriesSupplier supplier = new MediaTypeFilteredSupplier(getHar(), "text/javascript");
+        HarEntryAssertion assertion = new NoBrokenStatusAssertion();
+
+        return checkHarEntryAssertion(supplier, assertion);
     }
 
     @Override
-    public AssertionResult assertNoBrokenStyleSheets() {
-        return assertNoBrokenMediaType("text/css");
+    public AssertionResult assertStyleSheetResponsesSuccessful() {
+        HarEntriesSupplier supplier = new MediaTypeFilteredSupplier(getHar(), "text/css");
+        HarEntryAssertion assertion = new NoBrokenStatusAssertion();
+
+        return checkHarEntryAssertion(supplier, assertion);
     }
 
     @Override
-    public AssertionResult assertNoBrokenMediaType(String mediaTypeRegex) {
-        HarEntriesSupplier supplier = new MediaTypeFilteredSupplier(getHar(), mediaTypeRegex);
+    public AssertionResult assertResourceResponsesSuccessful() {
+        HarEntriesSupplier supplier = new MediaTypeFilteredSupplier(getHar(), "image/.*|text/javascript|text/css");
         HarEntryAssertion assertion = new NoBrokenStatusAssertion();
 
         return checkHarEntryAssertion(supplier, assertion);

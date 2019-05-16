@@ -873,25 +873,24 @@ public interface BrowserUpProxy {
      * Assert that all images found on a page are not broken (have response status code < 400).
      * @return Assertion result
      */
-    AssertionResult assertNoBrokenImages();
+    AssertionResult assertImageResponsesSuccessful();
 
     /**
      * Assert that all JavaScript links found on a page are not broken (have response status code < 400).
      * @return Assertion result
      */
-    AssertionResult assertNoBrokenJavaScriptLinks();
+    AssertionResult assertJavaScriptResponsesSuccessful();
 
     /**
      * Assert that all Style Sheets (CSS) links found on a page are not broken (have response status code < 400).
      * @return Assertion result
      */
-    AssertionResult assertNoBrokenStyleSheets();
+    AssertionResult assertStyleSheetResponsesSuccessful();
 
     /**
-     * Assert that all media resources for provided Media Type regular expression
-     * which found on a page are not broken (have response status code < 400).
-     * @param mediaTypeRegex Media Type regular expression
+     * Assert that all Images, JS links, Style Sheets (CSS) links found on a page are not broken
+     * (have response status code < 400).
      * @return Assertion result
      */
-    AssertionResult assertNoBrokenMediaType(String mediaTypeRegex);
+    AssertionResult assertResourceResponsesSuccessful();
 }

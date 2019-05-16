@@ -47,6 +47,50 @@ class MediaTypeFilteredSupplierTest {
     }
 
     @Test
+    void getFilteredAllResourcesEntries() {
+        def har = new Har()
+        def harEntries = [] as List<HarEntry>
+        def harEntry1 = new HarEntry()
+        def harResponse1 = new HarResponse()
+        def harContent1 = new HarContent()
+        harContent1.setMimeType("image/png")
+        harResponse1.setContent(harContent1)
+        harEntry1.setResponse(harResponse1)
+        harEntries.add(harEntry1)
+
+        def harEntry2 = new HarEntry()
+        def harResponse2 = new HarResponse()
+        def harContent2 = new HarContent()
+        harContent2.setMimeType("text/javascript")
+        harResponse2.setContent(harContent2)
+        harEntry2.setResponse(harResponse2)
+        harEntries.add(harEntry2)
+
+        def harEntry3 = new HarEntry()
+        def harResponse3 = new HarResponse()
+        def harContent3 = new HarContent()
+        harContent3.setMimeType("text/css")
+        harResponse3.setContent(harContent3)
+        harEntry3.setResponse(harResponse3)
+        harEntries.add(harEntry3)
+
+        def harEntry4 = new HarEntry()
+        def harResponse4 = new HarResponse()
+        def harContent4 = new HarContent()
+        harContent4.setMimeType("text/plain")
+        harResponse4.setContent(harContent4)
+        harEntry4.setResponse(harResponse4)
+        harEntries.add(harEntry4)
+
+        har.getLog().setEntries(harEntries)
+
+        def supplier = new MediaTypeFilteredSupplier(har, "image/.*|text/javascript|text/css")
+        def result = supplier.get()
+
+        assertThat("Expected to get 3 entries", result, Matchers.hasSize(3))
+    }
+
+    @Test
     void getEmtpyEntriesIfNothingFoundByFilter() {
         def har = new Har()
         def harEntries = [] as List<HarEntry>

@@ -19,7 +19,7 @@ class NoBrokenResourcesAssertionsTest extends BaseAssertionsTest {
         mockResponse(Header.header("Content-Type", "text/javascript"), status)
         requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertNoBrokenJavaScriptLinks()
+        def result = proxy.assertJavaScriptResponsesSuccessful()
 
         assertTrue("Expected to find not broken links", result.passed)
         assertFalse("Expected to find not broken links", result.failed)
@@ -32,7 +32,7 @@ class NoBrokenResourcesAssertionsTest extends BaseAssertionsTest {
         mockResponse(Header.header("Content-Type", "text/javascript"), status)
         requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertNoBrokenJavaScriptLinks()
+        def result = proxy.assertJavaScriptResponsesSuccessful()
 
         assertTrue("Expected to find not broken links", result.passed)
         assertFalse("Expected to find not broken links", result.failed)
@@ -45,7 +45,7 @@ class NoBrokenResourcesAssertionsTest extends BaseAssertionsTest {
         mockResponse(Header.header("Content-Type", ""), status)
         requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertNoBrokenJavaScriptLinks()
+        def result = proxy.assertJavaScriptResponsesSuccessful()
 
         assertTrue("Expected to find not broken links", result.passed)
         assertFalse("Expected to find not broken links", result.failed)
@@ -58,7 +58,7 @@ class NoBrokenResourcesAssertionsTest extends BaseAssertionsTest {
         mockResponse(Header.header("Content-Type", "text/javascript"), status)
         requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertNoBrokenJavaScriptLinks()
+        def result = proxy.assertJavaScriptResponsesSuccessful()
 
         assertTrue("Expected to find broken links", result.failed)
         assertFalse("Expected to find broken links", result.passed)
@@ -71,7 +71,7 @@ class NoBrokenResourcesAssertionsTest extends BaseAssertionsTest {
         mockResponse(Header.header("Content-Type", "image/jpg"), status)
         requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertNoBrokenImages()
+        def result = proxy.assertImageResponsesSuccessful()
 
         assertTrue("Expected to find not broken links", result.passed)
         assertFalse("Expected to find not broken links", result.failed)
@@ -84,7 +84,7 @@ class NoBrokenResourcesAssertionsTest extends BaseAssertionsTest {
         mockResponse(Header.header("Content-Type", ""), status)
         requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertNoBrokenImages()
+        def result = proxy.assertImageResponsesSuccessful()
 
         assertTrue("Expected to pass when header not found", result.passed)
         assertFalse("Expected to pass when header not found", result.failed)
@@ -97,7 +97,7 @@ class NoBrokenResourcesAssertionsTest extends BaseAssertionsTest {
         mockResponse(Header.header("Content-Type", "image/jpg"), status)
         requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertNoBrokenImages()
+        def result = proxy.assertImageResponsesSuccessful()
 
         assertTrue("Expected to find broken links", result.failed)
         assertFalse("Expected to find broken links", result.passed)
@@ -110,7 +110,7 @@ class NoBrokenResourcesAssertionsTest extends BaseAssertionsTest {
         mockResponse(Header.header("Content-Type", "text/css"), status)
         requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertNoBrokenStyleSheets()
+        def result = proxy.assertStyleSheetResponsesSuccessful()
 
         assertTrue("Expected to find not broken links", result.passed)
         assertFalse("Expected to find not broken links", result.failed)
@@ -123,7 +123,7 @@ class NoBrokenResourcesAssertionsTest extends BaseAssertionsTest {
         mockResponse(Header.header("Content-Type", "text/css"), status)
         requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertNoBrokenStyleSheets()
+        def result = proxy.assertStyleSheetResponsesSuccessful()
 
         assertTrue("Expected to find not broken links", result.passed)
         assertFalse("Expected to find not broken links", result.failed)
@@ -136,7 +136,7 @@ class NoBrokenResourcesAssertionsTest extends BaseAssertionsTest {
         mockResponse(Header.header("Content-Type", ""), status)
         requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertNoBrokenStyleSheets()
+        def result = proxy.assertStyleSheetResponsesSuccessful()
 
         assertTrue("Expected to find not broken links", result.passed)
         assertFalse("Expected to find not broken links", result.failed)
@@ -149,7 +149,7 @@ class NoBrokenResourcesAssertionsTest extends BaseAssertionsTest {
         mockResponse(Header.header("Content-Type", "text/css"), status)
         requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertNoBrokenStyleSheets()
+        def result = proxy.assertStyleSheetResponsesSuccessful()
 
         assertTrue("Expected to find broken links", result.failed)
         assertFalse("Expected to find broken links", result.passed)
@@ -159,10 +159,10 @@ class NoBrokenResourcesAssertionsTest extends BaseAssertionsTest {
     void noBrokenMediaTypeWhenContainsCorrectTypeAndStatusCode2xxPasses() {
         def status = HttpStatus.SC_OK
 
-        mockResponse(Header.header("Content-Type", "text/csv"), status)
+        mockResponse(Header.header("Content-Type", "image/png", "text/css", "text/javascript"), status)
         requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertNoBrokenMediaType("text/csv")
+        def result = proxy.assertResourceResponsesSuccessful()
 
         assertTrue("Expected to find not broken links", result.passed)
         assertFalse("Expected to find not broken links", result.failed)
@@ -172,10 +172,10 @@ class NoBrokenResourcesAssertionsTest extends BaseAssertionsTest {
     void noBrokenMediaTypeWhenContainsCorrectTypeAndStatus4xxFails() {
         def status = HttpStatus.SC_BAD_REQUEST
 
-        mockResponse(Header.header("Content-Type", "text/csv"), status)
+        mockResponse(Header.header("Content-Type", "image/png", "text/css", "text/javascript"), status)
         requestToMockedServer(URL_PATH)
 
-        def result = proxy.assertNoBrokenMediaType("text/csv")
+        def result = proxy.assertResourceResponsesSuccessful()
 
         assertTrue("Expected to find broken links", result.failed)
         assertFalse("Expected to find broken links", result.passed)
