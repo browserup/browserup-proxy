@@ -19,7 +19,7 @@ import com.browserup.bup.assertion.field.header.HeadersDoNotContainStringAsserti
 import com.browserup.bup.assertion.field.header.HeadersMatchAssertion;
 import com.browserup.bup.assertion.field.status.StatusBelongsToClassAssertion;
 import com.browserup.bup.assertion.field.status.StatusEqualsAssertion;
-import com.browserup.bup.assertion.field.status.NoBrokenStatusAssertion;
+import com.browserup.bup.assertion.field.status.SuccessfulStatusAssertion;
 import com.browserup.bup.assertion.model.AssertionEntryResult;
 import com.browserup.bup.assertion.model.AssertionResult;
 import com.browserup.bup.assertion.supplier.MediaTypeFilteredSupplier;
@@ -1222,7 +1222,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     @Override
     public AssertionResult assertImageResponsesSuccessful() {
         HarEntriesSupplier supplier = new MediaTypeFilteredSupplier(getHar(), "image/.*");
-        HarEntryAssertion assertion = new NoBrokenStatusAssertion();
+        HarEntryAssertion assertion = new SuccessfulStatusAssertion();
 
         return checkHarEntryAssertion(supplier, assertion);
     }
@@ -1230,7 +1230,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     @Override
     public AssertionResult assertJavaScriptResponsesSuccessful() {
         HarEntriesSupplier supplier = new MediaTypeFilteredSupplier(getHar(), "text/javascript");
-        HarEntryAssertion assertion = new NoBrokenStatusAssertion();
+        HarEntryAssertion assertion = new SuccessfulStatusAssertion();
 
         return checkHarEntryAssertion(supplier, assertion);
     }
@@ -1238,7 +1238,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     @Override
     public AssertionResult assertStyleSheetResponsesSuccessful() {
         HarEntriesSupplier supplier = new MediaTypeFilteredSupplier(getHar(), "text/css");
-        HarEntryAssertion assertion = new NoBrokenStatusAssertion();
+        HarEntryAssertion assertion = new SuccessfulStatusAssertion();
 
         return checkHarEntryAssertion(supplier, assertion);
     }
@@ -1246,7 +1246,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     @Override
     public AssertionResult assertResourceResponsesSuccessful() {
         HarEntriesSupplier supplier = new MediaTypeFilteredSupplier(getHar(), "image/.*|text/javascript|text/css");
-        HarEntryAssertion assertion = new NoBrokenStatusAssertion();
+        HarEntryAssertion assertion = new SuccessfulStatusAssertion();
 
         return checkHarEntryAssertion(supplier, assertion);
     }
