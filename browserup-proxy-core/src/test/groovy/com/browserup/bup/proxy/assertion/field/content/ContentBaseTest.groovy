@@ -21,6 +21,7 @@ class ContentBaseTest extends BaseAssertionsTest {
                 .withPath("/${path}"),
                 Times.once())
                 .respond(response()
+                        .withHeader("Content-Type", "application/json")
                         .withStatusCode(HttpStatus.SC_OK)
                         .withBody(body)
                 )
