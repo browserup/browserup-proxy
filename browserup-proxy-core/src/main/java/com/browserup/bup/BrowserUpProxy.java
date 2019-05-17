@@ -870,26 +870,26 @@ public interface BrowserUpProxy {
     AssertionResult assertMostRecentResponseStatusCode(Pattern url, HttpStatusClass clazz);
 
     /**
-     * Assert that all images found on a page are not broken (have response status code < 400).
+     * Assert that all images found on a page are not broken (have response status code &lt; 400).
      * @return Assertion result
      */
     AssertionResult assertImageResponsesSuccessful();
 
     /**
-     * Assert that all JavaScript links found on a page are not broken (have response status code < 400).
+     * Assert that all JavaScript links found on a page are not broken (have response status code &lt; 400).
      * @return Assertion result
      */
     AssertionResult assertJavaScriptResponsesSuccessful();
 
     /**
-     * Assert that all Style Sheets (CSS) links found on a page are not broken (have response status code < 400).
+     * Assert that all Style Sheets (CSS) links found on a page are not broken (have response status code &lt; 400).
      * @return Assertion result
      */
     AssertionResult assertStyleSheetResponsesSuccessful();
 
     /**
      * Assert that all Images, JS links, Style Sheets (CSS) links found on a page are not broken
-     * (have response status code < 400).
+     * (have response status code &lt; 400).
      * @return Assertion result
      */
     AssertionResult assertResourceResponsesSuccessful();
