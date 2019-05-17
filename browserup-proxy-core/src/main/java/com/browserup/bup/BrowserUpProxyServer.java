@@ -1221,7 +1221,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
 
     @Override
     public AssertionResult assertImageResponsesSuccessful() {
-        HarEntriesSupplier supplier = new MediaTypeFilteredSupplier(getHar(), "image/.*");
+        HarEntriesSupplier supplier = new MediaTypeFilteredSupplier(getHar(), Pattern.compile("image/.*"));
         HarEntryAssertion assertion = new SuccessfulStatusAssertion();
 
         return checkHarEntryAssertion(supplier, assertion);
@@ -1229,7 +1229,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
 
     @Override
     public AssertionResult assertJavaScriptResponsesSuccessful() {
-        HarEntriesSupplier supplier = new MediaTypeFilteredSupplier(getHar(), "text/javascript");
+        HarEntriesSupplier supplier = new MediaTypeFilteredSupplier(getHar(), Pattern.compile("text/javascript"));
         HarEntryAssertion assertion = new SuccessfulStatusAssertion();
 
         return checkHarEntryAssertion(supplier, assertion);
@@ -1237,7 +1237,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
 
     @Override
     public AssertionResult assertStyleSheetResponsesSuccessful() {
-        HarEntriesSupplier supplier = new MediaTypeFilteredSupplier(getHar(), "text/css");
+        HarEntriesSupplier supplier = new MediaTypeFilteredSupplier(getHar(), Pattern.compile("text/css"));
         HarEntryAssertion assertion = new SuccessfulStatusAssertion();
 
         return checkHarEntryAssertion(supplier, assertion);
@@ -1245,7 +1245,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
 
     @Override
     public AssertionResult assertResourceResponsesSuccessful() {
-        HarEntriesSupplier supplier = new MediaTypeFilteredSupplier(getHar(), "image/.*|text/javascript|text/css");
+        HarEntriesSupplier supplier = new MediaTypeFilteredSupplier(getHar(), Pattern.compile("image/.*|text/javascript|text/css"));
         HarEntryAssertion assertion = new SuccessfulStatusAssertion();
 
         return checkHarEntryAssertion(supplier, assertion);

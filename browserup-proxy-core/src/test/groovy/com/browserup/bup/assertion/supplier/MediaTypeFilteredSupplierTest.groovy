@@ -7,6 +7,8 @@ import com.browserup.harreader.model.HarResponse
 import org.hamcrest.Matchers
 import org.junit.Test
 
+import java.util.regex.Pattern
+
 import static org.junit.Assert.assertThat
 
 class MediaTypeFilteredSupplierTest {
@@ -40,7 +42,7 @@ class MediaTypeFilteredSupplierTest {
 
         har.getLog().setEntries(harEntries)
 
-        def supplier = new MediaTypeFilteredSupplier(har, "image/.*")
+        def supplier = new MediaTypeFilteredSupplier(har, Pattern.compile("image/.*"))
         def result = supplier.get()
 
         assertThat("Expected to get 2 entries", result, Matchers.hasSize(2))
@@ -84,7 +86,7 @@ class MediaTypeFilteredSupplierTest {
 
         har.getLog().setEntries(harEntries)
 
-        def supplier = new MediaTypeFilteredSupplier(har, "image/.*|text/javascript|text/css")
+        def supplier = new MediaTypeFilteredSupplier(har, Pattern.compile("image/.*|text/javascript|text/css"))
         def result = supplier.get()
 
         assertThat("Expected to get 3 entries", result, Matchers.hasSize(3))
@@ -106,7 +108,7 @@ class MediaTypeFilteredSupplierTest {
         })
         har.getLog().setEntries(harEntries)
 
-        def supplier = new MediaTypeFilteredSupplier(har, "text/javascript")
+        def supplier = new MediaTypeFilteredSupplier(har, Pattern.compile("text/javascript"))
         def result = supplier.get()
 
         assertThat("Expected to get empty array", result, Matchers.hasSize(0))

@@ -9,21 +9,21 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class MediaTypeFilteredSupplier extends HarEntriesSupplier {
-    private final String mediaTypeRegex;
+    private final Pattern mediaType;
 
-    public MediaTypeFilteredSupplier(Har har, String mediaTypeRegex) {
+    public MediaTypeFilteredSupplier(Har har, Pattern mediaType) {
         super(har, new AssertionUrlFilterInfo());
-        this.mediaTypeRegex = mediaTypeRegex;
+        this.mediaType = mediaType;
     }
 
     @Override
     public List<HarEntry> get() {
         return getHar().getLog().getEntries().stream()
-                .filter(harEntry -> Pattern.matches(mediaTypeRegex, harEntry.getResponse().getContent().getMimeType()))
+                .filter(harEntry -> mediaType.matcher(harEntry.getResponse().getContent().getMimeType()).matches())
                 .collect(Collectors.toList());
     }
 
-    public String getMediaTypeRegex() {
-        return mediaTypeRegex;
+    public Pattern getMediaType() {
+        return mediaType;
     }
 }
