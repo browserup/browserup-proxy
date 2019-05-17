@@ -12,7 +12,7 @@ class ContentContainsTest extends ContentBaseTest {
     @Test
     void contentContainsTextAssertionPasses() {
         def bodyPart = 'body part'
-        def body = "body example with ${bodyPart} in the middle"
+        String body = "body example with ${bodyPart} in the middle"
 
         mockResponse(URL_PATH, body)
 

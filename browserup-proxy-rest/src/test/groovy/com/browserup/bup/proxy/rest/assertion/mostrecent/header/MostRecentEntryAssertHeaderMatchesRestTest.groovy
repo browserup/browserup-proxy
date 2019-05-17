@@ -3,11 +3,11 @@ package com.browserup.bup.proxy.rest.assertion.mostrecent.header
 import com.browserup.bup.assertion.model.AssertionResult
 import com.browserup.bup.proxy.CaptureType
 import com.browserup.bup.proxy.rest.BaseRestTest
+import com.browserup.harreader.model.HttpMethod
 import com.fasterxml.jackson.databind.ObjectMapper
 import groovyx.net.http.Method
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
-import org.eclipse.jetty.http.HttpMethods
 import org.hamcrest.Matchers
 import org.junit.Test
 import org.mockserver.matchers.Times
@@ -203,7 +203,7 @@ class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
                 .withSuppressConnectionHeader(true)
 
         targetMockedServer.when(request()
-                .withMethod(HttpMethods.GET)
+                .withMethod(HttpMethod.GET.name())
                 .withPath("/${url}"),
                 Times.exactly(1))
                 .respond(response()

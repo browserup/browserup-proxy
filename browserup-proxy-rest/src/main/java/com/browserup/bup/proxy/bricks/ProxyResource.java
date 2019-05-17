@@ -174,7 +174,7 @@ public class ProxyResource {
             return Reply.with("Invalid 'milliseconds' url parameter").badRequest();
         }
 
-        AssertionResult result = proxy.assertMostRecentResponseContentLengthLessThanOrEqual(pattern, time.get());
+        AssertionResult result = proxy.assertMostRecentResponseTimeLessThanOrEqual(pattern, time.get());
         return Reply.with(result).status(HttpStatus.OK_200).as(Json.class);
     }
 

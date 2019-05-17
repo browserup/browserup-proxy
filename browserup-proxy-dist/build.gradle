@@ -52,6 +52,11 @@ uploadArchives {
                     }
                 }
             }
+
+            addFilter('distribution') {artifact, file ->
+                file.name.endsWith('.zip') || file.name.endsWith('.tar')
+            }
+            pom('distribution').artifactId = 'browserup-proxy'
         }
     }
 }
@@ -91,4 +96,3 @@ distributions {
         }
     }
 }
-
