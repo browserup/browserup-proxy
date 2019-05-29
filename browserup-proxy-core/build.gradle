@@ -98,7 +98,7 @@ dependencies {
         exclude(module: 'netty-handler')
         exclude(module: 'netty-transport')
     }
-    testImplementation 'org.mockito:mockito-core:2.27.0'
+    testImplementation 'org.mockito:mockito-core:2.28.1'
     testImplementation 'org.seleniumhq.selenium:selenium-firefox-driver:3.141.59'
     testImplementation 'org.apache.httpcomponents:httpclient:4.5.8'
 }

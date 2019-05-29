@@ -80,5 +80,5 @@ dependencies {
     testImplementation 'org.codehaus.groovy:groovy-all:2.5.7'
     testImplementation 'org.hamcrest:hamcrest:2.1'
     testImplementation 'org.hamcrest:hamcrest-library:2.1'
-    testImplementation 'org.mockito:mockito-core:2.27.0'
+    testImplementation 'org.mockito:mockito-core:2.28.1'
 }
