@@ -59,8 +59,6 @@ uploadArchives {
 dependencies {
     implementation project(':browserup-proxy-mitm')
 
-    implementation 'org.brotli:dec:0.1.2'
-
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
 
     implementation 'com.fasterxml.jackson.core:jackson-core:2.9.9'
@@ -74,6 +72,7 @@ dependencies {
     implementation 'io.netty:netty-all:4.1.36.Final'
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.61'
     implementation 'org.bouncycastle:bcprov-jdk15on:1.61'
+    implementation 'org.brotli:dec:0.1.2'
     implementation 'org.javassist:javassist:3.25.0-GA'
     implementation 'org.seleniumhq.selenium:selenium-api:3.141.59'
     implementation 'org.slf4j:jcl-over-slf4j:1.7.26'
