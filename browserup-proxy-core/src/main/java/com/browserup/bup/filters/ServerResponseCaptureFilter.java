@@ -139,7 +139,7 @@ public class ServerResponseCaptureFilter extends HttpFiltersAdapter {
             }
         } else if (contentEncoding.equals(BROTLI_COMPRESSION)) {
             try {
-                fullResponseContents = BrowserMobHttpUtil.decompressBrotliContents(getRawResponseContents());
+                fullResponseContents = BrowserUpHttpUtil.decompressBrotliContents(getRawResponseContents());
                 decompressionSuccessful = true;
             } catch (RuntimeException e) {
                 log.warn("Failed to decompress response with encoding type " + contentEncoding + " when decoding request from " + originalRequest.getUri(), e);
