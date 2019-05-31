@@ -135,7 +135,7 @@ public class BrowserUpHttpUtil {
                 contentType.startsWith("application/json")  ||
                 contentType.startsWith("application/xml")  ||
                 contentType.startsWith("application/xhtml+xml") ||
-                contentType.startsWith("application/") && contentType.endsWith("+json")
+                (contentType.startsWith("application/") && contentType.endsWith("+json"))
                 );
     }
 
