@@ -85,7 +85,7 @@ public class BrowserUpHttpUtil {
      * @return decompressed bytes
      * @throws DecompressionException thrown if the fullMessage cannot be read or decompressed for any reason
      */
-    public static byte[] decompressContents(byte[] fullMessage) throws DecompressionException {
+    public static byte[] decompressGZIPContents(byte[] fullMessage) throws DecompressionException {
         InflaterInputStream gzipReader = null;
         ByteArrayOutputStream uncompressed;
         try {
@@ -115,7 +115,7 @@ public class BrowserUpHttpUtil {
     }
 
     /**
-     * Decompresses the brotli byze stream
+     * Decompresses the brotli byte stream
      *
      * @param fullMessage brotli byte stream to decompress
      * @return decompressed bytes
