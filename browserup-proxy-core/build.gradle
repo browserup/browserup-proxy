@@ -59,6 +59,8 @@ uploadArchives {
 dependencies {
     implementation project(':browserup-proxy-mitm')
 
+    compile group: 'org.brotli', name: 'dec', version: '0.1.2'
+
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
 
     implementation 'com.fasterxml.jackson.core:jackson-core:2.9.9'
