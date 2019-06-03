@@ -4,6 +4,12 @@
 
 Performance, Page, and Network Assertions against the HAR.
 
+# [1.2.0]
+- Add much-needed handling of Brotli Compression. Brotli has become a popular alternative to GZIP compression scheme, and is utilized all over the web by websites including Google and Facebook. The proxy can now decompress and recognize brotli.
+- Add recognition for variant (versioned) JSON content type strings. Previously, response bodies for JSON content types with content types like  "application/something-v1+json"  would not be captured. Now they will be.
+- Fix a credentials leak where the basic auth header was being added to non-connect request types.
+- Dependency updates
+
 # [1.1.0]
 - ZIP distribution with launch scripts, SSL certificates and keys
 - Dependency updates
