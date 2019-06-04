@@ -4,6 +4,9 @@
 
 Performance, Page, and Network Assertions against the HAR.
 
+# [1.2.1]
+- No changes, binaries compiled for Java 8+.
+
 # [1.2.0]
 - Add much-needed handling of Brotli Compression. Brotli has become a popular alternative to GZIP compression scheme, and is utilized all over the web by websites including Google and Facebook. The proxy can now decompress and recognize brotli.
 - Add recognition for variant (versioned) JSON content type strings. Previously, response bodies for JSON content types with content types like  "application/something-v1+json"  would not be captured. Now they will be.
