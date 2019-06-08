@@ -116,8 +116,6 @@ Empties the DNS cache | DELETE | */proxy/[port]/dns/cache* ||
 | [REST API interceptors with LittleProxy](#interceptorsRESTapiLP) |||
 |Describe your own request interception | POST | */proxy/[port]/filter/request* | A string which determinates interceptor rules. See more [here](#interceptorsRESTapiLPRequestFilter) |
 |Describe your own response interception | POST | */proxy/[port]/filter/response* | A string which determinates interceptor rules. See more [here](#interceptorsRESTapiLPResponseFilter) |
-|Describe your own request interception | POST | */proxy/[port]/interceptor/request* | A string which determinates interceptor rules. See more [here](#interceptorsRESTapiLegacy) |
-|Describe your own response interception | POST | */proxy/[port]/interceptor/response* | A string which determinates interceptor rules. See more [here](#interceptorsRESTapiLegacy) |
 
 For example, once you've started the proxy you can create a new HAR to start recording data like so:
 
@@ -269,10 +267,6 @@ See the javadoc for the `RequestFilter` and `ResponseFilter` classes for more in
 For fine-grained control over the request and response lifecycle, you can add "filter factories" directly using `addFirstHttpFilterFactory` and `addLastHttpFilterFactory` (see the examples in the InterceptorTest unit tests).
 
 #### <a name="interceptorsRESTapiLP">REST API interceptors with LittleProxy</a>
-
-When running the REST API with LittleProxy enabled, you cannot use the legacy `/:port/interceptor/` endpoints. Instead, POST the javascript payload to the new `/:port/filter/request` and `/:port/filter/response` endpoints.
-
-##### <a name="interceptorsRESTapiLPRequestFilter">Request filters</a>
 
 Javascript request filters have access to the variables `request` (type `io.netty.handler.codec.http.HttpRequest`), `contents` (type `com.browserup.bup.util.HttpMessageContents`), and `messageInfo` (type `com.browserup.bup.util.HttpMessageInfo`). `messageInfo` contains additional information about the message, including whether the message is sent over HTTP or HTTPS, as well as the original request received from the client before any changes made by previous filters. If the javascript returns an object of type `io.netty.handler.codec.http.HttpResponse`, the HTTP request will "short-circuit" and return the response immediately.
 
