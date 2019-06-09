@@ -3,11 +3,22 @@
 The BrowserUp Proxy allows you to manipulate HTTP requests and responses, capture HTTP content, and export performance data as a [HAR file](http://www.softwareishard.com/blog/har-12-spec/).
 BrowserUp Proxy works well as a standalone proxy server, but it is especially useful when embedded in Selenium tests.
 
-BrowserUp Proxy is originally forked from [BrowserMobProxy](https://github.com/lightbody/browsermob-proxy) and is powered by [LittleProxy](https://github.com/mrog/LittleProxy). 
-See [CHANGELOG.md] for updates.
+BrowserUp Proxy is forked from [BrowserMobProxy](https://github.com/lightbody/browsermob-proxy) and is powered by [LittleProxy](https://github.com/mrog/LittleProxy).
+See [changelog](CHANGELOG.md) for updates.
 
 If you're running BrowserUp Proxy within a Java application or Selenium test, get started with [Embedded Mode](#getting-started-embedded-mode). If you want to run BUP from the
 command line as a standalone proxy, start with [Standalone](#getting-started-standalone).
+
+
+#### About BrowserUp
+
+The cloud has made machine-hours cheap. Spending **thousands** in labor costs painfully correlating HTTP scripts to 
+optimize machine costs doesn't make sense when an hour of 96 core cloud time costs *under a dollar.*
+
+BrowserUp [load tests your website with *real browsers*]((https://browserup.com/)) using the same page objects you wrote for your integration tests.
+
+[Email us](mailto:hello@browserup.com) for a demo. 
+
 
 ### Getting started: Embedded Mode
 To use BrowserUp Proxy in your tests or application, add the `browserup-proxy-core` dependency to your pom:
@@ -116,8 +127,6 @@ Empties the DNS cache | DELETE | */proxy/[port]/dns/cache* ||
 | [REST API interceptors with LittleProxy](#interceptorsRESTapiLP) |||
 |Describe your own request interception | POST | */proxy/[port]/filter/request* | A string which determinates interceptor rules. See more [here](#interceptorsRESTapiLPRequestFilter) |
 |Describe your own response interception | POST | */proxy/[port]/filter/response* | A string which determinates interceptor rules. See more [here](#interceptorsRESTapiLPResponseFilter) |
-|Describe your own request interception | POST | */proxy/[port]/interceptor/request* | A string which determinates interceptor rules. See more [here](#interceptorsRESTapiLegacy) |
-|Describe your own response interception | POST | */proxy/[port]/interceptor/response* | A string which determinates interceptor rules. See more [here](#interceptorsRESTapiLegacy) |
 
 For example, once you've started the proxy you can create a new HAR to start recording data like so:
 
@@ -302,8 +311,8 @@ If you're doing testing with Selenium, you'll want to make sure that the browser
 
 ### NodeJS Support
 
-We are compatible with the browsermob proxy, so you could probably fork this and get it going
-[https://www.npmjs.com/package/browsermob-proxy-api]
+We are compatible with the browsermob proxy, so you could probably fork [this][https://www.npmjs.com/package/browsermob-proxy-api] and get it going
+
 
 
 
