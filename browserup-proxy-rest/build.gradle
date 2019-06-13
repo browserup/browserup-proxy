@@ -66,7 +66,7 @@ dependencies {
     implementation 'com.google.sitebricks:sitebricks:0.8.11'
     implementation 'io.netty:netty-all:4.1.36.Final'
     implementation 'net.sf.jopt-simple:jopt-simple:5.0.4'
-    implementation 'org.eclipse.jetty:jetty-server:9.4.18.v20190429'
+    implementation 'org.eclipse.jetty:jetty-server:9.4.19.v20190610'
     implementation 'org.eclipse.jetty:jetty-servlet:9.4.18.v20190429'
     implementation 'org.slf4j:jcl-over-slf4j:1.7.26'
     implementation 'org.apache.commons:commons-lang3:3.9'
