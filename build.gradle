@@ -32,6 +32,10 @@ subprojects {
 
     sourceCompatibility=1.8
 
+    ext {
+        jettyVersion = '9.4.19.v20190610'
+    }
+
     repositories {
         jcenter()
         mavenCentral()
