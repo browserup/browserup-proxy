@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
     id 'groovy'
+    id 'com.benjaminsproule.swagger' version '1.0.0'
 }
 
 archivesBaseName = 'browserup-proxy-rest'
@@ -66,6 +67,30 @@ dependencies {
     implementation 'org.eclipse.jetty:jetty-servlet:7.3.0.v20110203'
     implementation 'org.slf4j:jcl-over-slf4j:1.7.25'
     implementation 'org.apache.commons:commons-lang3:3.8.1'
+
+    // https://mvnrepository.com/artifact/org.glassfish.jersey.containers/jersey-container-servlet-core
+    compile group: 'org.glassfish.jersey.containers', name: 'jersey-container-servlet-core', version: '2.28'
+// https://mvnrepository.com/artifact/org.glassfish.jersey.media/jersey-media-json-jackson
+    compile group: 'org.glassfish.jersey.media', name: 'jersey-media-json-jackson', version: '2.28'
+    // https://mvnrepository.com/artifact/org.glassfish.jersey.inject/jersey-hk2
+    compile group: 'org.glassfish.jersey.inject', name: 'jersey-hk2', version: '2.28'
+// https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-jaxrs2
+    compile group: 'io.swagger.core.v3', name: 'swagger-jaxrs2', version: '2.0.8'
+// https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-core
+    compile group: 'io.swagger.core.v3', name: 'swagger-core', version: '2.0.8'
+// https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-integration
+    compile group: 'io.swagger.core.v3', name: 'swagger-integration', version: '2.0.8'
+// https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-jaxrs2-servlet-initializer
+    compile group: 'io.swagger.core.v3', name: 'swagger-jaxrs2-servlet-initializer', version: '2.0.8'
+// https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-models
+    compile group: 'io.swagger.core.v3', name: 'swagger-models', version: '2.0.8'
+// https://mvnrepository.com/artifact/org.webjars/swagger-ui
+    compile group: 'org.webjars', name: 'swagger-ui', version: '3.22.2'
+// https://mvnrepository.com/artifact/org.glassfish.jersey.ext/jersey-bean-validation
+    compile group: 'org.glassfish.jersey.ext', name: 'jersey-bean-validation', version: '2.28'
+
+// https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
+    compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
 
     testImplementation project(':browserup-proxy-mitm')
     testImplementation 'com.browserup:littleproxy:2.0.0-SNAPSHOT'

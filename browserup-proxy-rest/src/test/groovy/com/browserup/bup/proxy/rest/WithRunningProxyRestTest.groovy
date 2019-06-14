@@ -114,7 +114,7 @@ class WithRunningProxyRestTest {
     }
 
     def sendGetToProxyServer(Closure configClosure) {
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN, configClosure)
+        proxyRestServerClient.request(Method.GET, ContentType.WILDCARD, configClosure)
     }
 
     void requestToTargetServer(url, expectedResponse) {

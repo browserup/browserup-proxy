@@ -1,13 +1,11 @@
-package com.browserup.bup.proxy.bricks.resource;
+package com.browserup.bup.rest;
 
 import com.browserup.bup.BrowserUpProxyServer;
 import com.browserup.bup.proxy.ProxyManager;
-import com.browserup.bup.proxy.bricks.resource.entries.EntriesProxyResource;
 import com.browserup.bup.proxy.bricks.validation.ParamConstraintViolation;
 import com.browserup.bup.proxy.bricks.validation.param.raw.IntRawParam;
 import com.browserup.bup.proxy.bricks.validation.param.raw.StringRawParam;
 import com.browserup.bup.proxy.bricks.validation.param.ValidatedParam;
-import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,12 +20,11 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class BaseResource  {
-    private static final Logger LOG = LoggerFactory.getLogger(EntriesProxyResource.class);
+public abstract class BaseResource  {
+    private static final Logger LOG = LoggerFactory.getLogger(BaseResource.class);
 
-    private final ProxyManager proxyManager;
+    protected final ProxyManager proxyManager;
 
-    @Inject
     public BaseResource(ProxyManager proxyManager) {
         this.proxyManager = proxyManager;
     }

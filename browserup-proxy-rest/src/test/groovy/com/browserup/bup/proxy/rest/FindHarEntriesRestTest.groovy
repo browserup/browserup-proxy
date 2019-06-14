@@ -2,6 +2,7 @@ package com.browserup.bup.proxy.rest
 
 import com.browserup.harreader.model.HarEntry
 import com.fasterxml.jackson.databind.ObjectMapper
+import groovyx.net.http.HttpResponseDecorator
 import groovyx.net.http.Method
 import org.apache.http.entity.ContentType
 import org.hamcrest.Matchers
@@ -35,8 +36,8 @@ class FindHarEntriesRestTest extends BaseRestTest {
             def urlPattern = ".*${urlToCatch}"
             uri.path = "/proxy/${proxy.port}/${urlPath}"
             uri.query = [urlPattern: urlPattern]
-            response.success = { _, reader ->
-                HarEntry[] entries = new ObjectMapper().readValue(reader, HarEntry[]) as HarEntry[]
+            response.success = { HttpResponseDecorator resp ->
+                HarEntry[] entries = new ObjectMapper().readValue(resp.entity.content, HarEntry[]) as HarEntry[]
                 assertThat('Expected to find only one entry', entries, Matchers.arrayWithSize(1))
                 assertThat('Expected to find entry containing url from url filter pattern',
                         entries[0].request.url, Matchers.containsString(urlToCatch))
@@ -58,7 +59,7 @@ class FindHarEntriesRestTest extends BaseRestTest {
 
         targetServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             uri.path = "/${urlNotToCatch}"
-            response.success = { _, reader ->
+            response.success = { HttpResponseDecorator resp ->
                 assertEquals(responseBody, reader.text)
             }
         }
@@ -67,8 +68,8 @@ class FindHarEntriesRestTest extends BaseRestTest {
             def urlPattern = ".*${urlToCatch}"
             uri.path = "/proxy/${proxy.port}/${urlPath}"
             uri.query = [urlPattern: urlPattern]
-            response.success = { _, reader ->
-                HarEntry[] entries = new ObjectMapper().readValue(reader, HarEntry[]) as HarEntry[]
+            response.success = { HttpResponseDecorator resp ->
+                HarEntry[] entries = new ObjectMapper().readValue(resp.entity.content, HarEntry[]) as HarEntry[]
                 assertThat('Expected get empty har entries array', entries, Matchers.arrayWithSize(0))
             }
         }

@@ -37,6 +37,16 @@ public class ParamConstraintViolation<T> implements ConstraintViolation<T> {
     }
 
     @Override
+    public Object[] getExecutableParameters() {
+        return new Object[0];
+    }
+
+    @Override
+    public Object getExecutableReturnValue() {
+        return null;
+    }
+
+    @Override
     public Path getPropertyPath() {
         return null;
     }
@@ -48,6 +58,11 @@ public class ParamConstraintViolation<T> implements ConstraintViolation<T> {
 
     @Override
     public ConstraintDescriptor<?> getConstraintDescriptor() {
+        return null;
+    }
+
+    @Override
+    public <U> U unwrap(Class<U> type) {
         return null;
     }
 }
