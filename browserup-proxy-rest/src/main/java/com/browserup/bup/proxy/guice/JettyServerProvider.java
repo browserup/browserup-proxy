@@ -4,6 +4,7 @@ import com.browserup.bup.proxy.ProxyManager;
 import com.browserup.bup.rest.BaseResource;
 import com.browserup.bup.rest.CustomMapper;
 import com.browserup.bup.rest.FooResource;
+import com.browserup.bup.rest.filter.LoggingFilter;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
@@ -61,6 +62,8 @@ public class JettyServerProvider implements Provider<Server> {
         resourceConfig.register(proxyManagerToHkBinder(proxyManager));
         resourceConfig.register(JacksonFeature.class);
         resourceConfig.register(CustomMapper.class);
+        resourceConfig.registerClasses(LoggingFilter.class);
+
         resourceConfig.property(ServerProperties.BV_SEND_ERROR_IN_RESPONSE, true);
 
         ServletContainer servletContainer = new ServletContainer(resourceConfig);

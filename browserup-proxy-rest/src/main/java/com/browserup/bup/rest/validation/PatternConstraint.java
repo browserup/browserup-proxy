@@ -1,7 +1,7 @@
 package com.browserup.bup.rest.validation;
 
-import com.browserup.bup.proxy.ProxyManager;
-import com.browserup.bup.rest.mostrecent.MostRecentEntryProxyResource;
+import com.browserup.bup.rest.validation.validator.RegexpPatternValidator;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,27 +9,31 @@ import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.Payload;
-import javax.ws.rs.core.Context;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.regex.Pattern;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = { UrlPatternConstraint.UrlPatternConstraintValidator.class })
-public @interface UrlPatternConstraint {
+@Constraint(validatedBy = { PatternConstraint.PatternValidator.class })
+public @interface PatternConstraint {
 
     String message() default "";
+
+    String paramName() default "";
 
     Class<?>[] groups() default {};
 
     Class<? extends Payload>[] payload() default {};
 
-    class UrlPatternConstraintValidator implements ConstraintValidator<UrlPatternConstraint, String> {
-        private static final Logger LOG = LoggerFactory.getLogger(UrlPatternConstraintValidator.class);
-        private static final String PARAM_NAME = "urlPattern";
+    class PatternValidator implements ConstraintValidator<PatternConstraint, String> {
+        private static final Logger LOG = LoggerFactory.getLogger(RegexpPatternValidator.class);
 
         @Override
         public boolean isValid(String value, ConstraintValidatorContext context) {
+            if (StringUtils.isEmpty(value)) {
+                return true;
+            }
+
             try {
                 Pattern.compile(value);
                 return true;
@@ -38,7 +42,6 @@ public @interface UrlPatternConstraint {
                 LOG.warn(errorMessage);
 
                 context.buildConstraintViolationWithTemplate(errorMessage)
-                        .addPropertyNode(PARAM_NAME)
                         .addConstraintViolation();
             }
             return false;

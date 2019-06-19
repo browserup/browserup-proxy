@@ -18,6 +18,8 @@ public @interface PortWithExistingProxyConstraint {
 
     String message() default "";
 
+    String paramName() default "port";
+
     Class<?>[] groups() default {};
 
     Class<? extends Payload>[] payload() default {};

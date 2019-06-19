@@ -84,7 +84,6 @@ class FindMostRecentEntryRestTest extends BaseRestTest {
         proxyRestServerClient.request(Method.GET, ContentType.APPLICATION_JSON) { req ->
             uri.path = "/proxy/${proxy.port}/${urlPath}"
             uri.query = [urlPattern: urlPatternNotToMatchUrl]
-            def u = uri
             response.success = { HttpResponseDecorator resp ->
                 def actualEntry = new ObjectMapper().readValue(resp.entity.content, HarEntry) as HarEntry
                 assertNull('Expected to find empty entry', actualEntry.startedDateTime)
