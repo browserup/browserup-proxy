@@ -4,6 +4,7 @@ import com.browserup.bup.assertion.model.AssertionResult
 import com.browserup.bup.proxy.CaptureType
 import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
+import groovyx.net.http.HttpResponseDecorator
 import groovyx.net.http.Method
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
@@ -43,8 +44,8 @@ class MostRecentEntryAssertHeaderDoesNotContainRestTest extends BaseRestTest {
             def urlPattern = ".*${urlPatternToMatchUrl}"
             uri.path = fullUrlPath
             uri.query = [urlPattern: urlPattern, headerValue: headerValueToFind]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionFailed(assertionResult)
@@ -62,8 +63,8 @@ class MostRecentEntryAssertHeaderDoesNotContainRestTest extends BaseRestTest {
             def urlPattern = ".*${urlPatternToMatchUrl}"
             uri.path = fullUrlPath
             uri.query = [urlPattern: urlPattern, headerName: headerNameToFind, headerValue: headerValueToFind]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionFailed(assertionResult)
@@ -81,8 +82,8 @@ class MostRecentEntryAssertHeaderDoesNotContainRestTest extends BaseRestTest {
             def urlPattern = ".*${urlPatternToMatchUrl}"
             uri.path = fullUrlPath
             uri.query = [urlPattern: urlPattern, headerName: headerNameNotToFind, headerValue: headerValueToFind]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionPassed(assertionResult)
@@ -100,8 +101,8 @@ class MostRecentEntryAssertHeaderDoesNotContainRestTest extends BaseRestTest {
             def urlPattern = ".*${urlPatternToMatchUrl}"
             uri.path = fullUrlPath
             uri.query = [urlPattern: urlPattern, headerName: headerNameToFind, headerValue: headerValueNotToFind]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionPassed(assertionResult)
@@ -118,8 +119,8 @@ class MostRecentEntryAssertHeaderDoesNotContainRestTest extends BaseRestTest {
         sendGetToProxyServer { req ->
             uri.path = fullUrlPath
             uri.query = [urlPattern: urlPatternNotToMatchUrl, headerValue: headerValueNotToFind]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get no assertion result entries', assertionResult.requests, Matchers.hasSize(0))
                 assertAssertionPassed(assertionResult)

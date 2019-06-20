@@ -2,8 +2,7 @@ package com.browserup.bup.proxy.guice;
 
 import com.browserup.bup.proxy.ProxyManager;
 import com.browserup.bup.rest.BaseResource;
-import com.browserup.bup.rest.CustomMapper;
-import com.browserup.bup.rest.FooResource;
+import com.browserup.bup.rest.validation.mapper.ConstraintViolationExceptionMapper;
 import com.browserup.bup.rest.filter.LoggingFilter;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -12,13 +11,9 @@ import com.google.inject.servlet.GuiceFilter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.util.HashSet;
-import java.util.Set;
 
 import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -61,7 +56,7 @@ public class JettyServerProvider implements Provider<Server> {
         resourceConfig.registerClasses(OpenApiResource.class);
         resourceConfig.register(proxyManagerToHkBinder(proxyManager));
         resourceConfig.register(JacksonFeature.class);
-        resourceConfig.register(CustomMapper.class);
+        resourceConfig.register(ConstraintViolationExceptionMapper.class);
         resourceConfig.registerClasses(LoggingFilter.class);
 
         resourceConfig.property(ServerProperties.BV_SEND_ERROR_IN_RESPONSE, true);

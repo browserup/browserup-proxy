@@ -7,10 +7,9 @@ import com.browserup.bup.rest.BaseResource;
 import com.browserup.bup.rest.validation.*;
 import com.browserup.bup.util.HttpStatusClass;
 import com.browserup.harreader.model.HarEntry;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -19,6 +18,17 @@ import java.util.regex.Pattern;
 
 @Path("/proxy/{port}/har/mostRecentEntry")
 public class MostRecentEntryProxyResource extends BaseResource {
+    private static final String URL_PATTERN = "urlPattern";
+    private static final String PORT = "port";
+    private static final String CONTENT_TEXT = "contentText";
+    private static final String CONTENT_PATTERN = "contentPattern";
+    private static final String LENGTH = "length";
+    private static final String MILLISECONDS = "milliseconds";
+    private static final String HEADER_NAME = "headerName";
+    private static final String HEADER_VALUE = "headerValue";
+    private static final String HEADER_NAME_PATTERN = "headerNamePattern";
+    private static final String HEADER_VALUE_PATTERN = "headerValuePattern";
+    private static final String STATUS = "status";
 
     public MostRecentEntryProxyResource(@Context ProxyManager proxyManager) {
         super(proxyManager);
@@ -27,8 +37,15 @@ public class MostRecentEntryProxyResource extends BaseResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response mostRecentEntry(
-            @PathParam("port") @NotNull @PortWithExistingProxyConstraint int port,
-            @QueryParam("urlPattern") @NotBlank @PatternConstraint(paramName = "urlPattern") String urlPattern) {
+            @PathParam(PORT)
+            @NotNullConstraint(paramName = PORT)
+            @PortWithExistingProxyConstraint
+            @Parameter(required = true, in = ParameterIn.PATH) int port,
+
+            @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
+            @PatternConstraint(paramName = URL_PATTERN)
+            @Parameter(required = true) String urlPattern) {
         return Response.ok(proxyManager.get(port)
                 .findMostRecentEntry(Pattern.compile(urlPattern))
                 .orElse(new HarEntry())).build();
@@ -38,9 +55,19 @@ public class MostRecentEntryProxyResource extends BaseResource {
     @Path("/assertContentContains")
     @Produces(MediaType.APPLICATION_JSON)
     public Response contentContains(
-            @PathParam("port") @NotNull @PortWithExistingProxyConstraint int port,
-            @QueryParam("urlPattern") @PatternConstraint(paramName = "urlPattern") String urlPattern,
-            @QueryParam("contentText") @NotBlank String contentText) {
+            @PathParam(PORT)
+            @NotNullConstraint(paramName = PORT)
+            @PortWithExistingProxyConstraint
+            @Parameter(required = true, in = ParameterIn.PATH) int port,
+
+            @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
+            @PatternConstraint(paramName = URL_PATTERN)
+            @Parameter(required = true) String urlPattern,
+
+            @QueryParam(CONTENT_TEXT)
+            @NotBlankConstraint(paramName = CONTENT_TEXT)
+            @Parameter(required = true) String contentText) {
         AssertionResult result = proxyManager.get(port)
                 .assertMostRecentResponseContentContains(Pattern.compile(urlPattern), contentText);
 
@@ -52,9 +79,19 @@ public class MostRecentEntryProxyResource extends BaseResource {
     @Path("/assertContentDoesNotContain")
     @Produces(MediaType.APPLICATION_JSON)
     public Response contentDoesNotContain(
-            @PathParam("port") @NotNull @PortWithExistingProxyConstraint int port,
-            @QueryParam("urlPattern") @NotBlank @PatternConstraint(paramName = "urlPattern") String urlPattern,
-            @QueryParam("contentText") @NotBlank String contentText) {
+            @PathParam(PORT)
+            @NotNullConstraint(paramName = PORT)
+            @PortWithExistingProxyConstraint
+            @Parameter(required = true, in = ParameterIn.PATH) int port,
+
+            @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
+            @PatternConstraint(paramName = URL_PATTERN)
+            @Parameter(required = true) String urlPattern,
+
+            @QueryParam(CONTENT_TEXT)
+            @NotBlankConstraint(paramName = CONTENT_TEXT)
+            @Parameter(required = true) String contentText) {
         AssertionResult result = proxyManager.get(port)
                 .assertMostRecentResponseContentDoesNotContain(Pattern.compile(urlPattern), contentText);
 
@@ -65,9 +102,20 @@ public class MostRecentEntryProxyResource extends BaseResource {
     @Path("/assertContentMatches")
     @Produces(MediaType.APPLICATION_JSON)
     public Response contentMatches(
-            @PathParam("port") @NotNull @PortWithExistingProxyConstraint int port,
-            @QueryParam("urlPattern") @NotBlank @PatternConstraint(paramName = "urlPattern") String urlPattern,
-            @QueryParam("contentPattern") @NotBlank @PatternConstraint(paramName = "contentPattern") String contentPattern) {
+            @PathParam(PORT)
+            @NotNullConstraint(paramName = PORT)
+            @PortWithExistingProxyConstraint
+            @Parameter(required = true, in = ParameterIn.PATH) int port,
+
+            @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
+            @PatternConstraint(paramName = URL_PATTERN)
+            @Parameter(required = true) String urlPattern,
+
+            @QueryParam(CONTENT_PATTERN)
+            @NotBlankConstraint(paramName = CONTENT_PATTERN)
+            @PatternConstraint(paramName = CONTENT_PATTERN)
+            @Parameter(required = true) String contentPattern) {
         AssertionResult result = proxyManager.get(port).assertMostRecentResponseContentMatches(
                 Pattern.compile(urlPattern),
                 Pattern.compile(contentPattern));
@@ -79,9 +127,19 @@ public class MostRecentEntryProxyResource extends BaseResource {
     @Path("/assertContentLengthLessThanOrEqual")
     @Produces(MediaType.APPLICATION_JSON)
     public Response contentLengthLessThanOrEqual(
-            @PathParam("port") @NotNull @PortWithExistingProxyConstraint int port,
-            @QueryParam("urlPattern") @NotBlank @PatternConstraint(paramName = "urlPattern") String urlPattern,
-            @QueryParam("length") @NotNull @DecimalMin("0") String length) {
+            @PathParam(PORT)
+            @NotNullConstraint(paramName = PORT)
+            @PortWithExistingProxyConstraint
+            @Parameter(required = true, in = ParameterIn.PATH) int port,
+
+            @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
+            @PatternConstraint(paramName = URL_PATTERN)
+            @Parameter(required = true) String urlPattern,
+
+            @QueryParam(LENGTH)
+            @NotNullConstraint(paramName = LENGTH)
+            @LongPositiveConstraint(value = 0, paramName = LENGTH) String length) {
         AssertionResult result = proxyManager.get(port).assertMostRecentResponseContentLengthLessThanOrEqual(
                 Pattern.compile(urlPattern),
                 Long.parseLong(length));
@@ -93,9 +151,19 @@ public class MostRecentEntryProxyResource extends BaseResource {
     @Path("/assertResponseTimeLessThanOrEqual")
     @Produces(MediaType.APPLICATION_JSON)
     public Response responseTimeLessThanOrEqual(
-            @PathParam("port") @NotNull @PortWithExistingProxyConstraint int port,
-            @QueryParam("urlPattern") @NotBlank @PatternConstraint(paramName = "urlPattern") String urlPattern,
-            @QueryParam("milliseconds") @NotNull long milliseconds) {
+            @PathParam(PORT)
+            @NotNullConstraint(paramName = PORT)
+            @PortWithExistingProxyConstraint
+            @Parameter(required = true, in = ParameterIn.PATH) int port,
+
+            @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
+            @PatternConstraint(paramName = URL_PATTERN)
+            @Parameter(required = true) String urlPattern,
+
+            @QueryParam(MILLISECONDS)
+            @NotNullConstraint(paramName = PORT)
+            @Parameter(required = true) long milliseconds) {
         AssertionResult result = proxyManager.get(port).assertMostRecentResponseTimeLessThanOrEqual(
                 Pattern.compile(urlPattern),
                 milliseconds);
@@ -107,10 +175,22 @@ public class MostRecentEntryProxyResource extends BaseResource {
     @Path("/assertResponseHeaderContains")
     @Produces(MediaType.APPLICATION_JSON)
     public Response responseHeaderContains(
-            @PathParam("port") @NotNull @PortWithExistingProxyConstraint int port,
-            @QueryParam("urlPattern") @NotBlank @PatternConstraint(paramName = "urlPattern") String urlPattern,
-            @QueryParam("headerName") @NotBlank String headerName,
-            @QueryParam("headerValue") @NotBlank String headerValue) {
+            @PathParam(PORT)
+            @NotNullConstraint(paramName = PORT)
+            @PortWithExistingProxyConstraint
+            @Parameter(required = true, in = ParameterIn.PATH) int port,
+
+            @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
+            @PatternConstraint(paramName = URL_PATTERN)
+            @Parameter(required = true) String urlPattern,
+
+            @QueryParam(HEADER_NAME)
+            @Parameter String headerName,
+
+            @QueryParam(HEADER_VALUE)
+            @NotBlankConstraint(paramName = HEADER_VALUE)
+            @Parameter(required = true) String headerValue) {
         AssertionResult result = proxyManager.get(port).assertMostRecentResponseHeaderContains(
                 Pattern.compile(urlPattern),
                 headerName, headerValue);
@@ -122,10 +202,22 @@ public class MostRecentEntryProxyResource extends BaseResource {
     @Path("/assertResponseHeaderDoesNotContain")
     @Produces(MediaType.APPLICATION_JSON)
     public Response responseHeaderDoesNotContain(
-            @PathParam("port") @NotNull @PortWithExistingProxyConstraint int port,
-            @QueryParam("urlPattern") @NotBlank @PatternConstraint(paramName = "urlPattern") String urlPattern,
-            @QueryParam("headerName") @NotBlank String headerName,
-            @QueryParam("headerValue") @NotBlank String headerValue) {
+            @PathParam(PORT)
+            @NotNullConstraint(paramName = PORT)
+            @PortWithExistingProxyConstraint
+            @Parameter(required = true, in = ParameterIn.PATH) int port,
+
+            @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
+            @PatternConstraint(paramName = URL_PATTERN)
+            @Parameter(required = true) String urlPattern,
+
+            @QueryParam(HEADER_NAME)
+            @Parameter String headerName,
+
+            @QueryParam(HEADER_VALUE)
+            @NotBlankConstraint(paramName = HEADER_VALUE)
+            @Parameter(required = true) String headerValue) {
         AssertionResult result = proxyManager.get(port).assertMostRecentResponseHeaderDoesNotContain(
                 Pattern.compile(urlPattern),
                 headerName, headerValue);
@@ -137,13 +229,27 @@ public class MostRecentEntryProxyResource extends BaseResource {
     @Path("/assertResponseHeaderMatches")
     @Produces(MediaType.APPLICATION_JSON)
     public AssertionResult responseHeaderMatches(
-            @PathParam("port") @NotNull @PortWithExistingProxyConstraint int port,
-            @QueryParam("urlPattern") @NotBlank @PatternConstraint(paramName = "urlPattern") String urlPattern,
-            @QueryParam("headerNamePattern") @NotBlank @PatternConstraint(paramName = "headerNamePattern") String headerNamePattern,
-            @QueryParam("headerValuePattern") @NotBlank  @PatternConstraint(paramName = "headerValuePattern") String headerValuePattern) {
+            @PathParam(PORT)
+            @NotNullConstraint(paramName = PORT)
+            @PortWithExistingProxyConstraint
+            @Parameter(required = true, in = ParameterIn.PATH) int port,
+
+            @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
+            @PatternConstraint(paramName = URL_PATTERN)
+            @Parameter(required = true) String urlPattern,
+
+            @QueryParam(HEADER_NAME_PATTERN)
+            @PatternConstraint(paramName = HEADER_NAME_PATTERN)
+            @Parameter(required = true) String headerNamePattern,
+
+            @QueryParam(HEADER_VALUE_PATTERN)
+            @NotBlankConstraint(paramName = HEADER_VALUE_PATTERN)
+            @PatternConstraint(paramName = HEADER_VALUE_PATTERN)
+            @Parameter(required = true) String headerValuePattern) {
         return proxyManager.get(port).assertMostRecentResponseHeaderMatches(
                 Pattern.compile(urlPattern),
-                Pattern.compile(headerNamePattern),
+                headerNamePattern != null ? Pattern.compile(headerNamePattern) : null,
                 Pattern.compile(headerValuePattern));
     }
 
@@ -151,23 +257,42 @@ public class MostRecentEntryProxyResource extends BaseResource {
     @Path("/assertStatusEquals")
     @Produces(MediaType.APPLICATION_JSON)
     public AssertionResult statusEquals(
-            @PathParam("port") @NotNull @PortWithExistingProxyConstraint int port,
-            @QueryParam("urlPattern") @PatternConstraint(paramName = "urlPattern") String urlPattern,
-            @QueryParam("status") @NotNull int status) {
+            @PathParam(PORT)
+            @NotNullConstraint(paramName = PORT)
+            @PortWithExistingProxyConstraint
+            @Parameter(required = true, in = ParameterIn.PATH) int port,
+
+            @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
+            @PatternConstraint(paramName = URL_PATTERN)
+            @Parameter() String urlPattern,
+
+            @QueryParam(STATUS)
+            @NotNullConstraint(paramName = STATUS)
+            @HttpStatusCodeConstraint(paramName = STATUS)
+            @Parameter(required = true) String status) {
 
         BrowserUpProxyServer proxyServer = proxyManager.get(port);
+        int intStatus = Integer.parseInt(status);
 
         return urlPattern.isEmpty() ?
-                proxyServer.assertMostRecentResponseStatusCode(status) :
-                proxyServer.assertMostRecentResponseStatusCode(Pattern.compile(urlPattern), status);
+                proxyServer.assertMostRecentResponseStatusCode(intStatus) :
+                proxyServer.assertMostRecentResponseStatusCode(Pattern.compile(urlPattern), intStatus);
     }
 
     @GET
     @Path("/assertStatusInformational")
     @Produces(MediaType.APPLICATION_JSON)
     public AssertionResult statusInformational(
-            @PathParam("port") @NotNull @PortWithExistingProxyConstraint int port,
-            @QueryParam("urlPattern") @PatternConstraint(paramName = "urlPattern") String urlPattern) {
+            @PathParam(PORT)
+            @NotNullConstraint(paramName = PORT)
+            @PortWithExistingProxyConstraint
+            @Parameter(required = true, in = ParameterIn.PATH) int port,
+
+            @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
+            @PatternConstraint(paramName = URL_PATTERN)
+            @Parameter() String urlPattern) {
 
         BrowserUpProxyServer proxyServer = proxyManager.get(port);
 
@@ -180,8 +305,15 @@ public class MostRecentEntryProxyResource extends BaseResource {
     @Path("/assertStatusSuccess")
     @Produces(MediaType.APPLICATION_JSON)
     public AssertionResult statusSuccess(
-            @PathParam("port") @NotNull @PortWithExistingProxyConstraint int port,
-            @QueryParam("urlPattern") @PatternConstraint(paramName = "urlPattern") String urlPattern) {
+            @PathParam(PORT)
+            @NotNullConstraint(paramName = PORT)
+            @PortWithExistingProxyConstraint
+            @Parameter(required = true, in = ParameterIn.PATH) int port,
+
+            @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
+            @PatternConstraint(paramName = URL_PATTERN)
+            @Parameter() String urlPattern) {
 
         BrowserUpProxyServer proxyServer = proxyManager.get(port);
 
@@ -194,8 +326,15 @@ public class MostRecentEntryProxyResource extends BaseResource {
     @Path("/assertStatusRedirection")
     @Produces(MediaType.APPLICATION_JSON)
     public AssertionResult statusRedirection(
-            @PathParam("port") @NotNull @PortWithExistingProxyConstraint int port,
-            @QueryParam("urlPattern") @PatternConstraint(paramName = "urlPattern") String urlPattern) {
+            @PathParam(PORT)
+            @NotNullConstraint(paramName = PORT)
+            @PortWithExistingProxyConstraint
+            @Parameter(required = true, in = ParameterIn.PATH) int port,
+
+            @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
+            @PatternConstraint(paramName = URL_PATTERN)
+            @Parameter() String urlPattern) {
 
         BrowserUpProxyServer proxyServer = proxyManager.get(port);
 
@@ -208,8 +347,15 @@ public class MostRecentEntryProxyResource extends BaseResource {
     @Path("/assertStatusClientError")
     @Produces(MediaType.APPLICATION_JSON)
     public AssertionResult statusClientError(
-            @PathParam("port") @NotNull @PortWithExistingProxyConstraint int port,
-            @QueryParam("urlPattern") @PatternConstraint(paramName = "urlPattern") String urlPattern) {
+            @PathParam(PORT)
+            @NotNullConstraint(paramName = PORT)
+            @PortWithExistingProxyConstraint
+            @Parameter(required = true, in = ParameterIn.PATH) int port,
+
+            @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
+            @PatternConstraint(paramName = URL_PATTERN)
+            @Parameter() String urlPattern) {
 
         BrowserUpProxyServer proxyServer = proxyManager.get(port);
 
@@ -222,8 +368,15 @@ public class MostRecentEntryProxyResource extends BaseResource {
     @Path("/assertStatusServerError")
     @Produces(MediaType.APPLICATION_JSON)
     public AssertionResult statusServerError(
-            @PathParam("port") @NotNull @PortWithExistingProxyConstraint int port,
-            @QueryParam("urlPattern") @PatternConstraint(paramName = "urlPattern") String urlPattern) {
+            @PathParam(PORT)
+            @NotNullConstraint(paramName = PORT)
+            @PortWithExistingProxyConstraint
+            @Parameter(required = true, in = ParameterIn.PATH) int port,
+
+            @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
+            @PatternConstraint(paramName = URL_PATTERN)
+            @Parameter() String urlPattern) {
 
         BrowserUpProxyServer proxyServer = proxyManager.get(port);
 
