@@ -2,6 +2,7 @@ package com.browserup.bup.proxy.rest.assertion.entries.content
 
 import com.browserup.bup.assertion.model.AssertionResult
 import com.fasterxml.jackson.databind.ObjectMapper
+import groovyx.net.http.HttpResponseDecorator
 import org.apache.http.HttpStatus
 import org.hamcrest.Matchers
 import org.junit.Test
@@ -28,8 +29,8 @@ class EntriesAssertContentLengthLessThanOrEqualRestTest extends BaseEntriesAsser
                     urlPattern: URL_PATTERN_TO_MATCH_BOTH,
                     length: SECOND_CONTENT_SIZE
             ]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertAssertionPassed(assertionResult)
             }
@@ -47,8 +48,8 @@ class EntriesAssertContentLengthLessThanOrEqualRestTest extends BaseEntriesAsser
                     length: FIRST_CONTENT_SIZE
             ]
 
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get two assertion entries', assertionResult.requests, Matchers.hasSize(2))
                 assertAssertionFailed(assertionResult)
@@ -73,8 +74,8 @@ class EntriesAssertContentLengthLessThanOrEqualRestTest extends BaseEntriesAsser
                     urlPattern: URL_PATTERN_TO_MATCH_FIRST,
                     length: FIRST_CONTENT_SIZE - 1
             ]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertAssertionFailed(assertionResult)
 
@@ -98,8 +99,8 @@ class EntriesAssertContentLengthLessThanOrEqualRestTest extends BaseEntriesAsser
                     urlPattern: URL_PATTERN_TO_MATCH_NOTHING,
                     length: 1
             ]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertAssertionPassed(assertionResult)
             }

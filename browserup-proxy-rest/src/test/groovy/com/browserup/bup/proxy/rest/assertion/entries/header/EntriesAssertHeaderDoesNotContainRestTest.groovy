@@ -4,6 +4,7 @@ import com.browserup.bup.assertion.model.AssertionResult
 import com.browserup.bup.proxy.CaptureType
 import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
+import groovyx.net.http.HttpResponseDecorator
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.eclipse.jetty.http.HttpMethods
@@ -35,8 +36,8 @@ class EntriesAssertHeaderDoesNotContainRestTest extends BaseEntriesAssertHeaderR
                     headerValue: MISSING_HEADER_VALUE
             ]
 
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(2))
                 assertAssertionPassed(assertionResult)
@@ -55,8 +56,8 @@ class EntriesAssertHeaderDoesNotContainRestTest extends BaseEntriesAssertHeaderR
                     headerValue: FIRST_HEADER_VALUE
             ]
 
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(2))
                 assertAssertionFailed(assertionResult)
@@ -75,8 +76,8 @@ class EntriesAssertHeaderDoesNotContainRestTest extends BaseEntriesAssertHeaderR
                     headerValue: FIRST_HEADER_VALUE
             ]
 
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionFailed(assertionResult)
@@ -102,8 +103,8 @@ class EntriesAssertHeaderDoesNotContainRestTest extends BaseEntriesAssertHeaderR
                     headerValue: SECOND_HEADER_VALUE
             ]
 
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionPassed(assertionResult)
@@ -123,8 +124,8 @@ class EntriesAssertHeaderDoesNotContainRestTest extends BaseEntriesAssertHeaderR
                     headerValue: SECOND_HEADER_VALUE
             ]
 
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionPassed(assertionResult)
@@ -144,8 +145,8 @@ class EntriesAssertHeaderDoesNotContainRestTest extends BaseEntriesAssertHeaderR
                     headerValue: FIRST_HEADER_VALUE
             ]
 
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionFailed(assertionResult)
@@ -165,8 +166,8 @@ class EntriesAssertHeaderDoesNotContainRestTest extends BaseEntriesAssertHeaderR
                     headerValue: SECOND_HEADER_VALUE
             ]
 
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionPassed(assertionResult)
@@ -186,8 +187,8 @@ class EntriesAssertHeaderDoesNotContainRestTest extends BaseEntriesAssertHeaderR
                     headerValue: SECOND_HEADER_VALUE
             ]
 
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertAssertionPassed(assertionResult)
             }

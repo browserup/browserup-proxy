@@ -1,7 +1,7 @@
 package com.browserup.bup.proxy.guice;
 
 import com.browserup.bup.proxy.ProxyManager;
-import com.browserup.bup.rest.BaseResource;
+import com.browserup.bup.rest.mostrecent.MostRecentEntryProxyResource;
 import com.browserup.bup.rest.validation.mapper.ConstraintViolationExceptionMapper;
 import com.browserup.bup.rest.filter.LoggingFilter;
 import com.google.inject.Inject;
@@ -51,7 +51,7 @@ public class JettyServerProvider implements Provider<Server> {
     @Inject
     public JettyServerProvider(@Named("port") int port, @Named("address") String address, ProxyManager proxyManager) throws UnknownHostException {
         ResourceConfig resourceConfig = new ResourceConfig();
-        resourceConfig.packages(BaseResource.class.getPackageName());
+        resourceConfig.packages("com.browserup.bup.rest");
 
         resourceConfig.registerClasses(OpenApiResource.class);
         resourceConfig.register(proxyManagerToHkBinder(proxyManager));

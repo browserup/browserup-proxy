@@ -32,7 +32,7 @@ class FindHarEntriesRestTest extends BaseRestTest {
         requestToTargetServer(urlToCatch, responseBody)
         requestToTargetServer(urlNotToCatch, responseBody)
 
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        proxyRestServerClient.request(Method.GET, ContentType.APPLICATION_JSON) { req ->
             def urlPattern = ".*${urlToCatch}"
             uri.path = "/proxy/${proxy.port}/${urlPath}"
             uri.query = [urlPattern: urlPattern]
@@ -57,14 +57,14 @@ class FindHarEntriesRestTest extends BaseRestTest {
 
         proxyManager.get()[0].newHar()
 
-        targetServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        targetServerClient.request(Method.GET, ContentType.APPLICATION_JSON) { req ->
             uri.path = "/${urlNotToCatch}"
             response.success = { HttpResponseDecorator resp ->
                 assertEquals(responseBody, reader.text)
             }
         }
 
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        proxyRestServerClient.request(Method.GET, ContentType.APPLICATION_JSON) { req ->
             def urlPattern = ".*${urlToCatch}"
             uri.path = "/proxy/${proxy.port}/${urlPath}"
             uri.query = [urlPattern: urlPattern]
