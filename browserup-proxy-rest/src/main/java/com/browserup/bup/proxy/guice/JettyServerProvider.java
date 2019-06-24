@@ -1,7 +1,6 @@
 package com.browserup.bup.proxy.guice;
 
 import com.browserup.bup.proxy.ProxyManager;
-import com.browserup.bup.rest.mostrecent.MostRecentEntryProxyResource;
 import com.browserup.bup.rest.validation.mapper.ConstraintViolationExceptionMapper;
 import com.browserup.bup.rest.filter.LoggingFilter;
 import com.google.inject.Inject;
@@ -11,8 +10,10 @@ import com.google.inject.servlet.GuiceFilter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.Collections;
 
 import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
+import io.swagger.v3.oas.models.OpenAPI;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -25,6 +26,8 @@ import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 public class JettyServerProvider implements Provider<Server> {
+    public static final String SWAGGER_CONFIG_NAME = "swagger-config.yaml";
+    public static final String SWAGGER_PACKAGE = "com.browserup.bup.rest.resource";
 
     private Server server;
 
@@ -51,15 +54,17 @@ public class JettyServerProvider implements Provider<Server> {
     @Inject
     public JettyServerProvider(@Named("port") int port, @Named("address") String address, ProxyManager proxyManager) throws UnknownHostException {
         ResourceConfig resourceConfig = new ResourceConfig();
-        resourceConfig.packages("com.browserup.bup.rest");
-
-        resourceConfig.registerClasses(OpenApiResource.class);
+        resourceConfig.packages(SWAGGER_PACKAGE);
+        OpenApiResource openApiResource = new OpenApiResource();
+        openApiResource.setConfigLocation(SWAGGER_CONFIG_NAME);
+        resourceConfig.register(openApiResource);
         resourceConfig.register(proxyManagerToHkBinder(proxyManager));
         resourceConfig.register(JacksonFeature.class);
         resourceConfig.register(ConstraintViolationExceptionMapper.class);
         resourceConfig.registerClasses(LoggingFilter.class);
 
         resourceConfig.property(ServerProperties.BV_SEND_ERROR_IN_RESPONSE, true);
+        resourceConfig.property(ServerProperties.WADL_FEATURE_DISABLE, true);
 
         ServletContainer servletContainer = new ServletContainer(resourceConfig);
         ServletHolder sh = new ServletHolder(servletContainer);
@@ -76,17 +81,6 @@ public class JettyServerProvider implements Provider<Server> {
 
         server.setHandler(context);
     }
-
-//    public static ContextHandler buildSwaggerUI() throws Exception {
-//        ResourceHandler rh = new ResourceHandler();
-//        rh.setResourceBase(App.class.getClassLoader()
-//                .getResource("META-INF/resources/webjars/swagger-ui/2.1.4")
-//                .toURI().toString());
-//        ContextHandler context = new ContextHandler();
-//        context.setContextPath("/docs/");
-//        context.setHandler(rh);
-//        return context;
-//    }
 
     @Override
     public Server get() {

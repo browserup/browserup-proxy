@@ -1,9 +1,8 @@
-package com.browserup.bup.rest.entries;
+package com.browserup.bup.rest.resource.mostrecent;
 
 import com.browserup.bup.BrowserUpProxyServer;
 import com.browserup.bup.assertion.model.AssertionResult;
 import com.browserup.bup.proxy.ProxyManager;
-import com.browserup.bup.rest.swagger.DocConstants;
 import com.browserup.bup.rest.validation.HttpStatusCodeConstraint;
 import com.browserup.bup.rest.validation.LongPositiveConstraint;
 import com.browserup.bup.rest.validation.NotBlankConstraint;
@@ -11,12 +10,10 @@ import com.browserup.bup.rest.validation.NotNullConstraint;
 import com.browserup.bup.rest.validation.PatternConstraint;
 import com.browserup.bup.rest.validation.PortWithExistingProxyConstraint;
 import com.browserup.bup.util.HttpStatusClass;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import com.browserup.harreader.model.HarEntry;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.info.Info;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -30,13 +27,8 @@ import java.util.regex.Pattern;
 
 import static com.browserup.bup.rest.swagger.DocConstants.*;
 
-@OpenAPIDefinition(info =
-@Info(
-        title = "BrowserUp Proxy API",
-        version = "1.0.0"
-))
-@Path("/proxy/{port}/har/entries")
-public class EntriesProxyResource {
+@Path("/proxy/{port}/har/mostRecentEntry")
+public class MostRecentEntryProxyResource {
     private static final String URL_PATTERN = "urlPattern";
     private static final String PORT = "port";
     private static final String CONTENT_TEXT = "contentText";
@@ -51,94 +43,74 @@ public class EntriesProxyResource {
 
     private final ProxyManager proxyManager;
 
-    public EntriesProxyResource(@Context ProxyManager proxyManager) {
+    public MostRecentEntryProxyResource(@Context ProxyManager proxyManager) {
         this.proxyManager = proxyManager;
     }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(
-            summary = "Search the entire log for entries whose request URL matches the given url"
-    )
-    public Response entries(
+    @Operation(description = "Search the entire log for the most recent entry whose request URL matches the given url.")
+    public Response mostRecentEntry(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
-            @Parameter(required = true, in = ParameterIn.PATH, description = DocConstants.PORT_DESCRIPTION) int port,
+            @Parameter(required = true, in = ParameterIn.PATH, description = PORT_DESCRIPTION) int port,
 
             @QueryParam(URL_PATTERN)
             @NotBlankConstraint(paramName = URL_PATTERN)
             @PatternConstraint(paramName = URL_PATTERN)
-            @Parameter(required = true, description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern) {
+            @Parameter(required = true, description = URL_PATTERN_DESCRIPTION) String urlPattern) {
         return Response.ok(proxyManager.get(port)
-                .findEntries(Pattern.compile(urlPattern))).build();
-    }
-
-    @GET
-    @Path("/assertResponseTimeLessThanOrEqual")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response responseTimeLessThanOrEqual(
-            @PathParam(PORT)
-            @NotNullConstraint(paramName = PORT)
-            @PortWithExistingProxyConstraint
-            @Parameter(required = true, in = ParameterIn.PATH, description = DocConstants.PORT_DESCRIPTION) int port,
-
-            @QueryParam(URL_PATTERN)
-            @NotBlankConstraint(paramName = URL_PATTERN)
-            @PatternConstraint(paramName = URL_PATTERN)
-            @Parameter(required = true, description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern,
-
-            @QueryParam(MILLISECONDS)
-            @LongPositiveConstraint(value = 0, paramName = MILLISECONDS)
-            @Parameter(required = true, description = DocConstants.MILLISECONDS_DESCRIPTION) String milliseconds) {
-        AssertionResult result = proxyManager.get(port).assertResponseTimeLessThanOrEqual(
-                Pattern.compile(urlPattern),
-                Long.parseLong(milliseconds));
-
-        return Response.ok(result).build();
+                .findMostRecentEntry(Pattern.compile(urlPattern))
+                .orElse(new HarEntry())).build();
     }
 
     @GET
     @Path("/assertContentContains")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "Assert that response content for the most recent request found by a given URL pattern contains specified value.")
     public Response contentContains(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
-            @Parameter(required = true, in = ParameterIn.PATH, description = DocConstants.PORT_DESCRIPTION) int port,
+            @Parameter(required = true, in = ParameterIn.PATH, description = PORT_DESCRIPTION) int port,
 
             @QueryParam(URL_PATTERN)
             @NotBlankConstraint(paramName = URL_PATTERN)
             @PatternConstraint(paramName = URL_PATTERN)
-            @Parameter(required = true, description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern,
+            @Parameter(required = true, description = URL_PATTERN_DESCRIPTION) String urlPattern,
 
             @QueryParam(CONTENT_TEXT)
             @NotBlankConstraint(paramName = CONTENT_TEXT)
-            @Parameter(required = true, description = DocConstants.CONTENT_TEXT_DESCRIPTION) String contentText) {
+            @Parameter(required = true, description = CONTENT_TEXT_DESCRIPTION) String contentText) {
         AssertionResult result = proxyManager.get(port)
-                .assertAnyUrlContentContains(Pattern.compile(urlPattern), contentText);
+                .assertMostRecentResponseContentContains(Pattern.compile(urlPattern), contentText);
 
         return Response.ok(result).build();
     }
+
+
     @GET
     @Path("/assertContentDoesNotContain")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "Assert that response content for the most recent request " +
+            "found by a given URL pattern doesn't contain specified value.")
     public Response contentDoesNotContain(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
-            @Parameter(required = true, in = ParameterIn.PATH, description = DocConstants.PORT_DESCRIPTION) int port,
+            @Parameter(required = true, in = ParameterIn.PATH, description = PORT_DESCRIPTION) int port,
 
             @QueryParam(URL_PATTERN)
             @NotBlankConstraint(paramName = URL_PATTERN)
             @PatternConstraint(paramName = URL_PATTERN)
-            @Parameter(required = true, description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern,
+            @Parameter(required = true, description = URL_PATTERN_DESCRIPTION) String urlPattern,
 
             @QueryParam(CONTENT_TEXT)
             @NotBlankConstraint(paramName = CONTENT_TEXT)
-            @Parameter(required = true, description = DocConstants.CONTENT_TEXT_DESCRIPTION) String contentText) {
+            @Parameter(required = true, description = CONTENT_TEXT_DESCRIPTION) String contentText) {
         AssertionResult result = proxyManager.get(port)
-                .assertAnyUrlContentDoesNotContain(Pattern.compile(urlPattern), contentText);
+                .assertMostRecentResponseContentDoesNotContain(Pattern.compile(urlPattern), contentText);
 
         return Response.ok(result).build();
     }
@@ -146,22 +118,24 @@ public class EntriesProxyResource {
     @GET
     @Path("/assertContentMatches")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "Assert that response content for the most recent request " +
+            "found by a given URL pattern matches content pattern.")
     public Response contentMatches(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
-            @Parameter(required = true, in = ParameterIn.PATH, description = DocConstants.PORT_DESCRIPTION) int port,
+            @Parameter(required = true, in = ParameterIn.PATH, description = PORT_DESCRIPTION) int port,
 
             @QueryParam(URL_PATTERN)
             @NotBlankConstraint(paramName = URL_PATTERN)
             @PatternConstraint(paramName = URL_PATTERN)
-            @Parameter(required = true, description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern,
+            @Parameter(required = true, description = URL_PATTERN_DESCRIPTION) String urlPattern,
 
             @QueryParam(CONTENT_PATTERN)
             @NotBlankConstraint(paramName = CONTENT_PATTERN)
             @PatternConstraint(paramName = CONTENT_PATTERN)
-            @Parameter(required = true, description = DocConstants.CONTENT_PATTERN_DESCRIPTION) String contentPattern) {
-        AssertionResult result = proxyManager.get(port).assertAnyUrlContentMatches(
+            @Parameter(required = true, description = CONTENT_PATTERN_DESCRIPTION) String contentPattern) {
+        AssertionResult result = proxyManager.get(port).assertMostRecentResponseContentMatches(
                 Pattern.compile(urlPattern),
                 Pattern.compile(contentPattern));
 
@@ -171,22 +145,23 @@ public class EntriesProxyResource {
     @GET
     @Path("/assertContentLengthLessThanOrEqual")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "Assert that content length of the most recent response found by url pattern does not exceed max value.")
     public Response contentLengthLessThanOrEqual(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
-            @Parameter(required = true, in = ParameterIn.PATH, description = DocConstants.PORT_DESCRIPTION) int port,
+            @Parameter(required = true, in = ParameterIn.PATH, description = PORT_DESCRIPTION) int port,
 
             @QueryParam(URL_PATTERN)
             @NotBlankConstraint(paramName = URL_PATTERN)
             @PatternConstraint(paramName = URL_PATTERN)
-            @Parameter(required = true, description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern,
+            @Parameter(required = true, description = URL_PATTERN_DESCRIPTION) String urlPattern,
 
             @QueryParam(LENGTH)
             @NotNullConstraint(paramName = LENGTH)
             @LongPositiveConstraint(value = 0, paramName = LENGTH)
-            @Parameter(required = true, description = DocConstants.CONTENT_LENGTH_DESCRIPTION) String length) {
-        AssertionResult result = proxyManager.get(port).assertAnyUrlContentLengthLessThanOrEquals(
+            @Parameter(required = true, description = CONTENT_LENGTH_DESCRIPTION) String length) {
+        AssertionResult result = proxyManager.get(port).assertMostRecentResponseContentLengthLessThanOrEqual(
                 Pattern.compile(urlPattern),
                 Long.parseLong(length));
 
@@ -194,18 +169,46 @@ public class EntriesProxyResource {
     }
 
     @GET
-    @Path("/assertResponseHeaderContains")
+    @Path("/assertResponseTimeLessThanOrEqual")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response responseHeaderContains(
+    @Operation(description = "Assert that the response time for the most recent request " +
+            "found by a given URL pattern is less than or equal to a given number of milliseconds.")
+    public Response responseTimeLessThanOrEqual(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
-            @Parameter(required = true, in = ParameterIn.PATH, description = DocConstants.PORT_DESCRIPTION) int port,
+            @Parameter(required = true, in = ParameterIn.PATH, description = PORT_DESCRIPTION) int port,
 
             @QueryParam(URL_PATTERN)
             @NotBlankConstraint(paramName = URL_PATTERN)
             @PatternConstraint(paramName = URL_PATTERN)
-            @Parameter(required = true, description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern,
+            @Parameter(required = true, description = URL_PATTERN_DESCRIPTION) String urlPattern,
+
+            @QueryParam(MILLISECONDS)
+            @LongPositiveConstraint(value = 0, paramName = MILLISECONDS)
+            @Parameter(required = true, description = MILLISECONDS_DESCRIPTION) String milliseconds) {
+        AssertionResult result = proxyManager.get(port).assertMostRecentResponseTimeLessThanOrEqual(
+                Pattern.compile(urlPattern),
+                Long.parseLong(milliseconds));
+
+        return Response.ok(result).build();
+    }
+
+    @GET
+    @Path("/assertResponseHeaderContains")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "Assert that if the most recent response found by url pattern has header with specified name " +
+            "- it's value must contain specified text.")
+    public Response responseHeaderContains(
+            @PathParam(PORT)
+            @NotNullConstraint(paramName = PORT)
+            @PortWithExistingProxyConstraint
+            @Parameter(required = true, in = ParameterIn.PATH, description = PORT_DESCRIPTION) int port,
+
+            @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
+            @PatternConstraint(paramName = URL_PATTERN)
+            @Parameter(required = true, description = URL_PATTERN_DESCRIPTION) String urlPattern,
 
             @QueryParam(HEADER_NAME)
             @Parameter(description = HEADER_NAME_DESCRIPTION) String headerName,
@@ -213,7 +216,7 @@ public class EntriesProxyResource {
             @QueryParam(HEADER_VALUE)
             @NotBlankConstraint(paramName = HEADER_VALUE)
             @Parameter(required = true, description = HEADER_VALUE_DESCRIPTION) String headerValue) {
-        AssertionResult result = proxyManager.get(port).assertAnyUrlResponseHeaderContains(
+        AssertionResult result = proxyManager.get(port).assertMostRecentResponseHeaderContains(
                 Pattern.compile(urlPattern),
                 headerName, headerValue);
 
@@ -223,16 +226,18 @@ public class EntriesProxyResource {
     @GET
     @Path("/assertResponseHeaderDoesNotContain")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "Assert that if the most recent response found by url pattern has header with specified name" +
+            "- it's value must not contain specified text.")
     public Response responseHeaderDoesNotContain(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
-            @Parameter(required = true, in = ParameterIn.PATH, description = DocConstants.PORT_DESCRIPTION) int port,
+            @Parameter(required = true, in = ParameterIn.PATH, description = PORT_DESCRIPTION) int port,
 
             @QueryParam(URL_PATTERN)
             @NotBlankConstraint(paramName = URL_PATTERN)
             @PatternConstraint(paramName = URL_PATTERN)
-            @Parameter(required = true, description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern,
+            @Parameter(required = true, description = URL_PATTERN_DESCRIPTION) String urlPattern,
 
             @QueryParam(HEADER_NAME)
             @Parameter(description = HEADER_NAME_DESCRIPTION) String headerName,
@@ -240,27 +245,28 @@ public class EntriesProxyResource {
             @QueryParam(HEADER_VALUE)
             @NotBlankConstraint(paramName = HEADER_VALUE)
             @Parameter(required = true, description = HEADER_VALUE_DESCRIPTION) String headerValue) {
-        AssertionResult result = proxyManager.get(port).assertAnyUrlResponseHeaderDoesNotContain(
+        AssertionResult result = proxyManager.get(port).assertMostRecentResponseHeaderDoesNotContain(
                 Pattern.compile(urlPattern),
                 headerName, headerValue);
 
         return Response.ok(result).build();
     }
 
-
     @GET
     @Path("/assertResponseHeaderMatches")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "Assert that if the most recent response found by url pattern has header with name " +
+            "found by name pattern - it's value should match value pattern.")
     public AssertionResult responseHeaderMatches(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
-            @Parameter(required = true, in = ParameterIn.PATH, description = DocConstants.PORT_DESCRIPTION) int port,
+            @Parameter(required = true, in = ParameterIn.PATH, description = PORT_DESCRIPTION) int port,
 
             @QueryParam(URL_PATTERN)
             @NotBlankConstraint(paramName = URL_PATTERN)
             @PatternConstraint(paramName = URL_PATTERN)
-            @Parameter(required = true, description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern,
+            @Parameter(required = true, description = URL_PATTERN_DESCRIPTION) String urlPattern,
 
             @QueryParam(HEADER_NAME_PATTERN)
             @PatternConstraint(paramName = HEADER_NAME_PATTERN)
@@ -270,27 +276,28 @@ public class EntriesProxyResource {
             @NotBlankConstraint(paramName = HEADER_VALUE_PATTERN)
             @PatternConstraint(paramName = HEADER_VALUE_PATTERN)
             @Parameter(required = true, description = HEADER_VALUE_PATTERN_DESCRIPTION) String headerValuePattern) {
-        return proxyManager.get(port).assertAnyUrlResponseHeaderMatches(
+        return proxyManager.get(port).assertMostRecentResponseHeaderMatches(
                 Pattern.compile(urlPattern),
                 headerNamePattern != null ? Pattern.compile(headerNamePattern) : null,
                 Pattern.compile(headerValuePattern));
     }
-//
 
-
-//
     @GET
     @Path("/assertStatusEquals")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "In case url patter is provided assert that the most recent response " +
+            "found by url pattern has specified status, otherwise " +
+            "assert that the most recent response has specified status.")
     public AssertionResult statusEquals(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
-            @Parameter(required = true, in = ParameterIn.PATH, description = DocConstants.PORT_DESCRIPTION) int port,
+            @Parameter(required = true, in = ParameterIn.PATH, description = PORT_DESCRIPTION) int port,
 
             @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
             @PatternConstraint(paramName = URL_PATTERN)
-            @Parameter(description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern,
+            @Parameter(description = URL_PATTERN_DESCRIPTION) String urlPattern,
 
             @QueryParam(STATUS)
             @NotNullConstraint(paramName = STATUS)
@@ -300,109 +307,128 @@ public class EntriesProxyResource {
         BrowserUpProxyServer proxyServer = proxyManager.get(port);
         int intStatus = Integer.parseInt(status);
 
-        return StringUtils.isEmpty(urlPattern) ?
-                proxyServer.assertResponseStatusCode(intStatus) :
-                proxyServer.assertResponseStatusCode(Pattern.compile(urlPattern), intStatus);
+        return urlPattern.isEmpty() ?
+                proxyServer.assertMostRecentResponseStatusCode(intStatus) :
+                proxyServer.assertMostRecentResponseStatusCode(Pattern.compile(urlPattern), intStatus);
     }
 
     @GET
     @Path("/assertStatusInformational")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "In case url pattern is provided assert that the most recent response " +
+            "found by url pattern has status belonging to INFORMATIONAL class (1xx), otherwise " +
+            "assert that the most recent response has status belonging to INFORMATIONAL class (1xx).")
     public AssertionResult statusInformational(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
-            @Parameter(required = true, in = ParameterIn.PATH, description = DocConstants.PORT_DESCRIPTION) int port,
+            @Parameter(required = true, in = ParameterIn.PATH, description = PORT_DESCRIPTION) int port,
 
             @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
             @PatternConstraint(paramName = URL_PATTERN)
-            @Parameter(description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern) {
+            @Parameter(description = URL_PATTERN_DESCRIPTION) String urlPattern) {
 
         BrowserUpProxyServer proxyServer = proxyManager.get(port);
 
-        return StringUtils.isEmpty(urlPattern) ?
-                proxyServer.assertResponseStatusCode(HttpStatusClass.INFORMATIONAL) :
-                proxyServer.assertResponseStatusCode(Pattern.compile(urlPattern), HttpStatusClass.INFORMATIONAL);
+        return urlPattern.isEmpty() ?
+                proxyServer.assertMostRecentResponseStatusCode(HttpStatusClass.INFORMATIONAL) :
+                proxyServer.assertMostRecentResponseStatusCode(Pattern.compile(urlPattern), HttpStatusClass.INFORMATIONAL);
     }
 
     @GET
     @Path("/assertStatusSuccess")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "In case url pattern is provided assert that the most recent response " +
+            "found by url pattern has status belonging to SUCCESS class (2xx), otherwise " +
+            "assert that the most recent response has status belonging to SUCCESS class (2xx).")
     public AssertionResult statusSuccess(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
-            @Parameter(required = true, in = ParameterIn.PATH, description = DocConstants.PORT_DESCRIPTION) int port,
+            @Parameter(required = true, in = ParameterIn.PATH, description = PORT_DESCRIPTION) int port,
 
             @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
             @PatternConstraint(paramName = URL_PATTERN)
-            @Parameter(description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern) {
+            @Parameter(description = URL_PATTERN_DESCRIPTION) String urlPattern) {
 
         BrowserUpProxyServer proxyServer = proxyManager.get(port);
 
-        return StringUtils.isEmpty(urlPattern) ?
-                proxyServer.assertResponseStatusCode(HttpStatusClass.SUCCESS) :
-                proxyServer.assertResponseStatusCode(Pattern.compile(urlPattern), HttpStatusClass.SUCCESS);
+        return urlPattern.isEmpty() ?
+                proxyServer.assertMostRecentResponseStatusCode(HttpStatusClass.SUCCESS) :
+                proxyServer.assertMostRecentResponseStatusCode(Pattern.compile(urlPattern), HttpStatusClass.SUCCESS);
     }
 
     @GET
     @Path("/assertStatusRedirection")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "In case url pattern is provided assert that the most recent response " +
+            "found by url pattern has status belonging to REDIRECTION class (3xx), otherwise " +
+            "assert that the most recent response has status belonging to REDIRECTION class (3xx).")
     public AssertionResult statusRedirection(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
-            @Parameter(required = true, in = ParameterIn.PATH, description = DocConstants.PORT_DESCRIPTION) int port,
+            @Parameter(required = true, in = ParameterIn.PATH, description = PORT_DESCRIPTION) int port,
 
             @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
             @PatternConstraint(paramName = URL_PATTERN)
-            @Parameter(description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern) {
+            @Parameter(description = URL_PATTERN_DESCRIPTION) String urlPattern) {
 
         BrowserUpProxyServer proxyServer = proxyManager.get(port);
 
-        return StringUtils.isEmpty(urlPattern) ?
-                proxyServer.assertResponseStatusCode(HttpStatusClass.REDIRECTION) :
-                proxyServer.assertResponseStatusCode(Pattern.compile(urlPattern), HttpStatusClass.REDIRECTION);
+        return urlPattern.isEmpty() ?
+                proxyServer.assertMostRecentResponseStatusCode(HttpStatusClass.REDIRECTION) :
+                proxyServer.assertMostRecentResponseStatusCode(Pattern.compile(urlPattern), HttpStatusClass.REDIRECTION);
     }
 
     @GET
     @Path("/assertStatusClientError")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "In case url pattern is provided assert that the most recent response " +
+            "found by url pattern has status belonging to CLIENT ERROR class (4xx), otherwise " +
+            "assert that the most recent response has status belonging to CLIENT ERROR class (4xx).")
     public AssertionResult statusClientError(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
-            @Parameter(required = true, in = ParameterIn.PATH, description = DocConstants.PORT_DESCRIPTION) int port,
+            @Parameter(required = true, in = ParameterIn.PATH, description = PORT_DESCRIPTION) int port,
 
             @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
             @PatternConstraint(paramName = URL_PATTERN)
-            @Parameter(description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern) {
+            @Parameter(description = URL_PATTERN_DESCRIPTION) String urlPattern) {
 
         BrowserUpProxyServer proxyServer = proxyManager.get(port);
 
-        return StringUtils.isEmpty(urlPattern) ?
-                proxyServer.assertResponseStatusCode(HttpStatusClass.CLIENT_ERROR) :
-                proxyServer.assertResponseStatusCode(Pattern.compile(urlPattern), HttpStatusClass.CLIENT_ERROR);
+        return urlPattern.isEmpty() ?
+                proxyServer.assertMostRecentResponseStatusCode(HttpStatusClass.CLIENT_ERROR) :
+                proxyServer.assertMostRecentResponseStatusCode(Pattern.compile(urlPattern), HttpStatusClass.CLIENT_ERROR);
     }
 
     @GET
     @Path("/assertStatusServerError")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(description = "In case url pattern is provided assert that the most recent response " +
+            "found by url pattern has status belonging to SERVER ERROR class (5xx), otherwise " +
+            "assert that the most recent response has status belonging to SERVER ERROR class (5xx).")
     public AssertionResult statusServerError(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
-            @Parameter(required = true, in = ParameterIn.PATH, description = DocConstants.PORT_DESCRIPTION) int port,
+            @Parameter(required = true, in = ParameterIn.PATH, description = PORT_DESCRIPTION) int port,
 
             @QueryParam(URL_PATTERN)
+            @NotBlankConstraint(paramName = URL_PATTERN)
             @PatternConstraint(paramName = URL_PATTERN)
-            @Parameter(description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern) {
+            @Parameter(description = URL_PATTERN_DESCRIPTION) String urlPattern) {
 
         BrowserUpProxyServer proxyServer = proxyManager.get(port);
 
-        return StringUtils.isEmpty(urlPattern) ?
-                proxyServer.assertResponseStatusCode(HttpStatusClass.SERVER_ERROR) :
-                proxyServer.assertResponseStatusCode(Pattern.compile(urlPattern), HttpStatusClass.SERVER_ERROR);
+        return urlPattern.isEmpty() ?
+                proxyServer.assertMostRecentResponseStatusCode(HttpStatusClass.SERVER_ERROR) :
+                proxyServer.assertMostRecentResponseStatusCode(Pattern.compile(urlPattern), HttpStatusClass.SERVER_ERROR);
     }
 }
-

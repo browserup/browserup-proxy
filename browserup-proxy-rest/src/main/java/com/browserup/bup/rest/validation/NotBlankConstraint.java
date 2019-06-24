@@ -24,12 +24,12 @@ public @interface NotBlankConstraint {
 
     Class<? extends Payload>[] payload() default {};
 
-    class NotBlankValidator implements ConstraintValidator<NotBlankConstraint, String> {
+    class NotBlankValidator implements ConstraintValidator<NotBlankConstraint, Object> {
         private static final Logger LOG = LoggerFactory.getLogger(RegexpPatternValidator.class);
 
         @Override
-        public boolean isValid(String value, ConstraintValidatorContext context) {
-            if (!StringUtils.isEmpty(value)) {
+        public boolean isValid(Object value, ConstraintValidatorContext context) {
+            if (value != null && StringUtils.isNotEmpty(String.valueOf(value))) {
                 return true;
             }
             String errorMessage = String.format("Expected not empty value, got '%s'", value);
