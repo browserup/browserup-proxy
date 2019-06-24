@@ -89,7 +89,7 @@ dependencies {
     testImplementation "org.eclipse.jetty:jetty-servlets:${jettyVersion}"
     testImplementation 'org.hamcrest:hamcrest:2.1'    
     testImplementation 'org.hamcrest:hamcrest-library:2.1'
-    testImplementation ('org.mock-server:mockserver-netty:5.5.4') {
+    testImplementation ('org.mock-server:mockserver-netty:5.6.0') {
         exclude(module: 'logback-classic')
         exclude(module: 'netty-codec-socks')
         exclude(module: 'netty-buffer')
