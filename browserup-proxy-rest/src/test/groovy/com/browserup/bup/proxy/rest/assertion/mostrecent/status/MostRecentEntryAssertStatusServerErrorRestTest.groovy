@@ -8,12 +8,15 @@ import groovyx.net.http.Method
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
-import org.eclipse.jetty.http.HttpMethods
 import org.hamcrest.Matchers
 import org.junit.Test
 import org.mockserver.matchers.Times
 import org.mockserver.model.Header
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.junit.Assert.*
 import static org.mockserver.model.HttpRequest.request
 import static org.mockserver.model.HttpResponse.response
@@ -122,15 +125,10 @@ class MostRecentEntryAssertStatusServerErrorRestTest extends BaseRestTest {
     }
 
     protected void mockTargetServerResponse(String url, int status) {
-        targetMockedServer.when(request()
-                .withMethod(HttpMethods.GET)
-                .withPath("/${url}"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(status)
-                .withHeaders(
-                new Header(HttpHeaders.CONTENT_TYPE, 'text/plain'),
-                new Header(HttpHeaders.LOCATION, 'test.com')
-        ))
+        def response = aResponse().withStatus(status)
+                .withBody(responseBody)
+                .withHeader('Content-Type', 'text/plain')
+                .withHeader('Location', 'test.com')
+        stubFor(get(urlEqualTo("/${url}")).willReturn(response))
     }
 }

@@ -6,16 +6,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import groovyx.net.http.HttpResponseDecorator
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
-import org.eclipse.jetty.http.HttpMethods
 import org.hamcrest.Matchers
 import org.junit.Test
-import org.mockserver.matchers.Times
-import org.mockserver.model.Header
 
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertThat
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class EntriesAssertHeaderMatchesRestTest extends BaseEntriesAssertHeaderRestTest {
     protected static final String HEADER_NAME_PATTERN_TO_MATCH_FIRST = ".*${FIRST_HEADER_NAME}.*"

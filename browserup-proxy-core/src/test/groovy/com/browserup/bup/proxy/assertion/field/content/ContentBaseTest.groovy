@@ -2,15 +2,17 @@ package com.browserup.bup.proxy.assertion.field.content
 
 import com.browserup.bup.proxy.CaptureType
 import com.browserup.bup.proxy.assertion.BaseAssertionsTest
+import com.github.tomakehurst.wiremock.matching.EqualToPattern
+import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
+import org.eclipse.jetty.http.HttpHeader
 import org.junit.Before
-import org.mockserver.matchers.Times
-
 import java.util.regex.Pattern
 
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
-
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 class ContentBaseTest extends BaseAssertionsTest {
     protected static final String BODY_PART = 'body part'
     protected static final String BODY_CONTAINING_BODY_PART = "body example with ${BODY_PART} in the middle".toString()
@@ -20,16 +22,11 @@ class ContentBaseTest extends BaseAssertionsTest {
 
     @Before
     void setUp() {
-        proxy.enableHarCaptureTypes(CaptureType.RESPONSE_CONTENT)
+        proxy.enableHarCaptureTypes(CaptureType.RESPONSE_CONTENT, CaptureType.REQUEST_BINARY_CONTENT, CaptureType.REQUEST_CONTENT)
     }
 
     protected mockResponse(String path, String body) {
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/${path}"),
-                Times.once())
-                .respond(response()
-                .withStatusCode(HttpStatus.SC_OK)
-                .withBody(body))
+        stubFor(get(urlEqualTo("/" + path))
+                .willReturn(ok().withHeader(HttpHeaders.CONTENT_TYPE, "text/plain").withBody(body)))
     }
 }

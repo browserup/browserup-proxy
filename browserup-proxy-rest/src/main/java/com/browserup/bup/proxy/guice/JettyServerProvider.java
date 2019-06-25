@@ -11,6 +11,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
+import java.util.EnumSet;
 
 import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -24,6 +25,8 @@ import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletContainer;
+
+import javax.servlet.DispatcherType;
 
 public class JettyServerProvider implements Provider<Server> {
     public static final String SWAGGER_CONFIG_NAME = "swagger-config.yaml";
@@ -50,7 +53,7 @@ public class JettyServerProvider implements Provider<Server> {
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
 
-        context.addFilter(GuiceFilter.class, "/*", 0);
+        context.addFilter(GuiceFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
         context.addServlet(DefaultServlet.class, "/");
         context.addServlet(new ServletHolder(new ServletContainer(resourceConfig)), "/*");
 

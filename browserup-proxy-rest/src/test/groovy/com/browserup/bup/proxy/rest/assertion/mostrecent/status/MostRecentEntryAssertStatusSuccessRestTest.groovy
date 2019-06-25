@@ -4,19 +4,15 @@ import com.browserup.bup.assertion.model.AssertionResult
 import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
 import groovyx.net.http.HttpResponseDecorator
-import groovyx.net.http.Method
-import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
-import org.apache.http.entity.ContentType
-import org.eclipse.jetty.http.HttpMethods
 import org.hamcrest.Matchers
 import org.junit.Test
-import org.mockserver.matchers.Times
-import org.mockserver.model.Header
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.junit.Assert.*
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class MostRecentEntryAssertStatusSuccessRestTest extends BaseRestTest {
     def urlOfMostRecentRequest = 'url-most-recent'
@@ -114,13 +110,9 @@ class MostRecentEntryAssertStatusSuccessRestTest extends BaseRestTest {
     }
 
     protected void mockTargetServerResponse(String url, String responseBody, int status) {
-        targetMockedServer.when(request()
-                .withMethod(HttpMethods.GET)
-                .withPath("/${url}"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(status)
-                .withHeader(new Header(HttpHeaders.CONTENT_TYPE, 'text/plain'))
-                .withBody(responseBody))
+        def response = aResponse().withStatus(status)
+                .withBody(responseBody)
+                .withHeader('Content-Type', 'text/plain')
+        stubFor(get(urlEqualTo("/${url}")).willReturn(response))
     }
 }

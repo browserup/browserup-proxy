@@ -2,22 +2,21 @@ package com.browserup.bup.proxy.rest.assertion.mostrecent.status
 
 import com.browserup.bup.assertion.model.AssertionResult
 import com.browserup.bup.proxy.rest.BaseRestTest
-import com.browserup.bup.util.HttpStatusClass
 import com.fasterxml.jackson.databind.ObjectMapper
 import groovyx.net.http.HttpResponseDecorator
 import groovyx.net.http.Method
-import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
-import org.eclipse.jetty.http.HttpMethods
 import org.hamcrest.Matchers
 import org.junit.Test
-import org.mockserver.matchers.Times
-import org.mockserver.model.Header
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import static org.junit.Assert.*
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class MostRecentEntryAssertStatusRedirectionRestTest extends BaseRestTest {
     def urlOfMostRecentRequest = 'url-most-recent'
@@ -59,7 +58,7 @@ class MostRecentEntryAssertStatusRedirectionRestTest extends BaseRestTest {
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionPassed(assertionResult)
-                
+
                 assertFalse('Expected assertion entry result to have "false" failed flag', assertionResult.requests[0].failed)
             }
         }
@@ -78,7 +77,7 @@ class MostRecentEntryAssertStatusRedirectionRestTest extends BaseRestTest {
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionFailed(assertionResult)
-                
+
                 assertTrue('Expected assertion entry result to have "true" failed flag', assertionResult.requests[0].failed)
             }
         }
@@ -96,7 +95,7 @@ class MostRecentEntryAssertStatusRedirectionRestTest extends BaseRestTest {
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get no assertion result entries', assertionResult.requests, Matchers.hasSize(0))
                 assertAssertionPassed(assertionResult)
-                
+
             }
         }
     }
@@ -123,15 +122,11 @@ class MostRecentEntryAssertStatusRedirectionRestTest extends BaseRestTest {
     }
 
     protected void mockTargetServerResponse(String url, int status) {
-        targetMockedServer.when(request()
-                .withMethod(HttpMethods.GET)
-                .withPath("/${url}"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(status)
-                .withHeaders(
-                new Header(HttpHeaders.CONTENT_TYPE, 'text/plain'),
-                new Header(HttpHeaders.LOCATION, 'test.com')
-        ))
+        def redirectUrl = 'test.com'
+        def response = aResponse().withStatus(status)
+                .withHeader('Location', redirectUrl)
+                .withHeader('Content-Type', 'text/plain')
+        stubFor(get(urlEqualTo("/${url}")).willReturn(response))
+        stubFor(get(urlMatching("/${redirectUrl}")).willReturn(ok().withBody("success")))
     }
 }

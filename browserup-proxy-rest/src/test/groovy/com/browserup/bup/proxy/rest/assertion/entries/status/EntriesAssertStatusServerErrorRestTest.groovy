@@ -8,7 +8,6 @@ import groovyx.net.http.Method
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
-import org.eclipse.jetty.http.HttpMethods
 import org.hamcrest.Matchers
 import org.junit.Test
 import org.mockserver.matchers.Times

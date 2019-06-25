@@ -61,9 +61,9 @@ dependencies {
     implementation 'com.google.inject.extensions:guice-multibindings:3.0'
     implementation 'com.google.sitebricks:sitebricks:0.8.10'
     implementation 'io.netty:netty-all:4.1.33.Final'
-    implementation 'net.sf.jopt-simple:jopt-simple:3.2'
-    implementation 'org.eclipse.jetty:jetty-server:7.3.0.v20110203'
-    implementation 'org.eclipse.jetty:jetty-servlet:7.3.0.v20110203'
+    implementation 'net.sf.jopt-simple:jopt-simple:5.0.4'
+    implementation 'org.eclipse.jetty:jetty-server:9.4.19.v20190610'
+    implementation 'org.eclipse.jetty:jetty-servlet:9.4.19.v20190610'
     implementation 'org.slf4j:jcl-over-slf4j:1.7.25'
     implementation 'org.apache.commons:commons-lang3:3.8.1'
 
@@ -94,4 +94,5 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:2.23.4'
     testImplementation 'org.seleniumhq.selenium:selenium-api:3.4.0'
     testImplementation 'org.awaitility:awaitility:3.1.6'
+    testImplementation 'com.github.tomakehurst:wiremock-jre8:2.22.0'
 }

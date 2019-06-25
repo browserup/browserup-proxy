@@ -4,7 +4,6 @@ import com.browserup.bup.proxy.CaptureType
 import com.browserup.bup.proxy.rest.BaseRestTest
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
-import org.eclipse.jetty.http.HttpMethods
 import org.mockserver.matchers.Times
 import org.mockserver.model.Header
 

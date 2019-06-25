@@ -8,8 +8,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.mockserver.matchers.Times;
-import org.mockserver.model.Delay;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

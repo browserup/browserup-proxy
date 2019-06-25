@@ -6,6 +6,7 @@ import com.browserup.bup.proxy.bricks.ProxyResource
 import com.browserup.bup.proxy.guice.ConfigModule
 import com.browserup.bup.proxy.guice.JettyModule
 import com.browserup.bup.util.BrowserUpProxyUtil
+import com.github.tomakehurst.wiremock.junit.WireMockRule
 import com.google.inject.Guice
 import com.google.inject.Injector
 import com.google.inject.servlet.GuiceServletContextListener
@@ -17,21 +18,23 @@ import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
 import org.awaitility.Awaitility
 import org.awaitility.Duration
-import org.eclipse.jetty.http.HttpMethods
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.junit.After
 import org.junit.Before
-import org.mockserver.integration.ClientAndServer
+import org.junit.Rule
 import org.mockserver.matchers.Times
-import org.mockserver.model.Delay
-import org.mockserver.model.Header
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import javax.servlet.ServletContextEvent
 import java.util.concurrent.TimeUnit
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import static org.junit.Assert.assertEquals
 import static org.mockserver.model.HttpRequest.request
 import static org.mockserver.model.HttpResponse.response
@@ -41,12 +44,17 @@ class WithRunningProxyRestTest {
 
     protected ProxyManager proxyManager
     protected BrowserUpProxyServer proxy
-    protected ClientAndServer targetMockedServer
     protected Server restServer
 
     protected String[] getArgs() {
         ['--port', '0'] as String[]
     }
+
+    protected int mockServerPort
+    protected int mockServerHttpsPort
+
+    @Rule
+    public WireMockRule wireMockRule = new WireMockRule(options().port(0).httpsPort(0))
 
     @Before
     void setUp() throws Exception {
@@ -82,7 +90,8 @@ class WithRunningProxyRestTest {
 
         LOG.debug("BrowserUp Proxy server is started successfully")
 
-        targetMockedServer = new ClientAndServer(0)
+        mockServerPort = wireMockRule.port();
+        mockServerHttpsPort = wireMockRule.httpsPort();
 
         waitForProxyServer()
     }
@@ -104,7 +113,7 @@ class WithRunningProxyRestTest {
     }
 
     HTTPBuilder getTargetServerClient() {
-        def http = new HTTPBuilder("http://localhost:${targetMockedServer.port}")
+        def http = new HTTPBuilder("http://localhost:${mockServerPort}")
         http.setProxy('localhost', proxy.port, 'http')
         http
     }
@@ -139,10 +148,6 @@ class WithRunningProxyRestTest {
                 LOG.error('Error while stopping proxy servers', ex)
             }
         }
-        if (targetMockedServer != null) {
-            LOG.debug('Stopping target mocked server')
-            targetMockedServer.stop()
-        }
 
         if (restServer != null) {
             LOG.debug('Stopping rest proxy server')
@@ -172,15 +177,21 @@ class WithRunningProxyRestTest {
         }
     }
 
-    protected void mockTargetServerResponse(String url, String responseBody, Delay delay=Delay.milliseconds(0)) {
-        targetMockedServer.when(request()
-                .withMethod(HttpMethods.GET)
-                .withPath("/${url}"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(HttpStatus.SC_OK)
-                .withDelay(delay)
-                .withHeader(new Header(HttpHeaders.CONTENT_TYPE, 'text/plain'))
-                .withBody(responseBody))
+    protected void mockTargetServerResponse(String url, String responseBody, int delayMilliseconds=0) {
+        def response = aResponse().withStatus(200)
+                .withBody(responseBody)
+                .withHeader('Content-Type', 'text/plain')
+                .withFixedDelay(delayMilliseconds)
+        stubFor(get(urlEqualTo("/${url}")).willReturn(response))
+
+//        targetMockedServer.when(request()
+//                .withMethod(HttpMethods.GET)
+//                .withPath("/${url}"),
+//                Times.exactly(1))
+//                .respond(response()
+//                .withStatusCode(HttpStatus.SC_OK)
+//                .withDelay(delay)
+//                .withHeader(new Header(HttpHeaders.CONTENT_TYPE, 'text/plain'))
+//                .withBody(responseBody))
     }
 }
