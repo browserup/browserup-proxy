@@ -31,6 +31,33 @@ public class JettyServerProvider implements Provider<Server> {
 
     private Server server;
 
+    @Inject
+    public JettyServerProvider(@Named("port") int port, @Named("address") String address, ProxyManager proxyManager) throws UnknownHostException {
+        OpenApiResource openApiResource = new OpenApiResource();
+        openApiResource.setConfigLocation(SWAGGER_CONFIG_NAME);
+
+        ResourceConfig resourceConfig = new ResourceConfig();
+        resourceConfig.packages(SWAGGER_PACKAGE);
+        resourceConfig.register(openApiResource);
+        resourceConfig.register(proxyManagerToHkBinder(proxyManager));
+        resourceConfig.register(JacksonFeature.class);
+        resourceConfig.register(ConstraintViolationExceptionMapper.class);
+        resourceConfig.registerClasses(LoggingFilter.class);
+
+        resourceConfig.property(ServerProperties.BV_SEND_ERROR_IN_RESPONSE, true);
+        resourceConfig.property(ServerProperties.WADL_FEATURE_DISABLE, true);
+
+        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+        context.setContextPath("/");
+
+        context.addFilter(GuiceFilter.class, "/*", 0);
+        context.addServlet(DefaultServlet.class, "/");
+        context.addServlet(new ServletHolder(new ServletContainer(resourceConfig)), "/*");
+
+        server = new Server(new InetSocketAddress(InetAddress.getByName(address), port));
+        server.setHandler(context);
+    }
+
     private AbstractBinder proxyManagerToHkBinder(ProxyManager proxyManager) {
         Factory<ProxyManager> proxyManagerFactory = new Factory<>() {
 
@@ -49,37 +76,6 @@ public class JettyServerProvider implements Provider<Server> {
                 bindFactory(proxyManagerFactory).to(ProxyManager.class);
             }
         };
-    }
-
-    @Inject
-    public JettyServerProvider(@Named("port") int port, @Named("address") String address, ProxyManager proxyManager) throws UnknownHostException {
-        ResourceConfig resourceConfig = new ResourceConfig();
-        resourceConfig.packages(SWAGGER_PACKAGE);
-        OpenApiResource openApiResource = new OpenApiResource();
-        openApiResource.setConfigLocation(SWAGGER_CONFIG_NAME);
-        resourceConfig.register(openApiResource);
-        resourceConfig.register(proxyManagerToHkBinder(proxyManager));
-        resourceConfig.register(JacksonFeature.class);
-        resourceConfig.register(ConstraintViolationExceptionMapper.class);
-        resourceConfig.registerClasses(LoggingFilter.class);
-
-        resourceConfig.property(ServerProperties.BV_SEND_ERROR_IN_RESPONSE, true);
-        resourceConfig.property(ServerProperties.WADL_FEATURE_DISABLE, true);
-
-        ServletContainer servletContainer = new ServletContainer(resourceConfig);
-        ServletHolder sh = new ServletHolder(servletContainer);
-
-        server = new Server(new InetSocketAddress(InetAddress.getByName(address), port));
-
-        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        context.setContextPath("/");
-
-        context.addFilter(GuiceFilter.class, "/*", 0);
-        context.addServlet(DefaultServlet.class, "/");
-        context.addServlet(sh, "/*");
-
-
-        server.setHandler(context);
     }
 
     @Override

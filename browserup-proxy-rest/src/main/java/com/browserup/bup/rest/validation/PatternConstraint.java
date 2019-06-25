@@ -1,6 +1,5 @@
 package com.browserup.bup.rest.validation;
 
-import com.browserup.bup.rest.validation.validator.RegexpPatternValidator;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +25,7 @@ public @interface PatternConstraint {
     Class<? extends Payload>[] payload() default {};
 
     class PatternValidator implements ConstraintValidator<PatternConstraint, String> {
-        private static final Logger LOG = LoggerFactory.getLogger(RegexpPatternValidator.class);
+        private static final Logger LOG = LoggerFactory.getLogger(PatternValidator.class);
 
         @Override
         public boolean isValid(String value, ConstraintValidatorContext context) {

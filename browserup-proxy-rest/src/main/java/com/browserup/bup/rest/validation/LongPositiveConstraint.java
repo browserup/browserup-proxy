@@ -1,6 +1,5 @@
 package com.browserup.bup.rest.validation;
 
-import com.browserup.bup.rest.validation.validator.RegexpPatternValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +25,7 @@ public @interface LongPositiveConstraint {
     Class<? extends Payload>[] payload() default {};
 
     class LongPositiveValidator implements ConstraintValidator<LongPositiveConstraint, String> {
-        private static final Logger LOG = LoggerFactory.getLogger(RegexpPatternValidator.class);
+        private static final Logger LOG = LoggerFactory.getLogger(LongPositiveValidator.class);
 
         @Override
         public boolean isValid(String value, ConstraintValidatorContext context) {

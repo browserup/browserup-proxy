@@ -1,6 +1,5 @@
 package com.browserup.bup.rest.validation;
 
-import com.browserup.bup.rest.validation.validator.RegexpPatternValidator;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +24,7 @@ public @interface NotBlankConstraint {
     Class<? extends Payload>[] payload() default {};
 
     class NotBlankValidator implements ConstraintValidator<NotBlankConstraint, Object> {
-        private static final Logger LOG = LoggerFactory.getLogger(RegexpPatternValidator.class);
+        private static final Logger LOG = LoggerFactory.getLogger(NotBlankValidator.class);
 
         @Override
         public boolean isValid(Object value, ConstraintValidatorContext context) {
