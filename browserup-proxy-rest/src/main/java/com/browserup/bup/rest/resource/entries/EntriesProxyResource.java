@@ -12,14 +12,11 @@ import com.browserup.bup.rest.validation.PatternConstraint;
 import com.browserup.bup.rest.validation.PortWithExistingProxyConstraint;
 import com.browserup.bup.util.HttpStatusClass;
 import com.browserup.harreader.model.HarEntry;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.apache.commons.lang3.StringUtils;
@@ -32,6 +29,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Collection;
 import java.util.regex.Pattern;
 
 import static com.browserup.bup.rest.swagger.DocConstants.*;
@@ -65,7 +63,7 @@ public class EntriesProxyResource {
                             mediaType = MediaType.APPLICATION_JSON,
                             array = @ArraySchema(schema = @Schema(implementation = HarEntry.class))))})
 
-    public Response entries(
+    public Collection<HarEntry> entries(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
@@ -75,8 +73,7 @@ public class EntriesProxyResource {
             @NotBlankConstraint(paramName = URL_PATTERN)
             @PatternConstraint(paramName = URL_PATTERN)
             @Parameter(required = true, description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern) {
-        return Response.ok(proxyManager.get(port)
-                .findEntries(Pattern.compile(urlPattern))).build();
+        return proxyManager.get(port).findEntries(Pattern.compile(urlPattern));
     }
 
     @GET
@@ -85,11 +82,13 @@ public class EntriesProxyResource {
     @Operation(
             description = "Assert that the response times for all requests " +
                     "found by a given URL pattern are less than or equal to a given number of milliseconds.",
-            responses = {@ApiResponse(description = "Assertion result",
-            content = @Content(
-                    mediaType = MediaType.APPLICATION_JSON,
-                    schema = @Schema(implementation = AssertionResult.class)))})
-    public Response responseTimeLessThanOrEqual(
+            responses = {
+                    @ApiResponse(
+                            description = "Assertion result",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(implementation = AssertionResult.class)))})
+    public AssertionResult responseTimeLessThanOrEqual(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
@@ -103,18 +102,23 @@ public class EntriesProxyResource {
             @QueryParam(MILLISECONDS)
             @LongPositiveConstraint(value = 0, paramName = MILLISECONDS)
             @Parameter(required = true, description = DocConstants.MILLISECONDS_DESCRIPTION) String milliseconds) {
-        AssertionResult result = proxyManager.get(port).assertResponseTimeLessThanOrEqual(
+
+        return proxyManager.get(port).assertResponseTimeLessThanOrEqual(
                 Pattern.compile(urlPattern),
                 Long.parseLong(milliseconds));
-
-        return Response.ok(result).build();
     }
 
     @GET
     @Path("/assertContentContains")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(description = "Assert that responses content for all requests found by a given URL pattern contain specified value.")
-    public Response contentContains(
+    @Operation(description = "Assert that responses content for all requests found by a given URL pattern contain specified value.",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
+
+    public AssertionResult contentContains(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
@@ -128,17 +132,20 @@ public class EntriesProxyResource {
             @QueryParam(CONTENT_TEXT)
             @NotBlankConstraint(paramName = CONTENT_TEXT)
             @Parameter(required = true, description = DocConstants.CONTENT_TEXT_DESCRIPTION) String contentText) {
-        AssertionResult result = proxyManager.get(port)
-                .assertAnyUrlContentContains(Pattern.compile(urlPattern), contentText);
 
-        return Response.ok(result).build();
+        return proxyManager.get(port).assertAnyUrlContentContains(Pattern.compile(urlPattern), contentText);
     }
 
     @GET
     @Path("/assertContentDoesNotContain")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(description = "Assert that responses content for all requests found by a given URL pattern don't contain specified value.")
-    public Response contentDoesNotContain(
+    @Operation(description = "Assert that responses content for all requests found by a given URL pattern don't contain specified value.",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
+    public AssertionResult contentDoesNotContain(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
@@ -152,17 +159,20 @@ public class EntriesProxyResource {
             @QueryParam(CONTENT_TEXT)
             @NotBlankConstraint(paramName = CONTENT_TEXT)
             @Parameter(required = true, description = DocConstants.CONTENT_TEXT_DESCRIPTION) String contentText) {
-        AssertionResult result = proxyManager.get(port)
-                .assertAnyUrlContentDoesNotContain(Pattern.compile(urlPattern), contentText);
 
-        return Response.ok(result).build();
+        return proxyManager.get(port).assertAnyUrlContentDoesNotContain(Pattern.compile(urlPattern), contentText);
     }
 
     @GET
     @Path("/assertContentMatches")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(description = "Assert that responses content for all requests found by url pattern matches content pattern.")
-    public Response contentMatches(
+    @Operation(description = "Assert that responses content for all requests found by url pattern matches content pattern.",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
+    public AssertionResult contentMatches(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
@@ -177,18 +187,22 @@ public class EntriesProxyResource {
             @NotBlankConstraint(paramName = CONTENT_PATTERN)
             @PatternConstraint(paramName = CONTENT_PATTERN)
             @Parameter(required = true, description = DocConstants.CONTENT_PATTERN_DESCRIPTION) String contentPattern) {
-        AssertionResult result = proxyManager.get(port).assertAnyUrlContentMatches(
+
+        return proxyManager.get(port).assertAnyUrlContentMatches(
                 Pattern.compile(urlPattern),
                 Pattern.compile(contentPattern));
-
-        return Response.ok(result).build();
     }
 
     @GET
     @Path("/assertContentLengthLessThanOrEqual")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(description = "Assert that content length of all responses found by url pattern do not exceed max value.")
-    public Response contentLengthLessThanOrEqual(
+    @Operation(description = "Assert that content length of all responses found by url pattern do not exceed max value.",
+    responses = {@ApiResponse(
+            description = "Assertion result",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = AssertionResult.class)))})
+    public AssertionResult contentLengthLessThanOrEqual(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
@@ -203,19 +217,23 @@ public class EntriesProxyResource {
             @NotNullConstraint(paramName = LENGTH)
             @LongPositiveConstraint(value = 0, paramName = LENGTH)
             @Parameter(required = true, description = DocConstants.CONTENT_LENGTH_DESCRIPTION) String length) {
-        AssertionResult result = proxyManager.get(port).assertAnyUrlContentLengthLessThanOrEquals(
+
+        return proxyManager.get(port).assertAnyUrlContentLengthLessThanOrEquals(
                 Pattern.compile(urlPattern),
                 Long.parseLong(length));
-
-        return Response.ok(result).build();
     }
 
     @GET
     @Path("/assertResponseHeaderContains")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Assert that if responses found by url pattern have headers with specified name " +
-            "- among them must be one header with value containing specified text.")
-    public Response responseHeaderContains(
+            "- among them must be one header with value containing specified text.",
+    responses = {@ApiResponse(
+            description = "Assertion result",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = AssertionResult.class)))})
+    public AssertionResult responseHeaderContains(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
@@ -232,18 +250,22 @@ public class EntriesProxyResource {
             @QueryParam(HEADER_VALUE)
             @NotBlankConstraint(paramName = HEADER_VALUE)
             @Parameter(required = true, description = HEADER_VALUE_DESCRIPTION) String headerValue) {
-        AssertionResult result = proxyManager.get(port).assertAnyUrlResponseHeaderContains(
+
+        return proxyManager.get(port).assertAnyUrlResponseHeaderContains(
                 Pattern.compile(urlPattern),
                 headerName, headerValue);
-
-        return Response.ok(result).build();
     }
 
     @GET
     @Path("/assertResponseHeaderDoesNotContain")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Assert that if responses found by url pattern have headers with specified name " +
-            "- their values must not contain specified value.")
+            "- their values must not contain specified value.",
+    responses = {@ApiResponse(
+            description = "Assertion result",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = AssertionResult.class)))})
     public Response responseHeaderDoesNotContain(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
@@ -273,7 +295,12 @@ public class EntriesProxyResource {
     @Path("/assertResponseHeaderMatches")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Assert that if responses found by url pattern have headers with name " +
-            "found by name pattern - their values should match value pattern.")
+            "found by name pattern - their values should match value pattern.",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
     public AssertionResult responseHeaderMatches(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
@@ -293,6 +320,7 @@ public class EntriesProxyResource {
             @NotBlankConstraint(paramName = HEADER_VALUE_PATTERN)
             @PatternConstraint(paramName = HEADER_VALUE_PATTERN)
             @Parameter(required = true, description = HEADER_VALUE_PATTERN_DESCRIPTION) String headerValuePattern) {
+
         return proxyManager.get(port).assertAnyUrlResponseHeaderMatches(
                 Pattern.compile(urlPattern),
                 headerNamePattern != null ? Pattern.compile(headerNamePattern) : null,
@@ -303,7 +331,12 @@ public class EntriesProxyResource {
     @Path("/assertStatusEquals")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "In case url pattern is provided assert that all responses found by url pattern have specified http status, " +
-            "otherwise assert that all responses of current step have specified status.")
+            "otherwise assert that all responses of current step have specified status.",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
     public AssertionResult statusEquals(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
@@ -332,7 +365,12 @@ public class EntriesProxyResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "In case url pattern is provided assert that all responses " +
             "found by url pattern have statuses belonging to INFORMATIONAL class (1xx), otherwise " +
-            "assert that all responses of current step have statuses belonging to INFORMATIONAL class (1xx)")
+            "assert that all responses of current step have statuses belonging to INFORMATIONAL class (1xx)",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
     public AssertionResult statusInformational(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
@@ -355,7 +393,12 @@ public class EntriesProxyResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "In case url pattern is provided assert that all responses " +
             "found by url pattern have statuses belonging to SUCCESS class (2xx), otherwise " +
-            "assert that all responses of current step have statuses belonging to SUCCESS class (2xx)")
+            "assert that all responses of current step have statuses belonging to SUCCESS class (2xx)",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
     public AssertionResult statusSuccess(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
@@ -378,7 +421,12 @@ public class EntriesProxyResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "In case url pattern is provided assert that all responses " +
             "found by url pattern have statuses belonging to REDIRECTION class (3xx), otherwise " +
-            "assert that all responses of current step have statuses belonging to REDIRECTION class (3xx)")
+            "assert that all responses of current step have statuses belonging to REDIRECTION class (3xx)",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
     public AssertionResult statusRedirection(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
@@ -401,7 +449,12 @@ public class EntriesProxyResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "In case url pattern is provided assert that all responses " +
             "found by url pattern have statuses belonging to CLIENT ERROR class (4xx), otherwise " +
-            "assert that all responses of current step have statuses belonging to CLIENT ERROR class (4xx)")
+            "assert that all responses of current step have statuses belonging to CLIENT ERROR class (4xx)",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
     public AssertionResult statusClientError(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
@@ -424,7 +477,12 @@ public class EntriesProxyResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "In case url pattern is provided assert that all responses " +
             "found by url pattern have statuses belonging to SERVER ERROR class (5xx), otherwise " +
-            "assert that all responses of current step have statuses belonging to SERVER ERROR class (5xx)")
+            "assert that all responses of current step have statuses belonging to SERVER ERROR class (5xx)",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
     public AssertionResult statusServerError(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)

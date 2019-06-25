@@ -14,6 +14,9 @@ import com.browserup.harreader.model.HarEntry;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -49,8 +52,13 @@ public class MostRecentEntryProxyResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(description = "Search the entire log for the most recent entry whose request URL matches the given url.")
-    public Response mostRecentEntry(
+    @Operation(description = "Search the entire log for the most recent entry whose request URL matches the given url.",
+    responses = {@ApiResponse(
+            description = "Har Entry",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = HarEntry.class)))})
+    public HarEntry mostRecentEntry(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
@@ -60,16 +68,22 @@ public class MostRecentEntryProxyResource {
             @NotBlankConstraint(paramName = URL_PATTERN)
             @PatternConstraint(paramName = URL_PATTERN)
             @Parameter(required = true, description = URL_PATTERN_DESCRIPTION) String urlPattern) {
-        return Response.ok(proxyManager.get(port)
+        return proxyManager.get(port)
                 .findMostRecentEntry(Pattern.compile(urlPattern))
-                .orElse(new HarEntry())).build();
+                .orElse(new HarEntry());
     }
 
     @GET
     @Path("/assertContentContains")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(description = "Assert that response content for the most recent request found by a given URL pattern contains specified value.")
-    public Response contentContains(
+    @Operation(
+            description = "Assert that response content for the most recent request found by a given URL pattern contains specified value.",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
+    public AssertionResult contentContains(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
@@ -83,10 +97,8 @@ public class MostRecentEntryProxyResource {
             @QueryParam(CONTENT_TEXT)
             @NotBlankConstraint(paramName = CONTENT_TEXT)
             @Parameter(required = true, description = CONTENT_TEXT_DESCRIPTION) String contentText) {
-        AssertionResult result = proxyManager.get(port)
-                .assertMostRecentResponseContentContains(Pattern.compile(urlPattern), contentText);
 
-        return Response.ok(result).build();
+        return proxyManager.get(port).assertMostRecentResponseContentContains(Pattern.compile(urlPattern), contentText);
     }
 
 
@@ -94,8 +106,13 @@ public class MostRecentEntryProxyResource {
     @Path("/assertContentDoesNotContain")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Assert that response content for the most recent request " +
-            "found by a given URL pattern doesn't contain specified value.")
-    public Response contentDoesNotContain(
+            "found by a given URL pattern doesn't contain specified value.",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
+    public AssertionResult contentDoesNotContain(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
@@ -109,18 +126,21 @@ public class MostRecentEntryProxyResource {
             @QueryParam(CONTENT_TEXT)
             @NotBlankConstraint(paramName = CONTENT_TEXT)
             @Parameter(required = true, description = CONTENT_TEXT_DESCRIPTION) String contentText) {
-        AssertionResult result = proxyManager.get(port)
-                .assertMostRecentResponseContentDoesNotContain(Pattern.compile(urlPattern), contentText);
 
-        return Response.ok(result).build();
+        return proxyManager.get(port).assertMostRecentResponseContentDoesNotContain(Pattern.compile(urlPattern), contentText);
     }
 
     @GET
     @Path("/assertContentMatches")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Assert that response content for the most recent request " +
-            "found by a given URL pattern matches content pattern.")
-    public Response contentMatches(
+            "found by a given URL pattern matches content pattern.",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
+    public AssertionResult contentMatches(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
@@ -135,18 +155,23 @@ public class MostRecentEntryProxyResource {
             @NotBlankConstraint(paramName = CONTENT_PATTERN)
             @PatternConstraint(paramName = CONTENT_PATTERN)
             @Parameter(required = true, description = CONTENT_PATTERN_DESCRIPTION) String contentPattern) {
-        AssertionResult result = proxyManager.get(port).assertMostRecentResponseContentMatches(
+
+        return proxyManager.get(port).assertMostRecentResponseContentMatches(
                 Pattern.compile(urlPattern),
                 Pattern.compile(contentPattern));
-
-        return Response.ok(result).build();
     }
 
     @GET
     @Path("/assertContentLengthLessThanOrEqual")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(description = "Assert that content length of the most recent response found by url pattern does not exceed max value.")
-    public Response contentLengthLessThanOrEqual(
+    @Operation(
+            description = "Assert that content length of the most recent response found by url pattern does not exceed max value.",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
+    public AssertionResult contentLengthLessThanOrEqual(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
@@ -161,19 +186,23 @@ public class MostRecentEntryProxyResource {
             @NotNullConstraint(paramName = LENGTH)
             @LongPositiveConstraint(value = 0, paramName = LENGTH)
             @Parameter(required = true, description = CONTENT_LENGTH_DESCRIPTION) String length) {
-        AssertionResult result = proxyManager.get(port).assertMostRecentResponseContentLengthLessThanOrEqual(
+
+        return proxyManager.get(port).assertMostRecentResponseContentLengthLessThanOrEqual(
                 Pattern.compile(urlPattern),
                 Long.parseLong(length));
-
-        return Response.ok(result).build();
     }
 
     @GET
     @Path("/assertResponseTimeLessThanOrEqual")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Assert that the response time for the most recent request " +
-            "found by a given URL pattern is less than or equal to a given number of milliseconds.")
-    public Response responseTimeLessThanOrEqual(
+            "found by a given URL pattern is less than or equal to a given number of milliseconds.",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
+    public AssertionResult responseTimeLessThanOrEqual(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
@@ -187,19 +216,23 @@ public class MostRecentEntryProxyResource {
             @QueryParam(MILLISECONDS)
             @LongPositiveConstraint(value = 0, paramName = MILLISECONDS)
             @Parameter(required = true, description = MILLISECONDS_DESCRIPTION) String milliseconds) {
-        AssertionResult result = proxyManager.get(port).assertMostRecentResponseTimeLessThanOrEqual(
+
+        return proxyManager.get(port).assertMostRecentResponseTimeLessThanOrEqual(
                 Pattern.compile(urlPattern),
                 Long.parseLong(milliseconds));
-
-        return Response.ok(result).build();
     }
 
     @GET
     @Path("/assertResponseHeaderContains")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Assert that if the most recent response found by url pattern has header with specified name " +
-            "- it's value must contain specified text.")
-    public Response responseHeaderContains(
+            "- it's value must contain specified text.",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
+    public AssertionResult responseHeaderContains(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
@@ -216,19 +249,23 @@ public class MostRecentEntryProxyResource {
             @QueryParam(HEADER_VALUE)
             @NotBlankConstraint(paramName = HEADER_VALUE)
             @Parameter(required = true, description = HEADER_VALUE_DESCRIPTION) String headerValue) {
-        AssertionResult result = proxyManager.get(port).assertMostRecentResponseHeaderContains(
+
+        return proxyManager.get(port).assertMostRecentResponseHeaderContains(
                 Pattern.compile(urlPattern),
                 headerName, headerValue);
-
-        return Response.ok(result).build();
     }
 
     @GET
     @Path("/assertResponseHeaderDoesNotContain")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Assert that if the most recent response found by url pattern has header with specified name" +
-            "- it's value must not contain specified text.")
-    public Response responseHeaderDoesNotContain(
+            "- it's value must not contain specified text.",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
+    public AssertionResult responseHeaderDoesNotContain(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
             @PortWithExistingProxyConstraint
@@ -245,18 +282,22 @@ public class MostRecentEntryProxyResource {
             @QueryParam(HEADER_VALUE)
             @NotBlankConstraint(paramName = HEADER_VALUE)
             @Parameter(required = true, description = HEADER_VALUE_DESCRIPTION) String headerValue) {
-        AssertionResult result = proxyManager.get(port).assertMostRecentResponseHeaderDoesNotContain(
+
+        return proxyManager.get(port).assertMostRecentResponseHeaderDoesNotContain(
                 Pattern.compile(urlPattern),
                 headerName, headerValue);
-
-        return Response.ok(result).build();
     }
 
     @GET
     @Path("/assertResponseHeaderMatches")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "Assert that if the most recent response found by url pattern has header with name " +
-            "found by name pattern - it's value should match value pattern.")
+            "found by name pattern - it's value should match value pattern.",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
     public AssertionResult responseHeaderMatches(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
@@ -276,6 +317,7 @@ public class MostRecentEntryProxyResource {
             @NotBlankConstraint(paramName = HEADER_VALUE_PATTERN)
             @PatternConstraint(paramName = HEADER_VALUE_PATTERN)
             @Parameter(required = true, description = HEADER_VALUE_PATTERN_DESCRIPTION) String headerValuePattern) {
+
         return proxyManager.get(port).assertMostRecentResponseHeaderMatches(
                 Pattern.compile(urlPattern),
                 headerNamePattern != null ? Pattern.compile(headerNamePattern) : null,
@@ -287,7 +329,12 @@ public class MostRecentEntryProxyResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "In case url patter is provided assert that the most recent response " +
             "found by url pattern has specified status, otherwise " +
-            "assert that the most recent response has specified status.")
+            "assert that the most recent response has specified status.",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
     public AssertionResult statusEquals(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
@@ -317,7 +364,12 @@ public class MostRecentEntryProxyResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "In case url pattern is provided assert that the most recent response " +
             "found by url pattern has status belonging to INFORMATIONAL class (1xx), otherwise " +
-            "assert that the most recent response has status belonging to INFORMATIONAL class (1xx).")
+            "assert that the most recent response has status belonging to INFORMATIONAL class (1xx).",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
     public AssertionResult statusInformational(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
@@ -341,7 +393,12 @@ public class MostRecentEntryProxyResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "In case url pattern is provided assert that the most recent response " +
             "found by url pattern has status belonging to SUCCESS class (2xx), otherwise " +
-            "assert that the most recent response has status belonging to SUCCESS class (2xx).")
+            "assert that the most recent response has status belonging to SUCCESS class (2xx).",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
     public AssertionResult statusSuccess(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
@@ -365,7 +422,12 @@ public class MostRecentEntryProxyResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "In case url pattern is provided assert that the most recent response " +
             "found by url pattern has status belonging to REDIRECTION class (3xx), otherwise " +
-            "assert that the most recent response has status belonging to REDIRECTION class (3xx).")
+            "assert that the most recent response has status belonging to REDIRECTION class (3xx).",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
     public AssertionResult statusRedirection(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
@@ -389,7 +451,12 @@ public class MostRecentEntryProxyResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "In case url pattern is provided assert that the most recent response " +
             "found by url pattern has status belonging to CLIENT ERROR class (4xx), otherwise " +
-            "assert that the most recent response has status belonging to CLIENT ERROR class (4xx).")
+            "assert that the most recent response has status belonging to CLIENT ERROR class (4xx).",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
     public AssertionResult statusClientError(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)
@@ -413,7 +480,12 @@ public class MostRecentEntryProxyResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(description = "In case url pattern is provided assert that the most recent response " +
             "found by url pattern has status belonging to SERVER ERROR class (5xx), otherwise " +
-            "assert that the most recent response has status belonging to SERVER ERROR class (5xx).")
+            "assert that the most recent response has status belonging to SERVER ERROR class (5xx).",
+            responses = {@ApiResponse(
+                    description = "Assertion result",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON,
+                            schema = @Schema(implementation = AssertionResult.class)))})
     public AssertionResult statusServerError(
             @PathParam(PORT)
             @NotNullConstraint(paramName = PORT)

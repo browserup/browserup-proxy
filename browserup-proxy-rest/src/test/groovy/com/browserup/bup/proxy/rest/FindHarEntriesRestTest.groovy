@@ -57,9 +57,9 @@ class FindHarEntriesRestTest extends BaseRestTest {
 
         proxyManager.get()[0].newHar()
 
-        targetServerClient.request(Method.GET, ContentType.APPLICATION_JSON) { req ->
+        targetServerClient.request(Method.GET, ContentType.WILDCARD) { req ->
             uri.path = "/${urlNotToCatch}"
-            response.success = { HttpResponseDecorator resp ->
+            response.success = { _, reader ->
                 assertEquals(responseBody, reader.text)
             }
         }
