@@ -120,17 +120,6 @@ class MostRecentEntryAssertStatusClientErrorRestTest extends BaseRestTest {
     }
 
     protected void mockTargetServerResponse(String url, int status) {
-//        targetMockedServer.when(request()
-//                .withMethod(HttpMethods.GET)
-//                .withPath("/${url}"),
-//                Times.exactly(1))
-//                .respond(response()
-//                .withStatusCode(status)
-//                .withHeaders(
-//                new Header(HttpHeaders.CONTENT_TYPE, 'text/plain'),
-//                new Header(HttpHeaders.LOCATION, 'test.com')
-//        ))
-
         def response = aResponse().withStatus(status)
                 .withBody(responseBody)
                 .withHeader('Content-Type', 'text/plain')

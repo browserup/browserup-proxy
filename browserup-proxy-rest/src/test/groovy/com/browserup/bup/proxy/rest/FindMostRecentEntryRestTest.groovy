@@ -3,6 +3,7 @@ package com.browserup.bup.proxy.rest
 import com.browserup.harreader.model.HarEntry
 import com.fasterxml.jackson.core.JsonFactory
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.tomakehurst.wiremock.client.WireMock
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovyx.net.http.HttpResponseDecorator
@@ -11,6 +12,8 @@ import org.apache.http.entity.ContentType
 import org.hamcrest.Matchers
 import org.junit.Test
 
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertNull
 import static org.junit.Assert.assertThat
@@ -66,6 +69,9 @@ class FindMostRecentEntryRestTest extends BaseRestTest {
                         actualEntry.startedDateTime, Matchers.equalTo(expectedMostRecentEntry.startedDateTime))
             }
         }
+
+        WireMock.verify(1, getRequestedFor(urlEqualTo("/${urlOfMostRecentRequest}")))
+        WireMock.verify(1, getRequestedFor(urlEqualTo("/${urlOfOldRequest}")))
     }
 
     @Test
@@ -89,5 +95,8 @@ class FindMostRecentEntryRestTest extends BaseRestTest {
                 assertNull('Expected to find empty entry', actualEntry.startedDateTime)
             }
         }
+
+        WireMock.verify(1, getRequestedFor(urlEqualTo("/${urlOfMostRecentRequest}")))
+        WireMock.verify(1, getRequestedFor(urlEqualTo("/${urlOfOldRequest}")))
     }
 }

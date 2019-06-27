@@ -13,17 +13,13 @@ import com.google.inject.servlet.GuiceServletContextListener
 import com.google.sitebricks.SitebricksModule
 import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.Method
-import org.apache.http.HttpHeaders
-import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
 import org.awaitility.Awaitility
-import org.awaitility.Duration
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
-import org.mockserver.matchers.Times
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -36,8 +32,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import static org.junit.Assert.assertEquals
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class WithRunningProxyRestTest {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyManager)
@@ -183,15 +177,5 @@ class WithRunningProxyRestTest {
                 .withHeader('Content-Type', 'text/plain')
                 .withFixedDelay(delayMilliseconds)
         stubFor(get(urlEqualTo("/${url}")).willReturn(response))
-
-//        targetMockedServer.when(request()
-//                .withMethod(HttpMethods.GET)
-//                .withPath("/${url}"),
-//                Times.exactly(1))
-//                .respond(response()
-//                .withStatusCode(HttpStatus.SC_OK)
-//                .withDelay(delay)
-//                .withHeader(new Header(HttpHeaders.CONTENT_TYPE, 'text/plain'))
-//                .withBody(responseBody))
     }
 }

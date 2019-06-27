@@ -2,12 +2,15 @@ package com.browserup.bup.proxy.rest
 
 import com.browserup.harreader.model.HarEntry
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.tomakehurst.wiremock.client.WireMock
 import groovyx.net.http.HttpResponseDecorator
 import groovyx.net.http.Method
 import org.apache.http.entity.ContentType
 import org.hamcrest.Matchers
 import org.junit.Test
 
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertThat
 
@@ -45,6 +48,9 @@ class FindHarEntriesRestTest extends BaseRestTest {
                         entries[0].request.url, Matchers.not(Matchers.containsString(urlNotToCatch)))
             }
         }
+
+        WireMock.verify(1, getRequestedFor(urlEqualTo("/${urlToCatch}")))
+        WireMock.verify(1, getRequestedFor(urlEqualTo("/${urlNotToCatch}")))
     }
 
     @Test
@@ -73,5 +79,7 @@ class FindHarEntriesRestTest extends BaseRestTest {
                 assertThat('Expected get empty har entries array', entries, Matchers.arrayWithSize(0))
             }
         }
+
+        WireMock.verify(1, getRequestedFor(urlEqualTo("/${urlNotToCatch}")))
     }
 }

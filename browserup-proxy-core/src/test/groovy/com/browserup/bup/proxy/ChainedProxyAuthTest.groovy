@@ -15,9 +15,12 @@ import org.littleshoot.proxy.impl.DefaultHttpProxyServer
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import static com.github.tomakehurst.wiremock.client.WireMock.lessThan
 import static com.github.tomakehurst.wiremock.client.WireMock.ok
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import static com.github.tomakehurst.wiremock.client.WireMock.verify
 import static org.junit.Assert.assertEquals
 
 class ChainedProxyAuthTest extends MockServerTest {
@@ -67,6 +70,8 @@ class ChainedProxyAuthTest extends MockServerTest {
             String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/proxyauth")).getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", responseBody)
         }
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
     @Test
@@ -102,5 +107,7 @@ class ChainedProxyAuthTest extends MockServerTest {
             CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/proxyauth"))
             assertEquals("Expected to receive a Bad Gateway due to incorrect proxy authentication credentials", 502, response.getStatusLine().statusCode)
         }
+
+        verify(lessThan(1), getRequestedFor(urlEqualTo(stubUrl)))
     }
 }

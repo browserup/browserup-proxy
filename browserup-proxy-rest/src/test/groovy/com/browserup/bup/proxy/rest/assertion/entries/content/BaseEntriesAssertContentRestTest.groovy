@@ -6,7 +6,6 @@ import org.apache.http.HttpStatus
 import org.junit.Test
 
 import static org.junit.Assert.assertEquals
-import static org.junit.Assert.assertEquals
 
 abstract class BaseEntriesAssertContentRestTest extends BaseRestTest {
     protected static final String COMMON_URL_PART = 'url'

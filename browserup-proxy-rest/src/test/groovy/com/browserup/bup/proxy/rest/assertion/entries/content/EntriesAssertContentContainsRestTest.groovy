@@ -1,20 +1,12 @@
 package com.browserup.bup.proxy.rest.assertion.entries.content
 
 import com.browserup.bup.assertion.model.AssertionResult
-import com.browserup.bup.proxy.CaptureType
-import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
 import groovyx.net.http.HttpResponseDecorator
-import groovyx.net.http.Method
-import org.apache.http.HttpStatus
-import org.apache.http.entity.ContentType
 import org.hamcrest.Matchers
-import org.junit.Before
 import org.junit.Test
 
-import java.util.regex.Pattern
-
-import static org.junit.Assert.*
+import static org.junit.Assert.assertThat
 
 class EntriesAssertContentContainsRestTest extends BaseEntriesAssertContentRestTest {
 

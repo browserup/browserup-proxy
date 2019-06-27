@@ -1,10 +1,8 @@
 package com.browserup.bup.proxy.rest.assertion.entries.header
 
 import com.browserup.bup.assertion.model.AssertionResult
-import com.browserup.bup.proxy.CaptureType
 import com.fasterxml.jackson.databind.ObjectMapper
 import groovyx.net.http.HttpResponseDecorator
-import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.hamcrest.Matchers
 import org.junit.Test

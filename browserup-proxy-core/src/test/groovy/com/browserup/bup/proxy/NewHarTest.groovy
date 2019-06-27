@@ -28,10 +28,12 @@ import java.util.concurrent.TimeUnit
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import static com.github.tomakehurst.wiremock.client.WireMock.ok
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching
+import static com.github.tomakehurst.wiremock.client.WireMock.verify
 import static org.hamcrest.Matchers.empty
 import static org.hamcrest.Matchers.equalTo
 import static org.hamcrest.Matchers.greaterThan
@@ -99,6 +101,8 @@ class NewHarTest extends MockServerTest {
         HarEntry entry = Iterables.get(har.getLog().getEntries(), 0)
         assertThat("Expected at least 1 second DNS delay", entry.getTimings().getDns(), greaterThanOrEqualTo(1000))
         assertNotNull(har.log.entries[0].time)
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
     @Test
@@ -146,6 +150,8 @@ class NewHarTest extends MockServerTest {
         assertEquals("Incorrect cookie value in HAR", "mock-value", expiresCookie.value)
 
         assertThat("Incorrect expiration date in cookie with Expires", expiresCookie.expires, equalTo(expiresDate))
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
     @Test
@@ -178,6 +184,8 @@ class NewHarTest extends MockServerTest {
         HarHeader header = headers.find { it.name == "Mock-Header" }
         assertNotNull("Expected to find header with name Mock-Header in HAR", header)
         assertEquals("Incorrect header value for Mock-Header", "mock value", header.value)
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
     @Test
@@ -214,6 +222,8 @@ class NewHarTest extends MockServerTest {
 
         assertEquals("Expected to capture body content in HAR", expectedResponseBody, content.text)
         assertEquals("Unexpected response content length", expectedResponseBody.getBytes("UTF-8").length, content.size)
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
     @Test
@@ -249,6 +259,8 @@ class NewHarTest extends MockServerTest {
         assertEquals("Expected to capture response mimeType in HAR", responseContentType, content.mimeType)
 
         assertNull("Expected to not capture body content in HAR", content.text)
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
     @Test
@@ -404,6 +416,8 @@ class NewHarTest extends MockServerTest {
 
         String capturedUrl = har.log.entries[0].request.url
         assertEquals("URL captured in HAR did not match request URL", requestUrl, capturedUrl)
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
     @Test
@@ -438,6 +452,8 @@ class NewHarTest extends MockServerTest {
 
         assertEquals("Expected first query parameter name to be param1", "param1", har.log.entries[0].request.queryString[0].name)
         assertEquals("Expected first query parameter value to be value1", "value1", har.log.entries[0].request.queryString[0].value)
+
+        verify(1, getRequestedFor(urlMatching(stubUrl)))
     }
 
     @Test
@@ -474,6 +490,8 @@ class NewHarTest extends MockServerTest {
 
         assertEquals("Expected first query parameter name to be param1", "param1", har.log.entries[0].request.queryString[0].name)
         assertEquals("Expected first query parameter value to be value1", "value1", har.log.entries[0].request.queryString[0].value)
+
+        verify(1, getRequestedFor(urlMatching(stubUrl)))
     }
 
     @Test
@@ -514,6 +532,8 @@ class NewHarTest extends MockServerTest {
 
         assertEquals("Expected first query parameter name to be param1", "param1", har.log.entries[0].request.queryString[0].name)
         assertEquals("Expected first query parameter value to be value1", "value1", har.log.entries[0].request.queryString[0].value)
+
+        verify(1, getRequestedFor(urlMatching(stubUrl)))
     }
 
     @Test

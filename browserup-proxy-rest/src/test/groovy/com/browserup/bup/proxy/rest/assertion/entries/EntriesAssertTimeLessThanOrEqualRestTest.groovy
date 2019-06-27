@@ -4,9 +4,7 @@ import com.browserup.bup.assertion.model.AssertionResult
 import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
 import groovyx.net.http.HttpResponseDecorator
-import groovyx.net.http.Method
 import org.apache.http.HttpStatus
-import org.apache.http.entity.ContentType
 import org.hamcrest.Matchers
 import org.junit.Test
 

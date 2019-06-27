@@ -7,22 +7,14 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import com.github.tomakehurst.wiremock.http.HttpHeaders
 import groovyx.net.http.HttpResponseDecorator
-import groovyx.net.http.Method
-import org.apache.http.HttpStatus
-import org.apache.http.entity.ContentType
 import org.hamcrest.Matchers
 import org.junit.Test
-import org.mockserver.matchers.Times
-import org.mockserver.model.ConnectionOptions
-import org.mockserver.model.Header
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get
 import static com.github.tomakehurst.wiremock.client.WireMock.ok
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.junit.Assert.*
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
     def responseBody = 'success'
@@ -205,20 +197,6 @@ class MostRecentEntryAssertHeaderMatchesRestTest extends BaseRestTest {
     }
 
     protected void mockTargetServerResponse(String url, String responseBody, HttpHeader[] headers) {
-//        def connectionOptions = ConnectionOptions
-//                .connectionOptions()
-//                .withSuppressConnectionHeader(true)
-//
-//        targetMockedServer.when(request()
-//                .withMethod(HttpMethods.GET)
-//                .withPath("/${url}"),
-//                Times.exactly(1))
-//                .respond(response()
-//                .withStatusCode(HttpStatus.SC_OK)
-//                .withBody(responseBody)
-//                .withConnectionOptions(connectionOptions)
-//                .withHeaders(headers))
-
         def allHeaders = headers + [new HttpHeader('Content-Type', 'text/plain')] as HttpHeader[]
         def response = ok()
                 .withBody(responseBody)

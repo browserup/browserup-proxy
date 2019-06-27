@@ -18,9 +18,11 @@ import org.littleshoot.proxy.HttpFiltersSourceAdapter
 import java.util.concurrent.atomic.AtomicBoolean
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import static com.github.tomakehurst.wiremock.client.WireMock.ok
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import static com.github.tomakehurst.wiremock.client.WireMock.verify
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertTrue
@@ -65,6 +67,8 @@ class FilterChainTest extends MockServerTest {
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", responseBody)
         }
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
     @Test
@@ -129,6 +133,8 @@ class FilterChainTest extends MockServerTest {
         assertTrue("Expected second filter method to be invoked after first filter threw exception", clientToProxyRequest.get())
         assertTrue("Expected second filter method to be invoked after first filter threw exception", serverToProxyResponse.get())
         assertTrue("Expected second filter method to be invoked after first filter threw exception", proxyToClientResponse.get())
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
     @Test
@@ -159,6 +165,8 @@ class FilterChainTest extends MockServerTest {
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", responseBody)
         }
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
     @Test
@@ -206,6 +214,8 @@ class FilterChainTest extends MockServerTest {
 
         assertTrue("Expected second request filter to be invoked", secondRequestFilterInvoked.get())
         assertTrue("Expected second response filter to be invoked", secondResponseFilterInvoked.get())
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
     /**

@@ -1,7 +1,6 @@
 package com.browserup.bup.proxy.rest
 
 import com.browserup.bup.assertion.model.AssertionResult
-import org.mockserver.model.Delay
 
 import static org.junit.Assert.*
 

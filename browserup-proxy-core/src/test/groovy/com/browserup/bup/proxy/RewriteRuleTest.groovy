@@ -11,9 +11,11 @@ import org.junit.After
 import org.junit.Test
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import static com.github.tomakehurst.wiremock.client.WireMock.ok
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching
+import static com.github.tomakehurst.wiremock.client.WireMock.verify
 import static org.junit.Assert.assertEquals
 
 class RewriteRuleTest extends MockServerTest {
@@ -48,6 +50,8 @@ class RewriteRuleTest extends MockServerTest {
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", responseBody)
         }
+
+        verify(1, getRequestedFor(urlMatching(stubUrl)))
     }
 
     @Test
@@ -74,5 +78,7 @@ class RewriteRuleTest extends MockServerTest {
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", responseBody)
         }
+
+        verify(1, getRequestedFor(urlMatching(stubUrl)))
     }
 }

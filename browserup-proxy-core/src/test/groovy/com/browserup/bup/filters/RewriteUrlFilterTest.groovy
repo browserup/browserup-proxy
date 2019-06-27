@@ -1,5 +1,6 @@
 package com.browserup.bup.filters
 
+import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.matching.EqualToPattern
 import com.google.common.collect.ImmutableList
 import io.netty.channel.ChannelHandlerContext
@@ -22,6 +23,7 @@ import java.nio.channels.Channel
 
 import static com.browserup.bup.filters.HttpsAwareFiltersAdapter.*
 import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import static com.github.tomakehurst.wiremock.client.WireMock.ok
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
@@ -122,6 +124,8 @@ class RewriteUrlFilterTest extends MockServerTest {
             String secondResponseBody = NewProxyServerTestUtil.toStringAndClose(secondResponse.getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", secondResponseBody)
         }
+
+        WireMock.verify(2, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
     @Test
@@ -144,6 +148,8 @@ class RewriteUrlFilterTest extends MockServerTest {
             String secondResponseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", secondResponseBody)
         }
+
+        WireMock.verify(2, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
     @Test
@@ -167,5 +173,7 @@ class RewriteUrlFilterTest extends MockServerTest {
             String secondResponseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(url)).getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", secondResponseBody)
         }
+
+        WireMock.verify(2, getRequestedFor(urlEqualTo(stubUrl)))
     }
 }
