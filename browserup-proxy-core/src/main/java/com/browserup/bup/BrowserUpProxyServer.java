@@ -104,6 +104,8 @@ import static java.util.stream.Collectors.toCollection;
 public class BrowserUpProxyServer implements BrowserUpProxy {
     private static final Logger log = LoggerFactory.getLogger(BrowserUpProxyServer.class);
 
+    public static final String DEFAULT_PAGE_REF = "Default";
+
     private static final HarCreatorBrowser HAR_CREATOR_VERSION =
         new HarCreatorBrowser();
     static {
@@ -1229,7 +1231,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
                 public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
                     Har har = getHar();
                     if (har != null && !ProxyUtils.isCONNECT(originalRequest)) {
-                        return new HarCaptureFilter(originalRequest, ctx, har, getCurrentHarPage() == null ? null : getCurrentHarPage().getId(), getHarCaptureTypes());
+                        return new HarCaptureFilter(originalRequest, ctx, har, getCurrentPageRef(), getHarCaptureTypes());
                     } else {
                         return null;
                     }
@@ -1242,12 +1244,16 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
                 public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
                     Har har = getHar();
                     if (har != null && ProxyUtils.isCONNECT(originalRequest)) {
-                        return new HttpConnectHarCaptureFilter(originalRequest, ctx, har, getCurrentHarPage() == null ? null : getCurrentHarPage().getId());
+                        return new HttpConnectHarCaptureFilter(originalRequest, ctx, har, getCurrentPageRef());
                     } else {
                         return null;
                     }
                 }
             });
         }
+    }
+
+    private String getCurrentPageRef() {
+        return Optional.ofNullable(getCurrentHarPage()).map(HarPage::getId).orElse(DEFAULT_PAGE_REF);
     }
 }
