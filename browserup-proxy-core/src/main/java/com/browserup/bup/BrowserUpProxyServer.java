@@ -1254,6 +1254,27 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     }
 
     private String getCurrentPageRef() {
-        return Optional.ofNullable(getCurrentHarPage()).map(HarPage::getId).orElse(DEFAULT_PAGE_REF);
+        HarPage harPage = getCurrentHarPage();
+        harPage = harPage == null ? getOrCreateDefaultPage() : harPage;
+
+        return harPage.getId();
+    }
+
+    private HarPage getOrCreateDefaultPage() {
+        return getDefaultPage().orElseGet(this::addDefaultPage);
+    }
+
+    private HarPage addDefaultPage() {
+        HarPage newPage = new HarPage();
+        newPage.setTitle(DEFAULT_PAGE_REF);
+        newPage.setId(DEFAULT_PAGE_REF);
+        getHar().getLog().getPages().add(newPage);
+        return newPage;
+    }
+
+    private Optional<HarPage> getDefaultPage() {
+        return getHar().getLog().getPages().stream()
+                .filter(p -> p.getTitle().equals(DEFAULT_PAGE_REF))
+                .findFirst();
     }
 }
