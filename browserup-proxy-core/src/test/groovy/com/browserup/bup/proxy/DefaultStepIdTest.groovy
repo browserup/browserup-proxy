@@ -20,6 +20,7 @@ import org.mockserver.matchers.Times
 import static com.browserup.bup.proxy.test.util.NewProxyServerTestUtil.toStringAndClose
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertNotNull
+import static org.junit.Assert.assertNull
 import static org.junit.Assert.assertThat
 import static org.mockserver.model.HttpRequest.request
 import static org.mockserver.model.HttpResponse.response
@@ -40,7 +41,6 @@ class DefaultStepIdTest extends MockServerTest {
         proxy = new BrowserUpProxyServer()
         proxy.setTrustAllServers(true)
         proxy.start()
-        proxy.newHar(INITIAL_STEP_NAME)
 
         clientToProxy = NewProxyServerTestUtil.getNewHttpClient(proxy.port)
     }
@@ -54,6 +54,8 @@ class DefaultStepIdTest extends MockServerTest {
 
     @Test
     void testDefaultStepIdIfNoCurrentPage() {
+        proxy.newHar(INITIAL_STEP_NAME)
+
         mockResponseForPath(FIRST_URL)
         mockResponseForPath(SECOND_URL)
         mockResponseForPath(THIRD_URL)
@@ -84,6 +86,17 @@ class DefaultStepIdTest extends MockServerTest {
 
         assertThat("Expected two pages available", proxy.har.log.pages, Matchers.hasSize(2))
         assertNotNull("Expected to find default page among pages", proxy.har.log.pages.find {it.id = DEFAULT_STEP_NAME})
+    }
+
+    @Test
+    void testNullHarIfNoNewHarCalled() {
+        mockResponseForPath(FIRST_URL)
+
+        def firstUrl = "http://localhost:${mockServerPort}/${FIRST_URL}"
+
+        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(firstUrl)).entity.content)
+        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+        assertNull("Expected to get null har", proxy.har)
     }
 
     private mockResponseForPath(String path) {
