@@ -396,6 +396,8 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         }
 
         proxyServer = bootstrap.start();
+
+        addHarCaptureFilter();
     }
 
     @Override
@@ -417,7 +419,6 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     @Override
     public void start() {
         this.start(0);
-        addHarCaptureFilter();
     }
 
     @Override
