@@ -284,6 +284,12 @@ class NewHarTest extends MockServerTest {
         proxy.setHarCaptureTypes([CaptureType.RESPONSE_CONTENT] as Set)
         proxy.start()
 
+        newHarInitiallyEmpty: {
+            Har newHar = proxy.newHar()
+
+            assertNull("Expected newHar() to return the old (null) har", newHar)
+        }
+
         proxy.newHar()
 
         // putting tests in code blocks to avoid variable name collisions
@@ -313,22 +319,16 @@ class NewHarTest extends MockServerTest {
             assertNull("Expected getHar() to return null after calling endHar()", emptyHar)
         }
 
-        harStillEmptyAfterRequest: {
+        harNotEmptyAfterRequest: {
             NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
                 String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testEndHar")).getEntity().getContent())
                 assertEquals("Did not receive expected response from mock server", "success", responseBody)
             }
 
             Thread.sleep(500)
-            Har stillEmptyHar = proxy.getHar()
+            Har nonEmptyHar = proxy.getHar()
 
-            assertNull("Expected getHar() to return null after calling endHar()", stillEmptyHar)
-        }
-
-        newHarInitiallyEmpty: {
-            Har newHar = proxy.newHar()
-
-            assertNull("Expected newHar() to return the old (null) har", newHar)
+            assertNotNull("Expected getHar() to return non-null Har after calling endHar() and sending request", nonEmptyHar)
         }
 
         newHarCanCapture: {
