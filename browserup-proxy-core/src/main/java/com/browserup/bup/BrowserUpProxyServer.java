@@ -103,6 +103,7 @@ import static java.util.stream.Collectors.toCollection;
  */
 public class BrowserUpProxyServer implements BrowserUpProxy {
     private static final Logger log = LoggerFactory.getLogger(BrowserUpProxyServer.class);
+    private static final Object LOCK = new Object();
 
     public static final String DEFAULT_PAGE_REF = "Default";
 
@@ -416,6 +417,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     @Override
     public void start() {
         this.start(0);
+        addHarCaptureFilter();
     }
 
     @Override
@@ -1229,7 +1231,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
             addHttpFilterFactory(new HttpFiltersSourceAdapter() {
                 @Override
                 public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
-                    Har har = getHar();
+                    Har har = getOrCreateHar();
                     if (har != null && !ProxyUtils.isCONNECT(originalRequest)) {
                         return new HarCaptureFilter(originalRequest, ctx, har, getCurrentPageRef(), getHarCaptureTypes());
                     } else {
@@ -1242,7 +1244,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
             addHttpFilterFactory(new HttpFiltersSourceAdapter() {
                 @Override
                 public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
-                    Har har = getHar();
+                    Har har = getOrCreateHar();
                     if (har != null && ProxyUtils.isCONNECT(originalRequest)) {
                         return new HttpConnectHarCaptureFilter(originalRequest, ctx, har, getCurrentPageRef());
                     } else {
@@ -1251,6 +1253,17 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
                 }
             });
         }
+    }
+
+    private Har getOrCreateHar() {
+        if (har == null) {
+            synchronized (LOCK) {
+                if (har == null) {
+                    newHar(DEFAULT_PAGE_REF);
+                }
+            }
+        }
+        return har;
     }
 
     private String getCurrentPageRef() {

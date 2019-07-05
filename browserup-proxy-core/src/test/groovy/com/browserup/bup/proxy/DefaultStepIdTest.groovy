@@ -89,14 +89,46 @@ class DefaultStepIdTest extends MockServerTest {
     }
 
     @Test
-    void testNullHarIfNoNewHarCalled() {
+    void testHarIsCreatedAfterFirstRequestIfNoNewHarCalled() {
+        mockResponseForPath(FIRST_URL)
+
+        assertNull("Expected null har before any requests sent", proxy.har)
+
+        def firstUrl = "http://localhost:${mockServerPort}/${FIRST_URL}"
+
+        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(firstUrl)).entity.content)
+        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+
+        assertNotNull("Expected non null har after request sent", proxy.har)
+    }
+
+    @Test
+    void testEntryCapturedIfNoNewHarCalled() {
         mockResponseForPath(FIRST_URL)
 
         def firstUrl = "http://localhost:${mockServerPort}/${FIRST_URL}"
 
         def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(firstUrl)).entity.content)
         assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
-        assertNull("Expected to get null har", proxy.har)
+
+        assertThat("Expected to get one entry", proxy.har.log.entries, Matchers.hasSize(1))
+        assertEquals("Expected entry to have default page ref", proxy.har.log.entries[0].pageref, DEFAULT_STEP_NAME)
+    }
+
+    @Test
+    void testEntryWithDefaultPageRefRemovedAfterNewHarCreated() {
+        mockResponseForPath(FIRST_URL)
+
+        def firstUrl = "http://localhost:${mockServerPort}/${FIRST_URL}"
+
+        def respBody = toStringAndClose(clientToProxy.execute(new HttpGet(firstUrl)).entity.content)
+        assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
+
+        assertThat("Expected to get one entry", proxy.har.log.entries, Matchers.hasSize(1))
+        assertEquals("Expected entry to have default page ref", proxy.har.log.entries[0].pageref, DEFAULT_STEP_NAME)
+
+        proxy.newHar(INITIAL_STEP_NAME)
+        assertThat("Expected to get no entries after new har called", proxy.har.log.entries, Matchers.hasSize(0))
     }
 
     private mockResponseForPath(String path) {
