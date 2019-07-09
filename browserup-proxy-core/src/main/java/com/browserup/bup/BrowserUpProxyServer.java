@@ -106,6 +106,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     private static final Object LOCK = new Object();
 
     public static final String DEFAULT_PAGE_REF = "Default";
+    public static final String DEFAULT_PAGE_TITLE = "Default";
 
     private static final HarCreatorBrowser HAR_CREATOR_VERSION =
         new HarCreatorBrowser();
@@ -491,6 +492,10 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
 
     @Override
     public Har newHar(String initialPageRef, String initialPageTitle) {
+        return newHar(initialPageRef, initialPageTitle, true);
+    }
+
+    private Har newHar(String initialPageRef, String initialPageTitle, boolean createPage) {
         Har oldHar = endHar();
 
         addHarCaptureFilter();
@@ -502,7 +507,9 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         this.har.setLog(harLog);
         harLog.setCreator(HAR_CREATOR_VERSION);
 
-        newPage(initialPageRef, initialPageTitle);
+        if (createPage) {
+            newPage(initialPageRef, initialPageTitle);
+        }
 
         return oldHar;
     }
@@ -571,9 +578,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
 
     @Override
     public Har newPage(String pageRef, String pageTitle) {
-        if (har == null) {
-            throw new IllegalStateException("No HAR exists for this proxy. Use newHar() to create a new HAR before calling newPage().");
-        }
+        har = getOrCreateHar(pageRef, pageTitle, false);
 
         Har endOfPageHar = null;
 
@@ -648,9 +653,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     }
 
     public void endPage() {
-        if (har == null) {
-            throw new IllegalStateException("No HAR exists for this proxy. Use newHar() to create a new HAR.");
-        }
+        if (har == null) return;
 
         HarPage previousPage = this.currentHarPage;
         this.currentHarPage = null;
@@ -1256,15 +1259,19 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         }
     }
 
-    private Har getOrCreateHar() {
+    private Har getOrCreateHar(String initialPageRef, String initialPageTitle, boolean createPage) {
         if (har == null) {
             synchronized (LOCK) {
                 if (har == null) {
-                    newHar(DEFAULT_PAGE_REF);
+                    newHar(initialPageRef, initialPageTitle, createPage);
                 }
             }
         }
         return har;
+    }
+
+    private Har getOrCreateHar() {
+        return getOrCreateHar(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE, true);
     }
 
     private String getCurrentPageRef() {
