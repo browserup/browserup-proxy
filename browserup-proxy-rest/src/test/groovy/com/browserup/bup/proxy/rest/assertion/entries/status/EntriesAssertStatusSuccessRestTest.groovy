@@ -3,19 +3,16 @@ package com.browserup.bup.proxy.rest.assertion.entries.status
 import com.browserup.bup.assertion.model.AssertionResult
 import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
-import groovyx.net.http.Method
-import org.apache.http.HttpHeaders
+import groovyx.net.http.HttpResponseDecorator
 import org.apache.http.HttpStatus
-import org.apache.http.entity.ContentType
-import org.eclipse.jetty.http.HttpMethods
 import org.hamcrest.Matchers
 import org.junit.Test
-import org.mockserver.matchers.Times
-import org.mockserver.model.Header
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.junit.Assert.*
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class EntriesAssertStatusSuccessRestTest extends BaseRestTest {
     def urlOfMostRecentRequest = 'url-most-recent'
@@ -54,8 +51,8 @@ class EntriesAssertStatusSuccessRestTest extends BaseRestTest {
             def urlPattern = ".*${urlPatternToMatchUrl}"
             uri.path = fullUrlPath
             uri.query = [urlPattern: urlPattern]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get all entries found by url pattern', assertionResult.requests, Matchers.hasSize(2))
                 assertAssertionPassed(assertionResult)
@@ -69,8 +66,8 @@ class EntriesAssertStatusSuccessRestTest extends BaseRestTest {
 
         sendGetToProxyServer { req ->
             uri.path = fullUrlPath
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get all assertion entries', assertionResult.requests, Matchers.hasSize(3))
                 assertAssertionPassed(assertionResult)
@@ -84,8 +81,8 @@ class EntriesAssertStatusSuccessRestTest extends BaseRestTest {
 
         sendGetToProxyServer { req ->
             uri.path = fullUrlPath
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get all assertion entries', assertionResult.requests, Matchers.hasSize(3))
                 assertAssertionFailed(assertionResult)
@@ -101,8 +98,8 @@ class EntriesAssertStatusSuccessRestTest extends BaseRestTest {
             def urlPattern = ".*${urlPatternToMatchUrl}"
             uri.path = fullUrlPath
             uri.query = [urlPattern: urlPattern]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get all entries found by url pattern', assertionResult.requests, Matchers.hasSize(2))
                 assertAssertionFailed(assertionResult)
@@ -121,8 +118,8 @@ class EntriesAssertStatusSuccessRestTest extends BaseRestTest {
         sendGetToProxyServer { req ->
             uri.path = fullUrlPath
             uri.query = [urlPattern: urlPatternNotToMatchUrl]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get no assertion result entries', assertionResult.requests, Matchers.hasSize(0))
                 assertAssertionPassed(assertionResult)
@@ -143,13 +140,9 @@ class EntriesAssertStatusSuccessRestTest extends BaseRestTest {
     }
 
     protected void mockTargetServerResponse(String url, String responseBody, int status) {
-        targetMockedServer.when(request()
-                .withMethod(HttpMethods.GET)
-                .withPath("/${url}"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(status)
-                .withHeader(new Header(HttpHeaders.CONTENT_TYPE, 'text/plain'))
-                .withBody(responseBody))
+        def response = aResponse().withStatus(status)
+                .withBody(responseBody)
+                .withHeader('Content-Type', 'text/plain')
+        stubFor(get(urlEqualTo("/${url}")).willReturn(response))
     }
 }

@@ -2,11 +2,15 @@ package com.browserup.bup.proxy.rest
 
 import com.browserup.harreader.model.HarEntry
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.tomakehurst.wiremock.client.WireMock
+import groovyx.net.http.HttpResponseDecorator
 import groovyx.net.http.Method
 import org.apache.http.entity.ContentType
 import org.hamcrest.Matchers
 import org.junit.Test
 
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertThat
 
@@ -31,12 +35,12 @@ class FindHarEntriesRestTest extends BaseRestTest {
         requestToTargetServer(urlToCatch, responseBody)
         requestToTargetServer(urlNotToCatch, responseBody)
 
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        proxyRestServerClient.request(Method.GET, ContentType.APPLICATION_JSON) { req ->
             def urlPattern = ".*${urlToCatch}"
             uri.path = "/proxy/${proxy.port}/${urlPath}"
             uri.query = [urlPattern: urlPattern]
-            response.success = { _, reader ->
-                HarEntry[] entries = new ObjectMapper().readValue(reader, HarEntry[]) as HarEntry[]
+            response.success = { HttpResponseDecorator resp ->
+                HarEntry[] entries = new ObjectMapper().readValue(resp.entity.content, HarEntry[]) as HarEntry[]
                 assertThat('Expected to find only one entry', entries, Matchers.arrayWithSize(1))
                 assertThat('Expected to find entry containing url from url filter pattern',
                         entries[0].request.url, Matchers.containsString(urlToCatch))
@@ -44,6 +48,9 @@ class FindHarEntriesRestTest extends BaseRestTest {
                         entries[0].request.url, Matchers.not(Matchers.containsString(urlNotToCatch)))
             }
         }
+
+        WireMock.verify(1, getRequestedFor(urlEqualTo("/${urlToCatch}")))
+        WireMock.verify(1, getRequestedFor(urlEqualTo("/${urlNotToCatch}")))
     }
 
     @Test
@@ -56,21 +63,23 @@ class FindHarEntriesRestTest extends BaseRestTest {
 
         proxyManager.get()[0].newHar()
 
-        targetServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        targetServerClient.request(Method.GET, ContentType.WILDCARD) { req ->
             uri.path = "/${urlNotToCatch}"
             response.success = { _, reader ->
                 assertEquals(responseBody, reader.text)
             }
         }
 
-        proxyRestServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
+        proxyRestServerClient.request(Method.GET, ContentType.APPLICATION_JSON) { req ->
             def urlPattern = ".*${urlToCatch}"
             uri.path = "/proxy/${proxy.port}/${urlPath}"
             uri.query = [urlPattern: urlPattern]
-            response.success = { _, reader ->
-                HarEntry[] entries = new ObjectMapper().readValue(reader, HarEntry[]) as HarEntry[]
+            response.success = { HttpResponseDecorator resp ->
+                HarEntry[] entries = new ObjectMapper().readValue(resp.entity.content, HarEntry[]) as HarEntry[]
                 assertThat('Expected get empty har entries array', entries, Matchers.arrayWithSize(0))
             }
         }
+
+        WireMock.verify(1, getRequestedFor(urlEqualTo("/${urlNotToCatch}")))
     }
 }

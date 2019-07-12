@@ -5,15 +5,22 @@ import com.browserup.bup.BrowserUpProxyServer
 import com.browserup.bup.proxy.auth.AuthType
 import com.browserup.bup.proxy.test.util.MockServerTest
 import com.browserup.bup.proxy.test.util.NewProxyServerTestUtil
+import com.github.tomakehurst.wiremock.matching.AbsentPattern
+import com.github.tomakehurst.wiremock.matching.EqualToPattern
+import com.github.tomakehurst.wiremock.matching.StringValuePattern
 import org.apache.http.client.methods.HttpGet
 import org.junit.After
 import org.junit.Test
-import org.mockserver.matchers.Times
-import org.mockserver.model.NottableString
 
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching
+import static com.github.tomakehurst.wiremock.client.WireMock.verify
+import static com.github.tomakehurst.wiremock.http.HttpHeader.absent
 import static org.junit.Assert.assertEquals
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class AutoAuthTest extends MockServerTest {
     BrowserUpProxy proxy
@@ -28,14 +35,11 @@ class AutoAuthTest extends MockServerTest {
     @Test
     void testBasicAuthAddedToHttpRequest() {
         // the base64-encoded rendering of "testUsername:testPassword" is dGVzdFVzZXJuYW1lOnRlc3RQYXNzd29yZA==
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/basicAuthHttp")
-                .withHeader("Authorization", "Basic dGVzdFVzZXJuYW1lOnRlc3RQYXNzd29yZA=="),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success"))
+        def stubUrl = "/basicAuthHttp"
+
+        stubFor(get(urlEqualTo(stubUrl))
+                .withHeader("Authorization", new EqualToPattern("Basic dGVzdFVzZXJuYW1lOnRlc3RQYXNzd29yZA=="))
+                .willReturn(ok().withBody("success")))
 
         proxy = new BrowserUpProxyServer()
         proxy.autoAuthorization("localhost", "testUsername", "testPassword", AuthType.BASIC)
@@ -46,19 +50,18 @@ class AutoAuthTest extends MockServerTest {
             String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/basicAuthHttp")).getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", responseBody)
         }
+
+        verify(1, getRequestedFor(urlMatching(stubUrl)))
     }
 
     @Test
     void testBasicAuthAddedToHttpsRequest() {
         // the base64-encoded rendering of "testUsername:testPassword" is dGVzdFVzZXJuYW1lOnRlc3RQYXNzd29yZA==
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/basicAuthHttp")
-                .withHeader("Authorization", "Basic dGVzdFVzZXJuYW1lOnRlc3RQYXNzd29yZA=="),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success"))
+        def stubUrl = "/basicAuthHttp"
+
+        stubFor(get(urlEqualTo(stubUrl))
+                .withHeader("Authorization", new EqualToPattern("Basic dGVzdFVzZXJuYW1lOnRlc3RQYXNzd29yZA=="))
+                .willReturn(ok().withBody("success")))
 
         proxy = new BrowserUpProxyServer()
         proxy.autoAuthorization("localhost", "testUsername", "testPassword", AuthType.BASIC)
@@ -66,23 +69,21 @@ class AutoAuthTest extends MockServerTest {
         proxy.start()
 
         NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://localhost:${mockServerPort}/basicAuthHttp")).getEntity().getContent())
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/basicAuthHttp")).getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", responseBody)
         }
+
+        verify(1, getRequestedFor(urlMatching(stubUrl)))
     }
 
     @Test
     void testCanStopBasicAuth() {
         // the base64-encoded rendering of "testUsername:testPassword" is dGVzdFVzZXJuYW1lOnRlc3RQYXNzd29yZA==
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/basicAuthHttp")
-                // require that the Auth header NOT be present
-                .withHeader(NottableString.not("Authorization"), NottableString.not("Basic dGVzdFVzZXJuYW1lOnRlc3RQYXNzd29yZA==")),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success"))
+        def stubUrl = "/basicAuthHttp"
+
+        stubFor(get(urlEqualTo(stubUrl))
+                .withHeader("Authorization", StringValuePattern.ABSENT)
+                .willReturn(ok().withBody("success")))
 
         proxy = new BrowserUpProxyServer()
         proxy.autoAuthorization("localhost", "testUsername", "testPassword", AuthType.BASIC)
@@ -95,5 +96,7 @@ class AutoAuthTest extends MockServerTest {
             String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/basicAuthHttp")).getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", responseBody)
         }
+
+        verify(1, getRequestedFor(urlMatching(stubUrl)))
     }
 }

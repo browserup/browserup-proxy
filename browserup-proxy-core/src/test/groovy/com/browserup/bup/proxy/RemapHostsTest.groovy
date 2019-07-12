@@ -7,11 +7,15 @@ import com.browserup.bup.proxy.test.util.NewProxyServerTestUtil
 import org.apache.http.client.methods.HttpGet
 import org.junit.After
 import org.junit.Test
-import org.mockserver.matchers.Times
 
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching
+import static com.github.tomakehurst.wiremock.client.WireMock.verify
 import static org.junit.Assert.assertEquals
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 /**
  * Tests host remapping using the {@link com.browserup.bup.proxy.dns.AdvancedHostResolver#remapHost(java.lang.String, java.lang.String)}
@@ -30,13 +34,9 @@ class RemapHostsTest extends MockServerTest {
     @Test
     void testRemapHttpHost() {
         // mock up a response to serve
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/remapHttpHost"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success"))
+
+        def stubUrl = "/remapHttpHost"
+        stubFor(get(urlEqualTo(stubUrl)).willReturn(ok().withBody("success")))
 
         proxy = new BrowserUpProxyServer()
         proxy.setTrustAllServers(true)
@@ -51,18 +51,15 @@ class RemapHostsTest extends MockServerTest {
             String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://www.someaddress.notreal:${mockServerPort}/remapHttpHost")).getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", responseBody)
         }
+
+        verify(1, getRequestedFor(urlMatching(stubUrl)))
     }
 
     @Test
     void testRemapHttpsHost() {
         // mock up a response to serve
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/remapHttpsHost"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success"))
+        def stubUrl = "/remapHttpsHost"
+        stubFor(get(urlEqualTo(stubUrl)).willReturn(ok().withBody("success")))
 
         proxy = new BrowserUpProxyServer()
         proxy.setTrustAllServers(true)
@@ -74,8 +71,10 @@ class RemapHostsTest extends MockServerTest {
         int proxyPort = proxy.getPort()
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://www.someaddress.notreal:${mockServerPort}/remapHttpsHost")).getEntity().getContent())
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://www.someaddress.notreal:${mockServerHttpsPort}/remapHttpsHost")).getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", responseBody)
         }
+
+        verify(1, getRequestedFor(urlMatching(stubUrl)))
     }
 }

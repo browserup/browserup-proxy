@@ -4,20 +4,17 @@ import com.browserup.bup.assertion.model.AssertionResult
 import com.browserup.bup.proxy.CaptureType
 import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
-import groovyx.net.http.Method
-import org.apache.http.HttpHeaders
-import org.apache.http.HttpStatus
-import org.apache.http.entity.ContentType
-import org.eclipse.jetty.http.HttpMethods
+import com.github.tomakehurst.wiremock.http.HttpHeader
+import com.github.tomakehurst.wiremock.http.HttpHeaders
+import groovyx.net.http.HttpResponseDecorator
 import org.hamcrest.Matchers
 import org.junit.Test
-import org.mockserver.matchers.Times
-import org.mockserver.model.Delay
-import org.mockserver.model.Header
 
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.junit.Assert.*
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class MostRecentEntryAssertHeaderContainsRestTest extends BaseRestTest {
     def responseBody = 'success'
@@ -29,7 +26,7 @@ class MostRecentEntryAssertHeaderContainsRestTest extends BaseRestTest {
     def headerNameNotToFind = 'some-header-name-not-to-find'
     def headerValueToFind = 'some-header-part'
     def headerValueNotToFind = 'will not find'
-    Header[] headers = [new Header(headerNameToFind, "header value before ${headerValueToFind} header value after".toString())]
+    HttpHeader[] headers = [new HttpHeader(headerNameToFind, "header value before ${headerValueToFind} header value after".toString())]
 
     @Override
     String getUrlPath() {
@@ -44,8 +41,8 @@ class MostRecentEntryAssertHeaderContainsRestTest extends BaseRestTest {
             def urlPattern = ".*${urlPatternToMatchUrl}"
             uri.path = fullUrlPath
             uri.query = [urlPattern: urlPattern, headerValue: headerValueToFind]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionPassed(assertionResult)
@@ -63,8 +60,8 @@ class MostRecentEntryAssertHeaderContainsRestTest extends BaseRestTest {
             def urlPattern = ".*${urlPatternToMatchUrl}"
             uri.path = fullUrlPath
             uri.query = [urlPattern: urlPattern, headerName: headerNameToFind, headerValue: headerValueToFind]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionPassed(assertionResult)
@@ -82,8 +79,8 @@ class MostRecentEntryAssertHeaderContainsRestTest extends BaseRestTest {
             def urlPattern = ".*${urlPatternToMatchUrl}"
             uri.path = fullUrlPath
             uri.query = [urlPattern: urlPattern, headerName: headerNameNotToFind, headerValue: headerValueToFind]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionFailed(assertionResult)
@@ -101,8 +98,8 @@ class MostRecentEntryAssertHeaderContainsRestTest extends BaseRestTest {
             def urlPattern = ".*${urlPatternToMatchUrl}"
             uri.path = fullUrlPath
             uri.query = [urlPattern: urlPattern, headerName: headerNameToFind, headerValue: headerValueNotToFind]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionFailed(assertionResult)
@@ -119,8 +116,8 @@ class MostRecentEntryAssertHeaderContainsRestTest extends BaseRestTest {
         sendGetToProxyServer { req ->
             uri.path = fullUrlPath
             uri.query = [urlPattern: urlPatternNotToMatchUrl, headerValue: headerValueNotToFind]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get no assertion result entries', assertionResult.requests, Matchers.hasSize(0))
                 assertAssertionPassed(assertionResult)
@@ -144,15 +141,11 @@ class MostRecentEntryAssertHeaderContainsRestTest extends BaseRestTest {
         requestToTargetServer(urlOfMostRecentRequest, responseBody)
     }
 
-    protected void mockTargetServerResponse(String url, String responseBody, Header[] headers) {
-        targetMockedServer.when(request()
-                .withMethod(HttpMethods.GET)
-                .withPath("/${url}"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(HttpStatus.SC_OK)
+    protected void mockTargetServerResponse(String url, String responseBody, HttpHeader[] headers) {
+        def allHeaders = headers + [new HttpHeader('Content-Type', 'text/plain')] as HttpHeader[]
+        def response = ok()
                 .withBody(responseBody)
-                .withHeader(new Header(HttpHeaders.CONTENT_TYPE, 'text/plain'))
-                .withHeaders(headers))
+                .withHeaders(new HttpHeaders(allHeaders))
+        stubFor(get(urlEqualTo("/${url}")).willReturn(response))
     }
 }

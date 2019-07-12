@@ -7,7 +7,9 @@ import org.junit.Test
 import java.util.regex.Pattern
 
 import static com.browserup.bup.proxy.test.util.NewProxyServerTestUtil.toStringAndClose
-import static java.util.concurrent.TimeUnit.MILLISECONDS
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching
+import static com.github.tomakehurst.wiremock.client.WireMock.verify
 import static org.junit.Assert.*
 
 class AllUrlResponsesTimeWithinTest extends BaseAssertionsTest {
@@ -27,7 +29,7 @@ class AllUrlResponsesTimeWithinTest extends BaseAssertionsTest {
         }
 
 
-        def assertionTime = MILLISECONDS.convert(DEFAULT_RESPONSE_DELAY.value, DEFAULT_RESPONSE_DELAY.timeUnit) - TIME_DELTA_MILLISECONDS
+        def assertionTime = DEFAULT_RESPONSE_DELAY - TIME_DELTA_MILLISECONDS
 
         def result = proxy.assertResponseTimeLessThanOrEqual(Pattern.compile(".*${URL_PATH}.*"), assertionTime)
 
@@ -37,6 +39,8 @@ class AllUrlResponsesTimeWithinTest extends BaseAssertionsTest {
         result.requests.forEach {
             assertTrue("Expected entry result to have failed flag = true", it.failed)
         }
+
+        verify(range.size(), getRequestedFor(urlMatching(".*")))
     }
 
     @Test
@@ -65,7 +69,7 @@ class AllUrlResponsesTimeWithinTest extends BaseAssertionsTest {
             assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody)
         }
 
-        def assertionTime = MILLISECONDS.convert(DEFAULT_RESPONSE_DELAY.value, DEFAULT_RESPONSE_DELAY.timeUnit) - TIME_DELTA_MILLISECONDS
+        def assertionTime = DEFAULT_RESPONSE_DELAY - TIME_DELTA_MILLISECONDS
 
         def result = proxy.assertResponseTimeLessThanOrEqual(Pattern.compile(".*${URL_PATH}.*"), assertionTime)
 
@@ -80,5 +84,7 @@ class AllUrlResponsesTimeWithinTest extends BaseAssertionsTest {
                 assertTrue("Expected entry result for slow response to have failed flag = true",e.failed)
             }
         }
+
+        verify(fastRange.size() + slowRange.size(), getRequestedFor(urlMatching(".*")))
     }
 }

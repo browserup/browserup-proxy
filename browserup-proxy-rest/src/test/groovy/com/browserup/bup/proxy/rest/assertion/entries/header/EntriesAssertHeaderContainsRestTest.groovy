@@ -1,20 +1,13 @@
 package com.browserup.bup.proxy.rest.assertion.entries.header
 
 import com.browserup.bup.assertion.model.AssertionResult
-import com.browserup.bup.proxy.CaptureType
-import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.apache.http.HttpHeaders
+import groovyx.net.http.HttpResponseDecorator
 import org.apache.http.HttpStatus
-import org.eclipse.jetty.http.HttpMethods
 import org.hamcrest.Matchers
 import org.junit.Test
-import org.mockserver.matchers.Times
-import org.mockserver.model.Header
 
 import static org.junit.Assert.*
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class EntriesAssertHeaderContainsRestTest extends BaseEntriesAssertHeaderRestTest {
 
@@ -34,8 +27,8 @@ class EntriesAssertHeaderContainsRestTest extends BaseEntriesAssertHeaderRestTes
                     headerValue: COMMON_HEADER_VALUE
             ]
 
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(2))
                 assertAssertionPassed(assertionResult)
@@ -54,8 +47,8 @@ class EntriesAssertHeaderContainsRestTest extends BaseEntriesAssertHeaderRestTes
                     headerValue: MISSING_HEADER_VALUE
             ]
 
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(2))
                 assertAssertionFailed(assertionResult)
@@ -74,8 +67,8 @@ class EntriesAssertHeaderContainsRestTest extends BaseEntriesAssertHeaderRestTes
                     headerValue: SECOND_HEADER_VALUE
             ]
 
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionFailed(assertionResult)
@@ -101,8 +94,8 @@ class EntriesAssertHeaderContainsRestTest extends BaseEntriesAssertHeaderRestTes
                     headerValue: FIRST_HEADER_VALUE
             ]
 
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionPassed(assertionResult)
@@ -122,8 +115,8 @@ class EntriesAssertHeaderContainsRestTest extends BaseEntriesAssertHeaderRestTes
                     headerValue: FIRST_HEADER_VALUE
             ]
 
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionPassed(assertionResult)
@@ -143,8 +136,8 @@ class EntriesAssertHeaderContainsRestTest extends BaseEntriesAssertHeaderRestTes
                     headerValue: SECOND_HEADER_VALUE
             ]
 
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionFailed(assertionResult)
@@ -164,8 +157,8 @@ class EntriesAssertHeaderContainsRestTest extends BaseEntriesAssertHeaderRestTes
                     headerValue: SECOND_HEADER_VALUE
             ]
 
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionFailed(assertionResult)
@@ -185,8 +178,8 @@ class EntriesAssertHeaderContainsRestTest extends BaseEntriesAssertHeaderRestTes
                     headerValue: SECOND_HEADER_VALUE
             ]
 
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertAssertionPassed(assertionResult)
             }

@@ -3,6 +3,7 @@ package com.browserup.bup.proxy.rest.assertion.mostrecent
 import com.browserup.bup.assertion.model.AssertionResult
 import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
+import groovyx.net.http.HttpResponseDecorator
 import groovyx.net.http.Method
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
@@ -34,8 +35,8 @@ class MostRecentEntryAssertTimeLessThanOrEqualRestTest extends BaseRestTest {
             def urlPattern = ".*${commonUrlPattern}"
             uri.path = fullUrlPath
             uri.query = [urlPattern: urlPattern, milliseconds: successfulAssertionMilliseconds]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionPassed(assertionResult)
@@ -48,8 +49,8 @@ class MostRecentEntryAssertTimeLessThanOrEqualRestTest extends BaseRestTest {
             def urlPattern = ".*${commonUrlPattern}"
             uri.path = fullUrlPath
             uri.query = [urlPattern: urlPattern, milliseconds: failedAssertionMilliseconds]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionFailed(assertionResult)
@@ -66,8 +67,8 @@ class MostRecentEntryAssertTimeLessThanOrEqualRestTest extends BaseRestTest {
         sendGetToProxyServer { req ->
             uri.path = fullUrlPath
             uri.query = [urlPattern: urlPattern, milliseconds: assertionMilliseconds]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get no assertion result entries', assertionResult.requests, Matchers.hasSize(0))
                 assertAssertionPassed(assertionResult)
@@ -84,7 +85,7 @@ class MostRecentEntryAssertTimeLessThanOrEqualRestTest extends BaseRestTest {
             uri.query = [urlPattern: '.*', milliseconds: 'abcd']
             uri.path = fullUrlPath
             response.failure = { resp, reader ->
-                assertEquals('Expected to get bad request', resp.status, HttpStatus.SC_BAD_REQUEST)
+                assertEquals('Expected to get bad request', HttpStatus.SC_BAD_REQUEST, resp.status)
             }
         }
     }

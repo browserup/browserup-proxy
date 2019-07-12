@@ -1,19 +1,12 @@
 package com.browserup.bup.proxy.rest.assertion.entries.content
 
 import com.browserup.bup.assertion.model.AssertionResult
-import com.browserup.bup.proxy.CaptureType
-import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
-import groovyx.net.http.Method
-import org.apache.http.HttpStatus
-import org.apache.http.entity.ContentType
+import groovyx.net.http.HttpResponseDecorator
 import org.hamcrest.Matchers
-import org.junit.Before
 import org.junit.Test
 
-import java.util.regex.Pattern
-
-import static org.junit.Assert.*
+import static org.junit.Assert.assertThat
 
 class EntriesAssertContentContainsRestTest extends BaseEntriesAssertContentRestTest {
 
@@ -32,8 +25,8 @@ class EntriesAssertContentContainsRestTest extends BaseEntriesAssertContentRestT
                     urlPattern: URL_PATTERN_TO_MATCH_BOTH,
                     contentText: RESPONSE_COMMON_PART
             ]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertAssertionPassed(assertionResult)
             }
@@ -51,8 +44,8 @@ class EntriesAssertContentContainsRestTest extends BaseEntriesAssertContentRestT
                     contentText: FIRST_RESPONSE
             ]
 
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get two assertion entries', assertionResult.requests, Matchers.hasSize(2))
                 assertAssertionFailed(assertionResult)
@@ -77,8 +70,8 @@ class EntriesAssertContentContainsRestTest extends BaseEntriesAssertContentRestT
                     urlPattern: URL_PATTERN_TO_MATCH_FIRST,
                     contentText: SECOND_RESPONSE
             ]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertAssertionFailed(assertionResult)
 
@@ -102,8 +95,8 @@ class EntriesAssertContentContainsRestTest extends BaseEntriesAssertContentRestT
                     urlPattern: URL_PATTERN_TO_MATCH_NOTHING,
                     contentText: RESPONSE_NOT_TO_FIND
             ]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertAssertionPassed(assertionResult)
             }

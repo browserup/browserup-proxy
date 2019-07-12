@@ -4,6 +4,7 @@ import com.browserup.bup.assertion.model.AssertionResult
 import com.browserup.bup.proxy.CaptureType
 import com.browserup.bup.proxy.rest.BaseRestTest
 import com.fasterxml.jackson.databind.ObjectMapper
+import groovyx.net.http.HttpResponseDecorator
 import groovyx.net.http.Method
 import org.apache.http.HttpStatus
 import org.apache.http.entity.ContentType
@@ -55,7 +56,7 @@ class MostRecentEntryAssertContentLengthLessThanOrEqualRestTest extends BaseRest
 
     @Test
     void getBadRequestIfLengthNotValid() {
-        proxyManager.get()[0].newHar()
+        sendRequestsToTargetServer()
 
         sendGetToProxyServer { req ->
             def urlPattern = ".*${urlPatternToMatchUrl}"
@@ -75,8 +76,8 @@ class MostRecentEntryAssertContentLengthLessThanOrEqualRestTest extends BaseRest
             def urlPattern = ".*${urlPatternToMatchUrl}"
             uri.path = fullUrlPath
             uri.query = [urlPattern: urlPattern, length: lengthToMatch]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionPassed(assertionResult)
@@ -94,8 +95,8 @@ class MostRecentEntryAssertContentLengthLessThanOrEqualRestTest extends BaseRest
             def urlPattern = ".*${urlPatternToMatchUrl}"
             uri.path = fullUrlPath
             uri.query = [urlPattern: urlPattern, length: lengthNotToMatch]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get one assertion result', assertionResult.requests, Matchers.hasSize(1))
                 assertAssertionFailed(assertionResult)
@@ -112,8 +113,8 @@ class MostRecentEntryAssertContentLengthLessThanOrEqualRestTest extends BaseRest
         sendGetToProxyServer { req ->
             uri.path = fullUrlPath
             uri.query = [urlPattern: urlPatternNotToMatchUrl, length: lengthNotToMatch]
-            response.success = { _, reader ->
-                def assertionResult = new ObjectMapper().readValue(reader, AssertionResult) as AssertionResult
+            response.success = { HttpResponseDecorator resp ->
+                def assertionResult = new ObjectMapper().readValue(resp.entity.content, AssertionResult) as AssertionResult
                 assertAssertionNotNull(assertionResult)
                 assertThat('Expected to get no assertion result entries', assertionResult.requests, Matchers.hasSize(0))
                 assertAssertionPassed(assertionResult)

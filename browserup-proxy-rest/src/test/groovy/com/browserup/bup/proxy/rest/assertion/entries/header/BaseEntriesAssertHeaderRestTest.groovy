@@ -2,14 +2,12 @@ package com.browserup.bup.proxy.rest.assertion.entries.header
 
 import com.browserup.bup.proxy.CaptureType
 import com.browserup.bup.proxy.rest.BaseRestTest
-import org.apache.http.HttpHeaders
-import org.apache.http.HttpStatus
-import org.eclipse.jetty.http.HttpMethods
-import org.mockserver.matchers.Times
-import org.mockserver.model.Header
+import com.github.tomakehurst.wiremock.http.HttpHeader
 
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 
 abstract class BaseEntriesAssertHeaderRestTest extends BaseRestTest {
     protected static final String COMMON_URL_PART = 'url'
@@ -27,28 +25,24 @@ abstract class BaseEntriesAssertHeaderRestTest extends BaseRestTest {
     protected static final String SECOND_HEADER_VALUE = "second-value-${COMMON_HEADER_VALUE}" as String
     protected static final String MISSING_HEADER_VALUE = 'missing value'
 
-    protected static final Header FIRST_HEADER = new Header(
+    protected static final HttpHeader FIRST_HEADER = new HttpHeader(
             FIRST_HEADER_NAME,
             FIRST_HEADER_VALUE
     )
-    protected static final Header SECOND_HEADER = new Header(
+    protected static final HttpHeader SECOND_HEADER = new HttpHeader(
             SECOND_HEADER_NAME,
             SECOND_HEADER_VALUE
     )
 
-    protected void mockTargetServerResponse(String url, String responseBody, Header... headers) {
-        targetMockedServer.when(request()
-                .withMethod(HttpMethods.GET)
-                .withPath("/${url}"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(HttpStatus.SC_OK)
+    protected void mockTargetServerResponse(String url, String responseBody, HttpHeader[] headers) {
+        def allHeaders = headers + [new HttpHeader('Content-Type', 'text/plain')] as HttpHeader[]
+        def response = ok()
                 .withBody(responseBody)
-                .withHeader(new Header(HttpHeaders.CONTENT_TYPE, 'text/plain'))
-                .withHeaders(headers))
+                .withHeaders(new com.github.tomakehurst.wiremock.http.HttpHeaders(allHeaders))
+        stubFor(get(urlEqualTo("/${url}")).willReturn(response))
     }
 
-    protected void sendRequestsToTargetServer(Header firstResponseHeader, Header secondResponseHeader) {
+    protected void sendRequestsToTargetServer(HttpHeader firstResponseHeader, HttpHeader secondResponseHeader) {
         proxy.enableHarCaptureTypes(CaptureType.RESPONSE_HEADERS)
 
         mockTargetServerResponse(URL_OF_FIRST_REQUEST, COMMON_RESPONSE_BODY, firstResponseHeader)

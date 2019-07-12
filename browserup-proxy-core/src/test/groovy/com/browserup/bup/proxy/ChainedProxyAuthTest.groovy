@@ -12,11 +12,16 @@ import org.junit.Test
 import org.littleshoot.proxy.HttpProxyServer
 import org.littleshoot.proxy.ProxyAuthenticator
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer
-import org.mockserver.matchers.Times
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import static com.github.tomakehurst.wiremock.client.WireMock.get
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import static com.github.tomakehurst.wiremock.client.WireMock.lessThan
+import static com.github.tomakehurst.wiremock.client.WireMock.ok
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import static com.github.tomakehurst.wiremock.client.WireMock.verify
 import static org.junit.Assert.assertEquals
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class ChainedProxyAuthTest extends MockServerTest {
     BrowserUpProxy proxy
@@ -52,13 +57,8 @@ class ChainedProxyAuthTest extends MockServerTest {
                 .withPort(0)
                 .start()
 
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/proxyauth"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(200)
-                .withBody("success"))
+        def stubUrl = "/proxyauth"
+        stubFor(get(urlEqualTo(stubUrl)).willReturn(ok().withBody("success")))
 
         proxy = new BrowserUpProxyServer()
         proxy.setChainedProxy(upstreamProxy.getListenAddress())
@@ -67,9 +67,11 @@ class ChainedProxyAuthTest extends MockServerTest {
         proxy.start()
 
         NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
-            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://localhost:${mockServerPort}/proxyauth")).getEntity().getContent())
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/proxyauth")).getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", responseBody)
         }
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
     @Test
@@ -92,13 +94,8 @@ class ChainedProxyAuthTest extends MockServerTest {
                 .withPort(0)
                 .start()
 
-        mockServer.when(request()
-                .withMethod("GET")
-                .withPath("/proxyauth"),
-                Times.exactly(1))
-                .respond(response()
-                .withStatusCode(500)
-                .withBody("shouldn't happen"))
+        def stubUrl = "/proxyauth"
+        stubFor(get(urlEqualTo(stubUrl)).willReturn(aResponse().withStatus(500).withBody("shouldn't happen")))
 
         proxy = new BrowserUpProxyServer()
         proxy.setChainedProxy(upstreamProxy.getListenAddress())
@@ -107,8 +104,10 @@ class ChainedProxyAuthTest extends MockServerTest {
         proxy.start()
 
         NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
-            CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerPort}/proxyauth"))
+            CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/proxyauth"))
             assertEquals("Expected to receive a Bad Gateway due to incorrect proxy authentication credentials", 502, response.getStatusLine().statusCode)
         }
+
+        verify(lessThan(1), getRequestedFor(urlEqualTo(stubUrl)))
     }
 }

@@ -1,5 +1,6 @@
 package com.browserup.bup.proxy.assertion.field.content.filtered
 
+import com.browserup.bup.proxy.CaptureType
 import com.browserup.bup.proxy.assertion.field.content.ContentBaseTest
 import com.browserup.bup.proxy.assertion.field.content.mostrecent.MostRecentContentBaseTest
 import org.hamcrest.Matchers

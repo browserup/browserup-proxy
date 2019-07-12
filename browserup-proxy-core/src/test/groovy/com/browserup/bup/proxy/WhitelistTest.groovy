@@ -14,7 +14,6 @@ import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.junit.After
 import org.junit.Test
-import org.mockserver.matchers.Times
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get
 import static com.github.tomakehurst.wiremock.client.WireMock.ok
@@ -24,8 +23,6 @@ import static org.hamcrest.Matchers.isEmptyOrNullString
 import static org.junit.Assert.*
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.when
-import static org.mockserver.model.HttpRequest.request
-import static org.mockserver.model.HttpResponse.response
 
 class WhitelistTest extends MockServerTest {
     BrowserUpProxy proxy
