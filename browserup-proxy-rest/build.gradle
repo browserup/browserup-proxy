@@ -73,7 +73,7 @@ dependencies {
 
     implementation 'org.glassfish.jersey.containers:jersey-container-servlet-core:2.28'
     implementation 'org.glassfish.jersey.media:jersey-media-json-jackson:2.28'
-    implementation 'org.glassfish.jersey.inject:jersey-hk2:2.28'
+    implementation 'org.glassfish.jersey.inject:jersey-hk2:2.29'
     implementation 'org.glassfish.jersey.ext:jersey-bean-validation:2.28'
 
     implementation 'io.swagger.core.v3:swagger-jaxrs2:2.0.8'
