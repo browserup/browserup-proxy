@@ -65,6 +65,8 @@ import com.browserup.bup.proxy.dns.AdvancedHostResolver;
 import com.browserup.bup.proxy.dns.DelegatingHostResolver;
 import com.browserup.bup.util.BrowserUpHttpUtil;
 import com.browserup.bup.util.BrowserUpProxyUtil;
+import org.littleshoot.proxy.SslEngineSource;
+import org.littleshoot.proxy.extras.SelfSignedSslEngineSource;
 import org.apache.commons.lang3.StringUtils;
 import org.littleshoot.proxy.ChainedProxy;
 import org.littleshoot.proxy.ChainedProxyAdapter;
@@ -102,6 +104,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
+import javax.net.ssl.SSLEngine;
 
 import static java.util.stream.Collectors.toCollection;
 
@@ -244,6 +247,11 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     private volatile InetSocketAddress upstreamProxyAddress;
 
     /**
+     * Whether to connect to that upstream chained proxy using https, rather than http
+     */
+    private volatile boolean upstreamProxyHTTPS;
+
+    /**
      * The chained proxy manager that manages upstream proxies.
      */
     private volatile ChainedProxyManager chainedProxyManager;
@@ -376,6 +384,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
                 public void lookupChainedProxies(HttpRequest httpRequest, Queue<ChainedProxy> chainedProxies, ClientDetails clientDetails) {
                     final InetSocketAddress upstreamProxy = upstreamProxyAddress;
                     if (upstreamProxy != null) {
+                        final boolean useEncryption = upstreamProxyHTTPS;
                         chainedProxies.add(new ChainedProxyAdapter() {
                             @Override
                             public InetSocketAddress getChainedProxyAddress() {
@@ -391,6 +400,21 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
                                             HttpHeaders.addHeader((HttpRequest) httpObject, HttpHeaderNames.PROXY_AUTHORIZATION, "Basic " + chainedProxyAuth);
                                         }
                                     }
+                                }
+                            }
+
+                            @Override
+                            public boolean requiresEncryption() {
+                                return useEncryption;
+                            }
+
+                            @Override
+                            public SSLEngine newSslEngine() {
+                                if (useEncryption) {
+                                    return new SelfSignedSslEngineSource(
+                                        true, false).newSslEngine();
+                                } else {
+                                    return null;
                                 }
                             }
                         });
@@ -927,6 +951,11 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         }
 
         upstreamProxyAddress = chainedProxyAddress;
+    }
+
+    @Override
+    public void setChainedProxyHTTPS(boolean chainedProxyHTTPS) {
+        upstreamProxyHTTPS = chainedProxyHTTPS;
     }
 
     @Override

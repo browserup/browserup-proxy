@@ -133,7 +133,7 @@ public class ProxyManager {
         }
     }
 
-    public BrowserUpProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword, Integer port, String bindAddr, String serverBindAddr, boolean useEcc, boolean trustAllServers) {
+    public BrowserUpProxyServer create(String upstreamHttpProxy, boolean upstreamProxyHttps, String proxyUsername, String proxyPassword, Integer port, String bindAddr, String serverBindAddr, boolean useEcc, boolean trustAllServers) {
         LOG.debug("Instantiate ProxyServer...");
         BrowserUpProxyServer proxy = new BrowserUpProxyServer();
 
@@ -161,6 +161,8 @@ public class ProxyManager {
                 LOG.error("Invalid upstream http proxy specified: " + upstreamHttpProxy + ". Must use host:port format.");
                 throw new RuntimeException("Invalid upstream http proxy");
             }
+
+            proxy.setChainedProxyHTTPS(upstreamProxyHttps);
         }
 
         InetAddress clientBindAddress = null;
@@ -204,23 +206,23 @@ public class ProxyManager {
     }
 
     public BrowserUpProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword, Integer port, String bindAddr, boolean useEcc, boolean trustAllServers) {
-        return create(upstreamHttpProxy, proxyUsername, proxyPassword, port, null, null, false, false);
+        return create(upstreamHttpProxy, false, proxyUsername, proxyPassword, port, null, null, false, false);
     }
 
     public BrowserUpProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword, Integer port) {
-        return create(upstreamHttpProxy, proxyUsername, proxyPassword, port, null, null, false, false);
+        return create(upstreamHttpProxy, false, proxyUsername, proxyPassword, port, null, null, false, false);
     }
 
     public BrowserUpProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword) {
-        return create(upstreamHttpProxy, proxyUsername, proxyPassword, null, null, null, false, false);
+        return create(upstreamHttpProxy, false, proxyUsername, proxyPassword, null, null, null, false, false);
     }
 
     public BrowserUpProxyServer create() {
-        return create(null, null, null, null, null, null, false, false);
+        return create(null, false, null, null, null, null, null, false, false);
     }
 
     public BrowserUpProxyServer create(int port) {
-        return create(null, null, null, port, null, null, false, false);
+        return create(null, false,null , null, port, null, null, false, false);
     }
 
     public BrowserUpProxyServer get(int port) {
