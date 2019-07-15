@@ -96,5 +96,5 @@ dependencies {
     testImplementation 'org.seleniumhq.selenium:selenium-api:3.4.0'
     testImplementation 'org.awaitility:awaitility:3.1.6'
     testImplementation 'xyz.rogfam:littleproxy:2.0.0-beta-3'
-    testImplementation 'com.github.tomakehurst:wiremock-jre8:2.22.0'
+    testImplementation 'com.github.tomakehurst:wiremock-jre8:2.23.2'
 }
