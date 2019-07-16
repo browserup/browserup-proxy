@@ -1508,6 +1508,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     private HarPage addDefaultPage() {
         HarPage newPage = new HarPage();
         newPage.setTitle(DEFAULT_PAGE_REF);
+        newPage.setStartedDateTime(new Date());
         newPage.setId(DEFAULT_PAGE_REF);
         getHar().getLog().getPages().add(newPage);
         return newPage;

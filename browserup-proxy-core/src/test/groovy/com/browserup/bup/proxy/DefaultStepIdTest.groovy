@@ -75,7 +75,9 @@ class DefaultStepIdTest extends MockServerTest {
 
         def respBody2 = toStringAndClose(clientToProxy.execute(new HttpGet(secondUrl)).entity.content)
         assertEquals("Did not receive expected response from mock server", SUCCESSFUL_RESPONSE_BODY, respBody2)
-
+        def defaultPage = proxy.har.log.pages.find {it.id == DEFAULT_STEP_NAME}
+        assertNotNull("Expected not null default page", defaultPage)
+        assertNotNull("Expected page with started date time", defaultPage.startedDateTime)
         def newestEntry = proxy.har.log.entries.sort({a,b -> (b.startedDateTime <=> a.startedDateTime) }).first()
         assertEquals("Expected to get default step name ", DEFAULT_STEP_NAME, newestEntry.pageref)
 
