@@ -78,7 +78,7 @@ public interface BrowserUpProxy {
      * @throws java.lang.IllegalStateException if the proxy has not been started.
      */
     void stop();
-    
+
     /**
      * Like {@link #stop()}, shuts down the proxy server and no longer accepts incoming connections, but does not wait for any existing
      * network traffic to cease. Any existing connections to clients or to servers may be force-killed immediately.
@@ -563,6 +563,13 @@ public interface BrowserUpProxy {
      * @param chainedProxyAddress address of the upstream proxy
      */
     void setChainedProxy(InetSocketAddress chainedProxyAddress);
+
+    /**
+     * Instructs this proxy to route traffic through an upstream proxy using HTTPS.
+     *
+     * @param chainedProxyHTTPS address of the upstream proxy
+     */
+    void setChainedProxyHTTPS(boolean chainedProxyHTTPS);
 
     /**
      * Returns the address and port of the upstream proxy.

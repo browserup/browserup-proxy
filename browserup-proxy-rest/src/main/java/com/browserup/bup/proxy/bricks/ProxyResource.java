@@ -76,6 +76,7 @@ public class ProxyResource {
         String httpProxy = request.param("httpProxy");
         String proxyUsername = request.param("proxyUsername");
         String proxyPassword = request.param("proxyPassword");
+        boolean upstreamProxyHttps = "true".equals(request.param("proxyHTTPS"));
 
         Hashtable<String, String> options = new Hashtable<String, String>();
 
@@ -101,7 +102,7 @@ public class ProxyResource {
                 paramBindAddr, paramPort, paramServerBindAddr);
         BrowserUpProxyServer proxy;
         try {
-            proxy = proxyManager.create(upstreamHttpProxy, proxyUsername, proxyPassword, paramPort, paramBindAddr, paramServerBindAddr, useEcc, trustAllServers);
+            proxy = proxyManager.create(upstreamHttpProxy, upstreamProxyHttps, proxyUsername, proxyPassword, paramPort, paramBindAddr, paramServerBindAddr, useEcc, trustAllServers);
         } catch (ProxyExistsException ex) {
             return Reply.with(new ProxyDescriptor(ex.getPort())).status(455).as(Json.class);
         } catch (ProxyPortsExhaustedException ex) {
