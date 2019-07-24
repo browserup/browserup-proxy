@@ -133,6 +133,10 @@ public class ProxyManager {
         }
     }
 
+    public BrowserUpProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword, Integer port, String bindAddr, String serverBindAddr, boolean useEcc, boolean trustAllServers) {
+        return create(upstreamHttpProxy, false, proxyUsername, proxyPassword, port, bindAddr, serverBindAddr, useEcc, trustAllServers);
+    }
+
     public BrowserUpProxyServer create(String upstreamHttpProxy, boolean upstreamProxyHttps, String proxyUsername, String proxyPassword, Integer port, String bindAddr, String serverBindAddr, boolean useEcc, boolean trustAllServers) {
         LOG.debug("Instantiate ProxyServer...");
         BrowserUpProxyServer proxy = new BrowserUpProxyServer();
