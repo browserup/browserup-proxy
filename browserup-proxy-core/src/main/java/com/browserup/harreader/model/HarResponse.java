@@ -23,7 +23,7 @@ public class HarResponse {
     private List<HarCookie> cookies;
     private List<HarHeader> headers;
     private HarContent content;
-    private String redirectURL;
+    private String redirectURL = "";
     private Long headersSize;
     private Long bodySize;
     private String comment;

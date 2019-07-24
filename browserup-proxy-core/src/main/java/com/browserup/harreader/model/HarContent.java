@@ -13,9 +13,9 @@ import java.util.Objects;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class HarContent {
 
-    private Long size;
+    private Long size = 0L;
     private Long compression;
-    private String mimeType;
+    private String mimeType = "";
     private String text;
     private String encoding;
     private String comment;

@@ -15,7 +15,7 @@ import java.util.Objects;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class HarPostData {
 
-    private String mimeType;
+    private String mimeType = "";
     private List<HarPostDataParam> params = new ArrayList<>();
     private String text;
     private String comment;
