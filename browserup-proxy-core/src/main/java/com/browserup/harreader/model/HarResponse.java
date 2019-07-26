@@ -18,12 +18,12 @@ public class HarResponse {
     protected static final Long DEFAULT_SIZE = -1L;
 
     private HttpStatus status;
-    private String statusText;
-    private String httpVersion;
+    private String statusText = "";
+    private String httpVersion = "HTTP/1.1";
     private List<HarCookie> cookies;
     private List<HarHeader> headers;
     private HarContent content;
-    private String redirectURL;
+    private String redirectURL = "";
     private Long headersSize;
     private Long bodySize;
     private String comment;

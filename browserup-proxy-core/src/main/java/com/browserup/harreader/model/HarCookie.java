@@ -15,8 +15,8 @@ import java.util.Objects;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class HarCookie {
 
-    private String name;
-    private String value;
+    private String name = "";
+    private String value = "";
     private String path;
     private String domain;
     private Date expires;

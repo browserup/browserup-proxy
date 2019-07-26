@@ -63,7 +63,7 @@ public class HarLogTest extends AbstractMapperTest<HarLog> {
     public void testBrowserNull() {
         HarLog log = new HarLog();
         log.setBrowser(null);
-        Assert.assertNotNull(log.getBrowser());
+        Assert.assertNull(log.getBrowser());
     }
 
     @Test

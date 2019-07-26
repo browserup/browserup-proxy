@@ -21,9 +21,9 @@ public class HarRequest {
 
     protected static final Long DEFAULT_SIZE = -1L;
 
-    private HttpMethod method;
-    private String url;
-    private String httpVersion;
+    private HttpMethod method = HttpMethod.GET;
+    private String url = "";
+    private String httpVersion = "HTTP/1.1";
     private List<HarCookie> cookies;
     private List<HarHeader> headers;
     private List<HarQueryParam> queryString;

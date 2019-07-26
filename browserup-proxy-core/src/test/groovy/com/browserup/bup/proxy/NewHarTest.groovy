@@ -262,7 +262,7 @@ class NewHarTest extends MockServerTest {
 
         assertEquals("Expected to capture response mimeType in HAR", responseContentType, content.mimeType)
 
-        assertNull("Expected to not capture body content in HAR", content.text)
+        assertEquals("Expected to not capture body content in HAR", "", content.text)
 
         verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }
