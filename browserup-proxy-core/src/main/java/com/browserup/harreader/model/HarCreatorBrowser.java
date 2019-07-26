@@ -13,8 +13,8 @@ import java.util.Objects;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class HarCreatorBrowser {
 
-    private String name;
-    private String version;
+    private String name = "";
+    private String version = "";
     private String comment;
 
     /**

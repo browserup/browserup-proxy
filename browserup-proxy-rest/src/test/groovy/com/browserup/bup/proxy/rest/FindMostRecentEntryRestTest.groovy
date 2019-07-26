@@ -18,6 +18,7 @@ import org.junit.Test
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertNull
 import static org.junit.Assert.assertThat
@@ -96,7 +97,7 @@ class FindMostRecentEntryRestTest extends BaseRestTest {
             uri.query = [urlPattern: urlPatternNotToMatchUrl]
             response.success = { HttpResponseDecorator resp ->
                 def actualEntry = new ObjectMapper().readValue(resp.entity.content, HarEntry) as HarEntry
-                assertNull('Expected to find empty entry', actualEntry.startedDateTime)
+                assertEquals('Expected to find empty entry', "", actualEntry.request.url)
             }
         }
 

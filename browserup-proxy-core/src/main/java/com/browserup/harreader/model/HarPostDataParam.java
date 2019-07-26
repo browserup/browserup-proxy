@@ -13,7 +13,7 @@ import java.util.Objects;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class HarPostDataParam {
 
-    private String name;
+    private String name = "";
     private String value;
     private String fileName;
     private String contentType;

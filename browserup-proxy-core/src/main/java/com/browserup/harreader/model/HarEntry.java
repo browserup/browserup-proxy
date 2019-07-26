@@ -20,8 +20,8 @@ import java.util.Objects;
 public class HarEntry {
 
     private String pageref;
-    private Date startedDateTime;
-    private Integer time;
+    private Date startedDateTime = new Date();
+    private Integer time = 0;
     private HarRequest request;
     private HarResponse response;
     private HarCache cache;

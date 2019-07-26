@@ -19,9 +19,9 @@ import java.util.Objects;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class HarPage {
 
-    private Date startedDateTime;
-    private String id;
-    private String title;
+    private Date startedDateTime = new Date();
+    private String id = "";
+    private String title = "";
     private HarPageTiming pageTimings;
     private String comment;
     private Map<String, Object> additional = new HashMap<>();

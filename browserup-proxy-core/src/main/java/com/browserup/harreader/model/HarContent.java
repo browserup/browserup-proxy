@@ -16,7 +16,7 @@ public class HarContent {
     private Long size = 0L;
     private Long compression;
     private String mimeType = "";
-    private String text;
+    private String text = "";
     private String encoding;
     private String comment;
 
