@@ -1,5 +1,7 @@
 # Changelog
 
+# [2.1.0]
+
 # [2.0.0]
 - Performance, Page and Network assertions. The proxy now lets you "assert" over the REST API about the recent HTTP traffic. If you are familiar with HAR files, this lets you skip handling them directly for most use-cases. Some highlights (See the rest in: https://github.com/browserup/browserup-proxy/commit/889aeda6d27b05b50714b754f6e43b3a600e6d9b):
     - assertMostRecentResponseTimeLessThanOrEqual
