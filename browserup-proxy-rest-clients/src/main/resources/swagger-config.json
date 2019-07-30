@@ -1,0 +1,18 @@
+{
+  "resourcePackages" : [
+    "com.browserup.bup.rest.resource"
+  ],
+  "openapi" : "3.0.1",
+  "info": {
+    "version": "1.0",
+    "title": "BrowserUp Proxy API",
+    "description": "BrowserUp Proxy API",
+    "contact": {
+      "email": "hello@browserup.com"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  }
+}
