@@ -21,6 +21,10 @@ configurations.all {
     }
 }
 
+ext {
+    jerseyVersion = '2.29'
+}
+
 subprojects {
     apply plugin: 'java'
     apply plugin: 'idea'

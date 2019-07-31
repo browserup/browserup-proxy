@@ -13,9 +13,11 @@ import com.browserup.bup.rest.validation.PatternConstraint;
 import com.browserup.bup.rest.validation.PortWithExistingProxyConstraint;
 import com.browserup.bup.util.HttpStatusClass;
 import com.browserup.harreader.model.HarEntry;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -35,6 +37,11 @@ import java.util.regex.Pattern;
 
 import static com.browserup.bup.rest.swagger.DocConstants.*;
 
+@OpenAPIDefinition(
+        info = @Info(
+                version = ""
+        )
+)
 @Path("/proxy/{port}/har/entries")
 public class EntriesProxyResource {
     private static final String URL_PATTERN = "urlPattern";

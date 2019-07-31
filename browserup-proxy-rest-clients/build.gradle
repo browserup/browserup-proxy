@@ -20,111 +20,48 @@ resolve {
     outputPath = 'build/swagger'
 }
 
-openApiGenerate {
-    generatorName = "python"
-    inputSpec = "$buildDir/swagger/openapi.yaml".toString()
-    outputDir = "$buildDir/swagger-clients/python/".toString()
-    apiPackage = "com.browserup.bup.rest"
-    invokerPackage = "com.browserup.bup.rest.client.invoker"
-    modelPackage = "com.browserup.bup.rest.client.model"
-    systemProperties = [
-            modelDocs: "false"
-    ]
-    skipValidateSpec = true
-    logToStderr = true
-    generateAliasAsModel = false
-}
+def clientLanguages = [
+        'JavaScript',
+        'Ruby',
+        'Python'
+]
 
-task openApiGeneratePythonClient(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
-    dependsOn 'resolve'
-    def language = "python"
-    generatorName = language
-    inputSpec = "$buildDir/swagger/openapi.yaml".toString()
-    outputDir = "$buildDir/swagger-clients/$language/".toString()
-    apiPackage = "com.browserup.bup.rest"
-    invokerPackage = "com.browserup.bup.rest.client.invoker"
-    modelPackage = "com.browserup.bup.rest.client.model"
-    systemProperties = [
-            modelDocs: "false"
-    ]
-    skipValidateSpec = true
-    logToStderr = true
-    generateAliasAsModel = false
-}
-
-task openApiGenerateRubyClient(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
-    dependsOn 'resolve'
-    def language = 'ruby'
-    generatorName = language
-    inputSpec = "$buildDir/swagger/openapi.yaml".toString()
-    outputDir = "$buildDir/swagger-clients/$language/".toString()
-    apiPackage = "com.browserup.bup.rest"
-    invokerPackage = "com.browserup.bup.rest.client.invoker"
-    modelPackage = "com.browserup.bup.rest.client.model"
-    systemProperties = [
-            modelDocs: "false"
-    ]
-    skipValidateSpec = true
-    logToStderr = true
-    generateAliasAsModel = false
-}
-
-task openApiGenerateJavaScriptClient(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
-    dependsOn 'resolve'
-    def language = 'javascript'
-    generatorName = language
-    inputSpec = "$buildDir/swagger/openapi.yaml".toString()
-    outputDir = "$buildDir/swagger-clients/$language/".toString()
-    apiPackage = "com.browserup.bup.rest"
-    invokerPackage = "com.browserup.bup.rest.client.invoker"
-    modelPackage = "com.browserup.bup.rest.client.model"
-    systemProperties = [
-            modelDocs: "false"
-    ]
-    skipValidateSpec = true
-    logToStderr = true
-    generateAliasAsModel = false
+clientLanguages.each { lang ->
+    task "openApiGenerate${lang}Client"(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+        dependsOn 'resolve'
+        def language = lang.toLowerCase()
+        generatorName = language
+        inputSpec = "$buildDir/swagger/openapi.yaml".toString()
+        outputDir = "$buildDir/swagger-clients/$language/".toString()
+        apiPackage = 'com.browserup.bup.rest'
+        invokerPackage = 'com.browserup.bup.rest.client.invoker'
+        modelPackage = 'com.browserup.bup.rest.client.model'
+        systemProperties = [
+                modelDocs: 'false'
+        ]
+        skipValidateSpec = true
+        logToStderr = true
+        generateAliasAsModel = false
+    }
 }
 
 task openApiGenerateClients() {
-    dependsOn 'openApiGeneratePythonClient'
-    dependsOn 'openApiGenerateRubyClient'
-    dependsOn 'openApiGenerateJavaScriptClient'
+    clientLanguages.each { lang ->
+        dependsOn "openApiGenerate${lang}Client"
+    }
 }
 
 archivesBaseName = 'browserup-proxy-rest-clients'
-
-ext {
-    jerseyVersion = '2.29'
-}
 
 dependencies {
     implementation project(':browserup-proxy-core')
     implementation project(':browserup-proxy-rest')
 
-    implementation 'com.google.guava:guava:27.0.1-jre'
     implementation 'com.google.inject:guice:4.2.2'
     implementation 'com.google.inject.extensions:guice-servlet:4.2.2'
     implementation 'com.google.inject.extensions:guice-multibindings:4.2.2'
     implementation 'com.google.sitebricks:sitebricks:0.8.11'
-    implementation 'io.netty:netty-all:4.1.37.Final'
-    implementation 'net.sf.jopt-simple:jopt-simple:5.0.4'
-    implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
-    implementation "org.eclipse.jetty:jetty-servlet:${jettyVersion}"
-    implementation 'org.slf4j:jcl-over-slf4j:1.7.26'
-    implementation 'org.apache.commons:commons-lang3:3.9'
-
-    implementation "org.glassfish.jersey.containers:jersey-container-servlet-core:${jerseyVersion}"
-    implementation "org.glassfish.jersey.media:jersey-media-json-jackson:${jerseyVersion}"
-    implementation "org.glassfish.jersey.inject:jersey-hk2:${jerseyVersion}"
-    implementation "org.glassfish.jersey.ext:jersey-bean-validation:${jerseyVersion}"
-
-    implementation 'io.swagger.core.v3:swagger-jaxrs2:2.0.8'
-    implementation 'io.swagger.core.v3:swagger-core:2.0.8'
-    implementation 'io.swagger.core.v3:swagger-integration:2.0.8'
-    implementation 'io.swagger.core.v3:swagger-jaxrs2-servlet-initializer:2.0.8'
-    implementation 'io.swagger.core.v3:swagger-models:2.0.8'
-
+    
     testImplementation project(':browserup-proxy-mitm')
 
     testImplementation 'junit:junit:4.12'
@@ -140,5 +77,7 @@ dependencies {
     testImplementation 'org.awaitility:awaitility:3.1.6'
     testImplementation 'xyz.rogfam:littleproxy:2.0.0-beta-3'
     testImplementation 'com.github.tomakehurst:wiremock-jre8:2.24.0'
+
 }
 
+build.finalizedBy(openApiGenerateClients)
