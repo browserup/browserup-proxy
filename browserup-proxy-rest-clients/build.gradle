@@ -6,7 +6,7 @@ plugins {
     id 'java-library'
     id 'groovy'
     id "io.swagger.core.v3.swagger-gradle-plugin" version "2.0.8"
-    id "org.openapi.generator" version "4.0.0-beta3"
+    id "org.openapi.generator" version "4.0.3"
 }
 
 resolve {
@@ -21,9 +21,9 @@ resolve {
 }
 
 def clientLanguages = [
-        'JavaScript',
-        'Ruby',
-        'Python'
+        //'JavaScript',
+        'Ruby'
+        //'Python'
 ]
 
 clientLanguages.each { lang ->
@@ -49,6 +49,11 @@ task openApiGenerateClients() {
     clientLanguages.each { lang ->
         dependsOn "openApiGenerate${lang}Client"
     }
+
+    copy {
+        from "$buildDir/swagger-clients/ruby/"
+        into "src/test/ruby/client"
+    }
 }
 
 archivesBaseName = 'browserup-proxy-rest-clients'
@@ -61,7 +66,8 @@ dependencies {
     implementation 'com.google.inject.extensions:guice-servlet:4.2.2'
     implementation 'com.google.inject.extensions:guice-multibindings:4.2.2'
     implementation 'com.google.sitebricks:sitebricks:0.8.11'
-    
+    implementation 'org.openapitools:openapi-generator:4.0.3'
+
     testImplementation project(':browserup-proxy-mitm')
 
     testImplementation 'junit:junit:4.12'
@@ -77,6 +83,8 @@ dependencies {
     testImplementation 'org.awaitility:awaitility:3.1.6'
     testImplementation 'xyz.rogfam:littleproxy:2.0.0-beta-3'
     testImplementation 'com.github.tomakehurst:wiremock-jre8:2.24.0'
+    testImplementation 'org.testcontainers:testcontainers:1.12.0'
+
 
 }
 

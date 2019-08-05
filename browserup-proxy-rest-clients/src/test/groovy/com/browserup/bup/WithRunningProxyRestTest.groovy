@@ -2,7 +2,7 @@
  * Modifications Copyright (c) 2019 BrowserUp, Inc.
  */
 
-package com
+package com.browserup.bup
 
 import com.browserup.bup.BrowserUpProxyServer
 import com.browserup.bup.proxy.ProxyManager
@@ -34,7 +34,7 @@ import javax.servlet.ServletContextEvent
 import java.util.concurrent.TimeUnit
 
 abstract class WithRunningProxyRestTest {
-    private static final Logger LOG = LoggerFactory.getLogger(ProxyManager)
+    private static final Logger LOG = LoggerFactory.getLogger(WithRunningProxyRestTest)
 
     protected ProxyManager proxyManager
     protected BrowserUpProxyServer proxy
