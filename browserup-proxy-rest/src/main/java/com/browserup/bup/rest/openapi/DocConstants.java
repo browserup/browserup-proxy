@@ -1,4 +1,4 @@
-package com.browserup.bup.rest.swagger;
+package com.browserup.bup.rest.openapi;
 
 public class DocConstants {
     public static final String STATUS_DESCRIPTION = "Http status.";

@@ -13,11 +13,11 @@ resolve {
     outputFileName = 'openapi'
     outputFormat = 'YAML'
     prettyPrint = 'TRUE'
-    openApiFile = file("src/main/resources/swagger-config.json")
+    openApiFile = file("src/main/resources/openapi-config.json")
     classpath = sourceSets.main.runtimeClasspath
-    readerClass = "com.browserup.bup.rest.swagger.CustomOpenApiReader"
+    readerClass = "com.browserup.bup.rest.openapi.CustomOpenApiReader"
     resourcePackages = ['com.browserup.bup.rest.resource']
-    outputPath = 'build/swagger'
+    outputPath = 'build/openapi'
 }
 
 def clientLanguages = [
@@ -31,8 +31,8 @@ clientLanguages.each { lang ->
         dependsOn 'resolve'
         def language = lang.toLowerCase()
         generatorName = language
-        inputSpec = "$buildDir/swagger/openapi.yaml".toString()
-        outputDir = "$buildDir/swagger-clients/$language/".toString()
+        inputSpec = "$buildDir/openapi/openapi.yaml".toString()
+        outputDir = "$buildDir/openapi-clients/$language/".toString()
         apiPackage = 'com.browserup.bup.rest'
         invokerPackage = 'com.browserup.bup.rest.client.invoker'
         modelPackage = 'com.browserup.bup.rest.client.model'
@@ -51,8 +51,12 @@ task openApiGenerateClients() {
     }
 
     copy {
-        from "$buildDir/swagger-clients/ruby/"
+        from "$buildDir/openapi-clients/ruby/"
         into "src/test/ruby/client"
+    }
+
+    doLast {
+        project.delete "$buildDir/openapi-clients"
     }
 }
 

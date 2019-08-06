@@ -1,7 +1,7 @@
 resourcePackages:
   - com.browserup.bup.rest.resource
 prettyPrint: true
-readerClass: com.browserup.bup.rest.swagger.CustomOpenApiReader
+readerClass: com.browserup.bup.rest.openapi.CustomOpenApiReader
 cacheTTL: 0
 openAPI:
   info:

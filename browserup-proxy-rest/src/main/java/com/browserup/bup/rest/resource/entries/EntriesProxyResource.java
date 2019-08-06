@@ -35,7 +35,7 @@ import javax.ws.rs.core.Response;
 import java.util.Collection;
 import java.util.regex.Pattern;
 
-import static com.browserup.bup.rest.swagger.DocConstants.*;
+import static com.browserup.bup.rest.openapi.DocConstants.*;
 
 @OpenAPIDefinition(
         info = @Info(

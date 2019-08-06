@@ -1,4 +1,4 @@
-package com.browserup.bup.rest.swagger;
+package com.browserup.bup.rest.openapi;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMethod;
