@@ -75,7 +75,7 @@ dependencies {
     implementation 'org.brotli:dec:0.1.2'
     implementation 'org.javassist:javassist:3.25.0-GA'
     implementation 'org.seleniumhq.selenium:selenium-api:3.141.59'
-    implementation 'org.slf4j:jcl-over-slf4j:1.7.26'
+    implementation 'org.slf4j:jcl-over-slf4j:1.7.27'
     implementation 'org.slf4j:slf4j-api:1.7.26'
     implementation 'xyz.rogfam:littleproxy:2.0.0-beta-3'
 
