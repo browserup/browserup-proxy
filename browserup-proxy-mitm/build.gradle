@@ -64,7 +64,7 @@ dependencies {
 
     implementation 'io.netty:netty-all:4.1.38.Final'
     implementation 'org.slf4j:jcl-over-slf4j:1.7.26'
-    implementation 'org.slf4j:slf4j-api:1.7.26'
+    implementation 'org.slf4j:slf4j-api:1.7.27'
     implementation 'xyz.rogfam:littleproxy:2.0.0-beta-3'
 
     testImplementation 'com.fasterxml.jackson.core:jackson-annotations:2.9.9'
