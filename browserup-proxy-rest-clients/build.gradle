@@ -6,7 +6,7 @@ plugins {
     id 'java-library'
     id 'groovy'
     id "io.swagger.core.v3.swagger-gradle-plugin" version "2.0.8"
-    id "org.openapi.generator" version "4.0.3"
+    id 'org.openapi.generator' version '4.1.0-SNAPSHOT'
 }
 
 resolve {
@@ -22,8 +22,8 @@ resolve {
 
 def clientLanguages = [
         //'JavaScript',
-        'Ruby'
-        //'Python'
+        'Ruby',
+        'Python'
 ]
 
 clientLanguages.each { lang ->
@@ -33,9 +33,9 @@ clientLanguages.each { lang ->
         generatorName = language
         inputSpec = "$buildDir/openapi/openapi.yaml".toString()
         outputDir = "$buildDir/openapi-clients/$language/".toString()
-        apiPackage = 'com.browserup.bup.rest'
-        invokerPackage = 'com.browserup.bup.rest.client.invoker'
-        modelPackage = 'com.browserup.bup.rest.client.model'
+//        apiPackage = "api"
+//        invokerPackage = "invoker"
+//        modelPackage = "model"
         systemProperties = [
                 modelDocs: 'false'
         ]
@@ -50,12 +50,19 @@ task openApiGenerateClients() {
         dependsOn "openApiGenerate${lang}Client"
     }
 
-    copy {
-        from "$buildDir/openapi-clients/ruby/"
-        into "src/test/ruby/client"
-    }
-
     doLast {
+        delete "src/test/python/client"
+
+        copy {
+            from "$buildDir/openapi-clients/python/"
+            into "src/test/python/client"
+        }
+
+        copy {
+            from "$buildDir/openapi-clients/ruby/"
+            into "src/test/ruby/client"
+        }
+
         project.delete "$buildDir/openapi-clients"
     }
 }
@@ -70,7 +77,8 @@ dependencies {
     implementation 'com.google.inject.extensions:guice-servlet:4.2.2'
     implementation 'com.google.inject.extensions:guice-multibindings:4.2.2'
     implementation 'com.google.sitebricks:sitebricks:0.8.11'
-    implementation 'org.openapitools:openapi-generator:4.0.3'
+    implementation 'org.openapitools:openapi-generator:4.1.0-SNAPSHOT'
+    implementation 'org.openapitools:openapi-generator-gradle-plugin:4.1.0-SNAPSHOT'
 
     testImplementation project(':browserup-proxy-mitm')
 

@@ -2,7 +2,7 @@
  * Modifications Copyright (c) 2019 BrowserUp, Inc.
  */
 
-package com.browserup.bup.ruby
+package com.browserup.bup.python
 
 import com.browserup.bup.WithRunningProxyRestTest
 import org.awaitility.Awaitility
@@ -12,15 +12,14 @@ import org.junit.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.Testcontainers
-import org.testcontainers.containers.Container
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.images.builder.ImageFromDockerfile
 
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
 
-class RubyClientTest extends WithRunningProxyRestTest {
-    private static final Logger LOG = LoggerFactory.getLogger(RubyClientTest)
+class PythonTestClient extends WithRunningProxyRestTest {
+    private static final Logger LOG = LoggerFactory.getLogger(PythonTestClient)
 
     private GenericContainer container
 
@@ -37,7 +36,7 @@ class RubyClientTest extends WithRunningProxyRestTest {
     }
 
     @Test
-    void connectToProxy() {
+    void connectToProxySuccessfully() {
         def urlToCatch = 'test'
         def urlNotToCatch = 'missing'
         def responseBody = 'success'
@@ -53,7 +52,7 @@ class RubyClientTest extends WithRunningProxyRestTest {
         Testcontainers.exposeHostPorts(restServer.connectors[0].localPort as Integer)
         Testcontainers.exposeHostPorts(proxy.port as Integer)
 
-        def dockerfile = new File('./src/test/ruby/Dockerfile')
+        def dockerfile = new File('./src/test/python/Dockerfile')
         container = new GenericContainer(
                 new ImageFromDockerfile()
                         .withDockerfile(Path.of(dockerfile.path)))
@@ -88,7 +87,7 @@ class RubyClientTest extends WithRunningProxyRestTest {
         Testcontainers.exposeHostPorts(restServer.connectors[0].localPort as Integer)
         Testcontainers.exposeHostPorts(proxy.port as Integer)
 
-        def dockerfile = new File('./src/test/ruby/Dockerfile')
+        def dockerfile = new File('./src/test/python/Dockerfile')
         container = new GenericContainer(
                 new ImageFromDockerfile()
                         .withDockerfile(Path.of(dockerfile.path)))
