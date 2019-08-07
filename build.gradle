@@ -35,6 +35,7 @@ subprojects {
     ext {
         jettyVersion = '9.4.19.v20190610'
         log4jVersion = '2.12.0'
+        slf4jVersion = '1.7.27'
     }
 
     repositories {
