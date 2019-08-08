@@ -21,7 +21,7 @@ resolve {
 }
 
 def clientLanguages = [
-        //'JavaScript',
+        'JavaScript',
         'Ruby',
         'Python'
 ]
@@ -53,14 +53,11 @@ task openApiGenerateClients() {
     doLast {
         delete "src/test/python/client"
 
-        copy {
-            from "$buildDir/openapi-clients/python/"
-            into "src/test/python/client"
-        }
-
-        copy {
-            from "$buildDir/openapi-clients/ruby/"
-            into "src/test/ruby/client"
+        clientLanguages.each { lang ->
+            copy {
+                from "$buildDir/openapi-clients/${lang.toLowerCase()}/"
+                into "src/test/${lang.toLowerCase()}/client"
+            }
         }
 
         project.delete "$buildDir/openapi-clients"
