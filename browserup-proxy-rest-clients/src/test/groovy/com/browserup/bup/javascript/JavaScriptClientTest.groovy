@@ -52,6 +52,8 @@ class JavaScriptClientTest extends WithRunningProxyRestTest {
         Testcontainers.exposeHostPorts(restServer.connectors[0].localPort as Integer)
         Testcontainers.exposeHostPorts(proxy.port as Integer)
 
+        new File('./src/test/javascript/client/node_modules').deleteDir()
+
         def dockerfile = new File('./src/test/javascript/Dockerfile')
         container = new GenericContainer(
                 new ImageFromDockerfile()

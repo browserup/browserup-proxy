@@ -1,27 +1,6 @@
 /*
  * Modifications Copyright (c) 2019 BrowserUp, Inc.
  */
-pluginManagement {
-    resolutionStrategy {
-        eachPlugin {
-            if (requested.id.namespace == 'org.openapi') {
-                useModule('org.openapitools:openapi-generator-gradle-plugin:4.1.0-SNAPSHOT')
-            }
-        }
-    }
-    repositories {
-        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
-        maven { url "https://oss.sonatype.org/service/local/staging/deploy/maven2/" }
-        mavenLocal()
-        mavenCentral()
-        gradlePluginPortal().tap {
-            metadataSources {
-                mavenPom()
-                artifact()
-            }
-        }
-    }
-}
 
 include 'browserup-proxy-core'
 include 'browserup-proxy-dist'

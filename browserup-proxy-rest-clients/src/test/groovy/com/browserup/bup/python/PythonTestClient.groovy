@@ -8,6 +8,7 @@ import com.browserup.bup.WithRunningProxyRestTest
 import org.awaitility.Awaitility
 import org.junit.After
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -18,6 +19,8 @@ import org.testcontainers.images.builder.ImageFromDockerfile
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
 
+// https://github.com/OpenAPITools/openapi-generator/issues/3285
+@Ignore
 class PythonTestClient extends WithRunningProxyRestTest {
     private static final Logger LOG = LoggerFactory.getLogger(PythonTestClient)
 
