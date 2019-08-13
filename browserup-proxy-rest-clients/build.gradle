@@ -17,7 +17,7 @@ resolve {
     classpath = sourceSets.main.runtimeClasspath
     readerClass = "com.browserup.bup.rest.openapi.CustomOpenApiReader"
     resourcePackages = ['com.browserup.bup.rest.resource']
-    outputPath = 'build/openapi'
+    outputPath = "$buildDir/openapi"
 }
 
 def clientLanguages = [
@@ -28,7 +28,7 @@ def clientLanguages = [
 ]
 
 clientLanguages.each { lang ->
-    task "openApiGenerate${lang}Client"(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask, dependsOn: resolve) {
+    task "openApiGenerate${lang}Client"(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
         def language = lang.toLowerCase()
         generatorName = language
         inputSpec = "$buildDir/openapi/openapi.yaml".toString()
@@ -45,7 +45,11 @@ clientLanguages.each { lang ->
     }
 }
 
-task openApiGenerateClients() {
+test {
+    testLogging.showStandardStreams = true
+}
+
+task openApiGenerateClients(dependsOn: resolve) {
     clientLanguages.each { lang ->
         dependsOn "openApiGenerate${lang}Client"
     }
@@ -69,7 +73,7 @@ archivesBaseName = 'browserup-proxy-rest-clients'
 dependencies {
     implementation project(':browserup-proxy-core')
     implementation project(':browserup-proxy-rest')
-    
+
     testImplementation project(':browserup-proxy-mitm')
 
     testImplementation "com.google.inject:guice:$guiceVersion"
@@ -94,4 +98,6 @@ dependencies {
     testImplementation 'org.testcontainers:testcontainers:1.12.0'
 }
 
-build.finalizedBy(openApiGenerateClients)
+openApiGenerateClients.mustRunAfter(resolve)
+
+test.dependsOn(openApiGenerateClients)

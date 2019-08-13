@@ -12,6 +12,24 @@
     },
 
     "loggers": {
+      "logger": [
+        {
+          "name": "org.testcontainers",
+          "level": "warn",
+          "additivity": false,
+          "AppenderRef": {
+            "ref": "console"
+          }
+        },
+        {
+          "name": "com.github.dockerjava",
+          "level": "warn",
+          "additivity": false,
+          "AppenderRef": {
+            "ref": "console"
+          }
+        }
+      ],
       "root": {
         "level": "info",
         "appender-ref": {
