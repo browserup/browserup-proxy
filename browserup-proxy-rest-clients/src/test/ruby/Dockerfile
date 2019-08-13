@@ -4,7 +4,7 @@ RUN bundle config --global frozen 1
 
 WORKDIR /
 
-COPY client/ /ruby-client/
+COPY ./client/ /ruby-client/
 
 # Build ruby client gem, install locally
 WORKDIR /ruby-client/

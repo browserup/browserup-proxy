@@ -4,7 +4,7 @@ USER root
 
 WORKDIR /
 
-COPY client/ /client/
+COPY ./client/ /client/
 
 # Build javascript client, install locally
 WORKDIR /client/

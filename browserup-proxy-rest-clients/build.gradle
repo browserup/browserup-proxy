@@ -23,7 +23,7 @@ resolve {
 def clientLanguages = [
         'JavaScript',
         'Ruby'
-         //https://github.com/OpenAPITools/openapi-generator/issues/3285
+        //https://github.com/OpenAPITools/openapi-generator/issues/3285
         //'Python'
 ]
 
@@ -69,15 +69,14 @@ archivesBaseName = 'browserup-proxy-rest-clients'
 dependencies {
     implementation project(':browserup-proxy-core')
     implementation project(':browserup-proxy-rest')
-
-    implementation 'com.google.inject:guice:4.2.2'
-    implementation 'com.google.inject.extensions:guice-servlet:4.2.2'
-    implementation 'com.google.inject.extensions:guice-multibindings:4.2.2'
-    implementation 'com.google.sitebricks:sitebricks:0.8.11'
-    implementation "org.openapitools:openapi-generator:4.1.0"
-    implementation "org.openapitools:openapi-generator-gradle-plugin:4.1.0"
-
+    
     testImplementation project(':browserup-proxy-mitm')
+
+    testImplementation "com.google.inject:guice:$guiceVersion"
+    testImplementation "com.google.inject.extensions:guice-servlet:$guiceVersion"
+    testImplementation "com.google.inject.extensions:guice-multibindings:$guiceVersion"
+
+    testImplementation 'com.google.sitebricks:sitebricks:0.8.11'
 
     testImplementation 'junit:junit:4.12'
     testImplementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
@@ -93,10 +92,6 @@ dependencies {
     testImplementation 'xyz.rogfam:littleproxy:2.0.0-beta-3'
     testImplementation 'com.github.tomakehurst:wiremock-jre8:2.24.0'
     testImplementation 'org.testcontainers:testcontainers:1.12.0'
-
-
 }
 
 build.finalizedBy(openApiGenerateClients)
-
-test.dependsOn(openApiGenerateClients)

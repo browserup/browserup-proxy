@@ -23,6 +23,7 @@ configurations.all {
 
 ext {
     jerseyVersion = '2.29'
+    guiceVersion = '4.2.2'
 }
 
 subprojects {
