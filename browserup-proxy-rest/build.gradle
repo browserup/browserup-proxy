@@ -80,7 +80,7 @@ dependencies {
     implementation "org.glassfish.jersey.inject:jersey-hk2:${jerseyVersion}"
     implementation "org.glassfish.jersey.ext:jersey-bean-validation:${jerseyVersion}"
 
-    implementation 'io.swagger.core.v3:swagger-jaxrs2:2.0.8'
+    implementation 'io.swagger.core.v3:swagger-jaxrs2:2.0.9'
     implementation 'io.swagger.core.v3:swagger-core:2.0.8'
     implementation 'io.swagger.core.v3:swagger-integration:2.0.8'
     implementation 'io.swagger.core.v3:swagger-jaxrs2-servlet-initializer:2.0.8'
