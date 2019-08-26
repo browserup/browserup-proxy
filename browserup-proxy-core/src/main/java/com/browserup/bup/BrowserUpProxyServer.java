@@ -65,7 +65,6 @@ import com.browserup.bup.proxy.dns.AdvancedHostResolver;
 import com.browserup.bup.proxy.dns.DelegatingHostResolver;
 import com.browserup.bup.util.BrowserUpHttpUtil;
 import com.browserup.bup.util.BrowserUpProxyUtil;
-import org.littleshoot.proxy.SslEngineSource;
 import org.littleshoot.proxy.extras.SelfSignedSslEngineSource;
 import org.apache.commons.lang3.StringUtils;
 import org.littleshoot.proxy.ChainedProxy;
@@ -678,6 +677,14 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         }
     }
 
+    private void updateDefaultPageTimings() {
+        getDefaultPage().ifPresent(page -> {
+            if (page.getStartedDateTime() != null) {
+                page.getPageTimings().setOnLoad(Math.toIntExact(new Date().getTime() - page.getStartedDateTime().getTime()));
+            }
+        });
+    }
+
     @Override
     public long getWriteBandwidthLimit() {
         return writeBandwidthLimitBps;
@@ -698,6 +705,8 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
                     .getPageTimings()
                     .setOnLoad(Math.toIntExact(new Date().getTime() - previousPage.getStartedDateTime().getTime()));
         }
+
+        updateDefaultPageTimings();
     }
 
     @Override
