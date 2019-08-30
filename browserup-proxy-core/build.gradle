@@ -77,7 +77,7 @@ dependencies {
     implementation 'org.seleniumhq.selenium:selenium-api:3.141.59'
     implementation "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
     implementation "org.slf4j:slf4j-api:${slf4jVersion}"
-    implementation 'xyz.rogfam:littleproxy:2.0.0-beta-3'
+    implementation 'xyz.rogfam:littleproxy:2.0.0-beta-5'
 
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.codehaus.groovy:groovy-all:2.5.8'
