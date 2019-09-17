@@ -68,7 +68,7 @@ dependencies {
     implementation 'xyz.rogfam:littleproxy:2.0.0-beta-3'
 
     testImplementation 'com.fasterxml.jackson.core:jackson-annotations:2.9.9'
-    testImplementation 'com.fasterxml.jackson.core:jackson-core:2.9.9'
+    testImplementation 'com.fasterxml.jackson.core:jackson-core:2.10.0.pr3'
     testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9.1'
     testImplementation 'junit:junit:4.12'
     testImplementation('org.apache.httpcomponents:httpclient:4.5.10') {
