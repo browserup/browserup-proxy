@@ -73,7 +73,7 @@ dependencies {
     implementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
     implementation "org.eclipse.jetty:jetty-servlet:${jettyVersion}"
-    implementation 'org.javassist:javassist:3.25.0-GA'
+    implementation 'org.javassist:javassist:3.26.0-GA'
 }
 
 applicationName = 'browserup-proxy'
