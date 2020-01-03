@@ -72,7 +72,7 @@ dependencies {
         exclude(module: 'netty')
     }
     implementation 'dnsjava:dnsjava:2.1.9'
-    implementation 'org.bouncycastle:bcpkix-jdk15on:1.63'
+    implementation 'org.bouncycastle:bcpkix-jdk15on:1.64'
     implementation 'org.bouncycastle:bcprov-jdk15on:1.63'
     implementation 'org.brotli:dec:0.1.2'
     implementation 'org.javassist:javassist:3.26.0-GA'
