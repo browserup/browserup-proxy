@@ -60,7 +60,7 @@ dependencies {
     implementation 'com.google.guava:guava:28.1-jre'
 
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.63'
-    implementation 'org.bouncycastle:bcprov-jdk15on:1.63'
+    implementation 'org.bouncycastle:bcprov-jdk15on:1.64'
 
     implementation 'io.netty:netty-codec:4.1.42.Final'
     implementation "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
