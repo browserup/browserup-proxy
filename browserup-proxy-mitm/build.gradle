@@ -57,16 +57,15 @@ uploadArchives {
 }
 
 dependencies {
-    api 'io.netty:netty-codec:4.1.42.Final'
-    api 'xyz.rogfam:littleproxy:2.0.0-beta-5'
-
     implementation 'com.google.guava:guava:28.1-jre'
 
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.63'
     implementation 'org.bouncycastle:bcprov-jdk15on:1.63'
 
+    implementation 'io.netty:netty-codec:4.1.42.Final'
     implementation "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
     implementation "org.slf4j:slf4j-api:${slf4jVersion}"
+    implementation 'xyz.rogfam:littleproxy:2.0.0-beta-5'
 
     testImplementation 'com.fasterxml.jackson.core:jackson-annotations:2.9.9'
     testImplementation 'com.fasterxml.jackson.core:jackson-core:2.9.9'
