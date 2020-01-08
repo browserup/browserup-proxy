@@ -33,6 +33,7 @@ subprojects {
     sourceCompatibility=1.8
 
     ext {
+        jacksonVersion = '2.10.2'
         jettyVersion = '9.4.21.v20190926'
         log4jVersion = '2.13.0'
         slf4jVersion = '1.7.28'
