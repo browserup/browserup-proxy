@@ -35,7 +35,7 @@ subprojects {
     ext {
         bcpVersion = '1.64'
         jacksonVersion = '2.10.2'
-        jettyVersion = '9.4.21.v20190926'
+        jettyVersion = '9.4.25.v20191220'
         log4jVersion = '2.13.0'
         slf4jVersion = '1.7.28'
     }
