@@ -10,7 +10,7 @@ plugins {
 archivesBaseName = 'browserup-proxy-rest'
 
 ext {
-    jerseyVersion = '2.29.1'
+    jerseyVersion = '2.30'
     swaggerVersion = '2.1.1'
 }
 
