@@ -71,7 +71,7 @@ dependencies {
     implementation('com.jcraft:jzlib:1.1.3') {
         exclude(module: 'netty')
     }
-    implementation 'dnsjava:dnsjava:2.1.9'
+    implementation 'dnsjava:dnsjava:3.0.0-next.1'
     implementation "org.bouncycastle:bcpkix-jdk15on:${bcpVersion}"
     implementation "org.bouncycastle:bcprov-jdk15on:${bcpVersion}"
     implementation 'org.brotli:dec:0.1.2'
