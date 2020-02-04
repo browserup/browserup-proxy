@@ -17,6 +17,7 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.images.builder.ImageFromDockerfile
 
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 
 class RubyClientTest extends WithRunningProxyRestTest {
@@ -56,7 +57,7 @@ class RubyClientTest extends WithRunningProxyRestTest {
         def dockerfile = new File('./src/test/ruby/Dockerfile')
         container = new GenericContainer(
                 new ImageFromDockerfile()
-                        .withDockerfile(Path.of(dockerfile.path)))
+                        .withDockerfile(Paths.get(dockerfile.path)))
                         .withEnv('PROXY_REST_HOST', 'host.testcontainers.internal')
                         .withEnv('PROXY_REST_PORT', restServer.connectors[0].localPort as String)
                         .withEnv('PROXY_PORT', proxy.port as String)
@@ -91,7 +92,7 @@ class RubyClientTest extends WithRunningProxyRestTest {
         def dockerfile = new File('./src/test/ruby/Dockerfile')
         container = new GenericContainer(
                 new ImageFromDockerfile()
-                        .withDockerfile(Path.of(dockerfile.path)))
+                        .withDockerfile(Paths.get(dockerfile.path)))
                 .withEnv('PROXY_REST_HOST', 'host.testcontainers.internal')
                 .withEnv('PROXY_REST_PORT', restServer.connectors[0].localPort as String)
                 .withEnv('PROXY_PORT', invalidProxyPort as String)

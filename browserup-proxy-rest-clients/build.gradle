@@ -5,8 +5,8 @@
 plugins {
     id 'java-library'
     id 'groovy'
-    id "io.swagger.core.v3.swagger-gradle-plugin" version "2.0.8"
-    id 'org.openapi.generator' version '4.1.0'
+    id "io.swagger.core.v3.swagger-gradle-plugin" version "2.1.1"
+    id 'org.openapi.generator' version '4.2.3'
 }
 
 resolve {
