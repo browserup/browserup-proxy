@@ -7,30 +7,25 @@ package com.browserup.bup;
 import com.browserup.bup.assertion.HarEntryAssertion;
 import com.browserup.bup.assertion.ResponseTimeLessThanOrEqualAssertion;
 import com.browserup.bup.assertion.error.HarEntryAssertionError;
-import com.browserup.bup.assertion.field.content.ContentMatchesAssertion;
-import com.browserup.bup.assertion.field.content.ContentSizeLessThanOrEqualAssertion;
 import com.browserup.bup.assertion.field.content.ContentContainsStringAssertion;
 import com.browserup.bup.assertion.field.content.ContentDoesNotContainStringAssertion;
-import com.browserup.bup.assertion.field.header.*;
+import com.browserup.bup.assertion.field.content.ContentMatchesAssertion;
+import com.browserup.bup.assertion.field.content.ContentSizeLessThanOrEqualAssertion;
+import com.browserup.bup.assertion.field.header.FilteredHeadersContainStringAssertion;
+import com.browserup.bup.assertion.field.header.FilteredHeadersDoNotContainStringAssertion;
+import com.browserup.bup.assertion.field.header.FilteredHeadersMatchAssertion;
+import com.browserup.bup.assertion.field.header.HeadersContainStringAssertion;
+import com.browserup.bup.assertion.field.header.HeadersDoNotContainStringAssertion;
+import com.browserup.bup.assertion.field.header.HeadersMatchAssertion;
 import com.browserup.bup.assertion.field.status.StatusBelongsToClassAssertion;
 import com.browserup.bup.assertion.field.status.StatusEqualsAssertion;
 import com.browserup.bup.assertion.model.AssertionEntryResult;
 import com.browserup.bup.assertion.model.AssertionResult;
-import com.browserup.bup.assertion.supplier.*;
-import com.browserup.bup.util.HttpStatusClass;
-import com.browserup.harreader.model.Har;
-import com.browserup.harreader.model.HarCreatorBrowser;
-import com.browserup.harreader.model.HarEntry;
-import com.browserup.harreader.model.HarLog;
-import com.browserup.harreader.model.HarPage;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.MapMaker;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.HttpObject;
-import io.netty.handler.codec.http.HttpRequest;
+import com.browserup.bup.assertion.supplier.CurrentStepHarEntriesSupplier;
+import com.browserup.bup.assertion.supplier.HarEntriesSupplier;
+import com.browserup.bup.assertion.supplier.MostRecentHarEntrySupplier;
+import com.browserup.bup.assertion.supplier.MostRecentUrlFilteredHarEntrySupplier;
+import com.browserup.bup.assertion.supplier.UrlFilteredHarEntriesSupplier;
 import com.browserup.bup.client.ClientUtil;
 import com.browserup.bup.filters.AddHeadersFilter;
 import com.browserup.bup.filters.AutoBasicAuthFilter;
@@ -65,7 +60,20 @@ import com.browserup.bup.proxy.dns.AdvancedHostResolver;
 import com.browserup.bup.proxy.dns.DelegatingHostResolver;
 import com.browserup.bup.util.BrowserUpHttpUtil;
 import com.browserup.bup.util.BrowserUpProxyUtil;
-import org.littleshoot.proxy.extras.SelfSignedSslEngineSource;
+import com.browserup.bup.util.HttpStatusClass;
+import com.browserup.harreader.model.Har;
+import com.browserup.harreader.model.HarCreatorBrowser;
+import com.browserup.harreader.model.HarEntry;
+import com.browserup.harreader.model.HarLog;
+import com.browserup.harreader.model.HarPage;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.MapMaker;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpObject;
+import io.netty.handler.codec.http.HttpRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.littleshoot.proxy.ChainedProxy;
 import org.littleshoot.proxy.ChainedProxyAdapter;
@@ -76,6 +84,7 @@ import org.littleshoot.proxy.HttpFiltersSourceAdapter;
 import org.littleshoot.proxy.HttpProxyServer;
 import org.littleshoot.proxy.HttpProxyServerBootstrap;
 import org.littleshoot.proxy.MitmManager;
+import org.littleshoot.proxy.extras.SelfSignedSslEngineSource;
 import org.littleshoot.proxy.impl.ClientDetails;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
 import org.littleshoot.proxy.impl.ProxyUtils;
@@ -83,6 +92,7 @@ import org.littleshoot.proxy.impl.ThreadPoolConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLEngine;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -103,7 +113,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
-import javax.net.ssl.SSLEngine;
 
 import static java.util.stream.Collectors.toCollection;
 
@@ -251,6 +260,11 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     private volatile boolean upstreamProxyHTTPS;
 
     /**
+     * The hosts and addresses that should not be routed through the upstream proxy
+     */
+    private List<String> upstreamProxyNonProxyHosts;
+
+    /**
      * The chained proxy manager that manages upstream proxies.
      */
     private volatile ChainedProxyManager chainedProxyManager;
@@ -382,41 +396,50 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
                 @Override
                 public void lookupChainedProxies(HttpRequest httpRequest, Queue<ChainedProxy> chainedProxies, ClientDetails clientDetails) {
                     final InetSocketAddress upstreamProxy = upstreamProxyAddress;
-                    if (upstreamProxy != null) {
-                        final boolean useEncryption = upstreamProxyHTTPS;
-                        chainedProxies.add(new ChainedProxyAdapter() {
-                            @Override
-                            public InetSocketAddress getChainedProxyAddress() {
-                                return upstreamProxy;
-                            }
 
-                            @Override
-                            public void filterRequest(HttpObject httpObject) {
-                                String chainedProxyAuth = chainedProxyCredentials;
-                                if (chainedProxyAuth != null) {
-                                    if (httpObject instanceof HttpRequest) {
-                                        if(ProxyUtils.isCONNECT(httpObject) || !((HttpRequest) httpObject).uri().startsWith("/")) {
-                                            HttpHeaders.addHeader((HttpRequest) httpObject, HttpHeaderNames.PROXY_AUTHORIZATION, "Basic " + chainedProxyAuth);
+                    if (upstreamProxy != null) {
+
+                        final boolean useEncryption = upstreamProxyHTTPS;
+                        final List<String> nonProxyHosts = upstreamProxyNonProxyHosts;
+
+                        // skip upstream proxy configuration because the host is defined as proxy exception / non proxy hosts
+                        if (nonProxyHosts != null && nonProxyHosts.stream().anyMatch(nph -> httpRequest.uri().contains(nph.trim()))) {
+                            chainedProxies.add(ChainedProxyAdapter.FALLBACK_TO_DIRECT_CONNECTION);
+                        } else {
+                            chainedProxies.add(new ChainedProxyAdapter() {
+                                @Override
+                                public InetSocketAddress getChainedProxyAddress() {
+                                    return upstreamProxy;
+                                }
+
+                                @Override
+                                public void filterRequest(HttpObject httpObject) {
+                                    String chainedProxyAuth = chainedProxyCredentials;
+                                    if (chainedProxyAuth != null) {
+                                        if (httpObject instanceof HttpRequest) {
+                                            if (ProxyUtils.isCONNECT(httpObject) || !((HttpRequest) httpObject).uri().startsWith("/")) {
+                                                HttpHeaders.addHeader((HttpRequest) httpObject, HttpHeaderNames.PROXY_AUTHORIZATION, "Basic " + chainedProxyAuth);
+                                            }
                                         }
                                     }
                                 }
-                            }
 
-                            @Override
-                            public boolean requiresEncryption() {
-                                return useEncryption;
-                            }
-
-                            @Override
-                            public SSLEngine newSslEngine() {
-                                if (useEncryption) {
-                                    return new SelfSignedSslEngineSource(
-                                        true, false).newSslEngine();
-                                } else {
-                                    return null;
+                                @Override
+                                public boolean requiresEncryption() {
+                                    return useEncryption;
                                 }
-                            }
-                        });
+
+                                @Override
+                                public SSLEngine newSslEngine() {
+                                    if (useEncryption) {
+                                        return new SelfSignedSslEngineSource(
+                                                true, false).newSslEngine();
+                                    } else {
+                                        return null;
+                                    }
+                                }
+                            });
+                        }
                     }
                 }
             });
@@ -986,6 +1009,11 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         }
 
         this.chainedProxyManager = chainedProxyManager;
+    }
+
+    @Override
+    public void setChainedProxyNonProxyHosts(List<String> upstreamNonProxyHosts) {
+        this.upstreamProxyNonProxyHosts = upstreamNonProxyHosts;
     }
 
     /**
