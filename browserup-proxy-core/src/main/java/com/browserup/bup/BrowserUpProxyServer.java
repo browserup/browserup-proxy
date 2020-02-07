@@ -95,6 +95,8 @@ import org.slf4j.LoggerFactory;
 import javax.net.ssl.SSLEngine;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -403,7 +405,17 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
                         final List<String> nonProxyHosts = upstreamProxyNonProxyHosts;
 
                         // skip upstream proxy configuration because the host is defined as proxy exception / non proxy hosts
-                        if (nonProxyHosts != null && nonProxyHosts.stream().anyMatch(nph -> httpRequest.uri().contains(nph.trim()))) {
+                        // therefore we need to cast it to an URL
+                        URL url = null;
+                        try {
+                            url = new URL(httpRequest.uri());
+                        } catch (MalformedURLException e) {
+                            log.error("The requested URL is not valid.", e);
+                        }
+
+                        final URL finalUrl = url; // need for lambda expression.
+                        // note that we have to transform the wildcard like *.example.com to a valid regex
+                        if (nonProxyHosts != null && finalUrl != null && nonProxyHosts.stream().anyMatch(nph -> finalUrl.getHost().matches(nph.trim().replace("*", ".*?")))) {
                             chainedProxies.add(ChainedProxyAdapter.FALLBACK_TO_DIRECT_CONNECTION);
                         } else {
                             chainedProxies.add(new ChainedProxyAdapter() {

@@ -37,10 +37,10 @@ class NonProxyChainTest extends MockServerTest {
     }
 
     /**
-     * This testcase will set up a upstream proxy that is blocking all requests containing "external.domain.com"
+     * This testcase will set up a upstream proxy that is blocking all requests containing "localhost:"
      * Then it will setup a proxy with that upstream proxy
-     * Then it will call an address containing "external.domain.com"
-     * This will end up in a 505, because the request is processed to the upstream proxy, which will deny the request.
+     * Then it will call an address containing "localhost:mockport/"
+     * This will end up in a 502, because the request is processed to the upstream proxy, which will deny the request.
      */
     @Test
     void testUpStreamProxyWithoutNonProxy() {
@@ -50,7 +50,7 @@ class NonProxyChainTest extends MockServerTest {
                 .withPort(0)
                 .start()
 
-        def stub = "/external.domain.com"
+        def stub = "/"
         stubFor(get(urlEqualTo(stub)).willReturn(ok().withBody("success")))
 
         proxy = new BrowserUpProxyServer()
@@ -60,31 +60,31 @@ class NonProxyChainTest extends MockServerTest {
 
         NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
 
-            CloseableHttpResponse response = it.execute(new HttpGet("http://localhost:${mockServerPort}/external.domain.com"))
+            CloseableHttpResponse response = it.execute(new HttpGet("http://localhost:${mockServerPort}/"))
             assertEquals("Did not receive HTTP 502 from mock server", 502, response.getStatusLine().getStatusCode())
         }
 
-        verify(0, getRequestedFor(urlEqualTo("/external.domain.com")))
+        verify(0, getRequestedFor(urlEqualTo("/")))
     }
 
     /**
-     * This testcase will set up a upstream proxy that is blocking all requests containing "external.domain.com"
-     * Then it will setup a proxy with that upstream proxy and configure a nonProxyHost "external.domain.com"
-     * Then it will call an address containing "external.domain.com"
+     * This testcase will set up a upstream proxy that is blocking all requests containing "localhost:"
+     * Then it will setup a proxy with that upstream proxy and configure a nonProxyHost "localhost"
+     * Then it will call an address containing "localhost:mockport"
      * This will end up in a 200, because the request is NOT processed to the upstream proxy due the nonProxySetting
      */
     @Test
     void testUpStreamProxyWithNonProxy() {
 
         List<String> objects = new ArrayList<>()
-        objects.add("external.domain.com")
+        objects.add("localhost")
 
         upstreamProxy = DefaultHttpProxyServer.bootstrap()
                 .withFiltersSource(getFiltersSource())
                 .withPort(0)
                 .start()
 
-        def stub = "/external.domain.com"
+        def stub = "/"
         stubFor(get(urlEqualTo(stub)).willReturn(ok().withBody("success")))
 
         proxy = new BrowserUpProxyServer()
@@ -95,14 +95,52 @@ class NonProxyChainTest extends MockServerTest {
 
         NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
 
-            CloseableHttpResponse response = it.execute(new HttpGet("http://localhost:${mockServerPort}/external.domain.com"))
+            CloseableHttpResponse response = it.execute(new HttpGet("http://localhost:${mockServerPort}/"))
             assertEquals("Did not receive HTTP 200 from mock server", 200, response.getStatusLine().getStatusCode())
 
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", responseBody)
         }
 
-        verify(1, getRequestedFor(urlEqualTo("/external.domain.com")))
+        verify(1, getRequestedFor(urlEqualTo("/")))
+    }
+
+    /**
+     * This testcase will set up a upstream proxy that is blocking all requests containing "localhost:"
+     * Then it will setup a proxy with that upstream proxy and configure a nonProxyHost "*"
+     * Then it will call an address containing "localhost:mockport"
+     * This will end up in a 200, because the request is NOT processed to the upstream proxy due the nonProxySetting
+     */
+    @Test
+    void testUpStreamProxyWithNonProxyWildcard() {
+
+        List<String> objects = new ArrayList<>()
+        objects.add("*")
+
+        upstreamProxy = DefaultHttpProxyServer.bootstrap()
+                .withFiltersSource(getFiltersSource())
+                .withPort(0)
+                .start()
+
+        def stub = "/"
+        stubFor(get(urlEqualTo(stub)).willReturn(ok().withBody("success")))
+
+        proxy = new BrowserUpProxyServer()
+        proxy.setChainedProxy(upstreamProxy.getListenAddress())
+        proxy.setChainedProxyNonProxyHosts(objects)
+        proxy.setTrustAllServers(true)
+        proxy.start()
+
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+
+            CloseableHttpResponse response = it.execute(new HttpGet("http://localhost:${mockServerPort}/"))
+            assertEquals("Did not receive HTTP 200 from mock server", 200, response.getStatusLine().getStatusCode())
+
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", responseBody)
+        }
+
+        verify(1, getRequestedFor(urlEqualTo("/")))
     }
 
     /**
@@ -126,7 +164,7 @@ class NonProxyChainTest extends MockServerTest {
 
                             System.out.println("Method URI : " + request.method() + " " + request.uri())
 
-                            if (request.uri().contains("external.domain.com")) {
+                            if (request.uri().contains("localhost:")) {
                                 return getBadGatewayResponse()
                             }
                         }
