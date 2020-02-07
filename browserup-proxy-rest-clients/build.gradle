@@ -20,22 +20,61 @@ resolve {
     outputPath = "$buildDir/openapi"
 }
 
-def clientLanguages = [
-        'JavaScript',
-        'Ruby'
-        //https://github.com/OpenAPITools/openapi-generator/issues/3285
-        //'Python'
-]
+class Constants {
+    static String apiPackage = 'browserup'
+    static String modelPackage = 'browserup.model'
+}
 
-clientLanguages.each { lang ->
+/*
+  https://github.com/OpenAPITools/openapi-generator/issues/3285
+ */
+class PythonClientPostProcessor {
+    String projectDir
+
+    void process() {
+        def clientDir = new File("$projectDir/build/openapi-clients/python")
+        clientDir.eachFileRecurse {
+            if (it.name.endsWith(".py")) {
+                processInitFile(it)
+            }
+        }
+        new File("${clientDir}/openapi_client/${Constants.apiPackage}/model/__init__.py") <<
+                new File("${clientDir}/openapi_client/${Constants.modelPackage}/__init__.py").text
+    }
+
+    private static void processInitFile(File initFile) {
+        initFile.text = initFile.text.replaceAll(
+                ~/(from ${Constants.apiPackage}.default_api import)/,
+                "from openapi_client.${Constants.apiPackage}.default_api import"
+        )
+    }
+}
+
+class ClientInfo {
+    String language
+    Closure postProcessor
+}
+
+def clients = [
+        new ClientInfo(language: 'JavaScript'),
+        new ClientInfo(language: 'Ruby'),
+        new ClientInfo(
+                language: 'Python',
+                postProcessor:  new PythonClientPostProcessor(projectDir: projectDir).&process)
+] as ClientInfo[]
+
+clients.each { client ->
+    def lang = client.language
+    def postProcessor = client.postProcessor
+    
     task "openApiGenerate${lang}Client"(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
         def language = lang.toLowerCase()
         generatorName = language
         inputSpec = "$buildDir/openapi/openapi.yaml".toString()
         outputDir = "$buildDir/openapi-clients/$language/".toString()
-        apiPackage = "browserup"
+        apiPackage = Constants.apiPackage
+        modelPackage = Constants.modelPackage
         invokerPackage = "browserup.invoker"
-        modelPackage = "browserup.model"
         systemProperties = [
                 modelDocs: 'false'
         ]
@@ -43,6 +82,7 @@ clientLanguages.each { lang ->
         logToStderr = true
         generateAliasAsModel = false
     }
+    if (postProcessor) tasks.getByName("openApiGenerate${lang}Client").doLast(postProcessor)
 }
 
 test {
@@ -50,13 +90,13 @@ test {
 }
 
 task openApiGenerateClients(dependsOn: resolve) {
-    clientLanguages.each { lang ->
-        dependsOn "openApiGenerate${lang}Client"
+    clients.each { c ->
+        dependsOn "openApiGenerate${c.language}Client"
     }
 
     doLast {
-        clientLanguages.each { lang ->
-            def langName = lang.toLowerCase()
+        clients.each { client ->
+            def langName = client.language.toLowerCase()
             delete "src/test/${langName}/client"
             copy {
                 from "$buildDir/openapi-clients/${langName}/"

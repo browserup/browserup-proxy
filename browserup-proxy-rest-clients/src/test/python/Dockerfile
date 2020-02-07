@@ -9,7 +9,6 @@ WORKDIR /python-client/
 RUN python setup.py install --user
 RUN pip install -r requirements.txt
 RUN pip install -r test-requirements.txt
-#RUN python import openapi_client
 
 COPY . /python/
 WORKDIR /python/

@@ -20,8 +20,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 
-// https://github.com/OpenAPITools/openapi-generator/issues/3285
-@Ignore
 class PythonTestClient extends WithRunningProxyRestTest {
     private static final Logger LOG = LoggerFactory.getLogger(PythonTestClient)
 
@@ -70,7 +68,7 @@ class PythonTestClient extends WithRunningProxyRestTest {
 
         LOG.info('Docker log: ' + container.getLogs())
 
-        Assert.assertEquals("Expected ruby-client container exit code to be 0", 0, container.getCurrentContainerInfo().getState().getExitCode())
+        Assert.assertEquals("Expected python-client container exit code to be 0", 0, container.getCurrentContainerInfo().getState().getExitCode())
     }
 
     @Test
@@ -105,7 +103,7 @@ class PythonTestClient extends WithRunningProxyRestTest {
 
         LOG.info('Docker log: ' + container.getLogs())
 
-        Assert.assertEquals("Expected ruby-client container exit code to be 1", 1, container.getCurrentContainerInfo().getState().getExitCode())
+        Assert.assertEquals("Expected python-client container exit code to be 1", 1, container.getCurrentContainerInfo().getState().getExitCode())
     }
 }
 
