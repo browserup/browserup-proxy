@@ -4,6 +4,11 @@
 
 package com.browserup.bup.proxy;
 
+import com.browserup.bup.BrowserUpProxyServer;
+import com.browserup.bup.exception.ProxyExistsException;
+import com.browserup.bup.exception.ProxyPortsExhaustedException;
+import com.browserup.bup.proxy.auth.AuthType;
+import com.browserup.bup.util.BrowserUpProxyUtil;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
@@ -11,26 +16,22 @@ import com.google.common.cache.RemovalNotification;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.ref.WeakReference;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-
-import com.browserup.bup.BrowserUpProxyServer;
-import com.browserup.bup.exception.ProxyExistsException;
-import com.browserup.bup.exception.ProxyPortsExhaustedException;
-import com.browserup.bup.proxy.auth.AuthType;
-import com.browserup.bup.util.BrowserUpProxyUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Singleton
 public class ProxyManager {
@@ -134,10 +135,15 @@ public class ProxyManager {
     }
 
     public BrowserUpProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword, Integer port, String bindAddr, String serverBindAddr, boolean useEcc, boolean trustAllServers) {
-        return create(upstreamHttpProxy, false, proxyUsername, proxyPassword, port, bindAddr, serverBindAddr, useEcc, trustAllServers);
+        return create(upstreamHttpProxy, false, null, proxyUsername, proxyPassword, port, bindAddr, serverBindAddr, useEcc, trustAllServers);
     }
 
     public BrowserUpProxyServer create(String upstreamHttpProxy, boolean upstreamProxyHttps, String proxyUsername, String proxyPassword, Integer port, String bindAddr, String serverBindAddr, boolean useEcc, boolean trustAllServers) {
+        return create(upstreamHttpProxy, upstreamProxyHttps, null, proxyUsername, proxyPassword, port, bindAddr, serverBindAddr, useEcc, trustAllServers);
+    }
+
+    public BrowserUpProxyServer create(String upstreamHttpProxy, boolean upstreamProxyHttps, List<String> upstreamNonProxyHosts, String proxyUsername, String proxyPassword, Integer port, String bindAddr, String serverBindAddr, boolean useEcc, boolean trustAllServers) {
+
         LOG.debug("Instantiate ProxyServer...");
         BrowserUpProxyServer proxy = new BrowserUpProxyServer();
 
@@ -160,13 +166,16 @@ public class ProxyManager {
             try {
                 InetSocketAddress chainedProxyAddress = BrowserUpProxyUtil.inetSocketAddressFromString(upstreamHttpProxy);
                 proxy.setChainedProxy(chainedProxyAddress);
-            }
-            catch(URISyntaxException e) {
+            } catch (URISyntaxException e) {
                 LOG.error("Invalid upstream http proxy specified: " + upstreamHttpProxy + ". Must use host:port format.");
                 throw new RuntimeException("Invalid upstream http proxy");
             }
 
             proxy.setChainedProxyHTTPS(upstreamProxyHttps);
+
+            if (upstreamNonProxyHosts != null) {
+                proxy.setChainedProxyNonProxyHosts(upstreamNonProxyHosts);
+            }
         }
 
         InetAddress clientBindAddress = null;
@@ -210,23 +219,23 @@ public class ProxyManager {
     }
 
     public BrowserUpProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword, Integer port, String bindAddr, boolean useEcc, boolean trustAllServers) {
-        return create(upstreamHttpProxy, false, proxyUsername, proxyPassword, port, null, null, false, false);
+        return create(upstreamHttpProxy, false, null, proxyUsername, proxyPassword, port, null, null, false, false);
     }
 
     public BrowserUpProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword, Integer port) {
-        return create(upstreamHttpProxy, false, proxyUsername, proxyPassword, port, null, null, false, false);
+        return create(upstreamHttpProxy, false, null, proxyUsername, proxyPassword, port, null, null, false, false);
     }
 
     public BrowserUpProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword) {
-        return create(upstreamHttpProxy, false, proxyUsername, proxyPassword, null, null, null, false, false);
+        return create(upstreamHttpProxy, false, null, proxyUsername, proxyPassword, null, null, null, false, false);
     }
 
     public BrowserUpProxyServer create() {
-        return create(null, false, null, null, null, null, null, false, false);
+        return create(null, false, null, null, null, null, null, null, false, false);
     }
 
     public BrowserUpProxyServer create(int port) {
-        return create(null, false,null , null, port, null, null, false, false);
+        return create(null, false, null, null, null, port, null, null, false, false);
     }
 
     public BrowserUpProxyServer get(int port) {

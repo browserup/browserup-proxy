@@ -5,8 +5,6 @@
 package com.browserup.bup;
 
 import com.browserup.bup.assertion.model.AssertionResult;
-import com.browserup.bup.util.HttpStatusClass;
-import com.browserup.harreader.model.Har;
 import com.browserup.bup.filters.RequestFilter;
 import com.browserup.bup.filters.ResponseFilter;
 import com.browserup.bup.mitm.TrustSource;
@@ -14,6 +12,8 @@ import com.browserup.bup.proxy.BlacklistEntry;
 import com.browserup.bup.proxy.CaptureType;
 import com.browserup.bup.proxy.auth.AuthType;
 import com.browserup.bup.proxy.dns.AdvancedHostResolver;
+import com.browserup.bup.util.HttpStatusClass;
+import com.browserup.harreader.model.Har;
 import com.browserup.harreader.model.HarEntry;
 import org.littleshoot.proxy.HttpFiltersSource;
 import org.littleshoot.proxy.MitmManager;
@@ -22,6 +22,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -570,6 +571,13 @@ public interface BrowserUpProxy {
      * @param chainedProxyHTTPS address of the upstream proxy
      */
     void setChainedProxyHTTPS(boolean chainedProxyHTTPS);
+
+    /**
+     * Instructs this proxy to route traffic trough an upstream proxy but handling this addresses as exceptions (non proxy hosts)
+     *
+     * @param upstreamNonProxyHosts non proxy hosts also called proxy exceptions
+     */
+    void setChainedProxyNonProxyHosts(List<String> upstreamNonProxyHosts);
 
     /**
      * Returns the address and port of the upstream proxy.

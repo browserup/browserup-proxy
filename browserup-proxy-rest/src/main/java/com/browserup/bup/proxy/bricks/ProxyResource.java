@@ -4,6 +4,16 @@
 
 package com.browserup.bup.proxy.bricks;
 
+import com.browserup.bup.BrowserUpProxyServer;
+import com.browserup.bup.exception.ProxyExistsException;
+import com.browserup.bup.exception.ProxyPortsExhaustedException;
+import com.browserup.bup.exception.UnsupportedCharsetException;
+import com.browserup.bup.filters.JavascriptRequestResponseFilter;
+import com.browserup.bup.proxy.CaptureType;
+import com.browserup.bup.proxy.ProxyManager;
+import com.browserup.bup.proxy.auth.AuthType;
+import com.browserup.bup.util.BrowserUpHttpUtil;
+import com.browserup.harreader.model.Har;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.sitebricks.At;
@@ -16,39 +26,33 @@ import com.google.sitebricks.http.Delete;
 import com.google.sitebricks.http.Get;
 import com.google.sitebricks.http.Post;
 import com.google.sitebricks.http.Put;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.script.ScriptException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import javax.script.ScriptException;
-import com.browserup.bup.BrowserUpProxyServer;
-import com.browserup.harreader.model.Har;
-import com.browserup.bup.exception.ProxyExistsException;
-import com.browserup.bup.exception.ProxyPortsExhaustedException;
-import com.browserup.bup.exception.UnsupportedCharsetException;
-import com.browserup.bup.filters.JavascriptRequestResponseFilter;
-import com.browserup.bup.proxy.CaptureType;
-import com.browserup.bup.proxy.ProxyManager;
-import com.browserup.bup.proxy.auth.AuthType;
-import com.browserup.bup.util.BrowserUpHttpUtil;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toList;
 
 @At("/proxy")
 @Service
 public class ProxyResource {
+
     private static final Logger LOG = LoggerFactory.getLogger(ProxyResource.class);
 
     private final ProxyManager proxyManager;
@@ -73,7 +77,11 @@ public class ProxyResource {
         LOG.info(request.params().toString());
         String systemProxyHost = System.getProperty("http.proxyHost");
         String systemProxyPort = System.getProperty("http.proxyPort");
+        String systemNonProxyHosts = System.getProperty("http.nonProxyHosts");
+
         String httpProxy = request.param("httpProxy");
+        String httpNonProxyHosts = request.param("httpNonProxyHosts");
+
         String proxyUsername = request.param("proxyUsername");
         String proxyPassword = request.param("proxyPassword");
         boolean upstreamProxyHttps = "true".equals(request.param("proxyHTTPS"));
@@ -85,7 +93,19 @@ public class ProxyResource {
         if (httpProxy != null) {
             upstreamHttpProxy = httpProxy;
         } else if ((systemProxyHost != null) && (systemProxyPort != null)) {
-            upstreamHttpProxy  = String.format("%s:%s", systemProxyHost, systemProxyPort);
+            upstreamHttpProxy = String.format("%s:%s", systemProxyHost, systemProxyPort);
+        }
+
+        // If the upstream proxy is defined, we should add the non proxy hosts (proxy exceptions) as well.
+        List<String> upstreamNonProxyHosts = null;
+        if (upstreamHttpProxy != null) {
+
+            // override system non proxy hosts with the provided ones
+            if (httpNonProxyHosts != null) {
+                upstreamNonProxyHosts = Arrays.asList(httpNonProxyHosts.split("\\|"));
+            } else if (systemNonProxyHosts != null) {
+                upstreamNonProxyHosts = Arrays.asList(systemNonProxyHosts.split("\\|"));
+            }
         }
 
         String paramBindAddr = request.param("bindAddress");
@@ -102,7 +122,7 @@ public class ProxyResource {
                 paramBindAddr, paramPort, paramServerBindAddr);
         BrowserUpProxyServer proxy;
         try {
-            proxy = proxyManager.create(upstreamHttpProxy, upstreamProxyHttps, proxyUsername, proxyPassword, paramPort, paramBindAddr, paramServerBindAddr, useEcc, trustAllServers);
+            proxy = proxyManager.create(upstreamHttpProxy, upstreamProxyHttps, upstreamNonProxyHosts, proxyUsername, proxyPassword, paramPort, paramBindAddr, paramServerBindAddr, useEcc, trustAllServers);
         } catch (ProxyExistsException ex) {
             return Reply.with(new ProxyDescriptor(ex.getPort())).status(455).as(Json.class);
         } catch (ProxyPortsExhaustedException ex) {
