@@ -98,7 +98,7 @@ dependencies {
     testImplementation 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.2'
     testImplementation 'org.hamcrest:hamcrest:2.2'
     testImplementation 'org.hamcrest:hamcrest-library:2.2'
-    testImplementation 'org.mockito:mockito-core:3.2.4'
+    testImplementation 'org.mockito:mockito-core:3.3.0'
     testImplementation 'org.seleniumhq.selenium:selenium-api:3.4.0'
     testImplementation 'org.awaitility:awaitility:4.0.2'
     testImplementation 'com.github.tomakehurst:wiremock-jre8:2.24.1'
