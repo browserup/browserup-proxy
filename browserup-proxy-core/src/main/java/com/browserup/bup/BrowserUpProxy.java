@@ -117,7 +117,17 @@ public interface BrowserUpProxy {
      *
      * @return current HAR, or null if HAR capture is not enabled
      */
-    Har getHar();
+    default Har getHar() {
+        return getHar(false);
+    }
+
+    /**
+     * If cleanHar is false - returns current HAR.
+     * If cleanHar is true - cleans current HAR and returns HAR with data it has before cleaning.
+     *
+     * @return current HAR, or null if HAR capture is not enabled
+     */
+    Har getHar(boolean cleanHar);
 
     /**
      * Starts a new HAR file with the default page name (see {@link #newPage()}. Enables HAR capture if it was not previously enabled.

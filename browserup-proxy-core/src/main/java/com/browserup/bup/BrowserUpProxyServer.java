@@ -124,6 +124,7 @@ import static java.util.stream.Collectors.toCollection;
 public class BrowserUpProxyServer implements BrowserUpProxy {
     private static final Logger log = LoggerFactory.getLogger(BrowserUpProxyServer.class);
     private static final Object LOCK = new Object();
+    private static final Object GET_HAR_LOCK = new Object();
 
     public static final String DEFAULT_PAGE_REF = "Default";
     public static final String DEFAULT_PAGE_TITLE = "Default";
@@ -542,7 +543,20 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
 
     @Override
     public Har getHar() {
-        return this.har;
+        synchronized (GET_HAR_LOCK) {
+            return this.har;
+        }
+    }
+
+    @Override
+    public Har getHar(boolean cleanHar) {
+        if (!cleanHar) {
+            return this.har;
+        }
+
+        synchronized (GET_HAR_LOCK) {
+            return this.newHar();
+        }
     }
 
     @Override
