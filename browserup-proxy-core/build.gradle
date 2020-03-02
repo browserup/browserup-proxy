@@ -57,7 +57,7 @@ uploadArchives {
 }
 
 dependencies {
-    api 'io.netty:netty-codec:4.1.44.Final'
+    api 'io.netty:netty-codec:4.1.46.Final'
     api 'xyz.rogfam:littleproxy:2.0.0-beta-5'
 
     implementation project(':browserup-proxy-mitm')
