@@ -15,12 +15,97 @@ import org.junit.Test
 import static com.github.tomakehurst.wiremock.client.WireMock.*
 import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertNull
+import static org.junit.Assert.assertTrue
 
 class ValidateHarRestTest extends BaseRestTest {
 
     @Override
     String getUrlPath() {
         return 'har'
+    }
+
+    @Test
+    void cleanHarFalseTest() {
+        def urlToCatch = 'test'
+        def responseBody = ''
+
+        mockTargetServerResponse(urlToCatch, responseBody)
+
+        proxyManager.get()[0].newHar()
+
+        requestToTargetServer(urlToCatch, responseBody)
+
+        proxyRestServerClient.request(Method.GET, ContentType.WILDCARD) { req ->
+            uri.path = "/proxy/${proxy.port}/${urlPath}"
+            response.success = { HttpResponseDecorator resp ->
+                Har har = new ObjectMapper().readValue(resp.entity.content, Har) as Har
+
+                assertTrue("Expected captured queries in har", har.getLog().getEntries().size() > 0)
+            }
+        }
+
+        proxyRestServerClient.request(Method.GET, ContentType.WILDCARD) { req ->
+            uri.path = "/proxy/${proxy.port}/${urlPath}"
+            uri.query = ['cleanHar': false]
+            response.success = { HttpResponseDecorator resp ->
+                Har har = new ObjectMapper().readValue(resp.entity.content, Har) as Har
+
+                assertTrue("Expected captured queries in har", har.getLog().getEntries().size() > 0)
+            }
+        }
+
+        proxyRestServerClient.request(Method.GET, ContentType.WILDCARD) { req ->
+            uri.path = "/proxy/${proxy.port}/${urlPath}"
+            response.success = { HttpResponseDecorator resp ->
+                Har har = new ObjectMapper().readValue(resp.entity.content, Har) as Har
+
+                assertTrue("Expected captured queries in har", har.getLog().getEntries().size() > 0)
+            }
+        }
+
+        verify(1, getRequestedFor(urlEqualTo("/${urlToCatch}")))
+    }
+
+    @Test
+    void cleanHarTest() {
+        def urlToCatch = 'test'
+        def responseBody = ''
+
+        mockTargetServerResponse(urlToCatch, responseBody)
+
+        proxyManager.get()[0].newHar()
+
+        requestToTargetServer(urlToCatch, responseBody)
+
+        proxyRestServerClient.request(Method.GET, ContentType.WILDCARD) { req ->
+            uri.path = "/proxy/${proxy.port}/${urlPath}"
+            response.success = { HttpResponseDecorator resp ->
+                Har har = new ObjectMapper().readValue(resp.entity.content, Har) as Har
+
+                assertTrue("Expected captured queries in har", har.getLog().getEntries().size() > 0)
+            }
+        }
+
+        proxyRestServerClient.request(Method.GET, ContentType.WILDCARD) { req ->
+            uri.path = "/proxy/${proxy.port}/${urlPath}"
+            uri.query = ['cleanHar': true]
+            response.success = { HttpResponseDecorator resp ->
+                Har har = new ObjectMapper().readValue(resp.entity.content, Har) as Har
+
+                assertTrue("Expected captured queries in old har", har.getLog().getEntries().size() > 0)
+            }
+        }
+
+        proxyRestServerClient.request(Method.GET, ContentType.WILDCARD) { req ->
+            uri.path = "/proxy/${proxy.port}/${urlPath}"
+            response.success = { HttpResponseDecorator resp ->
+                Har har = new ObjectMapper().readValue(resp.entity.content, Har) as Har
+
+                assertTrue("Expected to get Har without entries", har.getLog().getEntries().size() == 0)
+            }
+        }
+
+        verify(1, getRequestedFor(urlEqualTo("/${urlToCatch}")))
     }
 
     @Test

@@ -137,14 +137,15 @@ public class ProxyResource {
 
     @Get
     @At("/:port/har")
-    public Reply<?> getHar(@Named("port") int port) {
+    public Reply<?> getHar(@Named("port") int port, Request request) {
         LOG.info("GET /" + port + "/har");
         BrowserUpProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
 
-        Har har = proxy.getHar();
+        Boolean cleanHar = "true".equals(request.param("cleanHar"));
+        Har har = proxy.getHar(cleanHar);
 
         return Reply.with(har).as(Json.class);
     }
