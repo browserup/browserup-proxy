@@ -66,7 +66,7 @@ dependencies {
     implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}"
     implementation 'com.google.inject:guice:4.2.2'
     implementation 'com.google.inject.extensions:guice-servlet:4.2.2'
-    implementation 'com.google.inject.extensions:guice-multibindings:4.2.2'
+    implementation 'com.google.inject.extensions:guice-multibindings:4.2.3'
     implementation 'com.google.sitebricks:sitebricks:0.8.11'
     implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
     implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
