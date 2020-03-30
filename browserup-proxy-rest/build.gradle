@@ -75,7 +75,7 @@ dependencies {
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
     implementation "org.eclipse.jetty:jetty-servlet:${jettyVersion}"
     implementation "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
-    implementation 'org.apache.commons:commons-lang3:3.9'
+    implementation 'org.apache.commons:commons-lang3:3.10'
 
     implementation "org.glassfish.jersey.containers:jersey-container-servlet-core:${jerseyVersion}"
     implementation "org.glassfish.jersey.media:jersey-media-json-jackson:${jerseyVersion}"
