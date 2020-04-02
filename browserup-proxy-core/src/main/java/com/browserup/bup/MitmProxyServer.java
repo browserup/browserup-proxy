@@ -1,0 +1,567 @@
+package com.browserup.bup;
+
+import com.browserup.bup.assertion.model.AssertionResult;
+import com.browserup.bup.filters.RequestFilter;
+import com.browserup.bup.filters.ResponseFilter;
+import com.browserup.bup.mitm.TrustSource;
+import com.browserup.bup.mitmproxy.MitmProxyManager;
+import com.browserup.bup.mitmproxy.NetworkUtils;
+import com.browserup.bup.proxy.BlacklistEntry;
+import com.browserup.bup.proxy.CaptureType;
+import com.browserup.bup.proxy.auth.AuthType;
+import com.browserup.bup.proxy.dns.AdvancedHostResolver;
+import com.browserup.bup.util.HttpStatusClass;
+import com.browserup.harreader.model.Har;
+import com.browserup.harreader.model.HarEntry;
+import org.littleshoot.proxy.HttpFiltersSource;
+import org.littleshoot.proxy.MitmManager;
+
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
+
+public class MitmProxyServer implements BrowserUpProxy {
+  private MitmProxyManager mitmProxyManager = MitmProxyManager.getInstance();
+
+  @Override
+  public void start() {
+    mitmProxyManager.start(NetworkUtils.getFreePort());
+  }
+
+  @Override
+  public void start(int port) {
+    mitmProxyManager.start(port);
+  }
+
+  @Override
+  public void start(int port, InetAddress bindAddress) {
+
+  }
+
+  @Override
+  public void start(int port, InetAddress clientBindAddress, InetAddress serverBindAddress) {
+
+  }
+
+  @Override
+  public boolean isStarted() {
+    return false;
+  }
+
+  @Override
+  public void stop() {
+
+  }
+
+  @Override
+  public void abort() {
+
+  }
+
+  @Override
+  public InetAddress getClientBindAddress() {
+    return null;
+  }
+
+  @Override
+  public int getPort() {
+    return 0;
+  }
+
+  @Override
+  public InetAddress getServerBindAddress() {
+    return null;
+  }
+
+  @Override
+  public Har getHar() {
+    return null;
+  }
+
+  @Override
+  public Har getHar(boolean cleanHar) {
+    return null;
+  }
+
+  @Override
+  public Har newHar() {
+    return null;
+  }
+
+  @Override
+  public Har newHar(String initialPageRef) {
+    return null;
+  }
+
+  @Override
+  public Har newHar(String initialPageRef, String initialPageTitle) {
+    return null;
+  }
+
+  @Override
+  public void setHarCaptureTypes(Set<CaptureType> captureTypes) {
+
+  }
+
+  @Override
+  public void setHarCaptureTypes(CaptureType... captureTypes) {
+
+  }
+
+  @Override
+  public EnumSet<CaptureType> getHarCaptureTypes() {
+    return null;
+  }
+
+  @Override
+  public void enableHarCaptureTypes(Set<CaptureType> captureTypes) {
+
+  }
+
+  @Override
+  public void enableHarCaptureTypes(CaptureType... captureTypes) {
+
+  }
+
+  @Override
+  public void disableHarCaptureTypes(Set<CaptureType> captureTypes) {
+
+  }
+
+  @Override
+  public void disableHarCaptureTypes(CaptureType... captureTypes) {
+
+  }
+
+  @Override
+  public Har newPage() {
+    return null;
+  }
+
+  @Override
+  public Har newPage(String pageRef) {
+    return null;
+  }
+
+  @Override
+  public Har newPage(String pageRef, String pageTitle) {
+    return null;
+  }
+
+  @Override
+  public Har endHar() {
+    return null;
+  }
+
+  @Override
+  public void setReadBandwidthLimit(long bytesPerSecond) {
+
+  }
+
+  @Override
+  public long getReadBandwidthLimit() {
+    return 0;
+  }
+
+  @Override
+  public void setWriteBandwidthLimit(long bytesPerSecond) {
+
+  }
+
+  @Override
+  public long getWriteBandwidthLimit() {
+    return 0;
+  }
+
+  @Override
+  public void setLatency(long latency, TimeUnit timeUnit) {
+
+  }
+
+  @Override
+  public void setConnectTimeout(int connectionTimeout, TimeUnit timeUnit) {
+
+  }
+
+  @Override
+  public void setIdleConnectionTimeout(int idleConnectionTimeout, TimeUnit timeUnit) {
+
+  }
+
+  @Override
+  public void setRequestTimeout(int requestTimeout, TimeUnit timeUnit) {
+
+  }
+
+  @Override
+  public void autoAuthorization(String domain, String username, String password,
+                                AuthType authType) {
+
+  }
+
+  @Override
+  public void stopAutoAuthorization(String domain) {
+
+  }
+
+  @Override
+  public void chainedProxyAuthorization(String username, String password, AuthType authType) {
+
+  }
+
+  @Override
+  public void rewriteUrl(String urlPattern, String replacementExpression) {
+
+  }
+
+  @Override
+  public void rewriteUrls(Map<String, String> rewriteRules) {
+
+  }
+
+  @Override
+  public Map<String, String> getRewriteRules() {
+    return null;
+  }
+
+  @Override
+  public void removeRewriteRule(String urlPattern) {
+
+  }
+
+  @Override
+  public void clearRewriteRules() {
+
+  }
+
+  @Override
+  public void blacklistRequests(String urlPattern, int statusCode) {
+
+  }
+
+  @Override
+  public void blacklistRequests(String urlPattern, int statusCode, String httpMethodPattern) {
+
+  }
+
+  @Override
+  public void setBlacklist(Collection<BlacklistEntry> blacklist) {
+
+  }
+
+  @Override
+  public Collection<BlacklistEntry> getBlacklist() {
+    return null;
+  }
+
+  @Override
+  public void clearBlacklist() {
+
+  }
+
+  @Override
+  public void whitelistRequests(Collection<String> urlPatterns, int statusCode) {
+
+  }
+
+  @Override
+  public void addWhitelistPattern(String urlPattern) {
+
+  }
+
+  @Override
+  public void enableEmptyWhitelist(int statusCode) {
+
+  }
+
+  @Override
+  public void disableWhitelist() {
+
+  }
+
+  @Override
+  public Collection<String> getWhitelistUrls() {
+    return null;
+  }
+
+  @Override
+  public int getWhitelistStatusCode() {
+    return 0;
+  }
+
+  @Override
+  public boolean isWhitelistEnabled() {
+    return false;
+  }
+
+  @Override
+  public void addHeaders(Map<String, String> headers) {
+
+  }
+
+  @Override
+  public void addHeader(String name, String value) {
+
+  }
+
+  @Override
+  public void removeHeader(String name) {
+
+  }
+
+  @Override
+  public void removeAllHeaders() {
+
+  }
+
+  @Override
+  public Map<String, String> getAllHeaders() {
+    return null;
+  }
+
+  @Override
+  public void setHostNameResolver(AdvancedHostResolver resolver) {
+
+  }
+
+  @Override
+  public AdvancedHostResolver getHostNameResolver() {
+    return null;
+  }
+
+  @Override
+  public boolean waitForQuiescence(long quietPeriod, long timeout, TimeUnit timeUnit) {
+    return false;
+  }
+
+  @Override
+  public void setChainedProxy(InetSocketAddress chainedProxyAddress) {
+
+  }
+
+  @Override
+  public void setChainedProxyHTTPS(boolean chainedProxyHTTPS) {
+
+  }
+
+  @Override
+  public void setChainedProxyNonProxyHosts(List<String> upstreamNonProxyHosts) {
+
+  }
+
+  @Override
+  public InetSocketAddress getChainedProxy() {
+    return null;
+  }
+
+  @Override
+  public void addFirstHttpFilterFactory(HttpFiltersSource filterFactory) {
+
+  }
+
+  @Override
+  public void addLastHttpFilterFactory(HttpFiltersSource filterFactory) {
+
+  }
+
+  @Override
+  public void addResponseFilter(ResponseFilter filter) {
+
+  }
+
+  @Override
+  public void addRequestFilter(RequestFilter filter) {
+
+  }
+
+  @Override
+  public void setMitmDisabled(boolean mitmDisabled) {
+
+  }
+
+  @Override
+  public void setMitmManager(MitmManager mitmManager) {
+
+  }
+
+  @Override
+  public void setTrustAllServers(boolean trustAllServers) {
+
+  }
+
+  @Override
+  public void setTrustSource(TrustSource trustSource) {
+
+  }
+
+  @Override
+  public Optional<HarEntry> findMostRecentEntry(Pattern url) {
+    return Optional.empty();
+  }
+
+  @Override
+  public Collection<HarEntry> findEntries(Pattern url) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertMostRecentResponseTimeLessThanOrEqual(Pattern url,
+                                                                     long milliseconds) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertResponseTimeLessThanOrEqual(Pattern url, long milliseconds) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertMostRecentResponseContentContains(Pattern url, String text) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertMostRecentResponseContentDoesNotContain(Pattern url, String text) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertMostRecentResponseContentMatches(Pattern url,
+                                                                Pattern contentPattern) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertAnyUrlContentLengthLessThanOrEquals(Pattern url, Long max) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertAnyUrlContentMatches(Pattern url, Pattern contentPattern) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertAnyUrlContentContains(Pattern url, String text) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertAnyUrlContentDoesNotContain(Pattern url, String text) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertAnyUrlResponseHeaderContains(Pattern url, String value) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertAnyUrlResponseHeaderContains(Pattern url, String name,
+                                                            String value) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertAnyUrlResponseHeaderDoesNotContain(Pattern url, String value) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertAnyUrlResponseHeaderDoesNotContain(Pattern url, String name,
+                                                                  String value) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertAnyUrlResponseHeaderMatches(Pattern url, Pattern valuePattern) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertAnyUrlResponseHeaderMatches(Pattern url, Pattern namePattern,
+                                                           Pattern valuePattern) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertMostRecentResponseHeaderContains(Pattern url, String name,
+                                                                String value) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertMostRecentResponseHeaderContains(Pattern url, String value) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertMostRecentResponseHeaderDoesNotContain(Pattern url, String name,
+                                                                      String value) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertMostRecentResponseHeaderDoesNotContain(Pattern url, String value) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertMostRecentResponseHeaderMatches(Pattern url, Pattern name,
+                                                               Pattern value) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertMostRecentResponseHeaderMatches(Pattern url, Pattern value) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertMostRecentResponseContentLengthLessThanOrEqual(Pattern url,
+                                                                              Long max) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertResponseStatusCode(Integer status) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertResponseStatusCode(HttpStatusClass clazz) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertResponseStatusCode(Pattern url, Integer status) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertResponseStatusCode(Pattern url, HttpStatusClass clazz) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertMostRecentResponseStatusCode(Integer status) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertMostRecentResponseStatusCode(HttpStatusClass clazz) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertMostRecentResponseStatusCode(Pattern url, Integer status) {
+    return null;
+  }
+
+  @Override
+  public AssertionResult assertMostRecentResponseStatusCode(Pattern url, HttpStatusClass clazz) {
+    return null;
+  }
+}
