@@ -37,12 +37,12 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public void start(int port, InetAddress bindAddress) {
-
+    mitmProxyManager.start(port);
   }
 
   @Override
   public void start(int port, InetAddress clientBindAddress, InetAddress serverBindAddress) {
-
+    mitmProxyManager.start(port);
   }
 
   @Override
@@ -52,12 +52,12 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public void stop() {
-
+    mitmProxyManager.stop();
   }
 
   @Override
   public void abort() {
-
+    mitmProxyManager.stop();
   }
 
   @Override
@@ -67,7 +67,7 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public int getPort() {
-    return 0;
+    return mitmProxyManager.getPort();
   }
 
   @Override
@@ -77,7 +77,7 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public Har getHar() {
-    return null;
+    return mitmProxyManager.getHar();
   }
 
   @Override

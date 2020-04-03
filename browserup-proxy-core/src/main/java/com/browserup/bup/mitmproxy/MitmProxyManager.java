@@ -1,7 +1,10 @@
 package com.browserup.bup.mitmproxy;
 
+import com.browserup.bup.mitmproxy.addons.AbstractAddon;
 import com.browserup.bup.mitmproxy.addons.HarCaptureFilterAddOn;
 import com.browserup.harreader.model.Har;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
@@ -11,15 +14,21 @@ import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
 import java.io.*;
-import java.util.Optional;
+import java.lang.reflect.Field;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class MitmProxyManager {
   private static final Logger LOGGER = LoggerFactory.getLogger(MitmProxyManager.class);
 
   private StartedProcess startedProcess = null;
   private HarCaptureFilterAddOn harCaptureFilterAddOn = new HarCaptureFilterAddOn();
+  private Integer port = 0;
   private Har har = new Har();
+  private Process process;
+
+  private PipedInputStream pipedInputStream;
 
   private MitmProxyManager() {}
 
@@ -30,23 +39,55 @@ public class MitmProxyManager {
   public void start(int port) {
     try {
       startProxy(port);
+      this.port = port;
     } catch (Exception ex) {
+      LOGGER.error("Failed to start proxy", ex);
       stop();
       throw ex;
     }
   }
 
+  public Integer getPort() {
+    return port;
+  }
+
   public void stop() {
+    try {
+      pipedInputStream.close();
+    } catch (IOException e) {
+      LOGGER.warn("Couldn't close piped input stream", e);
+    }
     startedProcess.getProcess().destroy();
+    //startedProcess.getProcess().destroy();
+  }
+
+  private long getPidOfProcess(Process p) {
+    long pid = -1;
+
+    try {
+      if (p.getClass().getName().equals("java.lang.UNIXProcess")) {
+        Field f = p.getClass().getDeclaredField("pid");
+        f.setAccessible(true);
+        pid = f.getLong(p);
+        f.setAccessible(false);
+      }
+    } catch (Exception e) {
+      pid = -1;
+    }
+    return pid;
   }
 
   private void startProxy(int port) {
-    String[] command = new String[]{
-        "mitmdump", "-p", String.valueOf(port),
-        harCaptureFilterAddOn.getCommandParam()
-    };
+    List<String> command = new ArrayList<String>() {{
+      add("mitmdump");
+      add("-p");
+      add(String.valueOf(port));
+    }};
+    command.addAll(Arrays.asList(harCaptureFilterAddOn.getCommandParams()));
 
-    PipedInputStream pipedInputStream = new PipedInputStream();
+    LOGGER.info("Starting proxy using command: " + String.join(" ", command));
+
+    this.pipedInputStream = new PipedInputStream();
     ProcessExecutor processExecutor;
     try {
       processExecutor = new ProcessExecutor(command)
@@ -93,7 +134,20 @@ public class MitmProxyManager {
     }).start();
   }
 
-  public Optional<File> getHarDumpFile() {
-    return harCaptureFilterAddOn.getHarDumpFile();
+  public Har getHar() {
+    stop();
+
+    File harFile = harCaptureFilterAddOn.getHarDumpFile().get();
+
+    Har har;
+    try {
+      har = new ObjectMapper().readerFor(Har.class).readValue(harFile);
+    } catch (IOException e) {
+      throw new RuntimeException("Couldn't read HAR file", e);
+    }
+
+    start(port);
+
+    return har;
   }
 }

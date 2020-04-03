@@ -87,6 +87,7 @@ dependencies {
     testImplementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
     testImplementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
     testImplementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
+    testImplementation 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.2'
     testImplementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
     testImplementation "org.eclipse.jetty:jetty-servlet:${jettyVersion}"
     testImplementation "org.eclipse.jetty:jetty-servlets:${jettyVersion}"
