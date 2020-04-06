@@ -8,15 +8,18 @@ filename endwith '.zhar' will be compressed:
 mitmdump -s ./har_dump.py --set hardump=./dump.zhar
 """
 
-
 import json
 import base64
 import zlib
 import os
 import typing  # noqa
 
+import tempfile
+
 from datetime import datetime
 from datetime import timezone
+
+import falcon
 
 import mitmproxy
 
@@ -32,14 +35,28 @@ HAR: typing.Dict = {}
 # using 'connect' time for entries that use an existing connection.
 SERVERS_SEEN: typing.Set[connections.ServerConnection] = set()
 
+addonsManager = {}
+
+
+class HarDumpAddonResource:
+    def on_get(self, req, resp, method_name):
+        getattr(self, "on_" + method_name)(req, resp)
+
+    def on_get_har(self, req, resp):
+        har_file = save_current_har()
+
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps({
+            "path": har_file.name
+        }, ensure_ascii=False)
+
 
 def load(l):
-    l.add_option(
-        "hardump", str, "", "HAR dump path.",
-    )
+    global addonsManager
+    addonsManager = l.master.addons
 
 
-def configure(updated):
+def reset_har():
     HAR.update({
         "log": {
             "version": "1.2",
@@ -53,10 +70,14 @@ def configure(updated):
     })
 
 
+def configure(updated):
+    reset_har()
+
+
 def response(flow):
     """
-       Called when a server response has been received.
-    """
+         Called when a server response has been received.
+      """
 
     # -1 indicates that these values do not apply to current request
     ssl_time = -1
@@ -96,11 +117,14 @@ def response(flow):
     # Timings set to -1 will be ignored as per spec.
     full_time = sum(v for v in timings.values() if v > -1)
 
-    started_date_time = datetime.fromtimestamp(flow.request.timestamp_start, timezone.utc).isoformat()
+    started_date_time = datetime.fromtimestamp(flow.request.timestamp_start,
+                                               timezone.utc).isoformat()
 
     # Response body size and encoding
-    response_body_size = len(flow.response.raw_content) if flow.response.raw_content else 0
-    response_body_decoded_size = len(flow.response.content) if flow.response.content else 0
+    response_body_size = len(
+        flow.response.raw_content) if flow.response.raw_content else 0
+    response_body_decoded_size = len(
+        flow.response.content) if flow.response.content else 0
     response_body_compression = response_body_decoded_size - response_body_size
 
     entry = {
@@ -137,10 +161,12 @@ def response(flow):
 
     # Store binary data as base64
     if strutils.is_mostly_bin(flow.response.content):
-        entry["response"]["content"]["text"] = base64.b64encode(flow.response.content).decode()
+        entry["response"]["content"]["text"] = base64.b64encode(
+            flow.response.content).decode()
         entry["response"]["content"]["encoding"] = "base64"
     else:
-        entry["response"]["content"]["text"] = flow.response.get_text(strict=False)
+        entry["response"]["content"]["text"] = flow.response.get_text(
+            strict=False)
 
     if flow.request.method in ["POST", "PUT", "PATCH"]:
         params = [
@@ -157,6 +183,23 @@ def response(flow):
         entry["serverIPAddress"] = str(flow.server_conn.ip_address[0])
 
     HAR["log"]["entries"].append(entry)
+
+
+def save_current_har():
+    json_dump: str = json.dumps(HAR, indent=2)
+
+    tmp_file = tempfile.NamedTemporaryFile(mode="wb", prefix="har_dump_", delete=False)
+
+    raw: bytes = json_dump.encode()
+
+    tmp_file.write(raw)
+    tmp_file.flush()
+    tmp_file.close()
+
+    mitmproxy.ctx.log(
+        "HAR dump finished (wrote %s bytes to file)" % len(json_dump))
+
+    return tmp_file
 
 
 def done():
@@ -176,7 +219,8 @@ def done():
             with open(os.path.expanduser(ctx.options.hardump), "wb") as f:
                 f.write(raw)
 
-            mitmproxy.ctx.log("HAR dump finished (wrote %s bytes to file)" % len(json_dump))
+            mitmproxy.ctx.log(
+                "HAR dump finished (wrote %s bytes to file)" % len(json_dump))
 
 
 def format_cookies(cookie_list):
@@ -200,7 +244,8 @@ def format_cookies(cookie_list):
         # Expiration time needs to be formatted
         expire_ts = cookies.get_expiration_ts(attrs)
         if expire_ts is not None:
-            cookie_har["expires"] = datetime.fromtimestamp(expire_ts, timezone.utc).isoformat()
+            cookie_har["expires"] = datetime.fromtimestamp(expire_ts,
+                                                           timezone.utc).isoformat()
 
         rv.append(cookie_har)
 

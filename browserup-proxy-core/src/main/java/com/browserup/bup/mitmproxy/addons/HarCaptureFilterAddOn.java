@@ -11,14 +11,9 @@ public class HarCaptureFilterAddOn extends AbstractAddon {
 
   @Override
   public String[] getCommandParams() {
-    initHarDumpFile();
-
-    String[] command = new String[]{
-        "-s", "/home/kirill/dev/epic/bu/browserup-proxy/browserup-proxy-core/src/main/resources/mitmproxy/har_dump.py",
-        "--set", "hardump=" + harDumpFile.getAbsolutePath()
+    return new String[]{
+            "-s", getAddOnFilePath()
     };
-
-    return command;
   }
 
   @Override
@@ -27,14 +22,7 @@ public class HarCaptureFilterAddOn extends AbstractAddon {
   }
 
   public Optional<File> getHarDumpFile() {
-    return Optional.ofNullable(harDumpFile);
-  }
 
-  private void initHarDumpFile() {
-    try {
-      harDumpFile = File.createTempFile("har_dump.json", ".tmp");
-    } catch (IOException ex) {
-      throw new RuntimeException("Couldn't create har dump file", ex);
-    }
+    return Optional.ofNullable(harDumpFile);
   }
 }
