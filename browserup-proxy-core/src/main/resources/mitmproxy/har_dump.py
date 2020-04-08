@@ -18,6 +18,8 @@ from datetime import timezone
 
 import falcon
 
+from mitmproxy import ctx
+
 from mitmproxy import connections
 from mitmproxy import version
 from mitmproxy.utils import strutils
@@ -45,6 +47,8 @@ class HarDumpAddonResource:
 
     def on_get_har(self, req, resp):
         har_file = self.harDumpAddOn.save_current_har()
+        if req.get_param('cleanHar') == 'true':
+            self.harDumpAddOn.reset_har()
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps({
@@ -72,6 +76,7 @@ class HarDumpAddOn:
         })
 
     def configure(self, updated):
+        ctx.log.info('Configuring har dump add-on...')
         self.reset_har()
 
     def get_resource(self):

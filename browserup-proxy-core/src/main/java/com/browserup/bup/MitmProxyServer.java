@@ -67,7 +67,7 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public int getPort() {
-    return mitmProxyManager.getPort();
+    return mitmProxyManager.getProxyPort();
   }
 
   @Override
@@ -77,12 +77,12 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public Har getHar() {
-    return mitmProxyManager.getHar();
+    return getHar(false);
   }
 
   @Override
   public Har getHar(boolean cleanHar) {
-    return null;
+    return mitmProxyManager.getHar(cleanHar);
   }
 
   @Override

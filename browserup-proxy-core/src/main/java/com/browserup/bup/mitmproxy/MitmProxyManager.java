@@ -1,10 +1,11 @@
 package com.browserup.bup.mitmproxy;
 
-import com.browserup.bup.mitmproxy.addons.AbstractAddon;
+import com.browserup.bup.mitmproxy.addons.AddonsManagerAddOn;
 import com.browserup.bup.mitmproxy.addons.HarCaptureFilterAddOn;
+import com.browserup.bup.mitmproxy.management.AddonsManagerClient;
+import com.browserup.bup.mitmproxy.management.HarCaptureFilterManager;
 import com.browserup.harreader.model.Har;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Lists;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
@@ -14,21 +15,25 @@ import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
 import java.io.*;
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class MitmProxyManager {
+  public static final int ADDONS_MANAGER_API_PORT = 8088;
   private static final Logger LOGGER = LoggerFactory.getLogger(MitmProxyManager.class);
 
   private StartedProcess startedProcess = null;
   private HarCaptureFilterAddOn harCaptureFilterAddOn = new HarCaptureFilterAddOn();
-  private Integer port = 0;
-  private Har har = new Har();
-  private Process process;
+  private AddonsManagerAddOn addonsManagerAddOn = new AddonsManagerAddOn(ADDONS_MANAGER_API_PORT);
+  private AddonsManagerClient addonsManagerClient = new AddonsManagerClient(ADDONS_MANAGER_API_PORT);
+  private HarCaptureFilterManager harCaptureFilterManager = new HarCaptureFilterManager(addonsManagerClient);
+
+  private Integer proxyPort = 0;
 
   private PipedInputStream pipedInputStream;
+
+  private Har lastHar = new Har();
+  private boolean isRunning = false;
 
   private MitmProxyManager() {}
 
@@ -39,7 +44,7 @@ public class MitmProxyManager {
   public void start(int port) {
     try {
       startProxy(port);
-      this.port = port;
+      this.proxyPort = port;
     } catch (Exception ex) {
       LOGGER.error("Failed to start proxy", ex);
       stop();
@@ -47,34 +52,21 @@ public class MitmProxyManager {
     }
   }
 
-  public Integer getPort() {
-    return port;
+  public Integer getProxyPort() {
+    return proxyPort;
   }
 
   public void stop() {
+    getHar();
+    this.isRunning = false;
+
     try {
       pipedInputStream.close();
     } catch (IOException e) {
       LOGGER.warn("Couldn't close piped input stream", e);
     }
     startedProcess.getProcess().destroy();
-    //startedProcess.getProcess().destroy();
-  }
 
-  private long getPidOfProcess(Process p) {
-    long pid = -1;
-
-    try {
-      if (p.getClass().getName().equals("java.lang.UNIXProcess")) {
-        Field f = p.getClass().getDeclaredField("pid");
-        f.setAccessible(true);
-        pid = f.getLong(p);
-        f.setAccessible(false);
-      }
-    } catch (Exception e) {
-      pid = -1;
-    }
-    return pid;
   }
 
   private void startProxy(int port) {
@@ -84,6 +76,7 @@ public class MitmProxyManager {
       add(String.valueOf(port));
     }};
     command.addAll(Arrays.asList(harCaptureFilterAddOn.getCommandParams()));
+    command.addAll(Arrays.asList(addonsManagerAddOn.getCommandParams()));
 
     LOGGER.info("Starting proxy using command: " + String.join(" ", command));
 
@@ -115,6 +108,8 @@ public class MitmProxyManager {
       LOGGER.error("MitmProxy haven't started properly, output: " + output);
       throw new RuntimeException("Mitmproxy haven't started properly, output: " + output);
     }
+
+    this.isRunning = true;
   }
 
   private void readOutputOfMimtproxy(PipedInputStream pipedInputStream, StringBuilder output) {
@@ -135,9 +130,13 @@ public class MitmProxyManager {
   }
 
   public Har getHar() {
-    stop();
+    return getHar(false);
+  }
 
-    File harFile = harCaptureFilterAddOn.getHarDumpFile().get();
+  public Har getHar(boolean cleanHar) {
+    if (!this.isRunning) return this.lastHar;
+
+    File harFile = new File(harCaptureFilterManager.getCurrentHarFilePath(cleanHar));
 
     Har har;
     try {
@@ -146,8 +145,7 @@ public class MitmProxyManager {
       throw new RuntimeException("Couldn't read HAR file", e);
     }
 
-    start(port);
-
+    this.lastHar = har;
     return har;
   }
 }
