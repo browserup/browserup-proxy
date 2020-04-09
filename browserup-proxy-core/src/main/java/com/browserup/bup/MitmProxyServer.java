@@ -87,7 +87,7 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public Har newHar() {
-    return null;
+    return mitmProxyManager.getHar();
   }
 
   @Override

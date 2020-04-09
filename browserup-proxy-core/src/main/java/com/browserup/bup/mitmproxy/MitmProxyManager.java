@@ -136,7 +136,7 @@ public class MitmProxyManager {
   public Har getHar(boolean cleanHar) {
     if (!this.isRunning) return this.lastHar;
 
-    File harFile = new File(harCaptureFilterManager.getCurrentHarFilePath(cleanHar));
+    File harFile = new File(harCaptureFilterManager.getHar(cleanHar));
 
     Har har;
     try {

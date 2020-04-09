@@ -44,6 +44,8 @@ public class AddonsManagerClient {
         }
 
         try {
+            if (responseClass.equals(Void.class)) return null;
+
             return new ObjectMapper().readerFor(responseClass).readValue(Objects.requireNonNull(response.body()).byteStream());
         } catch (IOException e) {
             throw new RuntimeException("Failed to parse response from manager API", e);

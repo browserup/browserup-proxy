@@ -46,33 +46,9 @@ class HarDumpAddonResource:
         getattr(self, "on_" + method_name)(req, resp)
 
     def on_get_har(self, req, resp):
-        clean_har = req.get_param('cleanHar') == 'true'
-        har = self.harDumpAddOn.get_har(clean_har)
-
-        har_file = self.harDumpAddOn.save_har(har)
-
-        resp.status = falcon.HTTP_200
-        resp.body = json.dumps({
-            "path": har_file.name
-        }, ensure_ascii=False)
-
-    def on_new_har(self, req, resp):
-        page_ref = req.get_param('pageRef')
-        page_title = req.get_param('pageTitle')
-
-        har = self.harDumpAddOn.new_har(page_ref, page_title)
-
-        har_file = self.harDumpAddOn.save_har(har)
-
-        resp.status = falcon.HTTP_200
-        resp.body = json.dumps({
-            "path": har_file.name
-        }, ensure_ascii=False)
-
-    def on_end_har(self, req, resp):
-        har = self.harDumpAddOn.end_har()
-
-        har_file = self.harDumpAddOn.save_har(har)
+        har_file = self.harDumpAddOn.save_current_har()
+        if req.get_param('cleanHar') == 'true':
+            self.harDumpAddOn.reset_har()
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps({
@@ -80,17 +56,8 @@ class HarDumpAddonResource:
         }, ensure_ascii=False)
 
     def on_new_page(self, req, resp):
-        page_ref = req.get_param('pageRef')
-        page_title = req.get_param('pageTitle')
-
-        har = self.harDumpAddOn.new_page(page_ref, page_title)
-
-        har_file = self.harDumpAddOn.save_har(har)
-
-        resp.status = falcon.HTTP_200
-        resp.body = json.dumps({
-            "path": har_file.name
-        }, ensure_ascii=False)
+        pageRef = req.get_param('pageRef')
+        pageTitle = req.get_param('pageTitle')
 
 
 
@@ -105,11 +72,6 @@ class HarDumpAddOn:
     def configure(self, updated):
         ctx.log.info('Configuring har dump add-on...')
         self.reset_har()
-
-    def get_har(self, clean_har):
-        if clean_har:
-            return self.new_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE)
-        return self.har
 
     def get_default_har_page(self):
         for hp in self.har.pages:
@@ -134,13 +96,6 @@ class HarDumpAddOn:
             "log": self.generate_new_har_log()
         }
 
-    def generate_new_har_page(self):
-        return {
-            "title": "",
-            "id": "",
-            "startedDateTime": ""
-        }
-
     def reset_har(self):
         self.har = {}
         self.har.update(self.generate_new_har())
@@ -161,25 +116,7 @@ class HarDumpAddOn:
 
             self.end_page()
 
-            end_of_page_har = self.copy_har_through_page_ref(har, current_page_ref)
-
-        if page_ref is None:
-            self.har_page_count += 1
-            page_ref = "Page " + self.har_page_count
-
-        if page_title is None:
-            page_title = page_ref
-
-        new_page = self.generate_new_har_page()
-        new_page.title = page_title
-        new_page.id = page_ref
-        new_page.startedDateTime = datetime.utcnow().isoformat()
-        har.log.pages.append(new_page)
-
-        self.current_har_page = new_page
-
-        return end_of_page_har
-
+            self.copy_har_through_page_ref(har, self.current_har_page)
 
     def copy_har_through_page_ref(self, har, page_ref):
         if har is None:
@@ -383,8 +320,8 @@ class HarDumpAddOn:
 
         self.har["log"]["entries"].append(entry)
 
-    def save_har(self, har):
-        json_dump: str = json.dumps(har, indent=2)
+    def save_current_har(self):
+        json_dump: str = json.dumps(self.har, indent=2)
 
         tmp_file = tempfile.NamedTemporaryFile(mode="wb", prefix="har_dump_",
                                                delete=False)
