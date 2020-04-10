@@ -82,22 +82,22 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public Har getHar(boolean cleanHar) {
-    return mitmProxyManager.getHar(cleanHar);
+    return mitmProxyManager.getHarCaptureFilterManager().getHar(cleanHar);
   }
 
   @Override
   public Har newHar() {
-    return mitmProxyManager.getHar();
+    return mitmProxyManager.getHarCaptureFilterManager().newHar();
   }
 
   @Override
   public Har newHar(String initialPageRef) {
-    return null;
+    return mitmProxyManager.getHarCaptureFilterManager().newHar(initialPageRef);
   }
 
   @Override
   public Har newHar(String initialPageRef, String initialPageTitle) {
-    return null;
+    return mitmProxyManager.getHarCaptureFilterManager().newHar(initialPageRef, initialPageTitle);
   }
 
   @Override
@@ -137,22 +137,26 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public Har newPage() {
-    return null;
+    return mitmProxyManager.getHarCaptureFilterManager().newPage();
   }
 
   @Override
   public Har newPage(String pageRef) {
-    return null;
+    return mitmProxyManager.getHarCaptureFilterManager().newPage(pageRef);
   }
 
   @Override
   public Har newPage(String pageRef, String pageTitle) {
-    return null;
+    return mitmProxyManager.getHarCaptureFilterManager().newPage(pageRef, pageTitle);
+  }
+
+  public void endPage() {
+    mitmProxyManager.getHarCaptureFilterManager().endPage();
   }
 
   @Override
   public Har endHar() {
-    return null;
+    return mitmProxyManager.getHarCaptureFilterManager().endHar();
   }
 
   @Override

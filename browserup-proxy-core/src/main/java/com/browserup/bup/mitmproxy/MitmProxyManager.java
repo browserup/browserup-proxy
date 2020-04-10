@@ -26,13 +26,12 @@ public class MitmProxyManager {
   private HarCaptureFilterAddOn harCaptureFilterAddOn = new HarCaptureFilterAddOn();
   private AddonsManagerAddOn addonsManagerAddOn = new AddonsManagerAddOn(ADDONS_MANAGER_API_PORT);
   private AddonsManagerClient addonsManagerClient = new AddonsManagerClient(ADDONS_MANAGER_API_PORT);
-  private HarCaptureFilterManager harCaptureFilterManager = new HarCaptureFilterManager(addonsManagerClient);
+  private HarCaptureFilterManager harCaptureFilterManager = new HarCaptureFilterManager(addonsManagerClient, this);
 
   private Integer proxyPort = 0;
 
   private PipedInputStream pipedInputStream;
 
-  private Har lastHar = new Har();
   private boolean isRunning = false;
 
   private MitmProxyManager() {}
@@ -56,8 +55,11 @@ public class MitmProxyManager {
     return proxyPort;
   }
 
+  public boolean isRunning() {
+    return isRunning;
+  }
+
   public void stop() {
-    getHar();
     this.isRunning = false;
 
     try {
@@ -129,23 +131,7 @@ public class MitmProxyManager {
     }).start();
   }
 
-  public Har getHar() {
-    return getHar(false);
-  }
-
-  public Har getHar(boolean cleanHar) {
-    if (!this.isRunning) return this.lastHar;
-
-    File harFile = new File(harCaptureFilterManager.getHar(cleanHar));
-
-    Har har;
-    try {
-      har = new ObjectMapper().readerFor(Har.class).readValue(harFile);
-    } catch (IOException e) {
-      throw new RuntimeException("Couldn't read HAR file", e);
-    }
-
-    this.lastHar = har;
-    return har;
+  public HarCaptureFilterManager getHarCaptureFilterManager() {
+    return harCaptureFilterManager;
   }
 }
