@@ -47,7 +47,7 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public boolean isStarted() {
-    return false;
+    return mitmProxyManager.isRunning();
   }
 
   @Override

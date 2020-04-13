@@ -32,6 +32,7 @@ SERVERS_SEEN: typing.Set[connections.ServerConnection] = set()
 DEFAULT_PAGE_REF = "Default"
 DEFAULT_PAGE_TITLE = "Default"
 
+
 class HarDumpAddonResource:
 
     def addon_path(self):
@@ -53,7 +54,8 @@ class HarDumpAddonResource:
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps({
-            "path": har_file.name
+            "path": har_file.name,
+            "json": har
         }, ensure_ascii=False)
 
     def on_new_har(self, req, resp):
@@ -66,7 +68,8 @@ class HarDumpAddonResource:
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps({
-            "path": har_file.name
+            "path": har_file.name,
+            "json": har
         }, ensure_ascii=False)
 
     def on_end_har(self, req, resp):
@@ -76,7 +79,8 @@ class HarDumpAddonResource:
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps({
-            "path": har_file.name
+            "path": har_file.name,
+            "json": har
         }, ensure_ascii=False)
 
     def on_new_page(self, req, resp):
@@ -89,9 +93,20 @@ class HarDumpAddonResource:
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps({
-            "path": har_file.name
+            "path": har_file.name,
+            "json": har
         }, ensure_ascii=False)
 
+    def on_end_page(self, req, resp):
+        har = self.harDumpAddOn.end_page()
+
+        har_file = self.harDumpAddOn.save_har(har)
+
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps({
+            "path": har_file.name,
+            "json": har
+        }, ensure_ascii=False)
 
 
 class HarDumpAddOn:
@@ -102,26 +117,22 @@ class HarDumpAddOn:
         self.har_page_count = 0
         self.current_har_page = None
 
-    def configure(self, updated):
-        ctx.log.info('Configuring har dump add-on...')
-        self.reset_har()
-
     def get_har(self, clean_har):
         if clean_har:
             return self.new_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE)
         return self.har
 
     def get_default_har_page(self):
-        for hp in self.har.pages:
-            if hp.title == DEFAULT_PAGE_TITLE:
+        for hp in self.har['log']['pages']:
+            if hp['title'] == DEFAULT_PAGE_TITLE:
                 return hp
-        return {}
+        return None
 
     def generate_new_har_log(self):
         return {
-            "version": "1.2",
+            "version": "1.1",
             "creator": {
-                "name": "BrowserUp Har Dump",
+                "name": "BrowserUp Proxy",
                 "version": "0.1",
                 "comment": ""
             },
@@ -141,14 +152,9 @@ class HarDumpAddOn:
             "startedDateTime": ""
         }
 
-    def reset_har(self):
-        self.har = {}
-        self.har.update(self.generate_new_har())
-        self.add_default_page()
-
     def get_or_create_har(self, page_ref, page_title):
         if self.har is None:
-            self.har = self.new_har(page_ref, page_title)
+            self.new_har(page_ref, page_title)
         return self.har
 
     def new_page(self, page_ref, page_title):
@@ -157,58 +163,86 @@ class HarDumpAddOn:
         end_of_page_har = None
 
         if self.current_har_page is not None:
-            current_page_ref = self.current_har_page.id
+            current_page_ref = self.current_har_page['id']
 
             self.end_page()
 
-            end_of_page_har = self.copy_har_through_page_ref(har, current_page_ref)
+            end_of_page_har = self.copy_har_through_page_ref(har,
+                                                             current_page_ref)
 
         if page_ref is None:
             self.har_page_count += 1
-            page_ref = "Page " + self.har_page_count
+            page_ref = "Page " + str(self.har_page_count)
 
         if page_title is None:
             page_title = page_ref
 
         new_page = self.generate_new_har_page()
-        new_page.title = page_title
-        new_page.id = page_ref
-        new_page.startedDateTime = datetime.utcnow().isoformat()
-        har.log.pages.append(new_page)
+        new_page['title'] = page_title
+        new_page['id'] = page_ref
+        new_page['startedDateTime'] = datetime.utcnow().isoformat()
+        har['log']['pages'].append(new_page)
 
         self.current_har_page = new_page
 
         return end_of_page_har
 
-
     def copy_har_through_page_ref(self, har, page_ref):
         if har is None:
             return None
 
-        if har.log is None:
+        if har['log'] is None:
             return self.generate_new_har()
 
         page_refs_to_copy = []
 
-        for page in har.log.pages:
-            page_refs_to_copy.append(page.id)
-            if page_ref == page.id:
+        for page in har['log']['pages']:
+            page_refs_to_copy.append(page['id'])
+            if page_ref == page['id']:
                 break
 
         log_copy = self.generate_new_har_log()
 
-        for entry in har.log.entries:
-            if entry.page_ref in page_refs_to_copy:
-                log_copy.entries.append(entry)
+        for entry in har['log']['entries']:
+            if entry['page_ref'] in page_refs_to_copy:
+                log_copy['entries'].append(entry)
 
-        for page in har.log.pages:
-            if page.id in page_refs_to_copy:
-                log_copy.pages.append(page)
+        for page in har['log']['pages']:
+            if page['id'] in page_refs_to_copy:
+                log_copy['pages'].append(page)
 
         har_copy = self.generate_new_har()
-        har_copy.log = log_copy
+        har_copy['log'] = log_copy
 
         return har_copy
+
+    def get_current_page_ref(self):
+        har_page = self.current_har_page
+        if har_page is None:
+            har_page = self.get_or_create_default_page()
+        return har_page['id']
+
+    def get_or_create_default_page(self):
+        default_page = self.get_default_page()
+        if default_page is None:
+            default_page = self.add_default_page()
+        return default_page
+
+
+    def add_default_page(self):
+        new_page = self.generate_new_har_page()
+        new_page['title'] = DEFAULT_PAGE_REF
+        new_page['startedDateTime'] = datetime.utcnow().isoformat()
+        new_page['id'] = DEFAULT_PAGE_REF
+        self.har['log']['pages'].append(new_page)
+        return new_page
+
+
+    def get_default_page(self):
+        for p in self.har['log']['pages']:
+            if p['id'] == DEFAULT_PAGE_REF:
+                return p
+        return None
 
     def new_har(self, initial_page_ref, initial_page_title):
         old_har = self.end_har()
@@ -233,23 +267,24 @@ class HarDumpAddOn:
 
     def end_page(self):
         previous_har_page = self.current_har_page
-        self.current_har_page = {}
+        self.current_har_page = None
 
-        if previous_har_page == {}:
+        if previous_har_page is None:
             return
 
-        if previous_har_page.startedDateTime is not None:
-            on_load_delta_ms = (datetime.utcnow() - datetime.fromisoformat(previous_har_page.startedDateTime)).total_seconds() * 1000
-            previous_har_page.pageTimings.onLoad = on_load_delta_ms
+        if hasattr(previous_har_page, "startedDateTime"):
+            on_load_delta_ms = (datetime.utcnow() - datetime.fromisoformat(
+                previous_har_page['startedDateTime'])).total_seconds() * 1000
+            previous_har_page['pageTimings']['onLoad'] = on_load_delta_ms
 
         default_har_page = self.get_default_har_page()
-        if default_har_page is not {}:
-            if default_har_page.startedDateTime is not None:
-                default_har_page.pageTimings = (datetime.utcnow() - datetime.fromisoformat(default_har_page.startedDateTime)).total_seconds() * 1000
-
-
-    def add_default_page(self):
-        self.add_har_page(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE)
+        if default_har_page is not None:
+            if hasattr(default_har_page, "startedDateTime"):
+                default_har_page['pageTimings'] = \
+                    (
+                            datetime.utcnow() - datetime.fromisoformat(
+                        default_har_page['startedDateTime'])
+                    ).total_seconds() * 1000
 
     def add_har_page(self, pageRef, pageTitle):
         har_page = {
@@ -262,11 +297,8 @@ class HarDumpAddOn:
                 "comment": ""
             }
         }
-        self.har.pages.append(har_page)
+        self.har['log']['pages'].append(har_page)
         return har_page
-
-    def reset_har_pages(self):
-        self.har.log.pages = []
 
     def get_resource(self):
         return HarDumpAddonResource(self)
@@ -276,6 +308,8 @@ class HarDumpAddOn:
              Called when a server response has been received.
         """
         # -1 indicates that these values do not apply to current request
+        self.get_or_create_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE)
+
         ssl_time = -1
         connect_time = -1
 
@@ -324,7 +358,7 @@ class HarDumpAddOn:
         response_body_compression = response_body_decoded_size - response_body_size
 
         entry = {
-            "page_ref": None,
+            "pageref": self.get_current_page_ref(),
             "startedDateTime": started_date_time,
             "time": full_time,
             "request": {

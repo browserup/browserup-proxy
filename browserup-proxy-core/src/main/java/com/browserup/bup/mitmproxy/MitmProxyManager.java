@@ -104,7 +104,7 @@ public class MitmProxyManager {
 
     try {
       Awaitility.await().
-          atMost(5, TimeUnit.SECONDS).
+          atMost(10, TimeUnit.SECONDS).
           until(() -> output.toString().contains("Proxy server listening"));
     } catch (ConditionTimeoutException ex) {
       LOGGER.error("MitmProxy haven't started properly, output: " + output);

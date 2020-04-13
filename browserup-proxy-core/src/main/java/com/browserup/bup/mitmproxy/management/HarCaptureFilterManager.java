@@ -2,13 +2,16 @@ package com.browserup.bup.mitmproxy.management;
 
 import com.browserup.bup.mitmproxy.MitmProxyManager;
 import com.browserup.harreader.model.Har;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+
+import static java.util.Collections.emptyList;
 
 public class HarCaptureFilterManager {
     private final AddonsManagerClient addonsManagerClient;
@@ -27,14 +30,14 @@ public class HarCaptureFilterManager {
     public Har getHar(Boolean cleanHar) {
         if (!mitmProxyManager.isRunning()) return lastHar;
 
-        CurrentHarResponse response = addonsManagerClient.
+        HarResponse response = addonsManagerClient.
                 requestToAddonsManager(
                         "har",
                         "get_har",
                         new ArrayList<Pair<String, String>>() {{
                             add(Pair.of("cleanHar", String.valueOf(cleanHar)));
                         }},
-                        CurrentHarResponse.class);
+                        HarResponse.class);
         return parseHar(response.path);
     }
 
@@ -49,7 +52,7 @@ public class HarCaptureFilterManager {
     public Har newHar(String pageRef, String pageTitle) {
         if (!mitmProxyManager.isRunning()) return lastHar;
 
-        CurrentHarResponse response = addonsManagerClient.
+        HarResponse response = addonsManagerClient.
                 requestToAddonsManager(
                         "har",
                         "new_har",
@@ -57,19 +60,19 @@ public class HarCaptureFilterManager {
                             add(Pair.of("pageRef", String.valueOf(pageRef)));
                             add(Pair.of("pageTitle", String.valueOf(pageTitle)));
                         }},
-                        CurrentHarResponse.class);
+                        HarResponse.class);
         return parseHar(response.path);
     }
 
     public Har endHar() {
         if (!mitmProxyManager.isRunning()) return lastHar;
 
-        CurrentHarResponse response = addonsManagerClient.
+        HarResponse response = addonsManagerClient.
                 requestToAddonsManager(
                         "har",
                         "end_har",
-                        Collections.emptyList(),
-                        CurrentHarResponse.class);
+                        emptyList(),
+                        HarResponse.class);
         return parseHar(response.path);
     }
 
@@ -84,7 +87,7 @@ public class HarCaptureFilterManager {
     public Har newPage(String pageRef, String pageTitle) {
         if (!mitmProxyManager.isRunning()) return lastHar;
 
-        CurrentHarResponse response = addonsManagerClient.
+        HarResponse response = addonsManagerClient.
                 requestToAddonsManager(
                         "har",
                         "new_page",
@@ -92,7 +95,7 @@ public class HarCaptureFilterManager {
                             add(Pair.of("pageRef", String.valueOf(pageRef)));
                             add(Pair.of("pageTitle", String.valueOf(pageTitle)));
                         }},
-                        CurrentHarResponse.class);
+                        HarResponse.class);
         return parseHar(response.path);
     }
 
@@ -103,7 +106,7 @@ public class HarCaptureFilterManager {
                 requestToAddonsManager(
                         "har",
                         "end_page",
-                        Collections.emptyList(),
+                        emptyList(),
                         Void.class);
     }
 
@@ -120,12 +123,13 @@ public class HarCaptureFilterManager {
         return har;
     }
 
-    public static class CurrentHarResponse {
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class HarResponse {
         private String path;
 
-        public CurrentHarResponse() {}
+        public HarResponse() {}
 
-        public CurrentHarResponse(String path) {
+        public HarResponse(String path) {
             this.path = path;
         }
 
