@@ -11,7 +11,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import static java.lang.String.valueOf;
 import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.tuple.Pair.of;
 
 public class HarCaptureFilterManager {
     private final AddonsManagerClient addonsManagerClient;
@@ -35,7 +37,7 @@ public class HarCaptureFilterManager {
                         "har",
                         "get_har",
                         new ArrayList<Pair<String, String>>() {{
-                            add(Pair.of("cleanHar", String.valueOf(cleanHar)));
+                            add(of("cleanHar", valueOf(cleanHar)));
                         }},
                         HarResponse.class);
         return parseHar(response.path);
@@ -57,8 +59,8 @@ public class HarCaptureFilterManager {
                         "har",
                         "new_har",
                         new ArrayList<Pair<String, String>>() {{
-                            add(Pair.of("pageRef", String.valueOf(pageRef)));
-                            add(Pair.of("pageTitle", String.valueOf(pageTitle)));
+                            add(of("pageRef", pageRef));
+                            add(of("pageTitle", pageTitle));
                         }},
                         HarResponse.class);
         return parseHar(response.path);
@@ -92,8 +94,8 @@ public class HarCaptureFilterManager {
                         "har",
                         "new_page",
                         new ArrayList<Pair<String, String>>() {{
-                            add(Pair.of("pageRef", String.valueOf(pageRef)));
-                            add(Pair.of("pageTitle", String.valueOf(pageTitle)));
+                            add(of("pageRef", valueOf(pageRef)));
+                            add(of("pageTitle", valueOf(pageTitle)));
                         }},
                         HarResponse.class);
         return parseHar(response.path);

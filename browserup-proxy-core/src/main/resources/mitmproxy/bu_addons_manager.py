@@ -20,6 +20,9 @@ def running():
     if not initialized and is_script_loader_initialized():
         ctx.log.info('Scanning for custom add-ons resources...')
         resources = get_resources()
+        ctx.log.info('Found resources:')
+        for r in resources:
+            ctx.log.info('  - ' + str(r.__class__))
         ctx.log.info('Starting falcon REST service...')
         _thread.start_new_thread(start_falcon, tuple([resources]))
         initialized = True

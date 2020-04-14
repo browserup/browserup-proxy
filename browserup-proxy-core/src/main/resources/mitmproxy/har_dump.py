@@ -62,7 +62,7 @@ class HarDumpAddonResource:
         page_ref = req.get_param('pageRef')
         page_title = req.get_param('pageTitle')
 
-        har = self.harDumpAddOn.new_har(page_ref, page_title)
+        har = self.harDumpAddOn.new_har(page_ref, page_title, True)
 
         har_file = self.harDumpAddOn.save_har(har)
 
@@ -152,13 +152,13 @@ class HarDumpAddOn:
             "startedDateTime": ""
         }
 
-    def get_or_create_har(self, page_ref, page_title):
+    def get_or_create_har(self, page_ref, page_title, create_page=False):
         if self.har is None:
-            self.new_har(page_ref, page_title)
+            self.new_har(page_ref, page_title, create_page)
         return self.har
 
     def new_page(self, page_ref, page_title):
-        har = self.get_or_create_har(page_ref, page_title)
+        har = self.get_or_create_har(page_ref, page_title, False)
 
         end_of_page_har = None
 
@@ -244,14 +244,15 @@ class HarDumpAddOn:
                 return p
         return None
 
-    def new_har(self, initial_page_ref, initial_page_title):
+    def new_har(self, initial_page_ref, initial_page_title, create_page=False):
         old_har = self.end_har()
 
         self.har_page_count = 0
 
         self.har = self.generate_new_har()
 
-        self.new_page(initial_page_ref, initial_page_title)
+        if create_page:
+            self.new_page(initial_page_ref, initial_page_title)
 
         return old_har
 
@@ -308,7 +309,7 @@ class HarDumpAddOn:
              Called when a server response has been received.
         """
         # -1 indicates that these values do not apply to current request
-        self.get_or_create_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE)
+        self.get_or_create_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE, True)
 
         ssl_time = -1
         connect_time = -1

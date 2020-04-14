@@ -392,7 +392,10 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public void setTrustAllServers(boolean trustAllServers) {
-
+    this.mitmProxyManager.setTrustAll(trustAllServers);
+    if (isStarted()) {
+      mitmProxyManager.getProxyManager().setTrustAll(trustAllServers);
+    }
   }
 
   @Override

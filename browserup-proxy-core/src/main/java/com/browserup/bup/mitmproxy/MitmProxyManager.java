@@ -2,8 +2,10 @@ package com.browserup.bup.mitmproxy;
 
 import com.browserup.bup.mitmproxy.addons.AddonsManagerAddOn;
 import com.browserup.bup.mitmproxy.addons.HarCaptureFilterAddOn;
+import com.browserup.bup.mitmproxy.addons.ProxyManagerAddOn;
 import com.browserup.bup.mitmproxy.management.AddonsManagerClient;
 import com.browserup.bup.mitmproxy.management.HarCaptureFilterManager;
+import com.browserup.bup.mitmproxy.management.ProxyManager;
 import com.browserup.harreader.model.Har;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.awaitility.Awaitility;
@@ -23,16 +25,22 @@ public class MitmProxyManager {
   private static final Logger LOGGER = LoggerFactory.getLogger(MitmProxyManager.class);
 
   private StartedProcess startedProcess = null;
+
   private HarCaptureFilterAddOn harCaptureFilterAddOn = new HarCaptureFilterAddOn();
+  private ProxyManagerAddOn proxyManagerAddOn = new ProxyManagerAddOn();
   private AddonsManagerAddOn addonsManagerAddOn = new AddonsManagerAddOn(ADDONS_MANAGER_API_PORT);
+
   private AddonsManagerClient addonsManagerClient = new AddonsManagerClient(ADDONS_MANAGER_API_PORT);
+
   private HarCaptureFilterManager harCaptureFilterManager = new HarCaptureFilterManager(addonsManagerClient, this);
+  private ProxyManager proxyManager = new ProxyManager(addonsManagerClient, this);
 
   private Integer proxyPort = 0;
 
   private PipedInputStream pipedInputStream;
 
   private boolean isRunning = false;
+  private boolean trustAll = false;
 
   private MitmProxyManager() {}
 
@@ -71,14 +79,23 @@ public class MitmProxyManager {
 
   }
 
+  public void setTrustAll(boolean trustAll) {
+    this.trustAll = trustAll;
+  }
+
   private void startProxy(int port) {
     List<String> command = new ArrayList<String>() {{
       add("mitmdump");
       add("-p");
       add(String.valueOf(port));
     }};
+    if (trustAll) {
+      command.add("--ssl-insecure");
+    }
+
     command.addAll(Arrays.asList(harCaptureFilterAddOn.getCommandParams()));
     command.addAll(Arrays.asList(addonsManagerAddOn.getCommandParams()));
+    command.addAll(Arrays.asList(proxyManagerAddOn.getCommandParams()));
 
     LOGGER.info("Starting proxy using command: " + String.join(" ", command));
 
@@ -133,5 +150,9 @@ public class MitmProxyManager {
 
   public HarCaptureFilterManager getHarCaptureFilterManager() {
     return harCaptureFilterManager;
+  }
+
+  public ProxyManager getProxyManager() {
+    return proxyManager;
   }
 }

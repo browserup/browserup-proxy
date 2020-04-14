@@ -44,22 +44,21 @@ public class NewProxyServerTestUtil {
     public static CloseableHttpClient getNewHttpClient(int proxyPort, CookieStore cookieStore) {
         try {
             // Trust all certs -- under no circumstances should this ever be used outside of testing
-            SSLContext sslcontext = SSLContexts.custom()
-                    .useTLS()
-                    .loadTrustMaterial(null, new TrustStrategy() {
-                        @Override
-                        public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                            return true;
-                        }
-                    })
-                    .build();
-
-            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(
-                    sslcontext,
-                    SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+//            SSLContext sslcontext = SSLContexts.custom()
+//                    .useTLS()
+//                    .loadTrustMaterial(null, new TrustStrategy() {
+//                        @Override
+//                        public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+//                            return true;
+//                        }
+//                    })
+//                    .build();
+//
+//            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(
+//                    sslcontext,
+//                    SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
 
             CloseableHttpClient httpclient = HttpClients.custom()
-                    .setSSLSocketFactory(sslsf)
                     .setDefaultCookieStore(cookieStore)
                     .setProxy(new HttpHost("127.0.0.1", proxyPort))
                     // disable decompressing content, since some tests want uncompressed content for testing purposes
