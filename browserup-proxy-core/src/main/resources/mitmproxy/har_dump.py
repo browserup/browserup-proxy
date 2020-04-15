@@ -15,6 +15,7 @@ import tempfile
 
 from datetime import datetime
 from datetime import timezone
+import dateutil.parser
 
 import falcon
 
@@ -149,7 +150,12 @@ class HarDumpAddOn:
         return {
             "title": "",
             "id": "",
-            "startedDateTime": ""
+            "startedDateTime": "",
+            "pageTimings": {
+                "onContentLoad": 0,
+                "onLoad": 0,
+                "comment": ""
+            }
         }
 
     def get_or_create_har(self, page_ref, page_title, create_page=False):
@@ -273,17 +279,17 @@ class HarDumpAddOn:
         if previous_har_page is None:
             return
 
-        if hasattr(previous_har_page, "startedDateTime"):
-            on_load_delta_ms = (datetime.utcnow() - datetime.fromisoformat(
+        if 'startedDateTime' in previous_har_page:
+            on_load_delta_ms = (datetime.utcnow() - dateutil.parser.isoparse(
                 previous_har_page['startedDateTime'])).total_seconds() * 1000
             previous_har_page['pageTimings']['onLoad'] = on_load_delta_ms
 
         default_har_page = self.get_default_har_page()
         if default_har_page is not None:
-            if hasattr(default_har_page, "startedDateTime"):
+            if 'startedDateTime' in default_har_page:
                 default_har_page['pageTimings'] = \
                     (
-                            datetime.utcnow() - datetime.fromisoformat(
+                            datetime.utcnow() - dateutil.parser.isoparse(
                         default_har_page['startedDateTime'])
                     ).total_seconds() * 1000
 
@@ -303,6 +309,9 @@ class HarDumpAddOn:
 
     def get_resource(self):
         return HarDumpAddonResource(self)
+
+    def request(self, flow):
+        print()
 
     def response(self, flow):
         """
