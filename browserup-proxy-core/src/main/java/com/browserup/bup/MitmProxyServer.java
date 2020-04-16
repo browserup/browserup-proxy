@@ -6,6 +6,7 @@ import com.browserup.bup.filters.ResponseFilter;
 import com.browserup.bup.mitm.TrustSource;
 import com.browserup.bup.mitmproxy.MitmProxyManager;
 import com.browserup.bup.mitmproxy.NetworkUtils;
+import com.browserup.bup.mitmproxy.management.HarCaptureFilterManager;
 import com.browserup.bup.proxy.BlacklistEntry;
 import com.browserup.bup.proxy.CaptureType;
 import com.browserup.bup.proxy.auth.AuthType;
@@ -102,17 +103,27 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public void setHarCaptureTypes(Set<CaptureType> captureTypes) {
-
+    HarCaptureFilterManager manager = mitmProxyManager.getHarCaptureFilterManager();
+    if (captureTypes == null) {
+      manager.setHarCaptureTypes(EnumSet.noneOf(CaptureType.class));
+    } else {
+      manager.setHarCaptureTypes(EnumSet.copyOf(captureTypes));
+    }
   }
 
   @Override
   public void setHarCaptureTypes(CaptureType... captureTypes) {
-
+    HarCaptureFilterManager manager = mitmProxyManager.getHarCaptureFilterManager();
+    if (captureTypes == null) {
+      manager.setHarCaptureTypes(EnumSet.noneOf(CaptureType.class));
+    } else {
+      manager.setHarCaptureTypes(EnumSet.copyOf(Arrays.asList(captureTypes)));
+    }
   }
 
   @Override
   public EnumSet<CaptureType> getHarCaptureTypes() {
-    return null;
+    return mitmProxyManager.getHarCaptureFilterManager().getLastCaptureTypes();
   }
 
   @Override

@@ -146,8 +146,8 @@ class NewHarTest extends MockServerTest {
         )
 
         proxy = new MitmProxyServer()
-        proxy.setHarCaptureTypes([CaptureType.RESPONSE_HEADERS] as Set)
         proxy.start()
+        proxy.setHarCaptureTypes([CaptureType.RESPONSE_HEADERS, CaptureType.RESPONSE_CONTENT] as Set)
 
         proxy.newHar()
 

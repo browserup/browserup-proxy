@@ -1,13 +1,3 @@
-"""
-This inline script can be used to dump flows as HAR files.
-
-example cmdline invocation:
-mitmdump -s ./har_dump.py --set hardump=./dump.har
-
-filename endwith '.zhar' will be compressed:
-mitmdump -s ./har_dump.py --set hardump=./dump.zhar
-"""
-
 import json
 import base64
 import typing
@@ -16,6 +6,8 @@ import tempfile
 from datetime import datetime
 from datetime import timezone
 import dateutil.parser
+
+from enum import Enum, auto
 
 import falcon
 
@@ -32,6 +24,50 @@ SERVERS_SEEN: typing.Set[connections.ServerConnection] = set()
 
 DEFAULT_PAGE_REF = "Default"
 DEFAULT_PAGE_TITLE = "Default"
+
+
+class HarCaptureTypes(Enum):
+    REQUEST_HEADERS = auto()
+    REQUEST_COOKIES = auto()
+    REQUEST_CONTENT = auto()
+    REQUEST_BINARY_CONTENT = auto()
+    RESPONSE_HEADERS = auto()
+    RESPONSE_COOKIES = auto()
+    RESPONSE_CONTENT = auto()
+    RESPONSE_BINARY_CONTENT = auto()
+
+    REQUEST_CAPTURE_TYPES = {
+        REQUEST_HEADERS,
+        REQUEST_CONTENT,
+        REQUEST_BINARY_CONTENT,
+        REQUEST_COOKIES}
+
+    RESPONSE_CAPTURE_TYPES = {
+        RESPONSE_HEADERS,
+        RESPONSE_CONTENT,
+        RESPONSE_BINARY_CONTENT,
+        RESPONSE_COOKIES}
+
+    HEADER_CAPTURE_TYPES = {
+        REQUEST_HEADERS,
+        RESPONSE_HEADERS}
+
+    NON_BINARY_CONTENT_CAPTURE_TYPES = {
+        REQUEST_CONTENT,
+        RESPONSE_CONTENT}
+
+    BINARY_CONTENT_CAPTURE_TYPES = {
+        REQUEST_BINARY_CONTENT,
+        RESPONSE_BINARY_CONTENT}
+
+    ALL_CONTENT_CAPTURE_TYPES = {
+        REQUEST_CONTENT, RESPONSE_CONTENT,
+        REQUEST_BINARY_CONTENT,
+        RESPONSE_BINARY_CONTENT}
+
+    COOKIE_CAPTURE_TYPES = {
+        REQUEST_COOKIES,
+        RESPONSE_COOKIES}
 
 
 class HarDumpAddonResource:
@@ -109,6 +145,23 @@ class HarDumpAddonResource:
             "json": har
         }, ensure_ascii=False)
 
+    def on_set_har_capture_types(self, req, resp):
+        capture_types = req.get_param('captureTypes')
+        capture_types = capture_types.strip("[]").split(",")
+
+        capture_types_parsed = []
+        for ct in capture_types:
+            ct = ct.strip(" ")
+            if not hasattr(HarCaptureTypes, ct):
+                resp.status = falcon.HTTP_400
+                resp.body = "Invalid HAR Capture type"
+                return
+
+            capture_types_parsed.append(HarCaptureTypes[ct])
+
+        self.harDumpAddOn.har_capture_types = capture_types_parsed
+        resp.status = falcon.HTTP_200
+
 
 class HarDumpAddOn:
 
@@ -116,6 +169,7 @@ class HarDumpAddOn:
         self.num = 0
         self.har = None
         self.har_page_count = 0
+        self.har_capture_types = []
         self.current_har_page = None
 
     def get_har(self, clean_har):
@@ -234,7 +288,6 @@ class HarDumpAddOn:
             default_page = self.add_default_page()
         return default_page
 
-
     def add_default_page(self):
         new_page = self.generate_new_har_page()
         new_page['title'] = DEFAULT_PAGE_REF
@@ -242,7 +295,6 @@ class HarDumpAddOn:
         new_page['id'] = DEFAULT_PAGE_REF
         self.har['log']['pages'].append(new_page)
         return new_page
-
 
     def get_default_page(self):
         for p in self.har['log']['pages']:
@@ -310,7 +362,24 @@ class HarDumpAddOn:
     def get_resource(self):
         return HarDumpAddonResource(self)
 
+    def save_har(self, har):
+        json_dump: str = json.dumps(har, indent=2)
+
+        tmp_file = tempfile.NamedTemporaryFile(mode="wb", prefix="har_dump_",
+                                               delete=False)
+
+        raw: bytes = json_dump.encode()
+
+        tmp_file.write(raw)
+        tmp_file.flush()
+        tmp_file.close()
+
+        return tmp_file
+
     def request(self, flow):
+        self.get_or_create_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE, True)
+
+        # if HarCaptureTypes.RESPONSE_CONTENT in self.har_capture_types
         print()
 
     def response(self, flow):
@@ -426,20 +495,6 @@ class HarDumpAddOn:
             entry["serverIPAddress"] = str(flow.server_conn.ip_address[0])
 
         self.har["log"]["entries"].append(entry)
-
-    def save_har(self, har):
-        json_dump: str = json.dumps(har, indent=2)
-
-        tmp_file = tempfile.NamedTemporaryFile(mode="wb", prefix="har_dump_",
-                                               delete=False)
-
-        raw: bytes = json_dump.encode()
-
-        tmp_file.write(raw)
-        tmp_file.flush()
-        tmp_file.close()
-
-        return tmp_file
 
     def format_cookies(self, cookie_list):
         rv = []

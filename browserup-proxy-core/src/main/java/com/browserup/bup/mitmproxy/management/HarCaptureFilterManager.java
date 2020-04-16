@@ -1,6 +1,7 @@
 package com.browserup.bup.mitmproxy.management;
 
 import com.browserup.bup.mitmproxy.MitmProxyManager;
+import com.browserup.bup.proxy.CaptureType;
 import com.browserup.harreader.model.Har;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -9,7 +10,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.*;
 
 import static java.lang.String.valueOf;
 import static java.util.Collections.emptyList;
@@ -19,6 +20,7 @@ public class HarCaptureFilterManager {
     private final AddonsManagerClient addonsManagerClient;
     private final MitmProxyManager mitmProxyManager;
     private Har lastHar = new Har();
+    private EnumSet<CaptureType> lastCaptureTypes = EnumSet.noneOf(CaptureType.class);
 
     public HarCaptureFilterManager(AddonsManagerClient addonsManagerClient, MitmProxyManager mitmProxyManager) {
         this.addonsManagerClient = addonsManagerClient;
@@ -123,6 +125,25 @@ public class HarCaptureFilterManager {
         }
         lastHar = har;
         return har;
+    }
+
+    public void setHarCaptureTypes(EnumSet<CaptureType> captureTypes) {
+        if (!mitmProxyManager.isRunning()) return;
+
+        lastCaptureTypes = captureTypes;
+
+        addonsManagerClient.
+                requestToAddonsManager(
+                        "har",
+                        "set_har_capture_types",
+                        new ArrayList<Pair<String, String>>() {{
+                            add(of("captureTypes", valueOf(captureTypes)));
+                        }},
+                        Void.class);
+    }
+
+    public EnumSet<CaptureType> getLastCaptureTypes() {
+        return lastCaptureTypes;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

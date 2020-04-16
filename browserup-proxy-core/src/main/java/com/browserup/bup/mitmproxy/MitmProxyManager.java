@@ -1,13 +1,12 @@
 package com.browserup.bup.mitmproxy;
 
 import com.browserup.bup.mitmproxy.addons.AddonsManagerAddOn;
+import com.browserup.bup.mitmproxy.addons.DebugAddOn;
 import com.browserup.bup.mitmproxy.addons.HarCaptureFilterAddOn;
 import com.browserup.bup.mitmproxy.addons.ProxyManagerAddOn;
 import com.browserup.bup.mitmproxy.management.AddonsManagerClient;
 import com.browserup.bup.mitmproxy.management.HarCaptureFilterManager;
 import com.browserup.bup.mitmproxy.management.ProxyManager;
-import com.browserup.harreader.model.Har;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
@@ -29,6 +28,7 @@ public class MitmProxyManager {
   private HarCaptureFilterAddOn harCaptureFilterAddOn = new HarCaptureFilterAddOn();
   private ProxyManagerAddOn proxyManagerAddOn = new ProxyManagerAddOn();
   private AddonsManagerAddOn addonsManagerAddOn = new AddonsManagerAddOn(ADDONS_MANAGER_API_PORT);
+  private DebugAddOn debugAddOn = new DebugAddOn();
 
   private AddonsManagerClient addonsManagerClient = new AddonsManagerClient(ADDONS_MANAGER_API_PORT);
 
@@ -50,8 +50,9 @@ public class MitmProxyManager {
 
   public void start(int port) {
     try {
-      startProxy(port);
-      this.proxyPort = port;
+      // startProxy(port);
+      this.isRunning = true;
+      this.proxyPort = 8443;
     } catch (Exception ex) {
       LOGGER.error("Failed to start proxy", ex);
       stop();
@@ -70,12 +71,12 @@ public class MitmProxyManager {
   public void stop() {
     this.isRunning = false;
 
-    try {
-      pipedInputStream.close();
-    } catch (IOException e) {
-      LOGGER.warn("Couldn't close piped input stream", e);
-    }
-    startedProcess.getProcess().destroy();
+//    try {
+//      pipedInputStream.close();
+//    } catch (IOException e) {
+//      LOGGER.warn("Couldn't close piped input stream", e);
+//    }
+//    startedProcess.getProcess().destroy();
 
   }
 
@@ -96,6 +97,8 @@ public class MitmProxyManager {
     command.addAll(Arrays.asList(harCaptureFilterAddOn.getCommandParams()));
     command.addAll(Arrays.asList(addonsManagerAddOn.getCommandParams()));
     command.addAll(Arrays.asList(proxyManagerAddOn.getCommandParams()));
+    // Uncomment to debug MitmProxy
+    command.addAll(Arrays.asList(debugAddOn.getCommandParams()));
 
     LOGGER.info("Starting proxy using command: " + String.join(" ", command));
 
@@ -127,8 +130,6 @@ public class MitmProxyManager {
       LOGGER.error("MitmProxy haven't started properly, output: " + output);
       throw new RuntimeException("Mitmproxy haven't started properly, output: " + output);
     }
-
-    this.isRunning = true;
   }
 
   private void readOutputOfMimtproxy(PipedInputStream pipedInputStream, StringBuilder output) {
