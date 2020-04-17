@@ -168,6 +168,7 @@ class HarDumpAddOn:
     def __init__(self):
         self.num = 0
         self.har = None
+        self.har_entry = None
         self.har_page_count = 0
         self.har_capture_types = []
         self.current_har_page = None
@@ -210,6 +211,75 @@ class HarDumpAddOn:
                 "onLoad": 0,
                 "comment": ""
             }
+        }
+
+    def generate_new_har_post_data(self):
+        return {
+            "mimeType": "multipart/form-data",
+            "params": [],
+            "text" : "plain posted data",
+            "comment": ""
+        }
+
+    def generate_har_entry_request(self):
+        return {
+            "method": "",
+            "url": "",
+            "httpVersion": "",
+            "cookies": [],
+            "headers": [],
+            "queryString": [],
+            "headersSize": 0,
+            "bodySize": 0,
+            "comment": "",
+            "additional": {}
+        }
+
+    def generate_har_entry_response(self):
+        return {
+            "status": 0,
+            "statusText": "",
+            "httpVersion": "",
+            "cookies": [],
+            "headers": [],
+            "content": {
+                "size": 0,
+                "compression": 0,
+                "mimeType": "",
+                "text": "",
+                "encoding": "",
+                "comment": "",
+            },
+            "redirectURL": "",
+            "headersSize": 0,
+            "bodySize": 0,
+            "comment": 0,
+            "additional": {}
+        }
+
+    def generate_har_entry_response_for_failure(self):
+        result = self.generate_har_entry_response()
+        result['status'] = 0
+        result['statusText'] = ""
+        result['httpVersion'] = "unknown"
+        result['additional'] = {
+            "_errorMessage": "No response received"
+        }
+        return result
+
+    def generate_har_entry(self):
+        return {
+            "pageref": "",
+            "startedDateTime": "",
+            "time": 0,
+            "request": {},
+            "response": {},
+            "cache": {},
+            "timings": {},
+            "serverIPAddress": "",
+            "connection": "",
+            "comment": "",
+            "additional": {}
         }
 
     def get_or_create_har(self, page_ref, page_title, create_page=False):
@@ -379,8 +449,55 @@ class HarDumpAddOn:
     def request(self, flow):
         self.get_or_create_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE, True)
 
-        # if HarCaptureTypes.RESPONSE_CONTENT in self.har_capture_types
-        print()
+        self.har_entry = self.generate_har_entry()
+        self.har_entry['pageRef'] = self.current_har_page['id']
+        self.har_entry['startedDateTime'] = \
+            datetime.fromtimestamp(flow.request.timestamp_start, timezone.utc).isoformat()
+
+        har_request = self.generate_har_entry_request()
+        har_request['method'] = flow.request.method
+        har_request['url'] = flow.request.url
+        har_request['httpVersion'] = flow.request.http_version
+        har_request['queryString'] = self.name_value(flow.request.query or {})
+        har_request['headersSize'] = len(str(flow.request.headers))
+
+        har_response = self.generate_har_entry_response_for_failure()
+
+        self.har_entry['request'] = har_request
+        self.har_entry['response'] = har_response
+
+        self.har['log']['entries'].append(self.har_entry)
+
+        if HarCaptureTypes.REQUEST_COOKIES in self.har_capture_types:
+            self.capture_request_cookies(flow)
+
+        if HarCaptureTypes.REQUEST_HEADERS in self.har_capture_types:
+            self.capture_request_headers(flow)
+
+        if HarCaptureTypes.RESPONSE_CONTENT in self.har_capture_types:
+            self.capture_request_content(flow.request)
+
+        self.har_entry['request']['bodySize'] = \
+            len(flow.response.raw_content) if flow.response.raw_content else 0
+
+    def capture_request_cookies(self, flow):
+        self.har_entry['request']['cookies'] = \
+            self.format_request_cookies(flow.request.cookies.fields)
+
+    def capture_request_headers(self, flow):
+        self.har_entry['request']['headers'] = \
+            self.name_value(flow.request.headers)
+
+    def capture_request_content(self, flow):
+        params = [
+            {"name": a, "value": b}
+            for a, b in flow.request.urlencoded_form.items(multi=True)
+        ]
+        self.har_entry["request"]["postData"] = {
+            "mimeType": flow.request.headers.get("Content-Type", ""),
+            "text": flow.request.get_text(strict=False),
+            "params": params
+        }
 
     def response(self, flow):
         """
@@ -426,9 +543,6 @@ class HarDumpAddOn:
         # Timings set to -1 will be ignored as per spec.
         full_time = sum(v for v in timings.values() if v > -1)
 
-        started_date_time = datetime.fromtimestamp(flow.request.timestamp_start,
-                                                   timezone.utc).isoformat()
-
         # Response body size and encoding
         response_body_size = len(
             flow.response.raw_content) if flow.response.raw_content else 0
@@ -436,65 +550,52 @@ class HarDumpAddOn:
             flow.response.content) if flow.response.content else 0
         response_body_compression = response_body_decoded_size - response_body_size
 
-        entry = {
-            "pageref": self.get_current_page_ref(),
-            "startedDateTime": started_date_time,
-            "time": full_time,
-            "request": {
-                "method": flow.request.method,
-                "url": flow.request.url,
-                "httpVersion": flow.request.http_version,
-                "cookies": self.format_request_cookies(
-                    flow.request.cookies.fields),
-                "headers": self.name_value(flow.request.headers),
-                "queryString": self.name_value(flow.request.query or {}),
-                "headersSize": len(str(flow.request.headers)),
-                "bodySize": len(flow.request.content),
-            },
-            "response": {
-                "status": flow.response.status_code,
-                "statusText": flow.response.reason,
-                "httpVersion": flow.response.http_version,
-                "cookies": self.format_response_cookies(
-                    flow.response.cookies.fields),
-                "headers": self.name_value(flow.response.headers),
-                "content": {
-                    "size": response_body_size,
-                    "compression": response_body_compression,
-                    "mimeType": flow.response.headers.get('Content-Type', '')
-                },
-                "redirectURL": flow.response.headers.get('Location', ''),
-                "headersSize": len(str(flow.response.headers)),
-                "bodySize": response_body_size,
-            },
-            "cache": {},
-            "timings": timings,
-        }
+        har_response = self.generate_har_entry_response()
+        har_response["status"] = flow.response.status_code
+        har_response["statusText"] = flow.response.reason
+        har_response["httpVersion"] = flow.response.http_version
 
-        # Store binary data as base64
-        if strutils.is_mostly_bin(flow.response.content):
-            entry["response"]["content"]["text"] = base64.b64encode(
-                flow.response.content).decode()
-            entry["response"]["content"]["encoding"] = "base64"
-        else:
-            entry["response"]["content"]["text"] = flow.response.get_text(
-                strict=False)
+        if HarCaptureTypes.RESPONSE_COOKIES in self.har_capture_types:
+            har_response["cookies"] = \
+                self.format_response_cookies(flow.response.cookies.fields)
 
-        if flow.request.method in ["POST", "PUT", "PATCH"]:
-            params = [
-                {"name": a, "value": b}
-                for a, b in flow.request.urlencoded_form.items(multi=True)
-            ]
-            entry["request"]["postData"] = {
-                "mimeType": flow.request.headers.get("Content-Type", ""),
-                "text": flow.request.get_text(strict=False),
-                "params": params
-            }
+        if HarCaptureTypes.RESPONSE_HEADERS in self.har_capture_types:
+            har_response["headers"] = self.name_value(flow.response.headers)
+
+        if flow.request.status in [300, 301, 302, 303, 307]:
+            har_response['redirectURL'] = flow.request.headers['Location']
+
+        if HarCaptureTypes.RESPONSE_CONTENT in self.har_capture_types:
+            content = har_response['content']
+            content['size'] = response_body_size,
+            content['compression'] = response_body_compression,
+            content['mimeType'] = flow.response.headers.get('Content-Type', '')
+
+            if strutils.is_mostly_bin(flow.response.content):
+                har_response["content"]["text"] = base64.b64encode(
+                    flow.response.content).decode()
+                har_response["content"]["encoding"] = "base64"
+            else:
+                har_response["content"]["text"] = flow.response.get_text(
+                    strict=False)
+
+
+        har_response["redirectURL"] = flow.response.headers.get('Location', '')
+        har_response["headersSize"] = len(str(flow.response.headers))
+        har_response["bodySize"] = response_body_size
+
+        self.har_entry['response'] = har_response
+        self.har_entry['time'] = full_time
+        self.har_entry['pageref'] = self.get_current_page_ref()
+
+        self.har_entry['timings'] = timings
+
+
 
         if flow.server_conn.connected():
-            entry["serverIPAddress"] = str(flow.server_conn.ip_address[0])
+            self.har_entry["serverIPAddress"] = str(flow.server_conn.ip_address[0])
 
-        self.har["log"]["entries"].append(entry)
+        self.har["log"]["entries"].append(self.har_entry)
 
     def format_cookies(self, cookie_list):
         rv = []
