@@ -104,7 +104,7 @@ public class MitmProxyServer implements BrowserUpProxy {
   @Override
   public void setHarCaptureTypes(Set<CaptureType> captureTypes) {
     HarCaptureFilterManager manager = mitmProxyManager.getHarCaptureFilterManager();
-    if (captureTypes == null) {
+    if (captureTypes == null || captureTypes.isEmpty()) {
       manager.setHarCaptureTypes(EnumSet.noneOf(CaptureType.class));
     } else {
       manager.setHarCaptureTypes(EnumSet.copyOf(captureTypes));
@@ -114,7 +114,7 @@ public class MitmProxyServer implements BrowserUpProxy {
   @Override
   public void setHarCaptureTypes(CaptureType... captureTypes) {
     HarCaptureFilterManager manager = mitmProxyManager.getHarCaptureFilterManager();
-    if (captureTypes == null) {
+    if (captureTypes == null || captureTypes.length == 0) {
       manager.setHarCaptureTypes(EnumSet.noneOf(CaptureType.class));
     } else {
       manager.setHarCaptureTypes(EnumSet.copyOf(Arrays.asList(captureTypes)));

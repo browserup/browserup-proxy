@@ -334,7 +334,7 @@ class HarDumpAddOn:
         log_copy = self.generate_new_har_log()
 
         for entry in har['log']['entries']:
-            if entry['page_ref'] in page_refs_to_copy:
+            if entry['pageref'] in page_refs_to_copy:
                 log_copy['entries'].append(entry)
 
         for page in har['log']['pages']:
@@ -478,7 +478,7 @@ class HarDumpAddOn:
             self.capture_request_content(flow.request)
 
         self.har_entry['request']['bodySize'] = \
-            len(flow.response.raw_content) if flow.response.raw_content else 0
+            len(flow.request.raw_content) if flow.request.raw_content else 0
 
     def capture_request_cookies(self, flow):
         self.har_entry['request']['cookies'] = \
@@ -488,14 +488,14 @@ class HarDumpAddOn:
         self.har_entry['request']['headers'] = \
             self.name_value(flow.request.headers)
 
-    def capture_request_content(self, flow):
+    def capture_request_content(self, request):
         params = [
             {"name": a, "value": b}
-            for a, b in flow.request.urlencoded_form.items(multi=True)
+            for a, b in request.urlencoded_form.items(multi=True)
         ]
         self.har_entry["request"]["postData"] = {
-            "mimeType": flow.request.headers.get("Content-Type", ""),
-            "text": flow.request.get_text(strict=False),
+            "mimeType": request.headers.get("Content-Type", ""),
+            "text": request.get_text(strict=False),
             "params": params
         }
 
@@ -544,10 +544,9 @@ class HarDumpAddOn:
         full_time = sum(v for v in timings.values() if v > -1)
 
         # Response body size and encoding
-        response_body_size = len(
-            flow.response.raw_content) if flow.response.raw_content else 0
-        response_body_decoded_size = len(
-            flow.response.content) if flow.response.content else 0
+
+        response_body_size = len(flow.response.raw_content) if flow.response.raw_content else 0
+        response_body_decoded_size = len(flow.response.content) if flow.response.content else 0
         response_body_compression = response_body_decoded_size - response_body_size
 
         har_response = self.generate_har_entry_response()
@@ -562,23 +561,23 @@ class HarDumpAddOn:
         if HarCaptureTypes.RESPONSE_HEADERS in self.har_capture_types:
             har_response["headers"] = self.name_value(flow.response.headers)
 
-        if flow.request.status in [300, 301, 302, 303, 307]:
-            har_response['redirectURL'] = flow.request.headers['Location']
+        if flow.response.status_code in [300, 301, 302, 303, 307]:
+            har_response['redirectURL'] = flow.response.headers['Location']
+
+        content = har_response['content']
+        content['size'] = response_body_size
+        content['compression'] = response_body_compression
+        content['mimeType'] = flow.response.headers.get('Content-Type', '')
 
         if HarCaptureTypes.RESPONSE_CONTENT in self.har_capture_types:
-            content = har_response['content']
-            content['size'] = response_body_size,
-            content['compression'] = response_body_compression,
-            content['mimeType'] = flow.response.headers.get('Content-Type', '')
-
             if strutils.is_mostly_bin(flow.response.content):
-                har_response["content"]["text"] = base64.b64encode(
-                    flow.response.content).decode()
-                har_response["content"]["encoding"] = "base64"
+                if HarCaptureTypes.RESPONSE_BINARY_CONTENT in self.har_capture_types:
+                    har_response["content"]["text"] = base64.b64encode(
+                        flow.response.content).decode()
+                    har_response["content"]["encoding"] = "base64"
             else:
                 har_response["content"]["text"] = flow.response.get_text(
                     strict=False)
-
 
         har_response["redirectURL"] = flow.response.headers.get('Location', '')
         har_response["headersSize"] = len(str(flow.response.headers))
@@ -589,8 +588,6 @@ class HarDumpAddOn:
         self.har_entry['pageref'] = self.get_current_page_ref()
 
         self.har_entry['timings'] = timings
-
-
 
         if flow.server_conn.connected():
             self.har_entry["serverIPAddress"] = str(flow.server_conn.ip_address[0])

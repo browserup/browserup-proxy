@@ -121,16 +121,16 @@ public class HarCaptureFilterManager {
         try {
             har = new ObjectMapper().readerFor(Har.class).readValue(harFile);
         } catch (IOException e) {
-            throw new RuntimeException("Couldn't read HAR file", e);
+            throw new RuntimeException("Couldn't read HAR file: " + harFile.getAbsolutePath(), e);
         }
         lastHar = har;
         return har;
     }
 
     public void setHarCaptureTypes(EnumSet<CaptureType> captureTypes) {
-        if (!mitmProxyManager.isRunning()) return;
-
         lastCaptureTypes = captureTypes;
+
+        if (!mitmProxyManager.isRunning()) return;
 
         addonsManagerClient.
                 requestToAddonsManager(

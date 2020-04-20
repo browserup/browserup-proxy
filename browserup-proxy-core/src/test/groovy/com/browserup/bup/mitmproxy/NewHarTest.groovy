@@ -324,7 +324,6 @@ class NewHarTest extends MockServerTest {
     }
 
     @Test
-    @Ignore
     void testNewPageReturnsHarInPreviousState() {
         def stubUrl = "/testEndHar"
         stubFor(get(urlEqualTo(stubUrl))
