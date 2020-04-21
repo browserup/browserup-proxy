@@ -3,9 +3,11 @@ package com.browserup.bup.mitmproxy;
 import com.browserup.bup.mitmproxy.addons.AddonsManagerAddOn;
 import com.browserup.bup.mitmproxy.addons.HarCaptureFilterAddOn;
 import com.browserup.bup.mitmproxy.addons.ProxyManagerAddOn;
+import com.browserup.bup.mitmproxy.addons.WhiteListAddOn;
 import com.browserup.bup.mitmproxy.management.AddonsManagerClient;
 import com.browserup.bup.mitmproxy.management.HarCaptureFilterManager;
 import com.browserup.bup.mitmproxy.management.ProxyManager;
+import com.browserup.bup.mitmproxy.management.WhiteListManager;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
@@ -27,11 +29,13 @@ public class MitmProxyManager {
   private HarCaptureFilterAddOn harCaptureFilterAddOn = new HarCaptureFilterAddOn();
   private ProxyManagerAddOn proxyManagerAddOn = new ProxyManagerAddOn();
   private AddonsManagerAddOn addonsManagerAddOn = new AddonsManagerAddOn(ADDONS_MANAGER_API_PORT);
+  private WhiteListAddOn whiteListAddOn = new WhiteListAddOn();
 
   private AddonsManagerClient addonsManagerClient = new AddonsManagerClient(ADDONS_MANAGER_API_PORT);
 
   private HarCaptureFilterManager harCaptureFilterManager = new HarCaptureFilterManager(addonsManagerClient, this);
   private ProxyManager proxyManager = new ProxyManager(addonsManagerClient, this);
+  private WhiteListManager whiteListManager = new WhiteListManager(addonsManagerClient, this);
 
   private Integer proxyPort = 0;
 
@@ -96,6 +100,7 @@ public class MitmProxyManager {
     command.addAll(Arrays.asList(harCaptureFilterAddOn.getCommandParams()));
     command.addAll(Arrays.asList(addonsManagerAddOn.getCommandParams()));
     command.addAll(Arrays.asList(proxyManagerAddOn.getCommandParams()));
+    command.addAll(Arrays.asList(whiteListAddOn.getCommandParams()));
 
     LOGGER.info("Starting proxy using command: " + String.join(" ", command));
 
@@ -152,5 +157,9 @@ public class MitmProxyManager {
 
   public ProxyManager getProxyManager() {
     return proxyManager;
+  }
+
+  public WhiteListManager getWhiteListManager() {
+    return whiteListManager;
   }
 }

@@ -5,6 +5,7 @@ import com.browserup.harreader.model.Har;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 import static java.lang.String.valueOf;
 import static org.apache.commons.lang3.tuple.Pair.of;

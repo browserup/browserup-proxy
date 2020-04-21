@@ -278,22 +278,22 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public void whitelistRequests(Collection<String> urlPatterns, int statusCode) {
-
+    this.mitmProxyManager.getWhiteListManager().whitelistRequests(urlPatterns, statusCode);
   }
 
   @Override
   public void addWhitelistPattern(String urlPattern) {
-
+    this.mitmProxyManager.getWhiteListManager().addWhitelistPattern(urlPattern);
   }
 
   @Override
   public void enableEmptyWhitelist(int statusCode) {
-
+    this.mitmProxyManager.getWhiteListManager().enableEmptyWhitelist(statusCode);
   }
 
   @Override
   public void disableWhitelist() {
-
+    this.mitmProxyManager.getWhiteListManager().disableWhitelist();
   }
 
   @Override

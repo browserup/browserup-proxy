@@ -3,7 +3,6 @@ package com.browserup.bup.mitmproxy.management;
 import com.browserup.bup.mitmproxy.MitmProxyManager;
 import com.browserup.bup.proxy.CaptureType;
 import com.browserup.harreader.model.Har;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.tuple.Pair;

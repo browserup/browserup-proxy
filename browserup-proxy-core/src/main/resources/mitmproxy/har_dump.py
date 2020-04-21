@@ -500,9 +500,9 @@ class HarDumpAddOn:
         }
 
     def response(self, flow):
-        """
-             Called when a server response has been received.
-        """
+        if 'WhiteListFiltered' in flow.metadata:
+            return
+
         # -1 indicates that these values do not apply to current request
         self.get_or_create_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE, True)
 
