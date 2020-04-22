@@ -1,10 +1,7 @@
 package com.browserup.bup.mitmproxy.management;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import okhttp3.*;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -20,20 +17,31 @@ public class AddonsManagerClient {
         this.port = port;
     }
 
-    public <T> T requestToAddonsManager(String addOnPath,
+    public <T> T putRequestToAddonsManager(String addOnPath,
                                         String operation,
+                                        List<Pair<String, String>> queryParams,
+                                        RequestBody requestBody,
                                         Class<T> responseClass) {
-        return requestToAddonsManager(addOnPath, operation, Collections.emptyList(), responseClass);
+        return requestToAddonsManager(addOnPath, operation, queryParams, "PUT", requestBody, responseClass);
+    }
+
+    public <T> T getRequestToAddonsManager(String addOnPath,
+                                        String operation,
+                                        List<Pair<String, String>> queryParams,
+                                        Class<T> responseClass) {
+        return requestToAddonsManager(addOnPath, operation, queryParams, "GET", null, responseClass);
     }
 
     public <T> T requestToAddonsManager(String addOnPath,
                                         String operation,
                                         List<Pair<String, String>> queryParams,
+                                        String method,
+                                        RequestBody requestBody,
                                         Class<T> responseClass) {
         OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder()
                 .url(buildRequestUrl(addOnPath, operation, queryParams))
-                .get()
+                .method(method, requestBody)
                 .build();
 
         Response response;

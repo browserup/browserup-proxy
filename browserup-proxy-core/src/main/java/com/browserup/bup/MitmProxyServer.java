@@ -253,17 +253,17 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public void blacklistRequests(String urlPattern, int statusCode) {
-
+    this.mitmProxyManager.getBlackListManager().blacklistRequests(urlPattern, statusCode);
   }
 
   @Override
   public void blacklistRequests(String urlPattern, int statusCode, String httpMethodPattern) {
-
+    this.mitmProxyManager.getBlackListManager().blacklistRequests(urlPattern, statusCode, httpMethodPattern);
   }
 
   @Override
   public void setBlacklist(Collection<BlacklistEntry> blacklist) {
-
+    this.mitmProxyManager.getBlackListManager().setBlacklist(blacklist);
   }
 
   @Override

@@ -23,7 +23,7 @@ public class ProxyManager {
         if (!mitmProxyManager.isRunning()) return;
 
         addonsManagerClient.
-                requestToAddonsManager(
+                getRequestToAddonsManager(
                         "proxy_manager",
                         "trust_all",
                         new ArrayList<Pair<String, String>>() {{

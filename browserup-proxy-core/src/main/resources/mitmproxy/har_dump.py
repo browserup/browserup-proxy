@@ -152,6 +152,9 @@ class HarDumpAddonResource:
         capture_types_parsed = []
         for ct in capture_types:
             ct = ct.strip(" ")
+            if ct == "":
+                break
+
             if not hasattr(HarCaptureTypes, ct):
                 resp.status = falcon.HTTP_400
                 resp.body = "Invalid HAR Capture type"
@@ -411,7 +414,7 @@ class HarDumpAddOn:
             if 'startedDateTime' in default_har_page:
                 default_har_page['pageTimings'] = \
                     (
-                            datetime.utcnow() - dateutil.parser.isoparse(
+                        datetime.utcnow() - dateutil.parser.isoparse(
                         default_har_page['startedDateTime'])
                     ).total_seconds() * 1000
 
@@ -500,7 +503,7 @@ class HarDumpAddOn:
         }
 
     def response(self, flow):
-        if 'WhiteListFiltered' in flow.metadata:
+        if 'WhiteListFiltered' in flow.metadata or 'BlackListFiltered' in flow.metadata:
             return
 
         # -1 indicates that these values do not apply to current request

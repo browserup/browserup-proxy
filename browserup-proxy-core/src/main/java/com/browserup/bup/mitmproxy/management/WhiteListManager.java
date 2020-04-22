@@ -22,7 +22,7 @@ public class WhiteListManager {
         if (!mitmProxyManager.isRunning()) return;
 
         addonsManagerClient.
-                requestToAddonsManager(
+                getRequestToAddonsManager(
                         "whitelist",
                         "whitelist_requests",
                         new ArrayList<Pair<String, String>>() {{
@@ -36,7 +36,7 @@ public class WhiteListManager {
         if (!mitmProxyManager.isRunning()) return;
 
         addonsManagerClient.
-                requestToAddonsManager(
+                getRequestToAddonsManager(
                         "whitelist",
                         "add_whitelist_pattern",
                         new ArrayList<Pair<String, String>>() {{
@@ -49,7 +49,7 @@ public class WhiteListManager {
         if (!mitmProxyManager.isRunning()) return;
 
         addonsManagerClient.
-                requestToAddonsManager(
+                getRequestToAddonsManager(
                         "whitelist",
                         "enable_empty_whitelist",
                         new ArrayList<Pair<String, String>>() {{
@@ -62,7 +62,7 @@ public class WhiteListManager {
         if (!mitmProxyManager.isRunning()) return;
 
         addonsManagerClient.
-                requestToAddonsManager(
+                getRequestToAddonsManager(
                         "whitelist",
                         "disable_whitelist",
                         new ArrayList<>(),

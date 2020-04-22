@@ -1,13 +1,7 @@
 package com.browserup.bup.mitmproxy;
 
-import com.browserup.bup.mitmproxy.addons.AddonsManagerAddOn;
-import com.browserup.bup.mitmproxy.addons.HarCaptureFilterAddOn;
-import com.browserup.bup.mitmproxy.addons.ProxyManagerAddOn;
-import com.browserup.bup.mitmproxy.addons.WhiteListAddOn;
-import com.browserup.bup.mitmproxy.management.AddonsManagerClient;
-import com.browserup.bup.mitmproxy.management.HarCaptureFilterManager;
-import com.browserup.bup.mitmproxy.management.ProxyManager;
-import com.browserup.bup.mitmproxy.management.WhiteListManager;
+import com.browserup.bup.mitmproxy.addons.*;
+import com.browserup.bup.mitmproxy.management.*;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
@@ -30,12 +24,14 @@ public class MitmProxyManager {
   private ProxyManagerAddOn proxyManagerAddOn = new ProxyManagerAddOn();
   private AddonsManagerAddOn addonsManagerAddOn = new AddonsManagerAddOn(ADDONS_MANAGER_API_PORT);
   private WhiteListAddOn whiteListAddOn = new WhiteListAddOn();
+  private BlackListAddOn blackListAddOn = new BlackListAddOn();
 
   private AddonsManagerClient addonsManagerClient = new AddonsManagerClient(ADDONS_MANAGER_API_PORT);
 
   private HarCaptureFilterManager harCaptureFilterManager = new HarCaptureFilterManager(addonsManagerClient, this);
   private ProxyManager proxyManager = new ProxyManager(addonsManagerClient, this);
   private WhiteListManager whiteListManager = new WhiteListManager(addonsManagerClient, this);
+  private BlackListManager blackListManager = new BlackListManager(addonsManagerClient, this);
 
   private Integer proxyPort = 0;
 
@@ -52,9 +48,9 @@ public class MitmProxyManager {
 
   public void start(int port) {
     try {
-      startProxy(port);
+      // startProxy(port);
       this.isRunning = true;
-      this.proxyPort = port;
+      this.proxyPort = 8443;
       harCaptureFilterManager.setHarCaptureTypes(harCaptureFilterManager.getLastCaptureTypes());
     } catch (Exception ex) {
       LOGGER.error("Failed to start proxy", ex);
@@ -74,12 +70,12 @@ public class MitmProxyManager {
   public void stop() {
     this.isRunning = false;
 
-    try {
-      pipedInputStream.close();
-    } catch (IOException e) {
-      LOGGER.warn("Couldn't close piped input stream", e);
-    }
-    startedProcess.getProcess().destroy();
+//    try {
+//      pipedInputStream.close();
+//    } catch (IOException e) {
+//      LOGGER.warn("Couldn't close piped input stream", e);
+//    }
+//    startedProcess.getProcess().destroy();
 
   }
 
@@ -161,5 +157,9 @@ public class MitmProxyManager {
 
   public WhiteListManager getWhiteListManager() {
     return whiteListManager;
+  }
+
+  public BlackListManager getBlackListManager() {
+    return blackListManager;
   }
 }

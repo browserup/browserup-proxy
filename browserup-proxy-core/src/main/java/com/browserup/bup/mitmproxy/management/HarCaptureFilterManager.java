@@ -34,7 +34,7 @@ public class HarCaptureFilterManager {
         if (!mitmProxyManager.isRunning()) return lastHar;
 
         HarResponse response = addonsManagerClient.
-                requestToAddonsManager(
+                getRequestToAddonsManager(
                         "har",
                         "get_har",
                         new ArrayList<Pair<String, String>>() {{
@@ -56,7 +56,7 @@ public class HarCaptureFilterManager {
         if (!mitmProxyManager.isRunning()) return lastHar;
 
         HarResponse response = addonsManagerClient.
-                requestToAddonsManager(
+                getRequestToAddonsManager(
                         "har",
                         "new_har",
                         new ArrayList<Pair<String, String>>() {{
@@ -71,7 +71,7 @@ public class HarCaptureFilterManager {
         if (!mitmProxyManager.isRunning()) return lastHar;
 
         HarResponse response = addonsManagerClient.
-                requestToAddonsManager(
+                getRequestToAddonsManager(
                         "har",
                         "end_har",
                         emptyList(),
@@ -91,7 +91,7 @@ public class HarCaptureFilterManager {
         if (!mitmProxyManager.isRunning()) return lastHar;
 
         HarResponse response = addonsManagerClient.
-                requestToAddonsManager(
+                getRequestToAddonsManager(
                         "har",
                         "new_page",
                         new ArrayList<Pair<String, String>>() {{
@@ -106,7 +106,7 @@ public class HarCaptureFilterManager {
         if (!mitmProxyManager.isRunning()) return;
 
         addonsManagerClient.
-                requestToAddonsManager(
+                getRequestToAddonsManager(
                         "har",
                         "end_page",
                         emptyList(),
@@ -132,7 +132,7 @@ public class HarCaptureFilterManager {
         if (!mitmProxyManager.isRunning()) return;
 
         addonsManagerClient.
-                requestToAddonsManager(
+                getRequestToAddonsManager(
                         "har",
                         "set_har_capture_types",
                         new ArrayList<Pair<String, String>>() {{
