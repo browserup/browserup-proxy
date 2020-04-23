@@ -4,7 +4,6 @@
 
 package com.browserup.bup.mitmproxy
 
-import com.browserup.bup.BrowserUpProxyServer
 import com.browserup.bup.MitmProxyServer
 import com.browserup.bup.proxy.test.util.MockServerTest
 import com.browserup.bup.proxy.test.util.NewProxyServerTestUtil

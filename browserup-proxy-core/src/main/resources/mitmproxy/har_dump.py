@@ -595,8 +595,6 @@ class HarDumpAddOn:
         if flow.server_conn.connected():
             self.har_entry["serverIPAddress"] = str(flow.server_conn.ip_address[0])
 
-        self.har["log"]["entries"].append(self.har_entry)
-
     def format_cookies(self, cookie_list):
         rv = []
 

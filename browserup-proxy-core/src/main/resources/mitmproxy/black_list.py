@@ -48,23 +48,13 @@ class BlackListResource:
         http_method_pattern = req.get_param('httpMethodPattern')
 
         try:
-            if not url_pattern.startswith('^'):
-                url_pattern = '^' + url_pattern
-            if not url_pattern.endswith('$'):
-                url_pattern = url_pattern + '$'
-            if http_method_pattern is not None and not http_method_pattern.endswith('$'):
-                http_method_pattern = http_method_pattern + '$'
-
-            url_pattern_compiled = re.compile(url_pattern)
+            url_pattern_compiled = self.parse_regexp(url_pattern)
 
             http_method_pattern_compiled = None
-
             if http_method_pattern is not None:
-                http_method_pattern_compiled = re.compile(http_method_pattern)
+                http_method_pattern_compiled = self.parse_regexp(http_method_pattern)
         except re.error:
-            resp.status = falcon.HTTP_400
-            resp.body = "Invalid regular expressions"
-            return
+            raise falcon.HTTPBadRequest("Invalid regexp patterns")
 
         self.black_list_addon.black_list.append({
             "status_code": status_code,
@@ -77,33 +67,28 @@ class BlackListResource:
 
         blacklist = orjson.loads(req.bounded_stream.read())
 
-        for bl in blacklist:
+        for bl_item in blacklist:
             try:
-                if not bl['urlPattern'].startswith('^'):
-                    bl['urlPattern'] = '^' + bl['urlPattern']
-                if not bl['urlPattern'].endswith('$'):
-                    bl['urlPattern'] = bl['urlPattern'] + '$'
-                if bl['httpMethodPattern'] is not None and not bl['httpMethodPattern'].endswith('$'):
-                    bl['httpMethodPattern'] = bl['httpMethodPattern'] + '$'
+                url_pattern_compiled = self.parse_regexp(bl_item['urlPattern'])
 
-                url_pattern_compiled = re.compile(bl['urlPattern'])
-                http_method_pattern = bl['httpMethodPattern']
                 http_method_pattern_compiled = None
-
-                if http_method_pattern is not None:
-                    http_method_pattern_compiled = re.compile(
-                        http_method_pattern)
+                if bl_item['httpMethodPattern'] is not None:
+                    http_method_pattern_compiled = self.parse_regexp(bl_item['httpMethodPattern'])
 
                 self.black_list_addon.black_list.append({
-                    "status_code": bl['statusCode'],
+                    "status_code": bl_item['statusCode'],
                     "url_pattern": url_pattern_compiled,
                     "http_method_pattern": http_method_pattern_compiled
                 })
             except re.error:
-                resp.status = falcon.HTTP_400
-                resp.body = "Invalid regular expressions"
-                return
+                raise falcon.HTTPBadRequest("Invalid regexp patterns")
 
+    def parse_regexp(self, raw_regexp):
+        if not raw_regexp.startswith('^'):
+            raw_regexp = '^' + raw_regexp
+        if not raw_regexp.endswith('$'):
+            raw_regexp = raw_regexp + '$'
+        return re.compile(raw_regexp)
 
 class BlackListAddOn:
 
@@ -124,19 +109,19 @@ class BlackListAddOn:
         is_blacklisted = False
         status_code = 400
 
-        for bl in self.black_list:
+        for bl_item in self.black_list:
             request_url = flow.request.url
 
-            if bl['http_method_pattern'] is None:
+            if bl_item['http_method_pattern'] is None:
                 break
 
             if not request_url.startswith("http") and not request_url.startswith("https"):
                 request_url = 'https://' + request_url
 
-            if bl['url_pattern'].match(request_url) and \
-                    ((bl['http_method_pattern'] is None) or
-                     (bl['http_method_pattern'].match(flow.request.method))):
-                status_code = bl['status_code']
+            if bl_item['url_pattern'].match(request_url) and \
+                    ((bl_item['http_method_pattern'] is None) or
+                     (bl_item['http_method_pattern'].match(flow.request.method))):
+                status_code = bl_item['status_code']
                 is_blacklisted = True
                 break
 
@@ -152,26 +137,23 @@ class BlackListAddOn:
         if not self.is_blacklist_enabled():
             return
 
-        if 'BlackListFiltered' in flow.metadata:
-            return
-
         is_blacklisted = False
         status_code = 400
 
-        for bl in self.black_list:
+        for bl_item in self.black_list:
             request_url = flow.request.url
 
             if flow.request.method == 'CONNECT':
-                if bl['http_method_pattern'] is None:
+                if bl_item['http_method_pattern'] is None:
                     break
 
                 if not request_url.startswith("http") and not request_url.startswith("https"):
                     request_url = 'https://' + request_url
 
-            if bl['url_pattern'].match(request_url) and \
-                    ((bl['http_method_pattern'] is None) or
-                     (bl['http_method_pattern'].match(flow.request.method))):
-                status_code = bl['status_code']
+            if bl_item['url_pattern'].match(request_url) and \
+                    ((bl_item['http_method_pattern'] is None) or
+                     (bl_item['http_method_pattern'].match(flow.request.method))):
+                status_code = bl_item['status_code']
                 is_blacklisted = True
                 break
 

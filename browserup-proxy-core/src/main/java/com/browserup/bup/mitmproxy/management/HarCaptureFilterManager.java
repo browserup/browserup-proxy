@@ -41,6 +41,7 @@ public class HarCaptureFilterManager {
                             add(of("cleanHar", valueOf(cleanHar)));
                         }},
                         HarResponse.class);
+        System.out.println("PARSING HAR: " + response.path);
         return parseHar(response.path);
     }
 
