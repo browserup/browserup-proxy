@@ -45,10 +45,18 @@ class BlackListResource:
     def on_blacklist_requests(self, req, resp):
         url_pattern = req.get_param('urlPattern')
         status_code = req.get_param('statusCode')
+        http_method_pattern = req.get_param('httpMethodPattern')
 
         try:
+            if not url_pattern.startswith('^'):
+                url_pattern = '^' + url_pattern
+            if not url_pattern.endswith('$'):
+                url_pattern = url_pattern + '$'
+            if http_method_pattern is not None and not http_method_pattern.endswith('$'):
+                http_method_pattern = http_method_pattern + '$'
+
             url_pattern_compiled = re.compile(url_pattern)
-            http_method_pattern = req.get_param('httpMethodPattern')
+
             http_method_pattern_compiled = None
 
             if http_method_pattern is not None:
@@ -71,12 +79,20 @@ class BlackListResource:
 
         for bl in blacklist:
             try:
+                if not bl['urlPattern'].startswith('^'):
+                    bl['urlPattern'] = '^' + bl['urlPattern']
+                if not bl['urlPattern'].endswith('$'):
+                    bl['urlPattern'] = bl['urlPattern'] + '$'
+                if bl['httpMethodPattern'] is not None and not bl['httpMethodPattern'].endswith('$'):
+                    bl['httpMethodPattern'] = bl['httpMethodPattern'] + '$'
+
                 url_pattern_compiled = re.compile(bl['urlPattern'])
                 http_method_pattern = bl['httpMethodPattern']
                 http_method_pattern_compiled = None
 
                 if http_method_pattern is not None:
-                    http_method_pattern_compiled = re.compile(http_method_pattern)
+                    http_method_pattern_compiled = re.compile(
+                        http_method_pattern)
 
                 self.black_list_addon.black_list.append({
                     "status_code": bl['statusCode'],
@@ -101,7 +117,7 @@ class BlackListAddOn:
     def is_blacklist_enabled(self):
         return len(self.black_list) > 0
 
-    def request(self, flow):
+    def http_connect(self, flow):
         if not self.is_blacklist_enabled():
             return
 
@@ -109,8 +125,17 @@ class BlackListAddOn:
         status_code = 400
 
         for bl in self.black_list:
+            request_url = flow.request.url
 
-            if bl['url_pattern'].match(flow.request.url) and ((bl['http_method_pattern'] is None) or (bl['http_method_pattern'].match(flow.request.method))):
+            if bl['http_method_pattern'] is None:
+                break
+
+            if not request_url.startswith("http") and not request_url.startswith("https"):
+                request_url = 'https://' + request_url
+
+            if bl['url_pattern'].match(request_url) and \
+                    ((bl['http_method_pattern'] is None) or
+                     (bl['http_method_pattern'].match(flow.request.method))):
                 status_code = bl['status_code']
                 is_blacklisted = True
                 break
@@ -123,6 +148,40 @@ class BlackListAddOn:
             )
             flow.metadata['BlackListFiltered'] = True
 
+    def request(self, flow):
+        if not self.is_blacklist_enabled():
+            return
+
+        if 'BlackListFiltered' in flow.metadata:
+            return
+
+        is_blacklisted = False
+        status_code = 400
+
+        for bl in self.black_list:
+            request_url = flow.request.url
+
+            if flow.request.method == 'CONNECT':
+                if bl['http_method_pattern'] is None:
+                    break
+
+                if not request_url.startswith("http") and not request_url.startswith("https"):
+                    request_url = 'https://' + request_url
+
+            if bl['url_pattern'].match(request_url) and \
+                    ((bl['http_method_pattern'] is None) or
+                     (bl['http_method_pattern'].match(flow.request.method))):
+                status_code = bl['status_code']
+                is_blacklisted = True
+                break
+
+        if is_blacklisted:
+            flow.response = http.HTTPResponse.make(
+                int(status_code),
+                b"",
+                {"Content-Type": "text/html"}
+            )
+            flow.metadata['BlackListFiltered'] = True
 
 addons = [
     BlackListAddOn()

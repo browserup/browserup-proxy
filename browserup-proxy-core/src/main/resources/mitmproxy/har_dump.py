@@ -414,7 +414,7 @@ class HarDumpAddOn:
             if 'startedDateTime' in default_har_page:
                 default_har_page['pageTimings'] = \
                     (
-                        datetime.utcnow() - dateutil.parser.isoparse(
+                            datetime.utcnow() - dateutil.parser.isoparse(
                         default_har_page['startedDateTime'])
                     ).total_seconds() * 1000
 

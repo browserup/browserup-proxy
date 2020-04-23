@@ -48,9 +48,9 @@ public class MitmProxyManager {
 
   public void start(int port) {
     try {
-      // startProxy(port);
+      startProxy(port);
       this.isRunning = true;
-      this.proxyPort = 8443;
+      this.proxyPort = port;
       harCaptureFilterManager.setHarCaptureTypes(harCaptureFilterManager.getLastCaptureTypes());
     } catch (Exception ex) {
       LOGGER.error("Failed to start proxy", ex);
@@ -70,12 +70,12 @@ public class MitmProxyManager {
   public void stop() {
     this.isRunning = false;
 
-//    try {
-//      pipedInputStream.close();
-//    } catch (IOException e) {
-//      LOGGER.warn("Couldn't close piped input stream", e);
-//    }
-//    startedProcess.getProcess().destroy();
+    try {
+      pipedInputStream.close();
+    } catch (IOException e) {
+      LOGGER.warn("Couldn't close piped input stream", e);
+    }
+    startedProcess.getProcess().destroy();
 
   }
 
@@ -97,6 +97,7 @@ public class MitmProxyManager {
     command.addAll(Arrays.asList(addonsManagerAddOn.getCommandParams()));
     command.addAll(Arrays.asList(proxyManagerAddOn.getCommandParams()));
     command.addAll(Arrays.asList(whiteListAddOn.getCommandParams()));
+    command.addAll(Arrays.asList(blackListAddOn.getCommandParams()));
 
     LOGGER.info("Starting proxy using command: " + String.join(" ", command));
 
