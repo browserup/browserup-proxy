@@ -11,6 +11,7 @@ import com.browserup.bup.proxy.BlacklistEntry;
 import com.browserup.bup.proxy.CaptureType;
 import com.browserup.bup.proxy.auth.AuthType;
 import com.browserup.bup.proxy.dns.AdvancedHostResolver;
+import com.browserup.bup.util.BrowserUpHttpUtil;
 import com.browserup.bup.util.HttpStatusClass;
 import com.browserup.harreader.model.Har;
 import com.browserup.harreader.model.HarEntry;
@@ -213,12 +214,13 @@ public class MitmProxyServer implements BrowserUpProxy {
   @Override
   public void autoAuthorization(String domain, String username, String password,
                                 AuthType authType) {
-
+      String base64EncodedCredentials = BrowserUpHttpUtil.base64EncodeBasicCredentials(username, password);
+      this.mitmProxyManager.getAuthBasicFilterManager().authAuthorization(domain, base64EncodedCredentials);
   }
 
   @Override
   public void stopAutoAuthorization(String domain) {
-
+      this.mitmProxyManager.getAuthBasicFilterManager().stopAutoAuthorization(domain);
   }
 
   @Override

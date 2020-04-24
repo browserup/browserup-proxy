@@ -11,6 +11,7 @@ import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
 import java.io.*;
+import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -25,6 +26,7 @@ public class MitmProxyManager {
   private AddonsManagerAddOn addonsManagerAddOn = new AddonsManagerAddOn(ADDONS_MANAGER_API_PORT);
   private WhiteListAddOn whiteListAddOn = new WhiteListAddOn();
   private BlackListAddOn blackListAddOn = new BlackListAddOn();
+  private AuthBasicFilterAddOn authBasicFilterAddOn = new AuthBasicFilterAddOn();
 
   private AddonsManagerClient addonsManagerClient = new AddonsManagerClient(ADDONS_MANAGER_API_PORT);
 
@@ -32,6 +34,7 @@ public class MitmProxyManager {
   private ProxyManager proxyManager = new ProxyManager(addonsManagerClient, this);
   private WhiteListManager whiteListManager = new WhiteListManager(addonsManagerClient, this);
   private BlackListManager blackListManager = new BlackListManager(addonsManagerClient, this);
+  private AuthBasicFilterManager authBasicFilterManager = new AuthBasicFilterManager(addonsManagerClient, this);
 
   private Integer proxyPort = 0;
 
@@ -52,6 +55,7 @@ public class MitmProxyManager {
       this.isRunning = true;
       this.proxyPort = port;
       harCaptureFilterManager.setHarCaptureTypes(harCaptureFilterManager.getLastCaptureTypes());
+      authBasicFilterManager.getCredentials().forEach((key, value) -> authBasicFilterManager.authAuthorization(key, value));
     } catch (Exception ex) {
       LOGGER.error("Failed to start proxy", ex);
       stop();
@@ -76,7 +80,25 @@ public class MitmProxyManager {
       LOGGER.warn("Couldn't close piped input stream", e);
     }
     startedProcess.getProcess().destroy();
+    Awaitility.await().atMost(10, TimeUnit.SECONDS).until(this::isProxyPortFreed);
+  }
 
+  private boolean isProxyPortFreed() {
+    Socket s = null;
+    try {
+      s = new Socket("localhost", proxyPort);
+      return false;
+    } catch (IOException e) {
+      return true;
+    } finally {
+      if (s != null) {
+        try {
+          s.close();
+        } catch (IOException e) {
+          throw new RuntimeException("Couldn't check port availability", e);
+        }
+      }
+    }
   }
 
   public void setTrustAll(boolean trustAll) {
@@ -98,6 +120,7 @@ public class MitmProxyManager {
     command.addAll(Arrays.asList(proxyManagerAddOn.getCommandParams()));
     command.addAll(Arrays.asList(whiteListAddOn.getCommandParams()));
     command.addAll(Arrays.asList(blackListAddOn.getCommandParams()));
+    command.addAll(Arrays.asList(authBasicFilterAddOn.getCommandParams()));
 
     LOGGER.info("Starting proxy using command: " + String.join(" ", command));
 
@@ -162,5 +185,9 @@ public class MitmProxyManager {
 
   public BlackListManager getBlackListManager() {
     return blackListManager;
+  }
+
+  public AuthBasicFilterManager getAuthBasicFilterManager() {
+    return authBasicFilterManager;
   }
 }

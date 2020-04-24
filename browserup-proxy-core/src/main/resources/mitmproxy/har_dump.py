@@ -204,16 +204,19 @@ class HarDumpAddOn:
             "log": self.generate_new_har_log()
         }
 
+    def generate_new_page_timings(self):
+        return {
+            "onContentLoad": 0,
+            "onLoad": 0,
+            "comment": ""
+        }
+
     def generate_new_har_page(self):
         return {
             "title": "",
             "id": "",
             "startedDateTime": "",
-            "pageTimings": {
-                "onContentLoad": 0,
-                "onLoad": 0,
-                "comment": ""
-            }
+            "pageTimings": self.generate_new_page_timings()
         }
 
     def generate_new_har_post_data(self):
@@ -407,12 +410,12 @@ class HarDumpAddOn:
         if 'startedDateTime' in previous_har_page:
             on_load_delta_ms = (datetime.utcnow() - dateutil.parser.isoparse(
                 previous_har_page['startedDateTime'])).total_seconds() * 1000
-            previous_har_page['pageTimings']['onLoad'] = on_load_delta_ms
+            previous_har_page['pageTimings']['onLoad'] = int(on_load_delta_ms)
 
         default_har_page = self.get_default_har_page()
         if default_har_page is not None:
             if 'startedDateTime' in default_har_page:
-                default_har_page['pageTimings'] = \
+                default_har_page['pageTimings']['onLoad'] = \
                     (
                             datetime.utcnow() - dateutil.parser.isoparse(
                         default_har_page['startedDateTime'])
@@ -453,7 +456,7 @@ class HarDumpAddOn:
         self.get_or_create_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE, True)
 
         self.har_entry = self.generate_har_entry()
-        self.har_entry['pageRef'] = self.current_har_page['id']
+        self.har_entry['pageRef'] = self.get_current_page_ref()
         self.har_entry['startedDateTime'] = \
             datetime.fromtimestamp(flow.request.timestamp_start, timezone.utc).isoformat()
 
