@@ -21,20 +21,22 @@ public class MitmProxyManager {
 
   private StartedProcess startedProcess = null;
 
-  private HarCaptureFilterAddOn harCaptureFilterAddOn = new HarCaptureFilterAddOn();
+  private HarCaptureAddOn harCaptureFilterAddOn = new HarCaptureAddOn();
   private ProxyManagerAddOn proxyManagerAddOn = new ProxyManagerAddOn();
   private AddonsManagerAddOn addonsManagerAddOn = new AddonsManagerAddOn(ADDONS_MANAGER_API_PORT);
   private WhiteListAddOn whiteListAddOn = new WhiteListAddOn();
   private BlackListAddOn blackListAddOn = new BlackListAddOn();
-  private AuthBasicFilterAddOn authBasicFilterAddOn = new AuthBasicFilterAddOn();
+  private AuthBasicAddOn authBasicFilterAddOn = new AuthBasicAddOn();
+  private AdditionalHeadersAddOn additionalHeadersAddOn = new AdditionalHeadersAddOn();
 
   private AddonsManagerClient addonsManagerClient = new AddonsManagerClient(ADDONS_MANAGER_API_PORT);
 
-  private HarCaptureFilterManager harCaptureFilterManager = new HarCaptureFilterManager(addonsManagerClient, this);
+  private HarCaptureManager harCaptureFilterManager = new HarCaptureManager(addonsManagerClient, this);
   private ProxyManager proxyManager = new ProxyManager(addonsManagerClient, this);
   private WhiteListManager whiteListManager = new WhiteListManager(addonsManagerClient, this);
   private BlackListManager blackListManager = new BlackListManager(addonsManagerClient, this);
-  private AuthBasicFilterManager authBasicFilterManager = new AuthBasicFilterManager(addonsManagerClient, this);
+  private AuthBasicManager authBasicFilterManager = new AuthBasicManager(addonsManagerClient, this);
+  private AdditionalHeadersManager additionalHeadersManager = new AdditionalHeadersManager(addonsManagerClient, this);
 
   private Integer proxyPort = 0;
 
@@ -56,6 +58,7 @@ public class MitmProxyManager {
       this.proxyPort = port;
       harCaptureFilterManager.setHarCaptureTypes(harCaptureFilterManager.getLastCaptureTypes());
       authBasicFilterManager.getCredentials().forEach((key, value) -> authBasicFilterManager.authAuthorization(key, value));
+      additionalHeadersManager.addHeaders(additionalHeadersManager.getAllHeaders());
     } catch (Exception ex) {
       LOGGER.error("Failed to start proxy", ex);
       stop();
@@ -121,6 +124,7 @@ public class MitmProxyManager {
     command.addAll(Arrays.asList(whiteListAddOn.getCommandParams()));
     command.addAll(Arrays.asList(blackListAddOn.getCommandParams()));
     command.addAll(Arrays.asList(authBasicFilterAddOn.getCommandParams()));
+    command.addAll(Arrays.asList(additionalHeadersAddOn.getCommandParams()));
 
     LOGGER.info("Starting proxy using command: " + String.join(" ", command));
 
@@ -171,7 +175,7 @@ public class MitmProxyManager {
     }).start();
   }
 
-  public HarCaptureFilterManager getHarCaptureFilterManager() {
+  public HarCaptureManager getHarCaptureFilterManager() {
     return harCaptureFilterManager;
   }
 
@@ -187,7 +191,11 @@ public class MitmProxyManager {
     return blackListManager;
   }
 
-  public AuthBasicFilterManager getAuthBasicFilterManager() {
+  public AuthBasicManager getAuthBasicFilterManager() {
     return authBasicFilterManager;
+  }
+
+  public AdditionalHeadersManager getAdditionalHeadersManager() {
+    return additionalHeadersManager;
   }
 }

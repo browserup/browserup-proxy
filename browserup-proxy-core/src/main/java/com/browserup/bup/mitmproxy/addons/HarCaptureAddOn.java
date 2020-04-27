@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 
-public class HarCaptureFilterAddOn extends AbstractAddon {
+public class HarCaptureAddOn extends AbstractAddon {
   private static final String HAR_DUMP_ADD_ON_FILE_NAME = "har_dump.py";
 
   private File harDumpFile = null;

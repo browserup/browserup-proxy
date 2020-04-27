@@ -15,13 +15,13 @@ import static java.lang.String.valueOf;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.tuple.Pair.of;
 
-public class HarCaptureFilterManager {
+public class HarCaptureManager {
     private final AddonsManagerClient addonsManagerClient;
     private final MitmProxyManager mitmProxyManager;
     private Har lastHar = new Har();
     private EnumSet<CaptureType> lastCaptureTypes = EnumSet.noneOf(CaptureType.class);
 
-    public HarCaptureFilterManager(AddonsManagerClient addonsManagerClient, MitmProxyManager mitmProxyManager) {
+    public HarCaptureManager(AddonsManagerClient addonsManagerClient, MitmProxyManager mitmProxyManager) {
         this.addonsManagerClient = addonsManagerClient;
         this.mitmProxyManager = mitmProxyManager;
     }

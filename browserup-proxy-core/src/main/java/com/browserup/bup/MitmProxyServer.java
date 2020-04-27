@@ -6,7 +6,7 @@ import com.browserup.bup.filters.ResponseFilter;
 import com.browserup.bup.mitm.TrustSource;
 import com.browserup.bup.mitmproxy.MitmProxyManager;
 import com.browserup.bup.mitmproxy.NetworkUtils;
-import com.browserup.bup.mitmproxy.management.HarCaptureFilterManager;
+import com.browserup.bup.mitmproxy.management.HarCaptureManager;
 import com.browserup.bup.proxy.BlacklistEntry;
 import com.browserup.bup.proxy.CaptureType;
 import com.browserup.bup.proxy.auth.AuthType;
@@ -104,7 +104,7 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public void setHarCaptureTypes(Set<CaptureType> captureTypes) {
-    HarCaptureFilterManager manager = mitmProxyManager.getHarCaptureFilterManager();
+    HarCaptureManager manager = mitmProxyManager.getHarCaptureFilterManager();
     if (captureTypes == null || captureTypes.isEmpty()) {
       manager.setHarCaptureTypes(EnumSet.noneOf(CaptureType.class));
     } else {
@@ -114,7 +114,7 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public void setHarCaptureTypes(CaptureType... captureTypes) {
-    HarCaptureFilterManager manager = mitmProxyManager.getHarCaptureFilterManager();
+    HarCaptureManager manager = mitmProxyManager.getHarCaptureFilterManager();
     if (captureTypes == null || captureTypes.length == 0) {
       manager.setHarCaptureTypes(EnumSet.noneOf(CaptureType.class));
     } else {
@@ -315,27 +315,27 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public void addHeaders(Map<String, String> headers) {
-
+      this.mitmProxyManager.getAdditionalHeadersManager().addHeaders(headers);
   }
 
   @Override
   public void addHeader(String name, String value) {
-
+      this.mitmProxyManager.getAdditionalHeadersManager().addHeader(name, value);
   }
 
   @Override
   public void removeHeader(String name) {
-
+      this.mitmProxyManager.getAdditionalHeadersManager().removeHeader(name);
   }
 
   @Override
   public void removeAllHeaders() {
-
+      this.mitmProxyManager.getAdditionalHeadersManager().removeAllHeaders();
   }
 
   @Override
   public Map<String, String> getAllHeaders() {
-    return null;
+      return this.mitmProxyManager.getAdditionalHeadersManager().getAllHeaders();
   }
 
   @Override

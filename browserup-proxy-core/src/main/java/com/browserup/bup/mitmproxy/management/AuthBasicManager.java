@@ -11,12 +11,12 @@ import java.util.Map;
 import static java.lang.String.valueOf;
 import static org.apache.commons.lang3.tuple.Pair.of;
 
-public class AuthBasicFilterManager {
+public class AuthBasicManager {
     private final AddonsManagerClient addonsManagerClient;
     private final MitmProxyManager mitmProxyManager;
     private final Map<String, String> credentials = new HashMap<>();
 
-    public AuthBasicFilterManager(AddonsManagerClient addonsManagerClient, MitmProxyManager mitmProxyManager) {
+    public AuthBasicManager(AddonsManagerClient addonsManagerClient, MitmProxyManager mitmProxyManager) {
         this.addonsManagerClient = addonsManagerClient;
         this.mitmProxyManager = mitmProxyManager;
     }
