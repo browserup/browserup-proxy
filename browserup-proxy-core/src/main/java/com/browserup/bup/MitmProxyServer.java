@@ -9,18 +9,21 @@ import com.browserup.bup.mitmproxy.NetworkUtils;
 import com.browserup.bup.mitmproxy.management.HarCaptureManager;
 import com.browserup.bup.proxy.BlacklistEntry;
 import com.browserup.bup.proxy.CaptureType;
+import com.browserup.bup.proxy.RewriteRule;
 import com.browserup.bup.proxy.auth.AuthType;
 import com.browserup.bup.proxy.dns.AdvancedHostResolver;
 import com.browserup.bup.util.BrowserUpHttpUtil;
 import com.browserup.bup.util.HttpStatusClass;
 import com.browserup.harreader.model.Har;
 import com.browserup.harreader.model.HarEntry;
+import com.google.common.collect.ImmutableMap;
 import org.littleshoot.proxy.HttpFiltersSource;
 import org.littleshoot.proxy.MitmManager;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -230,27 +233,31 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public void rewriteUrl(String urlPattern, String replacementExpression) {
-
+    this.mitmProxyManager.getRewriteUrlManager().rewriteUrl(urlPattern, replacementExpression);
   }
 
   @Override
   public void rewriteUrls(Map<String, String> rewriteRules) {
-
+    this.mitmProxyManager.getRewriteUrlManager().rewriteUrls(rewriteRules);
   }
 
   @Override
   public Map<String, String> getRewriteRules() {
-    return null;
+    CopyOnWriteArrayList<RewriteRule> rewriteRules = this.mitmProxyManager.getRewriteUrlManager().getRewriteRules();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    rewriteRules.forEach(rewriteRule -> builder.put(rewriteRule.getPattern().pattern(), rewriteRule.getReplace()));
+
+    return builder.build();
   }
 
   @Override
   public void removeRewriteRule(String urlPattern) {
-
+    this.mitmProxyManager.getRewriteUrlManager().removeRewriteRule(urlPattern);
   }
 
   @Override
   public void clearRewriteRules() {
-
+    this.mitmProxyManager.getRewriteUrlManager().clearRewriteRules();
   }
 
   @Override

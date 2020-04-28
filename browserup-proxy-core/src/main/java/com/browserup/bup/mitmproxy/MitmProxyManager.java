@@ -12,7 +12,9 @@ import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class MitmProxyManager {
@@ -28,6 +30,7 @@ public class MitmProxyManager {
   private BlackListAddOn blackListAddOn = new BlackListAddOn();
   private AuthBasicAddOn authBasicFilterAddOn = new AuthBasicAddOn();
   private AdditionalHeadersAddOn additionalHeadersAddOn = new AdditionalHeadersAddOn();
+  private RewriteUrlAddOn rewriteUrlAddOn = new RewriteUrlAddOn();
 
   private AddonsManagerClient addonsManagerClient = new AddonsManagerClient(ADDONS_MANAGER_API_PORT);
 
@@ -37,6 +40,7 @@ public class MitmProxyManager {
   private BlackListManager blackListManager = new BlackListManager(addonsManagerClient, this);
   private AuthBasicManager authBasicFilterManager = new AuthBasicManager(addonsManagerClient, this);
   private AdditionalHeadersManager additionalHeadersManager = new AdditionalHeadersManager(addonsManagerClient, this);
+  private RewriteUrlManager rewriteUrlManager = new RewriteUrlManager(addonsManagerClient, this);
 
   private Integer proxyPort = 0;
 
@@ -53,12 +57,13 @@ public class MitmProxyManager {
 
   public void start(int port) {
     try {
-      startProxy(port);
+      // startProxy(port);
       this.isRunning = true;
-      this.proxyPort = port;
+      this.proxyPort = 8443;
       harCaptureFilterManager.setHarCaptureTypes(harCaptureFilterManager.getLastCaptureTypes());
       authBasicFilterManager.getCredentials().forEach((key, value) -> authBasicFilterManager.authAuthorization(key, value));
       additionalHeadersManager.addHeaders(additionalHeadersManager.getAllHeaders());
+      rewriteUrlManager.rewriteUrls(rewriteUrlManager.getRewriteRulesMap());
     } catch (Exception ex) {
       LOGGER.error("Failed to start proxy", ex);
       stop();
@@ -77,13 +82,13 @@ public class MitmProxyManager {
   public void stop() {
     this.isRunning = false;
 
-    try {
-      pipedInputStream.close();
-    } catch (IOException e) {
-      LOGGER.warn("Couldn't close piped input stream", e);
-    }
-    startedProcess.getProcess().destroy();
-    Awaitility.await().atMost(10, TimeUnit.SECONDS).until(this::isProxyPortFreed);
+//    try {
+//      pipedInputStream.close();
+//    } catch (IOException e) {
+//      LOGGER.warn("Couldn't close piped input stream", e);
+//    }
+//    startedProcess.getProcess().destroy();
+//    Awaitility.await().atMost(10, TimeUnit.SECONDS).until(this::isProxyPortFreed);
   }
 
   private boolean isProxyPortFreed() {
@@ -125,6 +130,7 @@ public class MitmProxyManager {
     command.addAll(Arrays.asList(blackListAddOn.getCommandParams()));
     command.addAll(Arrays.asList(authBasicFilterAddOn.getCommandParams()));
     command.addAll(Arrays.asList(additionalHeadersAddOn.getCommandParams()));
+    command.addAll(Arrays.asList(rewriteUrlAddOn.getCommandParams()));
 
     LOGGER.info("Starting proxy using command: " + String.join(" ", command));
 
@@ -197,5 +203,9 @@ public class MitmProxyManager {
 
   public AdditionalHeadersManager getAdditionalHeadersManager() {
     return additionalHeadersManager;
+  }
+
+  public RewriteUrlManager getRewriteUrlManager() {
+    return rewriteUrlManager;
   }
 }
