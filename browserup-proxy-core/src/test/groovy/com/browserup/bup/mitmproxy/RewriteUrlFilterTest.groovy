@@ -5,28 +5,16 @@
 package com.browserup.bup.mitmproxy
 
 import com.browserup.bup.MitmProxyServer
-import com.browserup.bup.filters.RewriteUrlFilter
-import com.browserup.bup.proxy.RewriteRule
 import com.browserup.bup.proxy.test.util.MockServerTest
 import com.browserup.bup.proxy.test.util.NewProxyServerTestUtil
-import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.matching.EqualToPattern
-import com.google.common.collect.ImmutableList
-import io.netty.channel.ChannelHandlerContext
-import io.netty.handler.codec.http.HttpHeaderNames
-import io.netty.handler.codec.http.HttpHeaders
-import io.netty.handler.codec.http.HttpRequest
-import io.netty.util.Attribute
-import io.netty.util.AttributeKey
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.junit.After
 import org.junit.Test
 
-import static com.browserup.bup.filters.HttpsAwareFiltersAdapter.IS_HTTPS_ATTRIBUTE_NAME
 import static com.github.tomakehurst.wiremock.client.WireMock.*
 import static org.junit.Assert.assertEquals
-import static org.mockito.Mockito.*
 
 class RewriteUrlFilterTest extends MockServerTest {
     MitmProxyServer proxy
@@ -39,58 +27,37 @@ class RewriteUrlFilterTest extends MockServerTest {
     }
 
     @Test
-    void testRewriteWithCaptureGroups() {
-        HttpHeaders mockHeaders = mock(HttpHeaders.class)
-        when(mockHeaders.contains(HttpHeaderNames.HOST)).thenReturn(false)
-
-        HttpRequest request = mock(HttpRequest.class)
-        when(request.uri()).thenReturn('http://www.yahoo.com?param=someValue')
-        when(request.headers()).thenReturn(mockHeaders)
-
-        Collection<RewriteRule> rewriteRules = ImmutableList.of(new RewriteRule('http://www\\.(yahoo|bing)\\.com\\?(\\w+)=(\\w+)', 'http://www.google.com?originalDomain=$1&$2=$3'))
-
-        // mock out the netty ChannelHandlerContext for the isHttps() call in the filter
-        Attribute<Boolean> mockIsHttpsAttribute = mock(Attribute)
-        when(mockIsHttpsAttribute.get()).thenReturn(Boolean.FALSE)
-
-        ChannelHandlerContext mockCtx = mock(ChannelHandlerContext)
-        io.netty.channel.Channel channelMock = mock(io.netty.channel.Channel)
-        when(mockCtx.channel()).thenReturn(channelMock)
-        when(channelMock.attr(AttributeKey.<Boolean>valueOf(IS_HTTPS_ATTRIBUTE_NAME))).thenReturn(mockIsHttpsAttribute)
-
-        RewriteUrlFilter filter = new RewriteUrlFilter(request, mockCtx, rewriteRules)
-        filter.clientToProxyRequest(request)
-
-        verify(request).setUri('http://www.google.com?originalDomain=yahoo&param=someValue')
-    }
-
-    @Test
     void testRewriteMultipleMatches() {
-        HttpHeaders mockHeaders = mock(HttpHeaders.class)
-        when(mockHeaders.contains(HttpHeaderNames.HOST)).thenReturn(false)
+        def stubUrl = "/testRewriteHttpHost/finalModification"
+        stubFor(get(urlEqualTo(stubUrl))
+                .withHeader("Host",new EqualToPattern("localhost:${mockServerPort}"))
+                .willReturn(ok()
+                .withBody("success")))
 
-        HttpRequest request = mock(HttpRequest.class)
-        when(request.uri()).thenReturn('http://www.yahoo.com?param=someValue')
-        when(request.headers()).thenReturn(mockHeaders)
+        proxy = new MitmProxyServer()
+        proxy.rewriteUrls([
+                'http://www\\.someotherhost\\.com:(\\d+)/(\\w+)' : 'http://localhost:\\1/\\2',
+                'http://localhost:(\\d+)/(\\w+)' : 'http://localhost:\\1/\\2/finalModification'
+        ])
 
-        Collection<RewriteRule> rewriteRules = ImmutableList.of(
-                new RewriteRule('http://www\\.yahoo\\.com\\?(\\w+)=(\\w+)', 'http://www.bing.com?new$1=new$2'),
-                new RewriteRule('http://www\\.(yahoo|bing)\\.com\\?(\\w+)=(\\w+)', 'http://www.google.com?originalDomain=$1&$2=$3')
-        )
+        proxy.start()
 
-        // mock out the netty ChannelHandlerContext for the isHttps() call in the filter
-        Attribute<Boolean> mockIsHttpsAttribute = mock(Attribute)
-        when(mockIsHttpsAttribute.get()).thenReturn(Boolean.FALSE)
+        String url = "http://www.someotherhost.com:${mockServerPort}/testRewriteHttpHost"
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            CloseableHttpResponse firstResponse = it.execute(new HttpGet(url))
+            assertEquals("Did not receive HTTP 200 from mock server", 200, firstResponse.getStatusLine().getStatusCode())
 
-        ChannelHandlerContext mockCtx = mock(ChannelHandlerContext)
-        io.netty.channel.Channel channelMock = mock(io.netty.channel.Channel)
-        when(mockCtx.channel()).thenReturn(channelMock)
-        when(channelMock.attr(AttributeKey.<Boolean>valueOf(IS_HTTPS_ATTRIBUTE_NAME))).thenReturn(mockIsHttpsAttribute)
+            String firstResponseBody = NewProxyServerTestUtil.toStringAndClose(firstResponse.getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", firstResponseBody)
 
-        RewriteUrlFilter filter = new RewriteUrlFilter(request, mockCtx, rewriteRules)
-        filter.clientToProxyRequest(request)
+            CloseableHttpResponse secondResponse = it.execute(new HttpGet(url))
+            assertEquals("Did not receive HTTP 200 from mock server", 200, secondResponse.getStatusLine().getStatusCode())
 
-        verify(request).setUri('http://www.google.com?originalDomain=bing&newparam=newsomeValue')
+            String secondResponseBody = NewProxyServerTestUtil.toStringAndClose(secondResponse.getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", secondResponseBody)
+        }
+
+        verify(2, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
     @Test
@@ -125,6 +92,37 @@ class RewriteUrlFilterTest extends MockServerTest {
     }
 
     @Test
+    void testRewriteHttpsHost() {
+        def stubUrl = "/testRewriteHttpsHost"
+        stubFor(get(urlEqualTo(stubUrl))
+                .withHeader("Host",new EqualToPattern("localhost:${mockServerHttpsPort}"))
+                .willReturn(ok()
+                .withBody("success")))
+
+        proxy = new MitmProxyServer()
+        proxy.rewriteUrl('https://www\\.someotherhost\\.com:(\\d+)/(\\w+)', 'https://localhost:\\1/\\2')
+
+        proxy.start()
+
+        String url = "https://www.someotherhost.com:${mockServerHttpsPort}/testRewriteHttpsHost"
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            CloseableHttpResponse firstResponse = it.execute(new HttpGet(url))
+            assertEquals("Did not receive HTTP 200 from mock server", 200, firstResponse.getStatusLine().getStatusCode())
+
+            String firstResponseBody = NewProxyServerTestUtil.toStringAndClose(firstResponse.getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", firstResponseBody)
+
+            CloseableHttpResponse secondResponse = it.execute(new HttpGet(url))
+            assertEquals("Did not receive HTTP 200 from mock server", 200, secondResponse.getStatusLine().getStatusCode())
+
+            String secondResponseBody = NewProxyServerTestUtil.toStringAndClose(secondResponse.getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", secondResponseBody)
+        }
+
+        verify(2, getRequestedFor(urlEqualTo(stubUrl)))
+    }
+
+    @Test
     void testRewriteHttpResource() {
         def stubUrl = "/rewrittenresource"
         stubFor(get(urlEqualTo(stubUrl))
@@ -132,7 +130,7 @@ class RewriteUrlFilterTest extends MockServerTest {
                 .withBody("success")))
 
         proxy = new MitmProxyServer()
-        proxy.rewriteUrl('http://badhost:(\\d+)/badresource', 'http://localhost:$1/rewrittenresource')
+        proxy.rewriteUrl('http://badhost:(\\d+)/badresource', 'http://localhost:\\1/rewrittenresource')
 
         proxy.start()
 
@@ -157,7 +155,7 @@ class RewriteUrlFilterTest extends MockServerTest {
 
         proxy = new MitmProxyServer()
         proxy.setTrustAllServers(true)
-        proxy.rewriteUrl('https://localhost:(\\d+)/badresource', 'https://localhost:$1/rewrittenresource')
+        proxy.rewriteUrl('https://localhost:(\\d+)/badresource', 'https://localhost:\\1/rewrittenresource')
 
         proxy.start()
 
