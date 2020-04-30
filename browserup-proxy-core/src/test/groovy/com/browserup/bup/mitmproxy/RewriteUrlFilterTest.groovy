@@ -92,37 +92,6 @@ class RewriteUrlFilterTest extends MockServerTest {
     }
 
     @Test
-    void testRewriteHttpsHost() {
-        def stubUrl = "/testRewriteHttpsHost"
-        stubFor(get(urlEqualTo(stubUrl))
-                .withHeader("Host",new EqualToPattern("localhost:${mockServerHttpsPort}"))
-                .willReturn(ok()
-                .withBody("success")))
-
-        proxy = new MitmProxyServer()
-        proxy.rewriteUrl('https://www\\.someotherhost\\.com:(\\d+)/(\\w+)', 'https://localhost:\\1/\\2')
-
-        proxy.start()
-
-        String url = "https://www.someotherhost.com:${mockServerHttpsPort}/testRewriteHttpsHost"
-        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
-            CloseableHttpResponse firstResponse = it.execute(new HttpGet(url))
-            assertEquals("Did not receive HTTP 200 from mock server", 200, firstResponse.getStatusLine().getStatusCode())
-
-            String firstResponseBody = NewProxyServerTestUtil.toStringAndClose(firstResponse.getEntity().getContent())
-            assertEquals("Did not receive expected response from mock server", "success", firstResponseBody)
-
-            CloseableHttpResponse secondResponse = it.execute(new HttpGet(url))
-            assertEquals("Did not receive HTTP 200 from mock server", 200, secondResponse.getStatusLine().getStatusCode())
-
-            String secondResponseBody = NewProxyServerTestUtil.toStringAndClose(secondResponse.getEntity().getContent())
-            assertEquals("Did not receive expected response from mock server", "success", secondResponseBody)
-        }
-
-        verify(2, getRequestedFor(urlEqualTo(stubUrl)))
-    }
-
-    @Test
     void testRewriteHttpResource() {
         def stubUrl = "/rewrittenresource"
         stubFor(get(urlEqualTo(stubUrl))

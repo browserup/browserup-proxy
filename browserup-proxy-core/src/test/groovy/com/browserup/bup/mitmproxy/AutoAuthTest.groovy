@@ -8,6 +8,7 @@ import com.browserup.bup.MitmProxyServer
 import com.browserup.bup.proxy.auth.AuthType
 import com.browserup.bup.proxy.test.util.MockServerTest
 import com.browserup.bup.proxy.test.util.NewProxyServerTestUtil
+import com.github.tomakehurst.wiremock.matching.AbsentPattern
 import com.github.tomakehurst.wiremock.matching.EqualToPattern
 import com.github.tomakehurst.wiremock.matching.StringValuePattern
 import org.apache.http.client.methods.HttpGet
@@ -77,7 +78,7 @@ class AutoAuthTest extends MockServerTest {
         def stubUrl = "/basicAuthHttp"
 
         stubFor(get(urlEqualTo(stubUrl))
-                .withHeader("Authorization", StringValuePattern.ABSENT)
+                .withHeader("Authorization", AbsentPattern.ABSENT)
                 .willReturn(ok().withBody("success")))
 
         proxy = new MitmProxyServer()

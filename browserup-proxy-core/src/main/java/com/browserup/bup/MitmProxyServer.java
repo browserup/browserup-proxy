@@ -196,7 +196,7 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public void setLatency(long latency, TimeUnit timeUnit) {
-
+    this.mitmProxyManager.getLatencyManager().setLatency(latency, timeUnit);
   }
 
   @Override
