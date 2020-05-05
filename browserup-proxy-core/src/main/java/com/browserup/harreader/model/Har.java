@@ -2,7 +2,12 @@ package com.browserup.harreader.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Writer;
 import java.util.Objects;
 
 /**
@@ -12,6 +17,8 @@ import java.util.Objects;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Har {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private HarLog log;
 
@@ -40,5 +47,17 @@ public class Har {
     @Override
     public int hashCode() {
         return Objects.hash(log);
+    }
+
+    public void writeTo(Writer writer) throws IOException {
+        OBJECT_MAPPER.writeValue(writer, this);
+    }
+
+    public void writeTo(OutputStream os) throws IOException {
+        OBJECT_MAPPER.writeValue(os, this);
+    }
+
+    public void writeTo(File file) throws IOException {
+        OBJECT_MAPPER.writeValue(file, this);
     }
 }
