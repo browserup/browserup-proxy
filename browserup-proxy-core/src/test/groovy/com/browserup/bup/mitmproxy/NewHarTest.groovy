@@ -636,7 +636,6 @@ class NewHarTest extends MockServerTest {
     }
 
     @Test
-    @Ignore
     void testHttpsDnsFailureCapturedInHar() {
         AdvancedHostResolver mockFailingResolver = mock(AdvancedHostResolver)
         when(mockFailingResolver.resolve("www.doesnotexist.address")).thenReturn([])
@@ -661,7 +660,7 @@ class NewHarTest extends MockServerTest {
 
         // make sure request data is still captured despite the failure
         String capturedUrl = har.log.entries[0].request.url
-        assertEquals("URL captured in HAR did not match expected HTTP CONNECT URL", "https://www.doesnotexist.address", capturedUrl)
+        assertEquals("URL captured in HAR did not match expected HTTP CONNECT URL", requestUrl, capturedUrl)
 
         HarResponse harResponse = har.log.entries[0].response
         assertNotNull("No HAR response found", harResponse)
@@ -735,7 +734,6 @@ class NewHarTest extends MockServerTest {
     }
 
     @Test
-    @Ignore
     void testHttpsConnectTimeoutCapturedInHar() {
         proxy = new MitmProxyServer()
         proxy.start()

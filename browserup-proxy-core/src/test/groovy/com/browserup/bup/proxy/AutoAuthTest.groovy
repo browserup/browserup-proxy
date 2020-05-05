@@ -86,7 +86,7 @@ class AutoAuthTest extends MockServerTest {
         def stubUrl = "/basicAuthHttp"
 
         stubFor(get(urlEqualTo(stubUrl))
-                .withHeader("Authorization", StringValuePattern.ABSENT)
+                .withHeader("Authorization", AbsentPattern.ABSENT)
                 .willReturn(ok().withBody("success")))
 
         proxy = new BrowserUpProxyServer()
