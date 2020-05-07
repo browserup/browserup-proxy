@@ -586,7 +586,6 @@ class NewHarTest extends MockServerTest {
     }
 
     @Test
-    @Ignore
     void testHttpDnsFailureCapturedInHar() {
         AdvancedHostResolver mockFailingResolver = mock(AdvancedHostResolver)
         when(mockFailingResolver.resolve("www.doesnotexist.address")).thenReturn([])
@@ -685,7 +684,6 @@ class NewHarTest extends MockServerTest {
     }
 
     @Test
-    @Ignore
     void testHttpConnectTimeoutCapturedInHar() {
         proxy = new MitmProxyServer()
         proxy.start()

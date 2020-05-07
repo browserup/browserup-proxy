@@ -250,13 +250,13 @@ class HarDumpAddOn:
 
     def generate_har_timings(self):
         return {
-            "blockedNanos": -1,
-            "dnsNanos": -1,
-            "connectNanos": -1,
-            "sslNanos": -1,
-            "sendNanos": 0,
-            "waitNanos": 0,
-            "receiveNanos": 0,
+            "blocked": -1,
+            "dns": -1,
+            "connect": -1,
+            "ssl": -1,
+            "send": 0,
+            "wait": 0,
+            "receive": 0,
             "comment": ""
         }
 
@@ -475,9 +475,10 @@ class HarDumpAddOn:
             host_port = 'https://' + host_port
         else:
             if request.scheme is not None:
-                host_port = request.scheme + host_port + ":" + str(request.port)
+                host_port = request.url
             else:
                 host_port = host_port + ":" + str(request.port)
+
 
         return host_port
 
@@ -500,9 +501,6 @@ class HarDumpAddOn:
         self.har['log']['entries'].append(self.har_entry)
 
     def request(self, flow):
-        self.dns_resolution_started_nanos = int(round(time.time() * 1000000))
-        self.connection_started_nanos = int(round(time.time() * 1000000))
-
         self.get_or_create_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE, True)
 
         self.create_har_entry_with_default_response(flow.request)
@@ -674,25 +672,48 @@ class HarDumpAddOn:
         """
         return [{"name": k, "value": v} for k, v in obj.items()]
 
+
+    def clientconnect(self, layer):
+        self.dns_resolution_started_nanos = int(round(time.time() * 1000000))
+        self.connection_started_nanos = int(round(time.time() * 1000000))
+
+
     def error(self, flow):
-        req_host_port = flow.request.host + ':' + str(flow.request.port)
+        req_host_port = flow.request.host
+        if flow.request.port != 80:
+            req_host_port = req_host_port + ':' + str(flow.request.port)
+        original_error = HarDumpAddOn.get_original_exception(flow.error)
 
         if 'Name or service not known' in flow.error.msg and flow.response is None:
-            self.proxy_to_server_resolution_failed(flow, req_host_port)
+            self.proxy_to_server_resolution_failed(flow, req_host_port, original_error)
         else:
-            self.proxy_to_server_connection_failed(flow, req_host_port)
+            self.proxy_to_server_connection_failed(flow, req_host_port, original_error)
 
-    def proxy_to_server_resolution_failed(self, flow, req_host_port):
+    def proxy_to_server_resolution_failed(self, flow, req_host_port, original_error):
         msg = RESOLUTION_FAILED_ERROR_MESSAGE + req_host_port
         self.create_har_entry_for_failed_connect(flow.request, msg)
-        self.populate_timings_for_failed_connect()
-        self.populate_server_ip_address(flow)
+        self.populate_dns_timings()
+        self.populate_server_ip_address(flow, original_error)
 
-    def proxy_to_server_connection_failed(self, flow, req_host_port):
-        msg = CONNECTION_FAILED_ERROR_MESSAGE + req_host_port
+        self.har_entry['time'] = self.calculate_total_elapsed_time()
+
+    def proxy_to_server_connection_failed(self, flow, req_host_port, original_error):
+        msg = CONNECTION_FAILED_ERROR_MESSAGE
         self.create_har_entry_for_failed_connect(flow.request, msg)
         self.populate_timings_for_failed_connect()
-        self.populate_server_ip_address(flow)
+        self.populate_server_ip_address(flow, original_error)
+
+        self.har_entry['time'] = self.calculate_total_elapsed_time()
+
+    def calculate_total_elapsed_time(self):
+        timings = self.har_entry['timings']
+        result = (0 if timings['blocked'] == -1 else timings['blocked']) + \
+                 (0 if timings['dns'] == -1 else timings['dns']) + \
+                 (0 if timings['connect'] == -1 else timings['connect']) + \
+                 (0 if timings['send'] == -1 else timings['send']) + \
+                 (0 if timings['wait'] == -1 else timings['wait']) + \
+                 (0 if timings['receive'] == -1 else timings['receive'])
+        return result
 
     def create_har_entry_for_failed_connect(self, request, msg):
         if self.har_entry is None:
@@ -704,14 +725,27 @@ class HarDumpAddOn:
         if self.connection_started_nanos > 0:
             self.har_entry['timings']['connect'] = int(
                 round(time.time() * 1000000)) - self.connection_started_nanos
+        self.populate_dns_timings()
 
+    def populate_dns_timings(self):
         if self.dns_resolution_started_nanos > 0:
             self.har_entry['timings']['dns'] = int(round(
                 time.time() * 1000000)) - self.dns_resolution_started_nanos
 
+    def populate_server_ip_address(self, flow, original_error):
+        if isinstance(original_error, ConnectionRefusedError):
+            if hasattr(original_error, 'resolved_server_addr'):
+                self.har_entry['serverIPAddress'] = original_error.resolved_server_addr[0]
 
-    def populate_server_ip_address(self, flow):
-        print()
+    @staticmethod
+    def get_original_exception(flow_error):
+        result = flow_error.cause
+        while True:
+            if hasattr(result, '__cause__') and result.__cause__ is not None:
+                result = result.__cause__
+            else:
+                break
+        return result
 
 addons = [
     HarDumpAddOn()
