@@ -206,7 +206,8 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public void setIdleConnectionTimeout(int idleConnectionTimeout, TimeUnit timeUnit) {
-
+    long timeout = TimeUnit.SECONDS.convert(idleConnectionTimeout, timeUnit);
+    this.mitmProxyManager.getProxyManager().setConnectionIdleTimeout(timeout);
   }
 
   @Override

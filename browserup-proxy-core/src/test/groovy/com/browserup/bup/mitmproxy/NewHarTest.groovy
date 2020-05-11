@@ -45,7 +45,7 @@ class NewHarTest extends MockServerTest {
     }
 
     @Test
-    @Ignore
+    //@Ignore
     void testDnsTimingPopulated() {
         // mock up a resolver with a DNS resolution delay
         AdvancedHostResolver mockResolver = mock(AdvancedHostResolver.class)
@@ -478,7 +478,6 @@ class NewHarTest extends MockServerTest {
     }
 
     @Test
-    @Ignore
     void testCaptureHttpsRewrittenUrlInHar() {
         def stubUrl = "/httpsrewrittenurlcaptured.*"
         stubFor(get(urlMatching(stubUrl)).withQueryParam("param1", WireMock.equalTo("value1"))
@@ -487,7 +486,7 @@ class NewHarTest extends MockServerTest {
         )
 
         proxy = new MitmProxyServer()
-        proxy.rewriteUrl("https://localhost:${mockServerHttpsPort}/originalurl(.*)", "https://localhost:${mockServerHttpsPort}/httpsrewrittenurlcaptured\$1")
+        proxy.rewriteUrl("https://localhost:${mockServerHttpsPort}/originalurl(.*)", "https://localhost:${mockServerHttpsPort}/httpsrewrittenurlcaptured\\1")
         proxy.setTrustAllServers(true)
         proxy.start()
 
@@ -780,7 +779,6 @@ class NewHarTest extends MockServerTest {
     }
 
     @Test
-    @Ignore
     void testHttpResponseTimeoutCapturedInHar() {
         def stubUrl = "/testResponseTimeoutCapturedInHar"
         stubFor(get(urlEqualTo(stubUrl))
