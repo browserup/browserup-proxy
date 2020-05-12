@@ -40,6 +40,7 @@ class ProxyManagerResource:
 
     def __init__(self, harDumpAddOn):
         self.num = 0
+        ctx.options.connection_idle_seconds = -1
 
     def on_get(self, req, resp, method_name):
         getattr(self, "on_" + method_name)(req, resp)
@@ -48,6 +49,11 @@ class ProxyManagerResource:
         trust_all = req.get_param('trustAll')
         if trust_all is not None and str(trust_all) == str(True):
             ctx.options.ssl_insecure = True
+
+    def on_set_connection_timeout_idle(self, req, resp):
+        idle_seconds = req.get_param('idleSeconds')
+        if idle_seconds is not None:
+            ctx.options.connection_idle_seconds = int(idle_seconds)
 
 
 class ProxyManagerAddOn:

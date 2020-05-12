@@ -30,6 +30,7 @@ public class MitmProxyManager {
   private BlackListAddOn blackListAddOn = new BlackListAddOn();
   private AuthBasicAddOn authBasicFilterAddOn = new AuthBasicAddOn();
   private AdditionalHeadersAddOn additionalHeadersAddOn = new AdditionalHeadersAddOn();
+  private HttpConnectCaptureAddOn httpConnectCaptureAddOn = new HttpConnectCaptureAddOn();
   private RewriteUrlAddOn rewriteUrlAddOn = new RewriteUrlAddOn();
   private LatencyAddOn latencyAddOn = new LatencyAddOn();
 
@@ -59,9 +60,9 @@ public class MitmProxyManager {
 
   public void start(int port) {
     try {
-      //startProxy(port);
+      startProxy(port);
       this.isRunning = true;
-      this.proxyPort = 8443;
+      this.proxyPort = port;
       harCaptureFilterManager.setHarCaptureTypes(harCaptureFilterManager.getLastCaptureTypes());
       authBasicFilterManager.getCredentials().forEach((key, value) -> authBasicFilterManager.authAuthorization(key, value));
       additionalHeadersManager.addHeaders(additionalHeadersManager.getAllHeaders());
@@ -85,19 +86,19 @@ public class MitmProxyManager {
 
   public void stop() {
     this.isRunning = false;
-//
-//    try {
-//      pipedInputStream.close();
-//    } catch (IOException e) {
-//      LOGGER.warn("Couldn't close piped input stream", e);
-//    }
-//    startedProcess.getProcess().destroy();
-//    Awaitility.await().atMost(10, TimeUnit.SECONDS).until(this::isProxyPortFreed);
-//    try {
-//      Thread.sleep(100);
-//    } catch (InterruptedException e) {
-//      e.printStackTrace();
-//    }
+
+    try {
+      pipedInputStream.close();
+    } catch (IOException e) {
+      LOGGER.warn("Couldn't close piped input stream", e);
+    }
+    startedProcess.getProcess().destroy();
+    Awaitility.await().atMost(10, TimeUnit.SECONDS).until(this::isProxyPortFreed);
+    try {
+      Thread.sleep(500);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
   private boolean isProxyPortFreed() {
@@ -133,6 +134,7 @@ public class MitmProxyManager {
     }
 
     command.addAll(Arrays.asList(rewriteUrlAddOn.getCommandParams()));
+    command.addAll(Arrays.asList(httpConnectCaptureAddOn.getCommandParams()));
     command.addAll(Arrays.asList(harCaptureFilterAddOn.getCommandParams()));
     command.addAll(Arrays.asList(addonsManagerAddOn.getCommandParams()));
     command.addAll(Arrays.asList(proxyManagerAddOn.getCommandParams()));

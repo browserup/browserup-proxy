@@ -73,7 +73,6 @@ class RewriteUrlResource:
 class RewriteUrlAddOn:
 
     def __init__(self):
-        self.num = 0
         self.rules = {}
 
     def get_resource(self):
