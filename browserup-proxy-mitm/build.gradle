@@ -62,7 +62,7 @@ dependencies {
     implementation "org.bouncycastle:bcpkix-jdk15on:${bcpVersion}"
     implementation "org.bouncycastle:bcprov-jdk15on:${bcpVersion}"
 
-    implementation 'io.netty:netty-codec:4.1.44.Final'
+    implementation 'io.netty:netty-codec:4.1.50.Final'
     implementation "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
     implementation "org.slf4j:slf4j-api:${slf4jVersion}"
     implementation 'xyz.rogfam:littleproxy:2.0.0-beta-5'
