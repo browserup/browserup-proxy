@@ -45,7 +45,7 @@ class NewHarTest extends MockServerTest {
     }
 
     @Test
-    //@Ignore
+    @Ignore // Currently there's no api in mitmproxy
     void testDnsTimingPopulated() {
         // mock up a resolver with a DNS resolution delay
         AdvancedHostResolver mockResolver = mock(AdvancedHostResolver.class)
@@ -837,7 +837,6 @@ class NewHarTest extends MockServerTest {
     }
 
     @Test
-    @Ignore
     void testHttpsResponseTimeoutCapturedInHar() {
         def stubUrl = "/testResponseTimeoutCapturedInHar"
         stubFor(get(urlEqualTo(stubUrl))
@@ -848,7 +847,7 @@ class NewHarTest extends MockServerTest {
 
         proxy = new MitmProxyServer()
         proxy.setTrustAllServers(true)
-        proxy.setIdleConnectionTimeout(3, TimeUnit.SECONDS)
+        proxy.setIdleConnectionTimeout(1, TimeUnit.SECONDS)
         proxy.start()
 
         proxy.newHar()

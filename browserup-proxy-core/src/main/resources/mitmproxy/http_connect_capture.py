@@ -31,28 +31,55 @@ class HttpConnectCaptureAddOn:
         self.har_dump_addon = None
 
         self.dns_resolution_started_nanos = 0
+        self.dns_resolution_finished_nanos = 0
         self.connection_started_nanos = 0
+        self.connection_succeeded_time_nanos = 0
         self.send_started_nanos = 0
         self.send_finished_nanos = 0
         self.response_receive_started_nanos = 0
+        self.ssl_handshake_started_nanos = 0
+        self.http_connect_timing = None
+
+    def generate_http_connect_timing(self):
+        return {
+            "blockedTimeNanos": -1,
+            "dnsTimeNanos": -1,
+            "connectTimeNanos": -1,
+            "sslHandshakeTimeNanos": -1,
+        }
 
     # TCP Callbacks
 
     def tcp_resolving_server_address_finished(self, sever_conn):
         self.populate_dns_timings()
+        self.dns_resolution_finished_nanos = self.now_time_nanos()
+
+        if self.dns_resolution_started_nanos > 0:
+            self.http_connect_timing['dnsTimeNanos'] = self.dns_resolution_finished_nanos - self.dns_resolution_started_nanos
+        else:
+            self.http_connect_timing['dnsTimeNanos'] = 0
 
     def tcp_resolving_server_address_started(self, sever_conn):
-        self.dns_resolution_started_nanos = int(round(time.time() * 1000000))
-        self.connection_started_nanos = int(round(time.time() * 1000000))
+        self.dns_resolution_started_nanos = int(round(self.now_time_nanos()))
+        self.connection_started_nanos = int(round(self.now_time_nanos()))
+        self.proxy_to_server_resolution_started()
 
+
+    # SSL Callbacks
+    def ssl_handshake_started(self, flow):
+        self.ssl_handshake_started_nanos = int(round(self.now_time_nanos()))
 
     # HTTP Callbacks
 
+    def http_connect(self, flow):
+        self.http_connect_timing = self.generate_http_connect_timing()
+        self.har_dump_addon.http_connect_timings[flow.client_conn] = self.http_connect_timing
+
     def http_proxy_to_server_request_started(self, flow):
-        self.send_started_nanos = time.time() * 1000000
+        self.send_started_nanos = self.now_time_nanos()
 
     def http_proxy_to_server_request_finished(self, flow):
-        self.send_finished_nanos = time.time() * 1000000
+        self.send_finished_nanos = self.now_time_nanos()
         if self.send_started_nanos > 0:
             self.get_har_entry()['timings'][
                 'send'] = self.send_finished_nanos - self.send_started_nanos
@@ -60,12 +87,27 @@ class HttpConnectCaptureAddOn:
             self.get_har_entry()['timings']['send'] = 0
 
     def http_server_to_proxy_response_receiving(self, flow):
-        self.response_receive_started_nanos = time.time() * 1000000
+        self.response_receive_started_nanos = self.now_time_nanos()
 
     def http_server_to_proxy_response_received(self, flow):
         """"""
 
     # PROXY Callbacks
+    def proxy_to_server_resolution_started(self):
+        self.http_connect_timing['blockedTimeNanos'] = 0
+
+    def proxy_to_server_connection_succeeded(self, f):
+        self.connection_succeeded_time_nanos = self.now_time_nanos()
+
+        if self.connection_started_nanos > 0:
+            self.http_connect_timing['connectTimeNanos'] = self.connection_succeeded_time_nanos - self.connection_started_nanos
+        else:
+            self.http_connect_timing['connectTimeNanos'] = 0
+
+        if self.ssl_handshake_started_nanos > 0:
+            self.http_connect_timing['sslHandshakeTimeNanos'] = self.connection_succeeded_time_nanos - self.ssl_handshake_started_nanos
+        else:
+            self.http_connect_timing['sslHandshakeTimeNanos'] = 0
 
     def error(self, flow):
         req_host_port = flow.request.host
@@ -88,14 +130,14 @@ class HttpConnectCaptureAddOn:
     def populate_dns_timings(self):
         if self.dns_resolution_started_nanos > 0 and self.get_har_entry():
             dns_nanos = int(round(
-                time.time() * 1000000)) - self.dns_resolution_started_nanos
+                self.now_time_nanos())) - self.dns_resolution_started_nanos
             dns_ms = int(dns_nanos / 1000)
             self.get_har_entry()['timings']['dns'] = dns_ms
 
     def populate_timings_for_failed_connect(self):
         if self.connection_started_nanos > 0:
             self.get_har_entry()['timings']['connect'] = int(
-                round(time.time() * 1000000)) - self.connection_started_nanos
+                round(self.now_time_nanos())) - self.connection_started_nanos
         self.populate_dns_timings()
 
     def populate_server_ip_address(self, flow, original_error):
@@ -131,7 +173,7 @@ class HttpConnectCaptureAddOn:
         self.populate_timings_for_failed_connect()
         self.populate_server_ip_address(flow, original_error)
 
-        current_time_nanos = time.time() * 1000000
+        current_time_nanos = self.now_time_nanos()
 
         if self.send_started_nanos > 0 and self.send_finished_nanos == 0:
             self.get_har_entry()['timings'][
@@ -175,6 +217,10 @@ class HttpConnectCaptureAddOn:
             else:
                 break
         return result
+
+    @staticmethod
+    def now_time_nanos():
+        return time.time() * 1000000
 
 
 addons = [

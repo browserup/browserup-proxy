@@ -176,6 +176,7 @@ class HarDumpAddOn:
         self.send_started_nanos = 0
         self.send_finished_nanos = 0
         self.response_receive_started_nanos = 0
+        self.http_connect_timings = {}
 
     def get_har(self, clean_har):
         if clean_har:
@@ -475,6 +476,11 @@ class HarDumpAddOn:
 
         return host_port
 
+    def consume_http_connect_timing(self, client_conn):
+        if client_conn in self.http_connect_timings:
+            return self.http_connect_timings.pop(client_conn, None)
+        return None
+
     def create_har_entry_with_default_response(self, request):
         self.har_entry = self.generate_har_entry()
         self.har_entry['pageRef'] = self.get_current_page_ref()
@@ -509,6 +515,13 @@ class HarDumpAddOn:
 
         self.har_entry['request']['bodySize'] = \
             len(flow.request.raw_content) if flow.request.raw_content else 0
+
+        connect_timing = self.consume_http_connect_timing(flow.client_conn)
+        if connect_timing is not None:
+            self.har_entry['timings']['ssl'] = connect_timing['sslHandshakeTimeNanos']
+            self.har_entry['timings']['connect'] = connect_timing['connectTimeNanos']
+            self.har_entry['timings']['blocked'] = connect_timing['blockedTimeNanos']
+            self.har_entry['timings']['dns'] = connect_timing['dnsTimeNanos']
 
     def capture_request_cookies(self, flow):
         self.har_entry['request']['cookies'] = \
