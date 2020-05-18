@@ -55,9 +55,9 @@ class HttpConnectCaptureAddOn:
         self.dns_resolution_finished_nanos = self.now_time_nanos()
 
         if self.dns_resolution_started_nanos > 0:
-            self.http_connect_timing['dnsTimeNanos'] = self.dns_resolution_finished_nanos - self.dns_resolution_started_nanos
+            self.get_http_connect_timing()['dnsTimeNanos'] = self.dns_resolution_finished_nanos - self.dns_resolution_started_nanos
         else:
-            self.http_connect_timing['dnsTimeNanos'] = 0
+            self.get_http_connect_timing()['dnsTimeNanos'] = 0
 
     def tcp_resolving_server_address_started(self, sever_conn):
         self.dns_resolution_started_nanos = int(round(self.now_time_nanos()))
@@ -72,7 +72,7 @@ class HttpConnectCaptureAddOn:
     # HTTP Callbacks
 
     def http_connect(self, flow):
-        self.http_connect_timing = self.generate_http_connect_timing()
+        self.http_connect_timing = self.get_http_connect_timing()
         self.har_dump_addon.http_connect_timings[flow.client_conn] = self.http_connect_timing
 
     def http_proxy_to_server_request_started(self, flow):
@@ -94,20 +94,20 @@ class HttpConnectCaptureAddOn:
 
     # PROXY Callbacks
     def proxy_to_server_resolution_started(self):
-        self.http_connect_timing['blockedTimeNanos'] = 0
+        self.get_http_connect_timing()['blockedTimeNanos'] = 0
 
     def proxy_to_server_connection_succeeded(self, f):
         self.connection_succeeded_time_nanos = self.now_time_nanos()
 
         if self.connection_started_nanos > 0:
-            self.http_connect_timing['connectTimeNanos'] = self.connection_succeeded_time_nanos - self.connection_started_nanos
+            self.get_http_connect_timing()['connectTimeNanos'] = self.connection_succeeded_time_nanos - self.connection_started_nanos
         else:
-            self.http_connect_timing['connectTimeNanos'] = 0
+            self.get_http_connect_timing()['connectTimeNanos'] = 0
 
         if self.ssl_handshake_started_nanos > 0:
-            self.http_connect_timing['sslHandshakeTimeNanos'] = self.connection_succeeded_time_nanos - self.ssl_handshake_started_nanos
+            self.get_http_connect_timing()['sslHandshakeTimeNanos'] = self.connection_succeeded_time_nanos - self.ssl_handshake_started_nanos
         else:
-            self.http_connect_timing['sslHandshakeTimeNanos'] = 0
+            self.get_http_connect_timing()['sslHandshakeTimeNanos'] = 0
 
     def error(self, flow):
         req_host_port = flow.request.host
@@ -207,6 +207,11 @@ class HttpConnectCaptureAddOn:
 
     def get_har_entry(self):
         return self.har_dump_addon.har_entry
+
+    def get_http_connect_timing(self):
+        if self.http_connect_timing is None:
+            self.http_connect_timing = self.generate_http_connect_timing()
+        return self.http_connect_timing
 
     @staticmethod
     def get_original_exception(flow_error):

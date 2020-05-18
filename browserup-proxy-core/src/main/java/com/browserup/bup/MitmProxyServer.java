@@ -348,7 +348,11 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public void setHostNameResolver(AdvancedHostResolver resolver) {
+    // TODO: do we need this in mitmproxy?
+  }
 
+  public void setDnsResolvingDelayMs(Long delayMs) {
+    this.mitmProxyManager.getProxyManager().setDnsResolvingDelayMs(delayMs);
   }
 
   @Override

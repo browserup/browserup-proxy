@@ -69,6 +69,7 @@ public class MitmProxyManager {
       rewriteUrlManager.rewriteUrls(rewriteUrlManager.getRewriteRulesMap());
       latencyManager.setLatency(latencyManager.getLatencyMs(), TimeUnit.MILLISECONDS);
       proxyManager.setConnectionIdleTimeout(proxyManager.getConnectionIdleTimeoutSeconds());
+      proxyManager.setDnsResolvingDelayMs(proxyManager.getDnsResolutionDelayMs());
     } catch (Exception ex) {
       LOGGER.error("Failed to start proxy", ex);
       stop();
@@ -92,19 +93,23 @@ public class MitmProxyManager {
     } catch (IOException e) {
       LOGGER.warn("Couldn't close piped input stream", e);
     }
+
     startedProcess.getProcess().destroy();
-    Awaitility.await().atMost(10, TimeUnit.SECONDS).until(this::isProxyPortFreed);
-    try {
-      Thread.sleep(500);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+    Awaitility.await().atMost(10, TimeUnit.SECONDS).until(() -> isProxyPortFree() && isProxyManagementPortFree());
   }
 
-  private boolean isProxyPortFreed() {
+  private boolean isProxyManagementPortFree() {
+    return isPortFree(8443);
+  }
+
+  private boolean isProxyPortFree() {
+    return isPortFree(proxyPort);
+  }
+
+  private boolean isPortFree(int port) {
     Socket s = null;
     try {
-      s = new Socket("localhost", proxyPort);
+      s = new Socket("localhost", port);
       return false;
     } catch (IOException e) {
       return true;

@@ -41,6 +41,7 @@ class ProxyManagerResource:
     def __init__(self, harDumpAddOn):
         self.num = 0
         ctx.options.connection_idle_seconds = -1
+        ctx.options.dns_resolving_delay_ms = -1
 
     def on_get(self, req, resp, method_name):
         getattr(self, "on_" + method_name)(req, resp)
@@ -54,6 +55,11 @@ class ProxyManagerResource:
         idle_seconds = req.get_param('idleSeconds')
         if idle_seconds is not None:
             ctx.options.connection_idle_seconds = int(idle_seconds)
+
+    def on_set_dns_resolving_delay_ms(self, req, resp):
+        delay_ms = req.get_param('delayMs')
+        if delay_ms is not None:
+            ctx.options.dns_resolving_delay_ms = int(delay_ms)
 
 
 class ProxyManagerAddOn:

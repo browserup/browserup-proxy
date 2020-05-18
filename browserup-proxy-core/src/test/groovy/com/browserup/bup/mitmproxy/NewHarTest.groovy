@@ -17,10 +17,7 @@ import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.junit.After
-import org.junit.Ignore
 import org.junit.Test
-import org.mockito.invocation.InvocationOnMock
-import org.mockito.stubbing.Answer
 
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
@@ -45,23 +42,12 @@ class NewHarTest extends MockServerTest {
     }
 
     @Test
-    @Ignore // Currently there's no api in mitmproxy
     void testDnsTimingPopulated() {
-        // mock up a resolver with a DNS resolution delay
-        AdvancedHostResolver mockResolver = mock(AdvancedHostResolver.class)
-        when(mockResolver.resolve("localhost")).then(new Answer<Collection<InetAddress>>() {
-            @Override
-            Collection<InetAddress> answer(InvocationOnMock invocationOnMock) throws Throwable {
-                TimeUnit.SECONDS.sleep(1)
-                return Collections.singleton(InetAddress.getByName("localhost"))
-            }
-        })
-
         def stubUrl = "/testDnsTimingPopulated"
         stubFor(get(urlEqualTo(stubUrl)).willReturn(ok().withBody("success")))
 
         proxy = new MitmProxyServer()
-        proxy.setHostNameResolver(mockResolver)
+        proxy.setDnsResolvingDelayMs(1000)
 
         proxy.start()
         int proxyPort = proxy.getPort()
@@ -134,7 +120,7 @@ class NewHarTest extends MockServerTest {
 
         assertEquals("Incorrect expiration date in cookie with Expires", expiresCookie.expires, expiresDate)
 
-        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
+        //verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
     @Test
@@ -169,6 +155,65 @@ class NewHarTest extends MockServerTest {
         assertEquals("Incorrect header value for Mock-Header", "mock value", header.value)
 
         verify(1, getRequestedFor(urlEqualTo(stubUrl)))
+    }
+
+    @Test
+    void testMultipleNewHarCallsLeadToCorrectEntries() {
+        String firstResponseBody = "firstResponseBody"
+        String responseContentType = "text/plain;charset=utf-8"
+
+        def firstRequestUrl = "/testFirstRequest"
+        stubFor(get(urlEqualTo(firstRequestUrl))
+                .willReturn(ok()
+                .withBody("firstResponseBody").withHeader("Content-Type", responseContentType))
+        )
+
+        proxy = new MitmProxyServer()
+        proxy.setHarCaptureTypes(CaptureType.RESPONSE_CONTENT)
+        proxy.start()
+        proxy.newHar()
+
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}$firstRequestUrl")).getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", firstResponseBody, responseBody)
+        }
+
+        Thread.sleep(500)
+        Har har = proxy.getHar()
+
+        assertEquals("Expected to get exactly one entry", 1, har.log.entries.size())
+
+        HarContent content = har.getLog().getEntries().first().response.content
+        assertNotNull("Expected to find HAR content", content)
+        assertEquals("Expected to find HAR content body of first response", firstResponseBody, content.text)
+
+
+        proxy.newHar()
+
+        String secondResponseBody = "secondResponseBody"
+
+        def secondRequestUrl = "/testSecondRequest"
+        stubFor(get(urlEqualTo(secondRequestUrl))
+                .willReturn(ok()
+                .withBody("secondResponseBody").withHeader("Content-Type", responseContentType))
+        )
+
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}$secondRequestUrl")).getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", secondResponseBody, responseBody)
+        }
+
+        Thread.sleep(500)
+        har = proxy.getHar()
+
+        assertEquals("Expected to get exactly one entry after newHar was called", 1, har.log.entries.size())
+
+        content = har.getLog().getEntries().first().response.content
+        assertNotNull("Expected to find HAR content", content)
+        assertEquals("Expected to find HAR content body of second response", secondResponseBody, content.text)
+
+
+        verify(1, getRequestedFor(urlEqualTo(secondRequestUrl)))
     }
 
     @Test
@@ -520,77 +565,11 @@ class NewHarTest extends MockServerTest {
     }
 
     @Test
-    @Ignore
-    void testMitmDisabledStopsHTTPCapture() {
-        def stubUrl1 = "/httpmitmdisabled"
-        stubFor(get(urlEqualTo(stubUrl1))
-                .willReturn(ok()
-                .withBody("Response over HTTP"))
-        )
-
-        def stubUrl2 = "/httpsmitmdisabled"
-        stubFor(get(urlEqualTo(stubUrl2))
-                .willReturn(ok()
-                .withBody("Response over HTTPS"))
-        )
-
-        proxy = new MitmProxyServer()
-        proxy.setMitmDisabled(true)
-        proxy.start()
-
-        proxy.newHar()
-
-        httpsRequest: {
-            String httpsUrl = "https://localhost:${mockServerHttpsPort}/httpsmitmdisabled"
-            NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
-                String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(httpsUrl)).getEntity().getContent())
-                assertEquals("Did not receive expected response from mock server", "Response over HTTPS", responseBody)
-            }
-
-            Thread.sleep(500)
-            Har har = proxy.getHar()
-
-            assertThat("Expected to find no entries in the HAR because MITM is disabled", har.getLog().getEntries(), empty())
-        }
-
-        httpRequest: {
-            String httpUrl = "http://localhost:${mockServerPort}/httpmitmdisabled"
-            NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
-                String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(httpUrl)).getEntity().getContent())
-                assertEquals("Did not receive expected response from mock server", "Response over HTTP", responseBody)
-            }
-
-            Thread.sleep(500)
-            Har har = proxy.getHar()
-
-            assertThat("Expected to find entries in the HAR", har.getLog().getEntries(), not(empty()))
-
-            String capturedUrl = har.log.entries[0].request.url
-            assertEquals("URL captured in HAR did not match request URL", httpUrl, capturedUrl)
-        }
-
-        secondHttpsRequest: {
-            String httpsUrl = "https://localhost:${mockServerHttpsPort}/httpsmitmdisabled"
-            NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
-                String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(httpsUrl)).getEntity().getContent())
-                assertEquals("Did not receive expected response from mock server", "Response over HTTPS", responseBody)
-            }
-
-            Thread.sleep(500)
-            Har har = proxy.getHar()
-
-            assertThat("Expected to find only the HTTP entry in the HAR", har.getLog().getEntries(), hasSize(1))
-        }
-
-    }
-
-    @Test
     void testHttpDnsFailureCapturedInHar() {
         AdvancedHostResolver mockFailingResolver = mock(AdvancedHostResolver)
         when(mockFailingResolver.resolve("www.doesnotexist.address")).thenReturn([])
 
         proxy = new MitmProxyServer()
-        proxy.setHostNameResolver(mockFailingResolver)
         proxy.start()
 
         proxy.newHar()

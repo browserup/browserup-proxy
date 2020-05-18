@@ -15,6 +15,7 @@ public class ProxyManager {
     private final MitmProxyManager mitmProxyManager;
 
     private long connectionIdleTimeoutSeconds = -1;
+    private long dnsResolutionDelayMs = -1;
 
     public ProxyManager(AddonsManagerClient addonsManagerClient, MitmProxyManager mitmProxyManager) {
         this.addonsManagerClient = addonsManagerClient;
@@ -49,7 +50,26 @@ public class ProxyManager {
                         Void.class);
     }
 
+    public void setDnsResolvingDelayMs(Long delayMs) {
+        this.dnsResolutionDelayMs = delayMs;
+
+        if (!mitmProxyManager.isRunning()) return;
+
+        addonsManagerClient.
+                getRequestToAddonsManager(
+                        "proxy_manager",
+                        "set_dns_resolving_delay_ms",
+                        new ArrayList<Pair<String, String>>() {{
+                            add(of("delayMs", valueOf(delayMs)));
+                        }},
+                        Void.class);
+    }
+
     public long getConnectionIdleTimeoutSeconds() {
         return connectionIdleTimeoutSeconds;
+    }
+
+    public long getDnsResolutionDelayMs() {
+        return dnsResolutionDelayMs;
     }
 }
