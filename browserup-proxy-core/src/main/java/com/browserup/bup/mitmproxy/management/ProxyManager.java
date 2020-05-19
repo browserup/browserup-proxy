@@ -4,6 +4,7 @@ import com.browserup.bup.mitmproxy.MitmProxyManager;
 import com.browserup.harreader.model.Har;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -16,6 +17,7 @@ public class ProxyManager {
 
     private long connectionIdleTimeoutSeconds = -1;
     private long dnsResolutionDelayMs = -1;
+    private InetSocketAddress upstreamProxyAddress;
 
     public ProxyManager(AddonsManagerClient addonsManagerClient, MitmProxyManager mitmProxyManager) {
         this.addonsManagerClient = addonsManagerClient;
@@ -65,11 +67,21 @@ public class ProxyManager {
                         Void.class);
     }
 
+
+
     public long getConnectionIdleTimeoutSeconds() {
         return connectionIdleTimeoutSeconds;
     }
 
     public long getDnsResolutionDelayMs() {
         return dnsResolutionDelayMs;
+    }
+
+    public void setChainedProxy(InetSocketAddress chainedProxyAddress) {
+        this.upstreamProxyAddress = chainedProxyAddress;
+    }
+
+    public InetSocketAddress getUpstreamProxyAddress() {
+        return upstreamProxyAddress;
     }
 }

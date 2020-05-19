@@ -11,6 +11,7 @@ import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
 import java.io.*;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,21 +61,32 @@ public class MitmProxyManager {
 
   public void start(int port) {
     try {
+      if (!isPortFree(8443)) {
+        throw new RuntimeException("Proxy Management port is not free (8443)");
+      }
+
       startProxy(port);
+
       this.isRunning = true;
       this.proxyPort = port;
-      harCaptureFilterManager.setHarCaptureTypes(harCaptureFilterManager.getLastCaptureTypes());
-      authBasicFilterManager.getCredentials().forEach((key, value) -> authBasicFilterManager.authAuthorization(key, value));
-      additionalHeadersManager.addHeaders(additionalHeadersManager.getAllHeaders());
-      rewriteUrlManager.rewriteUrls(rewriteUrlManager.getRewriteRulesMap());
-      latencyManager.setLatency(latencyManager.getLatencyMs(), TimeUnit.MILLISECONDS);
-      proxyManager.setConnectionIdleTimeout(proxyManager.getConnectionIdleTimeoutSeconds());
-      proxyManager.setDnsResolvingDelayMs(proxyManager.getDnsResolutionDelayMs());
+
+      configureProxy();
+
     } catch (Exception ex) {
       LOGGER.error("Failed to start proxy", ex);
       stop();
       throw ex;
     }
+  }
+
+  private void configureProxy() {
+    harCaptureFilterManager.setHarCaptureTypes(harCaptureFilterManager.getLastCaptureTypes());
+    authBasicFilterManager.getCredentials().forEach((key, value) -> authBasicFilterManager.authAuthorization(key, value));
+    additionalHeadersManager.addHeaders(additionalHeadersManager.getAllHeaders());
+    rewriteUrlManager.rewriteUrls(rewriteUrlManager.getRewriteRulesMap());
+    latencyManager.setLatency(latencyManager.getLatencyMs(), TimeUnit.MILLISECONDS);
+    proxyManager.setConnectionIdleTimeout(proxyManager.getConnectionIdleTimeoutSeconds());
+    proxyManager.setDnsResolvingDelayMs(proxyManager.getDnsResolutionDelayMs());
   }
 
   public Integer getProxyPort() {
@@ -93,9 +105,17 @@ public class MitmProxyManager {
     } catch (IOException e) {
       LOGGER.warn("Couldn't close piped input stream", e);
     }
+    Process process = startedProcess.getProcess();
+    process.destroyForcibly();
+    Awaitility.await().atMost(10, TimeUnit.SECONDS).until(() -> !process.isAlive());
 
-    startedProcess.getProcess().destroy();
-    Awaitility.await().atMost(10, TimeUnit.SECONDS).until(() -> isProxyPortFree() && isProxyManagementPortFree());
+    // Still sometimes mitmproxy doesn't stop properly even if ports are available
+    // TODO fix it
+    try {
+      Thread.sleep(500);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
   private boolean isProxyManagementPortFree() {
@@ -138,6 +158,12 @@ public class MitmProxyManager {
       command.add("--ssl-insecure");
     }
 
+    InetSocketAddress upstreamProxyAddress = proxyManager.getUpstreamProxyAddress();
+    if (upstreamProxyAddress != null) {
+        command.add("--mode");
+        command.add("upstream:http://" + upstreamProxyAddress.getHostName() + ":" + upstreamProxyAddress.getPort());
+    }
+
     command.addAll(Arrays.asList(rewriteUrlAddOn.getCommandParams()));
     command.addAll(Arrays.asList(httpConnectCaptureAddOn.getCommandParams()));
     command.addAll(Arrays.asList(harCaptureFilterAddOn.getCommandParams()));
@@ -169,11 +195,7 @@ public class MitmProxyManager {
     }
 
     StringBuilder output = new StringBuilder();
-//    try {
-//      Thread.sleep(1000);
-//    } catch (InterruptedException e) {
-//      e.printStackTrace();
-//    }
+
     readOutputOfMimtproxy(pipedInputStream, output);
 
     try {

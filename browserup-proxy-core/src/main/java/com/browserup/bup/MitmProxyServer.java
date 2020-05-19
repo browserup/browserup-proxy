@@ -367,7 +367,7 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public void setChainedProxy(InetSocketAddress chainedProxyAddress) {
-
+    this.mitmProxyManager.getProxyManager().setChainedProxy(chainedProxyAddress);
   }
 
   @Override
