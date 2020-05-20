@@ -61,12 +61,34 @@ class ProxyManagerResource:
         if delay_ms is not None:
             ctx.options.dns_resolving_delay_ms = int(delay_ms)
 
+    def on_set_upstream_proxy_authorization(self, req, resp):
+        credentials = req.get_param('credentials')
+        if credentials is not None:
+            ctx.options.upstream_proxy_credentials = credentials
+
 
 class ProxyManagerAddOn:
 
     def get_resource(self):
         return ProxyManagerResource(self)
 
+    def http_connect(self, f):
+        if ctx.options.upstream_proxy_credentials and f.mode == "upstream":
+            f.request.headers["Proxy-Authorization"] = "Basic " + ctx.options.upstream_proxy_credentials
+
+    def requestheaders(self, f):
+        if self.are_upstream_proxy_credentials_available():
+            if f.mode == "upstream" and not f.server_conn.via:
+                f.request.headers["Proxy-Authorization"] = "Basic " + ctx.options.upstream_proxy_credentials
+            elif ctx.options.mode.startswith("reverse"):
+                f.request.headers["Proxy-Authorization"] = "Basic " + ctx.options.upstream_proxy_credentials
+
+    def response_from_upstream_proxy(self, f):
+        if self.are_upstream_proxy_credentials_available() and f.response is not None and f.response.status_code == 407:
+            f.response.status_code = 502
+
+    def are_upstream_proxy_credentials_available(self):
+        return ctx.options.upstream_proxy_credentials is not None and ctx.options.upstream_proxy_credentials != ""
 
 addons = [
     ProxyManagerAddOn()

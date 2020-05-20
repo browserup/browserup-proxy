@@ -17,6 +17,7 @@ public class ProxyManager {
 
     private long connectionIdleTimeoutSeconds = -1;
     private long dnsResolutionDelayMs = -1;
+    private String upstreamProxyCredentials = "";
     private InetSocketAddress upstreamProxyAddress;
 
     public ProxyManager(AddonsManagerClient addonsManagerClient, MitmProxyManager mitmProxyManager) {
@@ -67,7 +68,24 @@ public class ProxyManager {
                         Void.class);
     }
 
+    public void setChainedProxyAuthorization(String chainedProxyCredentials) {
+        this.upstreamProxyCredentials = chainedProxyCredentials;
 
+        if (!mitmProxyManager.isRunning()) return;
+
+        addonsManagerClient.
+                getRequestToAddonsManager(
+                        "proxy_manager",
+                        "set_upstream_proxy_authorization",
+                        new ArrayList<Pair<String, String>>() {{
+                            add(of("credentials", valueOf(chainedProxyCredentials)));
+                        }},
+                        Void.class);
+    }
+
+    public String getUpstreamProxyCredentials() {
+        return upstreamProxyCredentials;
+    }
 
     public long getConnectionIdleTimeoutSeconds() {
         return connectionIdleTimeoutSeconds;
@@ -84,4 +102,6 @@ public class ProxyManager {
     public InetSocketAddress getUpstreamProxyAddress() {
         return upstreamProxyAddress;
     }
+
+
 }

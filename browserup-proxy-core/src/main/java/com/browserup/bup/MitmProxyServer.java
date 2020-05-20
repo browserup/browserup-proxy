@@ -229,7 +229,15 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public void chainedProxyAuthorization(String username, String password, AuthType authType) {
+    switch (authType) {
+      case BASIC:
+        mitmProxyManager.getProxyManager().setChainedProxyAuthorization(
+                BrowserUpHttpUtil.base64EncodeBasicCredentials(username, password));
+        break;
 
+      default:
+        throw new UnsupportedOperationException("AuthType " + authType + " is not supported for Proxy Authorization");
+    }
   }
 
   @Override

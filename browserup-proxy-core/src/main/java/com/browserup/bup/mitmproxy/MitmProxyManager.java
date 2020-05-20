@@ -61,8 +61,8 @@ public class MitmProxyManager {
 
   public void start(int port) {
     try {
-      if (!isPortFree(8443)) {
-        throw new RuntimeException("Proxy Management port is not free (8443)");
+      if (!isPortFree(ADDONS_MANAGER_API_PORT)) {
+        throw new RuntimeException("Proxy Management port is not free (" + ADDONS_MANAGER_API_PORT + ")");
       }
 
       startProxy(port);
@@ -87,6 +87,7 @@ public class MitmProxyManager {
     latencyManager.setLatency(latencyManager.getLatencyMs(), TimeUnit.MILLISECONDS);
     proxyManager.setConnectionIdleTimeout(proxyManager.getConnectionIdleTimeoutSeconds());
     proxyManager.setDnsResolvingDelayMs(proxyManager.getDnsResolutionDelayMs());
+    proxyManager.setChainedProxyAuthorization(proxyManager.getUpstreamProxyCredentials());
   }
 
   public Integer getProxyPort() {
@@ -119,7 +120,7 @@ public class MitmProxyManager {
   }
 
   private boolean isProxyManagementPortFree() {
-    return isPortFree(8443);
+    return isPortFree(ADDONS_MANAGER_API_PORT);
   }
 
   private boolean isProxyPortFree() {
