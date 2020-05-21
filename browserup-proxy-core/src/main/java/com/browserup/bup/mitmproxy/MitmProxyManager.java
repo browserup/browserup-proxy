@@ -60,17 +60,19 @@ public class MitmProxyManager {
   }
 
   public void start(int port) {
-    try {
-      if (!isPortFree(ADDONS_MANAGER_API_PORT)) {
-        throw new RuntimeException("Proxy Management port is not free (" + ADDONS_MANAGER_API_PORT + ")");
-      }
+    start(port, defaultAddons());
+  }
 
-      startProxy(port);
+  public void start(int port, List<AbstractAddon> addons) {
+    try {
+      startProxy(port, addons);
 
       this.isRunning = true;
       this.proxyPort = port;
 
-      configureProxy();
+      if (!addons.isEmpty()) {
+        configureProxy();
+      }
 
     } catch (Exception ex) {
       LOGGER.error("Failed to start proxy", ex);
@@ -119,37 +121,27 @@ public class MitmProxyManager {
     }
   }
 
-  private boolean isProxyManagementPortFree() {
-    return isPortFree(ADDONS_MANAGER_API_PORT);
-  }
-
-  private boolean isProxyPortFree() {
-    return isPortFree(proxyPort);
-  }
-
-  private boolean isPortFree(int port) {
-    Socket s = null;
-    try {
-      s = new Socket("localhost", port);
-      return false;
-    } catch (IOException e) {
-      return true;
-    } finally {
-      if (s != null) {
-        try {
-          s.close();
-        } catch (IOException e) {
-          throw new RuntimeException("Couldn't check port availability", e);
-        }
-      }
-    }
-  }
-
   public void setTrustAll(boolean trustAll) {
     this.trustAll = trustAll;
   }
 
-  private void startProxy(int port) {
+  private List<AbstractAddon> defaultAddons() {
+    AbstractAddon[] addonsArray = new AbstractAddon[]{
+            rewriteUrlAddOn,
+            httpConnectCaptureAddOn,
+            harCaptureFilterAddOn,
+            addonsManagerAddOn,
+            proxyManagerAddOn,
+            whiteListAddOn,
+            blackListAddOn,
+            authBasicFilterAddOn,
+            additionalHeadersAddOn,
+            latencyAddOn,
+    };
+    return Arrays.asList(addonsArray);
+  }
+
+  private void startProxy(int port, List<AbstractAddon> addons) {
     List<String> command = new ArrayList<String>() {{
       add("mitmdump");
       add("-p");
@@ -161,20 +153,15 @@ public class MitmProxyManager {
 
     InetSocketAddress upstreamProxyAddress = proxyManager.getUpstreamProxyAddress();
     if (upstreamProxyAddress != null) {
-        command.add("--mode");
-        command.add("upstream:http://" + upstreamProxyAddress.getHostName() + ":" + upstreamProxyAddress.getPort());
+      String schema = "http";
+      if (proxyManager.isUseHttpsUpstreamProxy()) {
+        schema = "https";
+      }
+      command.add("--mode");
+      command.add("upstream:" + schema + "://" + upstreamProxyAddress.getHostName() + ":" + upstreamProxyAddress.getPort());
     }
 
-    command.addAll(Arrays.asList(rewriteUrlAddOn.getCommandParams()));
-    command.addAll(Arrays.asList(httpConnectCaptureAddOn.getCommandParams()));
-    command.addAll(Arrays.asList(harCaptureFilterAddOn.getCommandParams()));
-    command.addAll(Arrays.asList(addonsManagerAddOn.getCommandParams()));
-    command.addAll(Arrays.asList(proxyManagerAddOn.getCommandParams()));
-    command.addAll(Arrays.asList(whiteListAddOn.getCommandParams()));
-    command.addAll(Arrays.asList(blackListAddOn.getCommandParams()));
-    command.addAll(Arrays.asList(authBasicFilterAddOn.getCommandParams()));
-    command.addAll(Arrays.asList(additionalHeadersAddOn.getCommandParams()));
-    command.addAll(Arrays.asList(latencyAddOn.getCommandParams()));
+    addons.forEach(addon -> command.addAll(Arrays.asList(addon.getCommandParams())));
 
     LOGGER.info("Starting proxy using command: " + String.join(" ", command));
 

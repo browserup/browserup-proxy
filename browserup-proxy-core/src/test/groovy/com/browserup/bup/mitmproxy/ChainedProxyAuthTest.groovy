@@ -15,6 +15,7 @@ import org.junit.After
 import org.junit.Test
 import org.littleshoot.proxy.HttpProxyServer
 import org.littleshoot.proxy.ProxyAuthenticator
+import org.littleshoot.proxy.extras.SelfSignedSslEngineSource
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*
@@ -23,6 +24,8 @@ import static org.junit.Assert.assertEquals
 class ChainedProxyAuthTest extends MockServerTest {
     MitmProxyServer proxy
 
+    MitmProxyServer upstreamMitmProxy
+
     HttpProxyServer upstreamProxy
 
     @After
@@ -30,7 +33,7 @@ class ChainedProxyAuthTest extends MockServerTest {
         if (proxy?.started) {
             proxy.abort()
         }
-
+        upstreamMitmProxy.abort()
         upstreamProxy?.abort()
     }
 
@@ -68,6 +71,30 @@ class ChainedProxyAuthTest extends MockServerTest {
 
         proxy = new MitmProxyServer()
         proxy.setChainedProxy(upstreamProxy.getListenAddress())
+        proxy.setTrustAllServers(true)
+        proxy.start()
+
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/proxyauth")).getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", responseBody)
+        }
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
+    }
+
+    @Test
+    void testMitmproxyUsesHttpsUpstreamProxy() {
+        upstreamMitmProxy = new MitmProxyServer()
+        upstreamMitmProxy.setTrustAllServers(true)
+        upstreamMitmProxy.start(Collections.emptyList())
+
+        def stubUrl = "/proxyauth"
+        stubFor(get(urlEqualTo(stubUrl)).willReturn(ok().withBody("success")))
+
+        proxy = new MitmProxyServer()
+
+        proxy.setChainedProxy(new InetSocketAddress("localhost", upstreamMitmProxy.getPort()))
+        proxy.setChainedProxyHTTPS(true)
         proxy.setTrustAllServers(true)
         proxy.start()
 

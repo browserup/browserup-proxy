@@ -19,6 +19,7 @@ public class ProxyManager {
     private long dnsResolutionDelayMs = -1;
     private String upstreamProxyCredentials = "";
     private InetSocketAddress upstreamProxyAddress;
+    private boolean useHttpsUpstreamProxy = false;
 
     public ProxyManager(AddonsManagerClient addonsManagerClient, MitmProxyManager mitmProxyManager) {
         this.addonsManagerClient = addonsManagerClient;
@@ -95,6 +96,10 @@ public class ProxyManager {
         return dnsResolutionDelayMs;
     }
 
+    public void setChainedHttpsProxy(boolean useHttpsUpstreamProxy) {
+        this.useHttpsUpstreamProxy = useHttpsUpstreamProxy;
+    }
+
     public void setChainedProxy(InetSocketAddress chainedProxyAddress) {
         this.upstreamProxyAddress = chainedProxyAddress;
     }
@@ -103,5 +108,7 @@ public class ProxyManager {
         return upstreamProxyAddress;
     }
 
-
+    public boolean isUseHttpsUpstreamProxy() {
+        return useHttpsUpstreamProxy;
+    }
 }

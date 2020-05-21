@@ -6,6 +6,7 @@ import com.browserup.bup.filters.ResponseFilter;
 import com.browserup.bup.mitm.TrustSource;
 import com.browserup.bup.mitmproxy.MitmProxyManager;
 import com.browserup.bup.mitmproxy.NetworkUtils;
+import com.browserup.bup.mitmproxy.addons.AbstractAddon;
 import com.browserup.bup.mitmproxy.management.HarCaptureManager;
 import com.browserup.bup.proxy.BlacklistEntry;
 import com.browserup.bup.proxy.CaptureType;
@@ -29,6 +30,10 @@ import java.util.regex.Pattern;
 
 public class MitmProxyServer implements BrowserUpProxy {
   private MitmProxyManager mitmProxyManager = MitmProxyManager.getInstance();
+
+  public void start(List<AbstractAddon> addons) {
+    mitmProxyManager.start(NetworkUtils.getFreePort(), addons);
+  }
 
   @Override
   public void start() {
@@ -380,7 +385,7 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public void setChainedProxyHTTPS(boolean chainedProxyHTTPS) {
-
+    this.mitmProxyManager.getProxyManager().setChainedHttpsProxy(chainedProxyHTTPS);
   }
 
   @Override
