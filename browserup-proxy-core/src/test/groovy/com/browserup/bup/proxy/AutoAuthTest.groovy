@@ -81,6 +81,29 @@ class AutoAuthTest extends MockServerTest {
     }
 
     @Test
+    void testBasicAuthWithWildcardAddedToHttpsRequest() {
+        // the base64-encoded rendering of "testUsername:testPassword" is dGVzdFVzZXJuYW1lOnRlc3RQYXNzd29yZA==
+        def stubUrl = "/basicAuthHttp"
+
+        stubFor(get(urlEqualTo(stubUrl))
+                .withHeader("Authorization", new EqualToPattern("Basic dGVzdFVzZXJuYW1lOnRlc3RQYXNzd29yZA=="))
+                .willReturn(ok().withBody("success")))
+
+        proxy = new BrowserUpProxyServer()
+        // * (wildcard) should match "localhost"
+        proxy.autoAuthorization("*", "testUsername", "testPassword", AuthType.BASIC)
+        proxy.setTrustAllServers(true)
+        proxy.start()
+
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/basicAuthHttp")).getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", responseBody)
+        }
+
+        verify(1, getRequestedFor(urlMatching(stubUrl)))
+    }
+
+    @Test
     void testCanStopBasicAuth() {
         // the base64-encoded rendering of "testUsername:testPassword" is dGVzdFVzZXJuYW1lOnRlc3RQYXNzd29yZA==
         def stubUrl = "/basicAuthHttp"
