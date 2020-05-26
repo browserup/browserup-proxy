@@ -57,8 +57,10 @@ uploadArchives {
 }
 
 dependencies {
-    api 'io.netty:netty-codec:4.1.44.Final'
-    api 'xyz.rogfam:littleproxy:2.0.0-beta-5'
+    api "io.netty:netty-codec:${nettyVersion}"
+    api('xyz.rogfam:littleproxy:2.0.0-beta-5') {
+        exclude(group: 'io.netty', module: 'netty-all')
+    }
 
     implementation project(':browserup-proxy-mitm')
 
@@ -68,14 +70,13 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     implementation "com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}"
     implementation 'com.google.guava:guava:28.2-jre'
-    implementation('com.jcraft:jzlib:1.1.3') {
-        exclude(module: 'netty')
-    }
-    implementation 'dnsjava:dnsjava:2.1.9'
+    implementation 'com.jcraft:jzlib:1.1.3'
+    implementation 'dnsjava:dnsjava:3.1.0'
+    implementation "io.netty:netty-all:${nettyVersion}"
     implementation "org.bouncycastle:bcpkix-jdk15on:${bcpVersion}"
     implementation "org.bouncycastle:bcprov-jdk15on:${bcpVersion}"
     implementation 'org.brotli:dec:0.1.2'
-    implementation 'org.javassist:javassist:3.26.0-GA'
+    implementation "org.javassist:javassist:${javassistVersion}"
     implementation 'org.seleniumhq.selenium:selenium-api:3.141.59'
     implementation "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
     implementation "org.slf4j:slf4j-api:${slf4jVersion}"
