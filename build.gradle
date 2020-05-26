@@ -28,7 +28,7 @@ subprojects {
     apply plugin: 'signing'
 
     group = 'com.browserup'
-    version = '2.1.1-SNAPSHOT'
+    version = '2.1.1'
 
     sourceCompatibility=1.8
 
