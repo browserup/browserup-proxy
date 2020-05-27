@@ -33,7 +33,7 @@ subprojects {
     sourceCompatibility=1.8
 
     ext {
-        bcpVersion = '1.64'
+        bcpVersion = '1.65'
         guiceVersion = '4.2.3'
         jacksonVersion = '2.10.3'
         javassistVersion = '3.27.0-GA'
