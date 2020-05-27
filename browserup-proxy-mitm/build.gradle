@@ -57,7 +57,7 @@ uploadArchives {
 }
 
 dependencies {
-    implementation 'com.google.guava:guava:28.2-jre'
+    implementation 'com.google.guava:guava:29.0-jre'
 
     implementation "org.bouncycastle:bcpkix-jdk15on:${bcpVersion}"
     implementation "org.bouncycastle:bcprov-jdk15on:${bcpVersion}"
