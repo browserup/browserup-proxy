@@ -66,6 +66,15 @@ class ProxyManagerResource:
         if credentials is not None:
             ctx.options.upstream_proxy_credentials = credentials
 
+    def on_set_chained_proxy_non_proxy_hosts(self, req, resp):
+        non_proxy_hosts = req.get_param('nonProxyHosts')
+
+        if non_proxy_hosts is not None:
+            non_proxy_hosts_parsed = non_proxy_hosts.strip("[]").split(",")
+            ctx.options.upstream_proxy_exception_hosts = non_proxy_hosts_parsed
+        else:
+            ctx.options.upstream_proxy_exception_hosts = []
+
 
 class ProxyManagerAddOn:
 
@@ -74,7 +83,7 @@ class ProxyManagerAddOn:
 
     def http_connect(self, f):
         if ctx.options.upstream_proxy_credentials and f.mode == "upstream":
-            f.request.headers["Proxy-Authorization"] = "Basic " + ctx.options.upstream_proxy_credentials
+            f.request.headers["Proxy-Authorization"] = ctx.options.upstream_proxy_credentials
 
     def requestheaders(self, f):
         if self.are_upstream_proxy_credentials_available():

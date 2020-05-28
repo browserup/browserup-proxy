@@ -1,0 +1,10 @@
+1. com.browserup.bup.MitmProxyServer.setChainedProxyNonProxyHosts
+
+Mitmproxy doesn't provide 'upstream' proxy exception hosts API:
+https://github.com/mitmproxy/mitmproxy/issues/1821
+
+Possible workaround might be using approach from addon 'change_upstream_proxy.py' (using flow.live.change_upstream_proxy_server),
+but it doesn't allow to avoid upstream proxy at all - only switch between upstream proxies.
+We could add transparent pass-through proxy for user and redirect request there in case request host is matched by non-upstream-proxy host filters, provided by user, but that doesn't sound acceptable, we'd still have upstream proxy.
+Related issue:
+https://github.com/mitmproxy/mitmproxy/issues/2123

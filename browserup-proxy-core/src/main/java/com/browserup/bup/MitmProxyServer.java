@@ -390,7 +390,8 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public void setChainedProxyNonProxyHosts(List<String> upstreamNonProxyHosts) {
-
+    // this.mitmProxyManager.getProxyManager().setChainedProxyNonProxyHosts(upstreamNonProxyHosts);
+    // See notes in browserup-proxy-core/Mitmproxy_Integration_Notes.txt
   }
 
   @Override

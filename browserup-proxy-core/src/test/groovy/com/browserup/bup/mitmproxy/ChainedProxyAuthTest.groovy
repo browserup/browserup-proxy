@@ -12,6 +12,7 @@ import com.browserup.bup.proxy.test.util.NewProxyServerTestUtil
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.junit.After
+import org.junit.Ignore
 import org.junit.Test
 import org.littleshoot.proxy.HttpProxyServer
 import org.littleshoot.proxy.ProxyAuthenticator
@@ -20,6 +21,7 @@ import org.littleshoot.proxy.impl.DefaultHttpProxyServer
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*
 import static org.junit.Assert.assertEquals
+import static org.junit.Assert.assertTrue
 
 class ChainedProxyAuthTest extends MockServerTest {
     MitmProxyServer proxy
@@ -33,7 +35,7 @@ class ChainedProxyAuthTest extends MockServerTest {
         if (proxy?.started) {
             proxy.abort()
         }
-        upstreamMitmProxy.abort()
+        upstreamMitmProxy?.abort()
         upstreamProxy?.abort()
     }
 
@@ -78,6 +80,75 @@ class ChainedProxyAuthTest extends MockServerTest {
             String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/proxyauth")).getEntity().getContent())
             assertEquals("Did not receive expected response from mock server", "success", responseBody)
         }
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
+    }
+
+
+    @Test
+    @Ignore
+    void testUpstreamAndDownstreamProxiesGetRequestIfNonProxyHostDoNotMatch() {
+        upstreamMitmProxy = new MitmProxyServer()
+        upstreamMitmProxy.setTrustAllServers(true)
+        upstreamMitmProxy.start()
+
+        def stubUrl = "/proxyauth"
+        stubFor(get(urlEqualTo(stubUrl)).willReturn(ok().withBody("success")))
+
+        proxy = new MitmProxyServer()
+
+        proxy.setChainedProxy(new InetSocketAddress("localhost", upstreamMitmProxy.getPort()))
+        proxy.setChainedProxyHTTPS(true)
+        proxy.setTrustAllServers(true)
+        proxy.setChainedProxyNonProxyHosts(['bbc.com'])
+        proxy.start()
+
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/proxyauth")).getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", responseBody)
+        }
+
+        def downStreamHar = proxy.getHar()
+        def upStreamHar = upstreamMitmProxy.getHar()
+
+        assertEquals("Expected to get exactly one entry in har from downstream proxy", 1, downStreamHar.log.entries.size())
+        assertEquals("Expected to get exactly one entry in har from upstream proxy", 1, upStreamHar.log.entries.size())
+
+        assertEquals("Expected to get the same request URL in entries from downstream and upstream proxies",
+                downStreamHar.log.entries.first().request.url,
+                upStreamHar.log.entries.first().request.url)
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
+    }
+
+    @Test
+    @Ignore
+    void testUpstreamProxyDoesNotGetRequestIfNonProxyHostMatch() {
+        def stubUrl = "/proxyauth"
+        stubFor(get(urlEqualTo(stubUrl)).willReturn(ok().withBody("success")))
+
+        upstreamMitmProxy = new MitmProxyServer()
+        upstreamMitmProxy.setTrustAllServers(true)
+        upstreamMitmProxy.start()
+
+        proxy = new MitmProxyServer()
+
+        proxy.setChainedProxy(new InetSocketAddress("localhost", upstreamMitmProxy.getPort()))
+        proxy.setChainedProxyHTTPS(true)
+        proxy.setTrustAllServers(true)
+        proxy.setChainedProxyNonProxyHosts(['*localhost*'])
+        proxy.start()
+
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/proxyauth")).getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", responseBody)
+        }
+
+        def downStreamHar = proxy.getHar()
+        def upStreamHar = upstreamMitmProxy.getHar()
+
+        assertEquals("Expected to get exactly one entry in har from downstream proxy", 1, downStreamHar.log.entries.size())
+        assertEquals("Expected to get exactly no entries in har from upstream proxy", 0, upStreamHar.log.entries.size())
 
         verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }

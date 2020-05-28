@@ -12,21 +12,20 @@ import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
 import java.io.*;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class MitmProxyManager {
-  public static final int ADDONS_MANAGER_API_PORT = 8088;
   private static final Logger LOGGER = LoggerFactory.getLogger(MitmProxyManager.class);
 
+  private final int addonsManagerApiPort = NetworkUtils.getFreePort();
   private StartedProcess startedProcess = null;
 
   private HarCaptureAddOn harCaptureFilterAddOn = new HarCaptureAddOn();
   private ProxyManagerAddOn proxyManagerAddOn = new ProxyManagerAddOn();
-  private AddonsManagerAddOn addonsManagerAddOn = new AddonsManagerAddOn(ADDONS_MANAGER_API_PORT);
+  private AddonsManagerAddOn addonsManagerAddOn = new AddonsManagerAddOn(addonsManagerApiPort);
   private WhiteListAddOn whiteListAddOn = new WhiteListAddOn();
   private BlackListAddOn blackListAddOn = new BlackListAddOn();
   private AuthBasicAddOn authBasicFilterAddOn = new AuthBasicAddOn();
@@ -35,7 +34,7 @@ public class MitmProxyManager {
   private RewriteUrlAddOn rewriteUrlAddOn = new RewriteUrlAddOn();
   private LatencyAddOn latencyAddOn = new LatencyAddOn();
 
-  private AddonsManagerClient addonsManagerClient = new AddonsManagerClient(ADDONS_MANAGER_API_PORT);
+  private AddonsManagerClient addonsManagerClient = new AddonsManagerClient(addonsManagerApiPort);
 
   private HarCaptureManager harCaptureFilterManager = new HarCaptureManager(addonsManagerClient, this);
   private ProxyManager proxyManager = new ProxyManager(addonsManagerClient, this);
@@ -90,6 +89,7 @@ public class MitmProxyManager {
     proxyManager.setConnectionIdleTimeout(proxyManager.getConnectionIdleTimeoutSeconds());
     proxyManager.setDnsResolvingDelayMs(proxyManager.getDnsResolutionDelayMs());
     proxyManager.setChainedProxyAuthorization(proxyManager.getUpstreamProxyCredentials());
+    proxyManager.setChainedProxyNonProxyHosts(proxyManager.getUpstreamNonProxyHosts());
   }
 
   public Integer getProxyPort() {

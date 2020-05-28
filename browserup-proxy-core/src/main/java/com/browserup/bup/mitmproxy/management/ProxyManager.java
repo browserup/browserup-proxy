@@ -7,6 +7,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import static java.lang.String.valueOf;
 import static org.apache.commons.lang3.tuple.Pair.of;
@@ -20,6 +21,7 @@ public class ProxyManager {
     private String upstreamProxyCredentials = "";
     private InetSocketAddress upstreamProxyAddress;
     private boolean useHttpsUpstreamProxy = false;
+    private List<String> upstreamNonProxyHosts = new ArrayList<>();
 
     public ProxyManager(AddonsManagerClient addonsManagerClient, MitmProxyManager mitmProxyManager) {
         this.addonsManagerClient = addonsManagerClient;
@@ -110,5 +112,24 @@ public class ProxyManager {
 
     public boolean isUseHttpsUpstreamProxy() {
         return useHttpsUpstreamProxy;
+    }
+
+    public List<String> getUpstreamNonProxyHosts() {
+        return upstreamNonProxyHosts;
+    }
+
+    public void setChainedProxyNonProxyHosts(List<String> upstreamNonProxyHosts) {
+        this.upstreamNonProxyHosts = upstreamNonProxyHosts;
+
+        if (!mitmProxyManager.isRunning()) return;
+
+        addonsManagerClient.
+                getRequestToAddonsManager(
+                        "proxy_manager",
+                        "set_chained_proxy_non_proxy_hosts",
+                        new ArrayList<Pair<String, String>>() {{
+                            add(of("nonProxyHosts", valueOf(upstreamNonProxyHosts)));
+                        }},
+                        Void.class);
     }
 }
