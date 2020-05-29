@@ -10,15 +10,14 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
-import java.io.*;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class MitmProxyManager {
-  private static final Logger LOGGER = LoggerFactory.getLogger(MitmProxyManager.class);
+public class MitmProxyProcessManager {
+  private static final Logger LOGGER = LoggerFactory.getLogger(MitmProxyProcessManager.class);
 
   private final int addonsManagerApiPort = NetworkUtils.getFreePort();
   private StartedProcess startedProcess = null;
@@ -50,14 +49,14 @@ public class MitmProxyManager {
   private boolean isRunning = false;
   private boolean trustAll = false;
 
-  private MitmProxyManager() {}
+  private MitmProxyProcessManager() {}
 
-  public static MitmProxyManager getInstance() {
-    return new MitmProxyManager();
+  public static MitmProxyProcessManager getInstance() {
+    return new MitmProxyProcessManager();
   }
 
   public void start(int port) {
-    start(port, defaultAddons());
+    start(port == 0 ? NetworkUtils.getFreePort() : port, defaultAddons());
   }
 
   public void start(int port, List<AbstractAddon> addons) {

@@ -1,6 +1,6 @@
 package com.browserup.bup
 
-import com.browserup.bup.mitmproxy.MitmProxyManager
+import com.browserup.bup.mitmproxy.MitmProxyProcessManager
 import com.browserup.harreader.model.Har
 import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.Method
@@ -11,8 +11,8 @@ import org.junit.Test
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertTrue;
 
-class MitmProxyManagerTest {
-    def mitmProxyManager = MitmProxyManager.getInstance()
+class MitmProxyProcessManagerTest {
+    def mitmProxyManager = MitmProxyProcessManager.getInstance()
 
     @After
     void setUp() {

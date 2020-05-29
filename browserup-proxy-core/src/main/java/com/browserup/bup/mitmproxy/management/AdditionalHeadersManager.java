@@ -1,6 +1,6 @@
 package com.browserup.bup.mitmproxy.management;
 
-import com.browserup.bup.mitmproxy.MitmProxyManager;
+import com.browserup.bup.mitmproxy.MitmProxyProcessManager;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -15,10 +15,10 @@ import static org.apache.commons.lang3.tuple.Pair.of;
 
 public class AdditionalHeadersManager {
     private final AddonsManagerClient addonsManagerClient;
-    private final MitmProxyManager mitmProxyManager;
+    private final MitmProxyProcessManager mitmProxyManager;
     private final Map<String, String> headers = new HashMap<>();
 
-    public AdditionalHeadersManager(AddonsManagerClient addonsManagerClient, MitmProxyManager mitmProxyManager) {
+    public AdditionalHeadersManager(AddonsManagerClient addonsManagerClient, MitmProxyProcessManager mitmProxyManager) {
         this.addonsManagerClient = addonsManagerClient;
         this.mitmProxyManager = mitmProxyManager;
     }

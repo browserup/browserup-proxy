@@ -1,6 +1,6 @@
 package com.browserup.bup.mitmproxy.management;
 
-import com.browserup.bup.mitmproxy.MitmProxyManager;
+import com.browserup.bup.mitmproxy.MitmProxyProcessManager;
 import com.browserup.bup.proxy.CaptureType;
 import com.browserup.harreader.model.Har;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -17,11 +17,11 @@ import static org.apache.commons.lang3.tuple.Pair.of;
 
 public class HarCaptureManager {
     private final AddonsManagerClient addonsManagerClient;
-    private final MitmProxyManager mitmProxyManager;
+    private final MitmProxyProcessManager mitmProxyManager;
     private Har lastHar = new Har();
     private EnumSet<CaptureType> lastCaptureTypes = EnumSet.noneOf(CaptureType.class);
 
-    public HarCaptureManager(AddonsManagerClient addonsManagerClient, MitmProxyManager mitmProxyManager) {
+    public HarCaptureManager(AddonsManagerClient addonsManagerClient, MitmProxyProcessManager mitmProxyManager) {
         this.addonsManagerClient = addonsManagerClient;
         this.mitmProxyManager = mitmProxyManager;
     }

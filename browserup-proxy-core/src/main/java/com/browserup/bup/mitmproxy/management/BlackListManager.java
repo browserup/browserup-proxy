@@ -1,6 +1,6 @@
 package com.browserup.bup.mitmproxy.management;
 
-import com.browserup.bup.mitmproxy.MitmProxyManager;
+import com.browserup.bup.mitmproxy.MitmProxyProcessManager;
 import com.browserup.bup.proxy.BlacklistEntry;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,9 +17,9 @@ import static org.apache.commons.lang3.tuple.Pair.of;
 
 public class BlackListManager {
     private final AddonsManagerClient addonsManagerClient;
-    private final MitmProxyManager mitmProxyManager;
+    private final MitmProxyProcessManager mitmProxyManager;
 
-    public BlackListManager(AddonsManagerClient addonsManagerClient, MitmProxyManager mitmProxyManager) {
+    public BlackListManager(AddonsManagerClient addonsManagerClient, MitmProxyProcessManager mitmProxyManager) {
         this.addonsManagerClient = addonsManagerClient;
         this.mitmProxyManager = mitmProxyManager;
     }

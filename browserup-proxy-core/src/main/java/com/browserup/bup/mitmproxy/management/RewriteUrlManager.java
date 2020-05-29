@@ -1,6 +1,6 @@
 package com.browserup.bup.mitmproxy.management;
 
-import com.browserup.bup.mitmproxy.MitmProxyManager;
+import com.browserup.bup.mitmproxy.MitmProxyProcessManager;
 import com.browserup.bup.proxy.RewriteRule;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.tuple.Pair;
@@ -15,11 +15,11 @@ import static org.apache.commons.lang3.tuple.Pair.of;
 
 public class RewriteUrlManager {
     private final AddonsManagerClient addonsManagerClient;
-    private final MitmProxyManager mitmProxyManager;
+    private final MitmProxyProcessManager mitmProxyManager;
 
     private volatile CopyOnWriteArrayList<RewriteRule> rewriteRules = new CopyOnWriteArrayList<>();
 
-    public RewriteUrlManager(AddonsManagerClient addonsManagerClient, MitmProxyManager mitmProxyManager) {
+    public RewriteUrlManager(AddonsManagerClient addonsManagerClient, MitmProxyProcessManager mitmProxyManager) {
         this.addonsManagerClient = addonsManagerClient;
         this.mitmProxyManager = mitmProxyManager;
     }

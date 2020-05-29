@@ -1,6 +1,6 @@
 package com.browserup.bup.mitmproxy.management;
 
-import com.browserup.bup.mitmproxy.MitmProxyManager;
+import com.browserup.bup.mitmproxy.MitmProxyProcessManager;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -11,9 +11,9 @@ import static org.apache.commons.lang3.tuple.Pair.of;
 
 public class WhiteListManager {
     private final AddonsManagerClient addonsManagerClient;
-    private final MitmProxyManager mitmProxyManager;
+    private final MitmProxyProcessManager mitmProxyManager;
 
-    public WhiteListManager(AddonsManagerClient addonsManagerClient, MitmProxyManager mitmProxyManager) {
+    public WhiteListManager(AddonsManagerClient addonsManagerClient, MitmProxyProcessManager mitmProxyManager) {
         this.addonsManagerClient = addonsManagerClient;
         this.mitmProxyManager = mitmProxyManager;
     }

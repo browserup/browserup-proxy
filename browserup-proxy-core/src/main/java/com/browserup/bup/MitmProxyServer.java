@@ -4,7 +4,7 @@ import com.browserup.bup.assertion.model.AssertionResult;
 import com.browserup.bup.filters.RequestFilter;
 import com.browserup.bup.filters.ResponseFilter;
 import com.browserup.bup.mitm.TrustSource;
-import com.browserup.bup.mitmproxy.MitmProxyManager;
+import com.browserup.bup.mitmproxy.MitmProxyProcessManager;
 import com.browserup.bup.mitmproxy.NetworkUtils;
 import com.browserup.bup.mitmproxy.addons.AbstractAddon;
 import com.browserup.bup.mitmproxy.management.HarCaptureManager;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 public class MitmProxyServer implements BrowserUpProxy {
   private static final Logger log = LoggerFactory.getLogger(MitmProxyServer.class);
 
-  private MitmProxyManager mitmProxyManager = MitmProxyManager.getInstance();
+  private MitmProxyProcessManager mitmProxyManager = MitmProxyProcessManager.getInstance();
 
   public void start(List<AbstractAddon> addons) {
     mitmProxyManager.start(NetworkUtils.getFreePort(), addons);

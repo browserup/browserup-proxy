@@ -9,7 +9,7 @@ import javax.validation.ConstraintValidatorContext;
 import javax.validation.Payload;
 import javax.ws.rs.core.Context;
 
-import com.browserup.bup.proxy.ProxyManager;
+import com.browserup.bup.proxy.MitmProxyManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,9 +31,9 @@ public @interface PortWithExistingProxyConstraint {
     private static final Logger LOG = LoggerFactory.getLogger(PortWithExistingProxyConstraintValidator.class);
     private static final String PARAM_NAME = "proxy port";
 
-    private final ProxyManager proxyManager;
+    private final MitmProxyManager proxyManager;
 
-    public PortWithExistingProxyConstraintValidator(@Context ProxyManager proxyManager) {
+    public PortWithExistingProxyConstraintValidator(@Context MitmProxyManager proxyManager) {
       this.proxyManager = proxyManager;
     }
 

@@ -1,25 +1,23 @@
 package com.browserup.bup.mitmproxy.management;
 
-import com.browserup.bup.mitmproxy.MitmProxyManager;
-import com.browserup.harreader.model.Har;
+import com.browserup.bup.mitmproxy.MitmProxyProcessManager;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import static java.lang.String.valueOf;
 import static org.apache.commons.lang3.tuple.Pair.of;
 
 public class ProxyManager {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MitmProxyManager.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MitmProxyProcessManager.class);
     private static final String SUCCESSFUL_HEALTH_CHECK_BODY = "OK";
 
     private final AddonsManagerClient addonsManagerClient;
-    private final MitmProxyManager mitmProxyManager;
+    private final MitmProxyProcessManager mitmProxyManager;
 
     private long connectionIdleTimeoutSeconds = -1;
     private long dnsResolutionDelayMs = -1;
@@ -28,7 +26,7 @@ public class ProxyManager {
     private boolean useHttpsUpstreamProxy = false;
     private List<String> upstreamNonProxyHosts = new ArrayList<>();
 
-    public ProxyManager(AddonsManagerClient addonsManagerClient, MitmProxyManager mitmProxyManager) {
+    public ProxyManager(AddonsManagerClient addonsManagerClient, MitmProxyProcessManager mitmProxyManager) {
         this.addonsManagerClient = addonsManagerClient;
         this.mitmProxyManager = mitmProxyManager;
     }

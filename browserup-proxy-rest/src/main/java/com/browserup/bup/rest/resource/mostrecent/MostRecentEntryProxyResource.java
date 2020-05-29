@@ -1,7 +1,9 @@
 package com.browserup.bup.rest.resource.mostrecent;
 
 import com.browserup.bup.BrowserUpProxyServer;
+import com.browserup.bup.MitmProxyServer;
 import com.browserup.bup.assertion.model.AssertionResult;
+import com.browserup.bup.proxy.MitmProxyManager;
 import com.browserup.bup.proxy.ProxyManager;
 import com.browserup.bup.rest.validation.HttpStatusCodeConstraint;
 import com.browserup.bup.rest.validation.LongPositiveConstraint;
@@ -44,9 +46,9 @@ public class MostRecentEntryProxyResource {
     private static final String HEADER_VALUE_PATTERN = "headerValuePattern";
     private static final String STATUS = "status";
 
-    private final ProxyManager proxyManager;
+    private final MitmProxyManager proxyManager;
 
-    public MostRecentEntryProxyResource(@Context ProxyManager proxyManager) {
+    public MostRecentEntryProxyResource(@Context MitmProxyManager proxyManager) {
         this.proxyManager = proxyManager;
     }
 
@@ -351,7 +353,7 @@ public class MostRecentEntryProxyResource {
             @HttpStatusCodeConstraint(paramName = STATUS)
             @Parameter(required = true, description = STATUS_DESCRIPTION) String status) {
 
-        BrowserUpProxyServer proxyServer = proxyManager.get(port);
+        MitmProxyServer proxyServer = proxyManager.get(port);
         int intStatus = Integer.parseInt(status);
 
         return urlPattern.isEmpty() ?
@@ -381,7 +383,7 @@ public class MostRecentEntryProxyResource {
             @PatternConstraint(paramName = URL_PATTERN)
             @Parameter(description = URL_PATTERN_DESCRIPTION) String urlPattern) {
 
-        BrowserUpProxyServer proxyServer = proxyManager.get(port);
+        MitmProxyServer proxyServer = proxyManager.get(port);
 
         return urlPattern.isEmpty() ?
                 proxyServer.assertMostRecentResponseStatusCode(HttpStatusClass.INFORMATIONAL) :
@@ -410,7 +412,7 @@ public class MostRecentEntryProxyResource {
             @PatternConstraint(paramName = URL_PATTERN)
             @Parameter(description = URL_PATTERN_DESCRIPTION) String urlPattern) {
 
-        BrowserUpProxyServer proxyServer = proxyManager.get(port);
+        MitmProxyServer proxyServer = proxyManager.get(port);
 
         return urlPattern.isEmpty() ?
                 proxyServer.assertMostRecentResponseStatusCode(HttpStatusClass.SUCCESS) :
@@ -439,7 +441,7 @@ public class MostRecentEntryProxyResource {
             @PatternConstraint(paramName = URL_PATTERN)
             @Parameter(description = URL_PATTERN_DESCRIPTION) String urlPattern) {
 
-        BrowserUpProxyServer proxyServer = proxyManager.get(port);
+        MitmProxyServer proxyServer = proxyManager.get(port);
 
         return urlPattern.isEmpty() ?
                 proxyServer.assertMostRecentResponseStatusCode(HttpStatusClass.REDIRECTION) :
@@ -468,7 +470,7 @@ public class MostRecentEntryProxyResource {
             @PatternConstraint(paramName = URL_PATTERN)
             @Parameter(description = URL_PATTERN_DESCRIPTION) String urlPattern) {
 
-        BrowserUpProxyServer proxyServer = proxyManager.get(port);
+        MitmProxyServer proxyServer = proxyManager.get(port);
 
         return urlPattern.isEmpty() ?
                 proxyServer.assertMostRecentResponseStatusCode(HttpStatusClass.CLIENT_ERROR) :
@@ -497,7 +499,7 @@ public class MostRecentEntryProxyResource {
             @PatternConstraint(paramName = URL_PATTERN)
             @Parameter(description = URL_PATTERN_DESCRIPTION) String urlPattern) {
 
-        BrowserUpProxyServer proxyServer = proxyManager.get(port);
+        MitmProxyServer proxyServer = proxyManager.get(port);
 
         return urlPattern.isEmpty() ?
                 proxyServer.assertMostRecentResponseStatusCode(HttpStatusClass.SERVER_ERROR) :

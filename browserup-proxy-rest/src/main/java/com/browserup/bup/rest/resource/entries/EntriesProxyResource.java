@@ -1,8 +1,9 @@
 package com.browserup.bup.rest.resource.entries;
 
 import com.browserup.bup.BrowserUpProxyServer;
+import com.browserup.bup.MitmProxyServer;
 import com.browserup.bup.assertion.model.AssertionResult;
-import com.browserup.bup.proxy.ProxyManager;
+import com.browserup.bup.proxy.MitmProxyManager;
 import com.browserup.bup.rest.swagger.DocConstants;
 import com.browserup.bup.rest.validation.HttpStatusCodeConstraint;
 import com.browserup.bup.rest.validation.LongPositiveConstraint;
@@ -48,9 +49,9 @@ public class EntriesProxyResource {
     private static final String HEADER_VALUE_PATTERN = "headerValuePattern";
     private static final String STATUS = "status";
 
-    private final ProxyManager proxyManager;
+    private final MitmProxyManager proxyManager;
 
-    public EntriesProxyResource(@Context ProxyManager proxyManager) {
+    public EntriesProxyResource(@Context MitmProxyManager proxyManager) {
         this.proxyManager = proxyManager;
     }
 
@@ -352,7 +353,7 @@ public class EntriesProxyResource {
             @HttpStatusCodeConstraint(paramName = STATUS)
             @Parameter(required = true, description = STATUS_DESCRIPTION) String status) {
 
-        BrowserUpProxyServer proxyServer = proxyManager.get(port);
+        MitmProxyServer proxyServer = proxyManager.get(port);
         int intStatus = Integer.parseInt(status);
 
         return StringUtils.isEmpty(urlPattern) ?
@@ -381,7 +382,7 @@ public class EntriesProxyResource {
             @PatternConstraint(paramName = URL_PATTERN)
             @Parameter(description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern) {
 
-        BrowserUpProxyServer proxyServer = proxyManager.get(port);
+        MitmProxyServer proxyServer = proxyManager.get(port);
 
         return StringUtils.isEmpty(urlPattern) ?
                 proxyServer.assertResponseStatusCode(HttpStatusClass.INFORMATIONAL) :
@@ -409,7 +410,7 @@ public class EntriesProxyResource {
             @PatternConstraint(paramName = URL_PATTERN)
             @Parameter(description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern) {
 
-        BrowserUpProxyServer proxyServer = proxyManager.get(port);
+        MitmProxyServer proxyServer = proxyManager.get(port);
 
         return StringUtils.isEmpty(urlPattern) ?
                 proxyServer.assertResponseStatusCode(HttpStatusClass.SUCCESS) :
@@ -437,7 +438,7 @@ public class EntriesProxyResource {
             @PatternConstraint(paramName = URL_PATTERN)
             @Parameter(description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern) {
 
-        BrowserUpProxyServer proxyServer = proxyManager.get(port);
+        MitmProxyServer proxyServer = proxyManager.get(port);
 
         return StringUtils.isEmpty(urlPattern) ?
                 proxyServer.assertResponseStatusCode(HttpStatusClass.REDIRECTION) :
@@ -465,7 +466,7 @@ public class EntriesProxyResource {
             @PatternConstraint(paramName = URL_PATTERN)
             @Parameter(description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern) {
 
-        BrowserUpProxyServer proxyServer = proxyManager.get(port);
+        MitmProxyServer proxyServer = proxyManager.get(port);
 
         return StringUtils.isEmpty(urlPattern) ?
                 proxyServer.assertResponseStatusCode(HttpStatusClass.CLIENT_ERROR) :
@@ -493,7 +494,7 @@ public class EntriesProxyResource {
             @PatternConstraint(paramName = URL_PATTERN)
             @Parameter(description = DocConstants.URL_PATTERN_DESCRIPTION) String urlPattern) {
 
-        BrowserUpProxyServer proxyServer = proxyManager.get(port);
+        MitmProxyServer proxyServer = proxyManager.get(port);
 
         return StringUtils.isEmpty(urlPattern) ?
                 proxyServer.assertResponseStatusCode(HttpStatusClass.SERVER_ERROR) :

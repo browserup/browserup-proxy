@@ -4,13 +4,13 @@
 
 package com.browserup.bup.proxy.bricks;
 
-import com.browserup.bup.BrowserUpProxyServer;
+import com.browserup.bup.MitmProxyServer;
 import com.browserup.bup.exception.ProxyExistsException;
 import com.browserup.bup.exception.ProxyPortsExhaustedException;
 import com.browserup.bup.exception.UnsupportedCharsetException;
 import com.browserup.bup.filters.JavascriptRequestResponseFilter;
 import com.browserup.bup.proxy.CaptureType;
-import com.browserup.bup.proxy.ProxyManager;
+import com.browserup.bup.proxy.MitmProxyManager;
 import com.browserup.bup.proxy.auth.AuthType;
 import com.browserup.bup.util.BrowserUpHttpUtil;
 import com.browserup.harreader.model.Har;
@@ -55,10 +55,10 @@ public class ProxyResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProxyResource.class);
 
-    private final ProxyManager proxyManager;
+    private final MitmProxyManager proxyManager;
 
     @Inject
-    public ProxyResource(ProxyManager proxyManager) {
+    public ProxyResource(MitmProxyManager proxyManager) {
         this.proxyManager = proxyManager;
     }
 
@@ -120,7 +120,7 @@ public class ProxyResource {
 
         LOG.debug("POST proxy instance on bindAddress `{}` & port `{}` & serverBindAddress `{}`",
                 paramBindAddr, paramPort, paramServerBindAddr);
-        BrowserUpProxyServer proxy;
+        MitmProxyServer proxy;
         try {
             proxy = proxyManager.create(upstreamHttpProxy, upstreamProxyHttps, upstreamNonProxyHosts, proxyUsername, proxyPassword, paramPort, paramBindAddr, paramServerBindAddr, useEcc, trustAllServers);
         } catch (ProxyExistsException ex) {
@@ -139,7 +139,7 @@ public class ProxyResource {
     @At("/:port/har")
     public Reply<?> getHar(@Named("port") int port, Request request) {
         LOG.info("GET /" + port + "/har");
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -155,7 +155,7 @@ public class ProxyResource {
     public Reply<?> newHar(@Named("port") int port, Request request) {
         LOG.info("PUT /" + port + "/har");
         LOG.info(request.params().toString());
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -180,9 +180,9 @@ public class ProxyResource {
         proxy.setHarCaptureTypes(captureTypes);
 
         String captureCookies = request.param("captureCookies");
-        if (proxy instanceof BrowserUpProxyServer && Boolean.parseBoolean(captureCookies)) {
-            BrowserUpProxyServer BrowserUpProxyServer = (BrowserUpProxyServer) proxy;
-            BrowserUpProxyServer.enableHarCaptureTypes(CaptureType.getCookieCaptureTypes());
+        if (proxy instanceof MitmProxyServer && Boolean.parseBoolean(captureCookies)) {
+            MitmProxyServer MitmProxyServer = (MitmProxyServer) proxy;
+            MitmProxyServer.enableHarCaptureTypes(CaptureType.getCookieCaptureTypes());
         }
 
         if (oldHar != null) {
@@ -197,7 +197,7 @@ public class ProxyResource {
     public Reply<?> setPage(@Named("port") int port, Request request) {
         LOG.info("PUT /" + port + "/har/pageRef");
         LOG.info(request.params().toString());
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -213,7 +213,7 @@ public class ProxyResource {
     @At("/:port/har/commands/endPage")
     public Reply<?> endPage(@Named("port") int port, Request request) {
         LOG.info("POST /" + port + "/commands/endPage");
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -227,7 +227,7 @@ public class ProxyResource {
     @At("/:port/har/commands/endHar")
     public Reply<?> endHar(@Named("port") int port, Request request) {
         LOG.info("POST /" + port + "/commands/endHar");
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -241,7 +241,7 @@ public class ProxyResource {
     @At("/:port/blacklist")
     public Reply<?> getBlacklist(@Named("port") int port, Request request) {
         LOG.info("GET /" + port + "/blacklist");
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -254,7 +254,7 @@ public class ProxyResource {
     public Reply<?> blacklist(@Named("port") int port, Request request) {
         LOG.info("PUT /" + port + "/blacklist");
         LOG.info(request.params().toString());
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -271,7 +271,7 @@ public class ProxyResource {
     @At("/:port/blacklist")
     public Reply<?> clearBlacklist(@Named("port") int port, Request request) {
         LOG.info("DELETE /" + port + "/blacklist");
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -284,7 +284,7 @@ public class ProxyResource {
     @At("/:port/whitelist")
     public Reply<?> getWhitelist(@Named("port") int port, Request request) {
         LOG.info("GET /" + port + "/whitelist");
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -297,14 +297,14 @@ public class ProxyResource {
     public Reply<?> whitelist(@Named("port") int port, Request request) {
         LOG.info("PUT /" + port + "/whitelist");
         LOG.info(request.params().toString());
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
 
         String regex = request.param("regex");
         int responseCode = parseResponseCode(request.param("status"));
-        proxy.whitelistRequests(regex.split(","), responseCode);
+        proxy.whitelistRequests(Arrays.asList(regex.split(",")), responseCode);
 
         return Reply.saying().ok();
     }
@@ -313,7 +313,7 @@ public class ProxyResource {
     @At("/:port/whitelist")
     public Reply<?> clearWhitelist(@Named("port") int port, Request request) {
         LOG.info("DELETE /" + port + "/whitelist");
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -326,7 +326,7 @@ public class ProxyResource {
     @At("/:port/auth/basic/:domain")
     public Reply<?> autoBasicAuth(@Named("port") int port, @Named("domain") String domain, Request request) {
         LOG.info("POST /" + port + "/auth/basic/" + domain);
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -342,7 +342,7 @@ public class ProxyResource {
     public Reply<?> updateHeaders(@Named("port") int port, Request request) {
         LOG.info("POST /" + port + "/headers");
 
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -356,7 +356,7 @@ public class ProxyResource {
     @At("/:port/filter/request")
     public Reply<?> addRequestFilter(@Named("port") int port, Request request) throws IOException, ScriptException {
         LOG.info("POST /" + port + "/filter/request");
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -375,7 +375,7 @@ public class ProxyResource {
     @At("/:port/filter/response")
     public Reply<?> addResponseFilter(@Named("port") int port, Request request) throws IOException, ScriptException {
         LOG.info("POST /" + port + "/filter/response");
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -394,7 +394,7 @@ public class ProxyResource {
     @At("/:port/limit")
     public Reply<?> limit(@Named("port") int port, Request request) {
         LOG.info("PUT /" + port + "/limit");
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -479,7 +479,7 @@ public class ProxyResource {
     @At("/:port/timeout")
     public Reply<?> timeout(@Named("port") int port, Request request) {
         LOG.info("PUT /" + port + "/timeout");
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -528,7 +528,7 @@ public class ProxyResource {
     @At("/:port")
     public Reply<?> delete(@Named("port") int port) {
         LOG.info("DELETE /" + port);
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -542,7 +542,7 @@ public class ProxyResource {
     public Reply<?> remapHosts(@Named("port") int port, Request request) {
         LOG.info("POST /" + port + "/hosts");
         LOG.info(request.params().toString());
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -565,7 +565,7 @@ public class ProxyResource {
     public Reply<?> wait(@Named("port") int port, Request request) {
         LOG.info("PUT /" + port + "/wait");
         LOG.info(request.params().toString());
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -580,7 +580,7 @@ public class ProxyResource {
     @At("/:port/dns/cache")
     public Reply<?> clearDnsCache(@Named("port") int port) {
         LOG.info("DELETE /" + port + "/dns/cache");
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -593,7 +593,7 @@ public class ProxyResource {
     @At("/:port/rewrite")
     public Reply<?> rewriteUrl(@Named("port") int port, Request request) {
         LOG.info("PUT /" + port + "/rewrite");
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
@@ -608,7 +608,7 @@ public class ProxyResource {
     @At("/:port/rewrite")
     public Reply<?> clearRewriteRules(@Named("port") int port, Request request) {
         LOG.info("DELETE /" + port + "/rewrite");
-        BrowserUpProxyServer proxy = proxyManager.get(port);
+        MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }

@@ -1,10 +1,9 @@
 package com.browserup.bup.mitmproxy.management;
 
-import com.browserup.bup.mitmproxy.MitmProxyManager;
+import com.browserup.bup.mitmproxy.MitmProxyProcessManager;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,10 +12,10 @@ import static org.apache.commons.lang3.tuple.Pair.of;
 
 public class AuthBasicManager {
     private final AddonsManagerClient addonsManagerClient;
-    private final MitmProxyManager mitmProxyManager;
+    private final MitmProxyProcessManager mitmProxyManager;
     private final Map<String, String> credentials = new HashMap<>();
 
-    public AuthBasicManager(AddonsManagerClient addonsManagerClient, MitmProxyManager mitmProxyManager) {
+    public AuthBasicManager(AddonsManagerClient addonsManagerClient, MitmProxyProcessManager mitmProxyManager) {
         this.addonsManagerClient = addonsManagerClient;
         this.mitmProxyManager = mitmProxyManager;
     }

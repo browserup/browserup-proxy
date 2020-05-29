@@ -4,6 +4,7 @@
 
 package com.browserup.bup.proxy.guice;
 
+import com.browserup.bup.MitmProxyServer;
 import com.browserup.bup.proxy.ProxyManager;
 import com.browserup.bup.rest.validation.mapper.ConstraintViolationExceptionMapper;
 import com.browserup.bup.rest.filter.LoggingFilter;
@@ -37,7 +38,7 @@ public class JettyServerProvider implements Provider<Server> {
     private Server server;
 
     @Inject
-    public JettyServerProvider(@Named("port") int port, @Named("address") String address, ProxyManager proxyManager) throws UnknownHostException {
+    public JettyServerProvider(@Named("port") int port, @Named("address") String address, MitmProxyServer proxyManager) throws UnknownHostException {
         OpenApiResource openApiResource = new OpenApiResource();
         openApiResource.setConfigLocation(SWAGGER_CONFIG_NAME);
 
@@ -63,22 +64,22 @@ public class JettyServerProvider implements Provider<Server> {
         server.setHandler(context);
     }
 
-    private AbstractBinder proxyManagerToHkBinder(ProxyManager proxyManager) {
-        Factory<ProxyManager> proxyManagerFactory = new Factory<ProxyManager>() {
+    private AbstractBinder proxyManagerToHkBinder(MitmProxyServer proxyManager) {
+        Factory<MitmProxyServer> proxyManagerFactory = new Factory<MitmProxyServer>() {
 
             @Override
-            public ProxyManager provide() {
+            public MitmProxyServer provide() {
                 return proxyManager;
             }
 
             @Override
-            public void dispose(ProxyManager instance) {}
+            public void dispose(MitmProxyServer instance) {}
         };
 
         return new AbstractBinder() {
             @Override
             protected void configure() {
-                bindFactory(proxyManagerFactory).to(ProxyManager.class);
+                bindFactory(proxyManagerFactory).to(MitmProxyServer.class);
             }
         };
     }
