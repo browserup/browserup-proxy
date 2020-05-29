@@ -20,15 +20,21 @@ import com.browserup.harreader.model.HarEntry;
 import com.google.common.collect.ImmutableMap;
 import org.littleshoot.proxy.HttpFiltersSource;
 import org.littleshoot.proxy.MitmManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class MitmProxyServer implements BrowserUpProxy {
+  private static final Logger log = LoggerFactory.getLogger(MitmProxyServer.class);
+
   private MitmProxyManager mitmProxyManager = MitmProxyManager.getInstance();
 
   public void start(List<AbstractAddon> addons) {
@@ -72,7 +78,12 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public InetAddress getClientBindAddress() {
-    return null;
+    try {
+      return InetAddress.getByName("localhost");
+    } catch (UnknownHostException e) {
+      log.error("Couldn't obtain InetAddress", e);
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
@@ -137,22 +148,38 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public void enableHarCaptureTypes(Set<CaptureType> captureTypes) {
+    if (captureTypes == null || captureTypes.isEmpty()) return;
 
+    HarCaptureManager manager = mitmProxyManager.getHarCaptureFilterManager();
+
+    EnumSet<CaptureType> lastCaptureTypes = manager.getLastCaptureTypes();
+    lastCaptureTypes.addAll(captureTypes);
+
+    manager.setHarCaptureTypes(EnumSet.copyOf(captureTypes));
   }
 
   @Override
   public void enableHarCaptureTypes(CaptureType... captureTypes) {
-
+    enableHarCaptureTypes(EnumSet.copyOf(Arrays.asList(captureTypes)));
   }
 
   @Override
-  public void disableHarCaptureTypes(Set<CaptureType> captureTypes) {
+  public void disableHarCaptureTypes(Set<CaptureType> disableCaptureTypes) {
+    if (disableCaptureTypes == null || disableCaptureTypes.isEmpty()) return;
 
+    HarCaptureManager manager = mitmProxyManager.getHarCaptureFilterManager();
+    EnumSet<CaptureType> lastCaptureTypes = manager.getLastCaptureTypes();
+
+    Set<CaptureType> filteredTypes = lastCaptureTypes.stream()
+            .filter(c -> !disableCaptureTypes.contains(c))
+            .collect(Collectors.toSet());
+
+    manager.setHarCaptureTypes(EnumSet.copyOf(filteredTypes));
   }
 
   @Override
   public void disableHarCaptureTypes(CaptureType... captureTypes) {
-
+    disableHarCaptureTypes(EnumSet.copyOf(Arrays.asList(captureTypes)));
   }
 
   @Override

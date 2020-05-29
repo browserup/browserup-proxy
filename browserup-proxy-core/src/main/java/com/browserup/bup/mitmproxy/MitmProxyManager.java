@@ -47,8 +47,6 @@ public class MitmProxyManager {
 
   private Integer proxyPort = 0;
 
-  private PipedInputStream pipedInputStream;
-
   private boolean isRunning = false;
   private boolean trustAll = false;
 
@@ -103,22 +101,10 @@ public class MitmProxyManager {
   public void stop() {
     this.isRunning = false;
 
-    try {
-      pipedInputStream.close();
-    } catch (IOException e) {
-      LOGGER.warn("Couldn't close piped input stream", e);
-    }
     Process process = startedProcess.getProcess();
     process.destroyForcibly();
-    Awaitility.await().atMost(10, TimeUnit.SECONDS).until(() -> !process.isAlive());
 
-    // Still sometimes mitmproxy doesn't stop properly even if ports are available
-    // TODO fix it
-    try {
-      Thread.sleep(500);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+    Awaitility.await().atMost(10, TimeUnit.SECONDS).until(() -> !process.isAlive());
   }
 
   public void setTrustAll(boolean trustAll) {
@@ -165,16 +151,9 @@ public class MitmProxyManager {
 
     LOGGER.info("Starting proxy using command: " + String.join(" ", command));
 
-    this.pipedInputStream = new PipedInputStream();
-    ProcessExecutor processExecutor;
-    try {
-      processExecutor = new ProcessExecutor(command)
-          .readOutput(true)
-          .redirectOutput(Slf4jStream.ofCaller().asInfo())
-          .redirectOutputAlsoTo(new PipedOutputStream(pipedInputStream));
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+      ProcessExecutor processExecutor = new ProcessExecutor(command)
+              .readOutput(true)
+              .redirectOutput(Slf4jStream.ofCaller().asInfo());
 
     try {
       startedProcess = processExecutor.start();
@@ -182,35 +161,13 @@ public class MitmProxyManager {
       throw new RuntimeException("Couldn't start mitmproxy process", ex);
     }
 
-    StringBuilder output = new StringBuilder();
-
-    readOutputOfMimtproxy(pipedInputStream, output);
-
     try {
-      Awaitility.await().
-          atMost(10, TimeUnit.SECONDS).
-          until(() -> output.toString().contains("Proxy server listening"));
+      Awaitility.await()
+              .atMost(5, TimeUnit.SECONDS)
+              .until(this.proxyManager::callHealthCheck);
     } catch (ConditionTimeoutException ex) {
-      LOGGER.error("MitmProxy haven't started properly, output: " + output);
-      throw new RuntimeException("Mitmproxy haven't started properly, output: " + output);
+      LOGGER.error("MitmProxy might not started properly");
     }
-  }
-
-  private void readOutputOfMimtproxy(PipedInputStream pipedInputStream, StringBuilder output) {
-    new Thread(() -> {
-      BufferedReader reader = new BufferedReader(new InputStreamReader(pipedInputStream));
-      Awaitility.await().atMost(5, TimeUnit.SECONDS).until(reader::ready);
-
-      while (true) {
-        try {
-          if (!reader.ready())
-            break;
-          output.append(reader.readLine());
-        } catch (IOException e) {
-          LOGGER.error("Error while reading output of mitmproxy", e);
-        }
-      }
-    }).start();
   }
 
   public HarCaptureManager getHarCaptureFilterManager() {
@@ -244,4 +201,8 @@ public class MitmProxyManager {
   public LatencyManager getLatencyManager() {
     return latencyManager;
   }
+
+    public int getAddonsManagerApiPort() {
+        return addonsManagerApiPort;
+    }
 }

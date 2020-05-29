@@ -5,12 +5,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.DatagramSocket;
 import java.net.ServerSocket;
 
 public class NetworkUtils {
   private static final Logger log = LoggerFactory
     .getLogger(HttpConnectHarCaptureFilter.class);
 
+  public static boolean isPortAvailable(int port) {
+    try (ServerSocket ss = new ServerSocket(port); DatagramSocket ds = new DatagramSocket(port)) {
+      return true;
+    } catch (IOException e) {
+      return false;
+    }
+  }
 
   public static int getFreePort() {
     ServerSocket s = null;

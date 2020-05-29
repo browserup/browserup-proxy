@@ -46,6 +46,10 @@ class ProxyManagerResource:
     def on_get(self, req, resp, method_name):
         getattr(self, "on_" + method_name)(req, resp)
 
+    def on_health_check(self, req, resp):
+        resp.body = 'OK'
+        resp.status = falcon.HTTP_200
+
     def on_trust_all(self, req, resp):
         trust_all = req.get_param('trustAll')
         if trust_all is not None and str(trust_all) == str(True):
@@ -83,7 +87,7 @@ class ProxyManagerAddOn:
 
     def http_connect(self, f):
         if ctx.options.upstream_proxy_credentials and f.mode == "upstream":
-            f.request.headers["Proxy-Authorization"] = ctx.options.upstream_proxy_credentials
+            f.request.headers["Proxy-Authorization"] = "Basic " + ctx.options.upstream_proxy_credentials
 
     def requestheaders(self, f):
         if self.are_upstream_proxy_credentials_available():

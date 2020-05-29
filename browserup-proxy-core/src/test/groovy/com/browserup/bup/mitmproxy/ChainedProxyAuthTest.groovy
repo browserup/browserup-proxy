@@ -202,8 +202,8 @@ class ChainedProxyAuthTest extends MockServerTest {
 
         proxy = new MitmProxyServer()
         proxy.setChainedProxy(upstreamProxy.getListenAddress())
-        proxy.chainedProxyAuthorization(proxyUser, proxyPassword, AuthType.BASIC)
         proxy.setTrustAllServers(true)
+        proxy.chainedProxyAuthorization(proxyUser, proxyPassword, AuthType.BASIC)
         proxy.start()
 
         NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {

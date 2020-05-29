@@ -158,6 +158,72 @@ class NewHarTest extends MockServerTest {
     }
 
     @Test
+    void testCaptureDataOfEnabledCaptureType() {
+        def stubUrl = "/testCaptureResponseHeaderInHar"
+        stubFor(get(urlEqualTo(stubUrl))
+                .willReturn(ok()
+                .withBody("success").withHeader("Mock-Header", "mock value"))
+        )
+
+        proxy = new MitmProxyServer()
+        proxy.start()
+        proxy.setHarCaptureTypes([CaptureType.RESPONSE_CONTENT] as Set)
+        proxy.enableHarCaptureTypes([CaptureType.RESPONSE_HEADERS] as Set)
+
+        proxy.newHar()
+
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testCaptureResponseHeaderInHar")).getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", responseBody)
+        }
+
+        Thread.sleep(500)
+        Har har = proxy.getHar()
+
+        assertThat("Expected to find entries in the HAR", har.getLog().getEntries(), not(empty()))
+
+        List<HarHeader> headers = har.getLog().getEntries().first().response.headers
+        assertThat("Expected to find headers in the HAR", headers, not(empty()))
+
+        HarHeader header = headers.find { it.name == "Mock-Header" }
+        assertNotNull("Expected to find header with name Mock-Header in HAR", header)
+        assertEquals("Incorrect header value for Mock-Header", "mock value", header.value)
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
+    }
+
+    @Test
+    void testDontCaptureDisabledCaptureType() {
+        def stubUrl = "/testCaptureResponseHeaderInHar"
+        stubFor(get(urlEqualTo(stubUrl))
+                .willReturn(ok()
+                .withBody("success").withHeader("Mock-Header", "mock value"))
+        )
+
+        proxy = new MitmProxyServer()
+        proxy.start()
+        proxy.setHarCaptureTypes([CaptureType.RESPONSE_HEADERS, CaptureType.RESPONSE_CONTENT] as Set)
+        proxy.disableHarCaptureTypes(CaptureType.RESPONSE_HEADERS)
+
+        proxy.newHar()
+
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testCaptureResponseHeaderInHar")).getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", responseBody)
+        }
+
+        Thread.sleep(500)
+        Har har = proxy.getHar()
+
+        assertThat("Expected to find entries in the HAR", har.getLog().getEntries(), not(empty()))
+
+        List<HarHeader> headers = har.getLog().getEntries().first().response.headers
+        assertThat("Expected to find headers in the HAR", headers, empty())
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
+    }
+
+    @Test
     void testMultipleNewHarCallsLeadToCorrectEntries() {
         String firstResponseBody = "firstResponseBody"
         String responseContentType = "text/plain;charset=utf-8"

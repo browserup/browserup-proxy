@@ -3,6 +3,8 @@ package com.browserup.bup.mitmproxy.management;
 import com.browserup.bup.mitmproxy.MitmProxyManager;
 import com.browserup.harreader.model.Har;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -13,6 +15,9 @@ import static java.lang.String.valueOf;
 import static org.apache.commons.lang3.tuple.Pair.of;
 
 public class ProxyManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MitmProxyManager.class);
+    private static final String SUCCESSFUL_HEALTH_CHECK_BODY = "OK";
+
     private final AddonsManagerClient addonsManagerClient;
     private final MitmProxyManager mitmProxyManager;
 
@@ -131,5 +136,24 @@ public class ProxyManager {
                             add(of("nonProxyHosts", valueOf(upstreamNonProxyHosts)));
                         }},
                         Void.class);
+    }
+
+    public Boolean callHealthCheck() {
+        String result = "";
+        try {
+            result = addonsManagerClient.
+                    getRequestToAddonsManager(
+                            "proxy_manager",
+                            "health_check",
+                            new ArrayList<Pair<String, String>>() {{
+                                add(of("nonProxyHosts", valueOf(upstreamNonProxyHosts)));
+                            }},
+                            String.class);
+        } catch (Exception ex) {
+            LOGGER.warn("Health check failed for mitmproxy with port: {}, management port: {}", this.mitmProxyManager.getProxyPort(), this.mitmProxyManager.getAddonsManagerApiPort());
+            return false;
+        }
+        return SUCCESSFUL_HEALTH_CHECK_BODY.equals(result);
+
     }
 }
