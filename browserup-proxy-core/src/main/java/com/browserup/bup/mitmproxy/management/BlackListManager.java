@@ -11,6 +11,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static java.lang.String.valueOf;
 import static org.apache.commons.lang3.tuple.Pair.of;
@@ -19,6 +20,9 @@ public class BlackListManager {
     private final AddonsManagerClient addonsManagerClient;
     private final MitmProxyProcessManager mitmProxyManager;
 
+    private volatile Collection<BlacklistEntry> blacklistEntries = new CopyOnWriteArrayList<>();
+
+
     public BlackListManager(AddonsManagerClient addonsManagerClient, MitmProxyProcessManager mitmProxyManager) {
         this.addonsManagerClient = addonsManagerClient;
         this.mitmProxyManager = mitmProxyManager;
@@ -26,6 +30,8 @@ public class BlackListManager {
 
     public void blacklistRequests(String urlPattern, int statusCode) {
         if (!mitmProxyManager.isRunning()) return;
+
+        blacklistEntries.add(new BlacklistEntry(urlPattern, statusCode));
 
         addonsManagerClient.
                 getRequestToAddonsManager(
@@ -40,6 +46,8 @@ public class BlackListManager {
 
     public void blacklistRequests(String urlPattern, int statusCode, String httpMethodPattern) {
         if (!mitmProxyManager.isRunning()) return;
+
+        blacklistEntries.add(new BlacklistEntry(urlPattern, statusCode, httpMethodPattern));
 
         addonsManagerClient.
                 getRequestToAddonsManager(
@@ -56,6 +64,8 @@ public class BlackListManager {
     public void setBlacklist(Collection<BlacklistEntry> blacklist) {
         if (!mitmProxyManager.isRunning()) return;
 
+        this.blacklistEntries = new CopyOnWriteArrayList<>(blacklist);
+
         String serializedBlackList;
         try {
             serializedBlackList = new ObjectMapper().writeValueAsString(blacklist);
@@ -70,4 +80,17 @@ public class BlackListManager {
                         RequestBody.create(serializedBlackList, MediaType.parse("application/json; charset=utf-8")),
                         Void.class);
     }
+
+    public Collection<BlacklistEntry> getBlacklist() {
+        return Collections.unmodifiableCollection(blacklistEntries);
+    }
+
+    public void clearBlackList() {
+        if (!mitmProxyManager.isRunning()) return;
+
+        blacklistEntries.clear();
+
+        this.setBlacklist(Collections.emptyList());
+    }
+
 }

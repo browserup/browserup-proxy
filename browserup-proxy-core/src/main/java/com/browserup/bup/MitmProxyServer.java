@@ -1,6 +1,18 @@
 package com.browserup.bup;
 
+import com.browserup.bup.assertion.HarEntryAssertion;
+import com.browserup.bup.assertion.ResponseTimeLessThanOrEqualAssertion;
+import com.browserup.bup.assertion.error.HarEntryAssertionError;
+import com.browserup.bup.assertion.field.content.ContentContainsStringAssertion;
+import com.browserup.bup.assertion.field.content.ContentDoesNotContainStringAssertion;
+import com.browserup.bup.assertion.field.content.ContentMatchesAssertion;
+import com.browserup.bup.assertion.field.content.ContentSizeLessThanOrEqualAssertion;
+import com.browserup.bup.assertion.field.header.*;
+import com.browserup.bup.assertion.field.status.StatusBelongsToClassAssertion;
+import com.browserup.bup.assertion.field.status.StatusEqualsAssertion;
+import com.browserup.bup.assertion.model.AssertionEntryResult;
 import com.browserup.bup.assertion.model.AssertionResult;
+import com.browserup.bup.assertion.supplier.*;
 import com.browserup.bup.filters.RequestFilter;
 import com.browserup.bup.filters.ResponseFilter;
 import com.browserup.bup.mitm.TrustSource;
@@ -18,6 +30,7 @@ import com.browserup.bup.util.HttpStatusClass;
 import com.browserup.harreader.model.Har;
 import com.browserup.harreader.model.HarEntry;
 import com.google.common.collect.ImmutableMap;
+import org.apache.commons.lang3.StringUtils;
 import org.littleshoot.proxy.HttpFiltersSource;
 import org.littleshoot.proxy.MitmManager;
 import org.slf4j.Logger;
@@ -29,6 +42,7 @@ import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -318,12 +332,12 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public Collection<BlacklistEntry> getBlacklist() {
-    return null;
+    return this.mitmProxyManager.getBlackListManager().getBlacklist();
   }
 
   @Override
   public void clearBlacklist() {
-
+    this.mitmProxyManager.getBlackListManager().clearBlackList();
   }
 
   @Override
@@ -348,17 +362,17 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public Collection<String> getWhitelistUrls() {
-    return null;
+    return mitmProxyManager.getWhiteListManager().getWhitelistUrls();
   }
 
   @Override
   public int getWhitelistStatusCode() {
-    return 0;
+    return mitmProxyManager.getWhiteListManager().getWhitelistStatusCode();
   }
 
   @Override
   public boolean isWhitelistEnabled() {
-    return false;
+    return mitmProxyManager.getWhiteListManager().isWhitelistEnabled();
   }
 
   @Override
@@ -471,170 +485,265 @@ public class MitmProxyServer implements BrowserUpProxy {
 
   @Override
   public Optional<HarEntry> findMostRecentEntry(Pattern url) {
-    return Optional.empty();
+    List<HarEntry> entries = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url).get();
+    return Optional.ofNullable(entries.isEmpty() ? null : entries.get(0));
   }
 
   @Override
   public Collection<HarEntry> findEntries(Pattern url) {
-    return null;
+    return new UrlFilteredHarEntriesSupplier(getHar(), url).get();
   }
 
   @Override
-  public AssertionResult assertMostRecentResponseTimeLessThanOrEqual(Pattern url,
-                                                                     long milliseconds) {
-    return null;
+  public AssertionResult assertMostRecentResponseTimeLessThanOrEqual(Pattern url, long time) {
+    HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
+    HarEntryAssertion assertion = new ResponseTimeLessThanOrEqualAssertion(time);
+
+    return checkAssertion(supplier, assertion);
   }
 
   @Override
-  public AssertionResult assertResponseTimeLessThanOrEqual(Pattern url, long milliseconds) {
-    return null;
+  public AssertionResult assertResponseTimeLessThanOrEqual(Pattern url, long time) {
+    HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
+    HarEntryAssertion assertion = new ResponseTimeLessThanOrEqualAssertion(time);
+
+    return checkAssertion(supplier, assertion);
   }
 
   @Override
   public AssertionResult assertMostRecentResponseContentContains(Pattern url, String text) {
-    return null;
+    HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
+    HarEntryAssertion assertion = new ContentContainsStringAssertion(text);
+
+    return checkAssertion(supplier, assertion);
   }
 
   @Override
   public AssertionResult assertMostRecentResponseContentDoesNotContain(Pattern url, String text) {
-    return null;
+    HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
+    HarEntryAssertion assertion = new ContentDoesNotContainStringAssertion(text);
+
+    return checkAssertion(supplier, assertion);
   }
 
   @Override
-  public AssertionResult assertMostRecentResponseContentMatches(Pattern url,
-                                                                Pattern contentPattern) {
-    return null;
+  public AssertionResult assertMostRecentResponseContentMatches(Pattern url, Pattern contentPattern) {
+    HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
+    HarEntryAssertion assertion = new ContentMatchesAssertion(contentPattern);
+
+    return checkAssertion(supplier, assertion);
   }
 
   @Override
-  public AssertionResult assertAnyUrlContentLengthLessThanOrEquals(Pattern url, Long max) {
-    return null;
+  public AssertionResult assertAnyUrlContentLengthLessThanOrEquals(Pattern url, Long maxSize) {
+    HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
+    HarEntryAssertion assertion = new ContentSizeLessThanOrEqualAssertion(maxSize);
+
+    return checkAssertion(supplier, assertion);
   }
 
   @Override
   public AssertionResult assertAnyUrlContentMatches(Pattern url, Pattern contentPattern) {
-    return null;
+    HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
+    HarEntryAssertion assertion = new ContentMatchesAssertion(contentPattern);
+
+    return checkAssertion(supplier, assertion);
   }
 
   @Override
   public AssertionResult assertAnyUrlContentContains(Pattern url, String text) {
-    return null;
+    HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
+    HarEntryAssertion assertion = new ContentContainsStringAssertion(text);
+
+    return checkAssertion(supplier, assertion);
   }
 
   @Override
   public AssertionResult assertAnyUrlContentDoesNotContain(Pattern url, String text) {
-    return null;
+    HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
+    HarEntryAssertion assertion = new ContentDoesNotContainStringAssertion(text);
+
+    return checkAssertion(supplier, assertion);
   }
 
   @Override
   public AssertionResult assertAnyUrlResponseHeaderContains(Pattern url, String value) {
-    return null;
+    HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
+    HarEntryAssertion assertion = new HeadersContainStringAssertion(value);
+
+    return checkAssertion(supplier, assertion);
   }
 
   @Override
-  public AssertionResult assertAnyUrlResponseHeaderContains(Pattern url, String name,
-                                                            String value) {
-    return null;
+  public AssertionResult assertAnyUrlResponseHeaderContains(Pattern url, String name, String value) {
+    HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
+    HarEntryAssertion assertion = StringUtils.isEmpty(name) ?
+            new HeadersContainStringAssertion(value) :
+            new FilteredHeadersContainStringAssertion(name, value);
+
+    return checkAssertion(supplier, assertion);
+  }
+
+  @Override
+  public AssertionResult assertAnyUrlResponseHeaderDoesNotContain(Pattern url, String name, String value) {
+    HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
+    HarEntryAssertion assertion = StringUtils.isEmpty(name) ?
+            new HeadersDoNotContainStringAssertion(value) :
+            new FilteredHeadersDoNotContainStringAssertion(name, value);
+
+    return checkAssertion(supplier, assertion);
   }
 
   @Override
   public AssertionResult assertAnyUrlResponseHeaderDoesNotContain(Pattern url, String value) {
-    return null;
+    HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
+    HarEntryAssertion assertion = new HeadersDoNotContainStringAssertion(value);
+
+    return checkAssertion(supplier, assertion);
   }
 
   @Override
-  public AssertionResult assertAnyUrlResponseHeaderDoesNotContain(Pattern url, String name,
-                                                                  String value) {
-    return null;
-  }
+  public AssertionResult assertAnyUrlResponseHeaderMatches(Pattern url, Pattern namePattern, Pattern valuePattern) {
+    HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
+    HarEntryAssertion assertion = namePattern == null ?
+            new HeadersMatchAssertion(valuePattern) :
+            new FilteredHeadersMatchAssertion(namePattern, valuePattern);
 
-  @Override
-  public AssertionResult assertAnyUrlResponseHeaderMatches(Pattern url, Pattern valuePattern) {
-    return null;
-  }
-
-  @Override
-  public AssertionResult assertAnyUrlResponseHeaderMatches(Pattern url, Pattern namePattern,
-                                                           Pattern valuePattern) {
-    return null;
-  }
-
-  @Override
-  public AssertionResult assertMostRecentResponseHeaderContains(Pattern url, String name,
-                                                                String value) {
-    return null;
-  }
-
-  @Override
-  public AssertionResult assertMostRecentResponseHeaderContains(Pattern url, String value) {
-    return null;
-  }
-
-  @Override
-  public AssertionResult assertMostRecentResponseHeaderDoesNotContain(Pattern url, String name,
-                                                                      String value) {
-    return null;
-  }
-
-  @Override
-  public AssertionResult assertMostRecentResponseHeaderDoesNotContain(Pattern url, String value) {
-    return null;
-  }
-
-  @Override
-  public AssertionResult assertMostRecentResponseHeaderMatches(Pattern url, Pattern name,
-                                                               Pattern value) {
-    return null;
-  }
-
-  @Override
-  public AssertionResult assertMostRecentResponseHeaderMatches(Pattern url, Pattern value) {
-    return null;
-  }
-
-  @Override
-  public AssertionResult assertMostRecentResponseContentLengthLessThanOrEqual(Pattern url,
-                                                                              Long max) {
-    return null;
+    return checkAssertion(supplier, assertion);
   }
 
   @Override
   public AssertionResult assertResponseStatusCode(Integer status) {
-    return null;
+    HarEntriesSupplier supplier = new CurrentStepHarEntriesSupplier(getHar());
+    HarEntryAssertion assertion = new StatusEqualsAssertion(status);
+
+    return checkAssertion(supplier, assertion);
   }
 
   @Override
   public AssertionResult assertResponseStatusCode(HttpStatusClass clazz) {
-    return null;
+    HarEntriesSupplier supplier = new CurrentStepHarEntriesSupplier(getHar());
+    HarEntryAssertion assertion = new StatusBelongsToClassAssertion(clazz);
+
+    return checkAssertion(supplier, assertion);
   }
 
   @Override
   public AssertionResult assertResponseStatusCode(Pattern url, Integer status) {
-    return null;
+    HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
+    HarEntryAssertion assertion = new StatusEqualsAssertion(status);
+
+    return checkAssertion(supplier, assertion);
   }
 
   @Override
   public AssertionResult assertResponseStatusCode(Pattern url, HttpStatusClass clazz) {
-    return null;
+    HarEntriesSupplier supplier = new UrlFilteredHarEntriesSupplier(getHar(), url);
+    HarEntryAssertion assertion = new StatusBelongsToClassAssertion(clazz);
+
+    return checkAssertion(supplier, assertion);
   }
 
   @Override
   public AssertionResult assertMostRecentResponseStatusCode(Integer status) {
-    return null;
+    HarEntriesSupplier supplier = new MostRecentHarEntrySupplier(getHar());
+    HarEntryAssertion assertion = new StatusEqualsAssertion(status);
+
+    return checkAssertion(supplier, assertion);
   }
+
 
   @Override
   public AssertionResult assertMostRecentResponseStatusCode(HttpStatusClass clazz) {
-    return null;
+    HarEntriesSupplier supplier = new MostRecentHarEntrySupplier(getHar());
+    HarEntryAssertion assertion = new StatusBelongsToClassAssertion(clazz);
+
+    return checkAssertion(supplier, assertion);
   }
 
   @Override
   public AssertionResult assertMostRecentResponseStatusCode(Pattern url, Integer status) {
-    return null;
+    HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
+    HarEntryAssertion assertion = new StatusEqualsAssertion(status);
+
+    return checkAssertion(supplier, assertion);
   }
 
   @Override
   public AssertionResult assertMostRecentResponseStatusCode(Pattern url, HttpStatusClass clazz) {
-    return null;
+    HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
+    HarEntryAssertion assertion = new StatusBelongsToClassAssertion(clazz);
+
+    return checkAssertion(supplier, assertion);
+  }
+
+  @Override
+  public AssertionResult assertMostRecentResponseContentLengthLessThanOrEqual(Pattern url, Long max) {
+    HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
+    HarEntryAssertion assertion = new ContentSizeLessThanOrEqualAssertion(max);
+
+    return checkAssertion(supplier, assertion);
+  }
+
+  @Override
+  public AssertionResult assertMostRecentResponseHeaderContains(Pattern url, String name, String value) {
+    HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
+    HarEntryAssertion assertion = StringUtils.isEmpty(name) ?
+            new HeadersContainStringAssertion(value) :
+            new FilteredHeadersContainStringAssertion(name, value);
+
+    return checkAssertion(supplier, assertion);
+  }
+
+  @Override
+  public AssertionResult assertMostRecentResponseHeaderDoesNotContain(Pattern url, String name, String value) {
+    HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
+    HarEntryAssertion assertion = StringUtils.isEmpty(name) ?
+            new HeadersDoNotContainStringAssertion(value) :
+            new FilteredHeadersDoNotContainStringAssertion(name, value);
+
+    return checkAssertion(supplier, assertion);
+  }
+
+  @Override
+  public AssertionResult assertMostRecentResponseHeaderMatches(Pattern url, Pattern name, Pattern value) {
+    HarEntriesSupplier supplier = new MostRecentUrlFilteredHarEntrySupplier(getHar(), url);
+    HarEntryAssertion assertion = name == null ?
+            new HeadersMatchAssertion(value) :
+            new FilteredHeadersMatchAssertion(name, value);
+
+    return checkAssertion(supplier, assertion);
+  }
+
+  private AssertionResult checkAssertion(HarEntriesSupplier harEntriesSupplier, HarEntryAssertion assertion) {
+    AssertionResult.Builder result = new AssertionResult.Builder();
+
+    List<HarEntry> entries = harEntriesSupplier.get();
+
+    AtomicInteger failedCount = new AtomicInteger();
+
+    entries.forEach(entry -> {
+      AssertionEntryResult.Builder requestResult = new AssertionEntryResult.Builder();
+      requestResult.setUrl(entry.getRequest().getUrl());
+
+      Optional<HarEntryAssertionError> error = assertion.assertion(entry);
+      requestResult.setFailed(error.isPresent());
+
+      if (error.isPresent()) {
+        requestResult.setMessage(error.get().getMessage());
+        failedCount.getAndIncrement();
+      }
+
+      result.addRequest(requestResult.create());
+    });
+
+    String resultMessage = String.format("%d passed, %d total", entries.size() - failedCount.get(), entries.size());
+
+    return result
+            .setFilter(harEntriesSupplier.getFilterInfo())
+            .setFailed(failedCount.get() > 0)
+            .setMessage(resultMessage)
+            .setPassed(failedCount.get() == 0)
+            .create();
   }
 }

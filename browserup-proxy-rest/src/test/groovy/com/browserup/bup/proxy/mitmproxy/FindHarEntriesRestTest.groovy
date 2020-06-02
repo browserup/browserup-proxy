@@ -52,9 +52,6 @@ class FindHarEntriesRestTest extends BaseRestTest {
                 assertThat('Expected to find no entries with urlNotToCatch filter',
                         entries[0].request.url, Matchers.not(Matchers.containsString(urlNotToCatch)))
             }
-            response.failure = { resp ->
-                println()
-            }
         }
 
         WireMock.verify(1, getRequestedFor(urlEqualTo("/${urlToCatch}")))
