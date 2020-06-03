@@ -8,8 +8,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
+import java.io.IOException;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,11 +53,7 @@ public class MitmProxyProcessManager {
   private boolean isRunning = false;
   private boolean trustAll = false;
 
-  private MitmProxyProcessManager() {}
-
-  public static MitmProxyProcessManager getInstance() {
-    return new MitmProxyProcessManager();
-  }
+  private StringBuilder proxyLog = new StringBuilder();
 
   public void start(int port) {
     start(port == 0 ? NetworkUtils.getFreePort() : port, defaultAddons());
@@ -61,10 +61,11 @@ public class MitmProxyProcessManager {
 
   public void start(int port, List<AbstractAddon> addons) {
     try {
+      this.proxyPort = port;
+
       startProxy(port, addons);
 
       this.isRunning = true;
-      this.proxyPort = port;
 
       if (!addons.isEmpty()) {
         configureProxy();
@@ -150,9 +151,15 @@ public class MitmProxyProcessManager {
 
     LOGGER.info("Starting proxy using command: " + String.join(" ", command));
 
-      ProcessExecutor processExecutor = new ProcessExecutor(command)
-              .readOutput(true)
-              .redirectOutput(Slf4jStream.ofCaller().asInfo());
+    ProcessExecutor processExecutor = new ProcessExecutor(command)
+            .readOutput(true)
+            .redirectOutput(Slf4jStream.ofCaller().asInfo())
+            .redirectOutput(new LogOutputStream() {
+              @Override
+              protected void processLine(String line) {
+                proxyLog.append(line).append("\n");
+              }
+            });
 
     try {
       startedProcess = processExecutor.start();
@@ -165,7 +172,14 @@ public class MitmProxyProcessManager {
               .atMost(5, TimeUnit.SECONDS)
               .until(this.proxyManager::callHealthCheck);
     } catch (ConditionTimeoutException ex) {
-      LOGGER.error("MitmProxy might not started properly");
+      LOGGER.error("MitmProxy might not started properly, healthcheck failed for port: " + this.proxyPort);
+      if (startedProcess != null && startedProcess.getProcess().exitValue() > 0) {
+        Throwable cause = null;
+        if (proxyLog.toString().contains("Address already in use")) {
+          cause = new java.net.BindException();
+        }
+        throw new RuntimeException("Couldn't start mitmproxy process on port: " + this.proxyPort + ", exit with code: " + startedProcess.getProcess().exitValue(), cause);
+      }
     }
   }
 

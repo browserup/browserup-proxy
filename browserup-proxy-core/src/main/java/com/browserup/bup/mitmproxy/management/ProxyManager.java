@@ -148,7 +148,6 @@ public class ProxyManager {
                             }},
                             String.class);
         } catch (Exception ex) {
-            LOGGER.warn("Health check failed for mitmproxy with port: {}, management port: {}", this.mitmProxyManager.getProxyPort(), this.mitmProxyManager.getAddonsManagerApiPort());
             return false;
         }
         return SUCCESSFUL_HEALTH_CHECK_BODY.equals(result);

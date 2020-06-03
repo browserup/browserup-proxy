@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
 public class MitmProxyServer implements BrowserUpProxy {
   private static final Logger log = LoggerFactory.getLogger(MitmProxyServer.class);
 
-  private MitmProxyProcessManager mitmProxyManager = MitmProxyProcessManager.getInstance();
+  private MitmProxyProcessManager mitmProxyManager = new MitmProxyProcessManager();
 
   public void start(List<AbstractAddon> addons) {
     mitmProxyManager.start(NetworkUtils.getFreePort(), addons);
