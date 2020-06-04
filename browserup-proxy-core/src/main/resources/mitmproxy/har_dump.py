@@ -181,6 +181,8 @@ class HarDumpAddOn:
     def get_har(self, clean_har):
         if clean_har:
             return self.new_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE)
+        if self.har is None:
+            self.new_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE)
         return self.har
 
     def get_default_har_page(self):

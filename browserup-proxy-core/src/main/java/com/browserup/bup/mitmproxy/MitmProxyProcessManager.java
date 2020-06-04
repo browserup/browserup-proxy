@@ -151,12 +151,14 @@ public class MitmProxyProcessManager {
 
     LOGGER.info("Starting proxy using command: " + String.join(" ", command));
 
+    String logPrefix = "MitmProxy[" + this.proxyPort + "]: ";
     ProcessExecutor processExecutor = new ProcessExecutor(command)
             .readOutput(true)
             .redirectOutput(Slf4jStream.ofCaller().asInfo())
             .redirectOutput(new LogOutputStream() {
               @Override
               protected void processLine(String line) {
+                LOGGER.debug(logPrefix + line);
                 proxyLog.append(line).append("\n");
               }
             });
