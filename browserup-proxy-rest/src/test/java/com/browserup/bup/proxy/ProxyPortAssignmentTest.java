@@ -7,7 +7,12 @@ package com.browserup.bup.proxy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+
 import com.browserup.bup.BrowserUpProxyServer;
+import com.browserup.bup.exception.AddressInUseException;
 import com.browserup.bup.exception.ProxyExistsException;
 import com.browserup.bup.exception.ProxyPortsExhaustedException;
 import com.browserup.bup.proxy.test.util.ProxyManagerTest;
@@ -56,5 +61,27 @@ public class ProxyPortAssignmentTest extends ProxyManagerTest {
             assertEquals(9094, e.getPort());
             proxyManager.delete(9094);
         }
+    }
+
+    @Test
+    public void testBindFailure() {
+    	
+    	int testPort = 9094;
+    	
+        InetSocketAddress testClientBindSocket = new InetSocketAddress(testPort);
+        
+        // Use a test socket to attempt binding with
+        try(Socket testSocket = new Socket()) {
+        	testSocket.bind(testClientBindSocket);	
+	        try{
+	            proxyManager.create(9094);
+	            fail();
+	        }catch(AddressInUseException e){
+	            assertEquals(9094, e.getPort());
+	        }
+        } catch (IOException e1) {
+			e1.printStackTrace();
+        	fail();
+		}
     }
 }

@@ -5,6 +5,7 @@
 package com.browserup.bup.proxy;
 
 import com.browserup.bup.BrowserUpProxyServer;
+import com.browserup.bup.exception.AddressInUseException;
 import com.browserup.bup.exception.ProxyExistsException;
 import com.browserup.bup.exception.ProxyPortsExhaustedException;
 import com.browserup.bup.proxy.auth.AuthType;
@@ -19,9 +20,11 @@ import com.google.inject.name.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.Collection;
@@ -217,8 +220,48 @@ public class ProxyManager {
         }
         throw new ProxyPortsExhaustedException();
     }
+    
+    /**
+     * Check that the Port is Available to bind to.
+     * 
+     * We need to verify that the port isn't already bound to on the client bind address.
+     * The application by default assumes that the min-max ports are reserved, however 
+     * in a mixed environment there may be some stray ports that are being used by 
+     * other services. 
+     * 
+     * This method will verify that the port isn't already bound by trying 
+     * to bind to it and then closing it. 
+     * 
+     * If the port is already bound it will throw a run-time exception.
+     * 
+     * @param clientBindAddress the bind address to check, can be null which is a wildcard
+     * @param port the port to attempt to bind to with the bind address
+     */
+    private void checkPortAvailability(InetAddress clientBindAddress, Integer port) {
 
-    public BrowserUpProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword, Integer port, String bindAddr, boolean useEcc, boolean trustAllServers) {
+        InetSocketAddress testClientBindSocket;
+        
+        // Use the wildcard address if the clientBindAddress isn't specified
+        if (clientBindAddress == null) {
+        	testClientBindSocket = new InetSocketAddress(port);
+        } else {
+        	testClientBindSocket = new InetSocketAddress(clientBindAddress, port);
+        }
+        
+        // Use a test socket to attempt binding with
+        try(Socket testSocket = new Socket()) {
+        	testSocket.bind(testClientBindSocket);
+        } catch (IOException e) {
+        	// Assume that the port cannot be bound to, log a warning and then return False
+            LOG.error("Bind address unavailable: " + testClientBindSocket.toString(), e);
+            throw new AddressInUseException(e, port, clientBindAddress);            
+		}
+        
+        // Log that the bind address is available
+        LOG.debug("Bind address available {}", testClientBindSocket);
+	}
+
+	public BrowserUpProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword, Integer port, String bindAddr, boolean useEcc, boolean trustAllServers) {
         return create(upstreamHttpProxy, false, null, proxyUsername, proxyPassword, port, null, null, false, false);
     }
 
@@ -249,6 +292,7 @@ public class ProxyManager {
                 LOG.info("Proxy already exists at port {}", port);
                 throw new ProxyExistsException(port);
             }
+            checkPortAvailability(clientBindAddr, port);            
         }
 
         try {
