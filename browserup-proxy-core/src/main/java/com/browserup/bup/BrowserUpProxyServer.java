@@ -530,7 +530,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     @Override
     public int getPort() {
         if (started.get()) {
-            return proxyServer.getListenAddress().getPort();
+            return (proxyServer != null ?  proxyServer.getListenAddress().getPort() : 0);
         } else {
             return 0;
         }
