@@ -9,6 +9,8 @@ import re
 from datetime import datetime
 from datetime import timezone
 
+import asyncio
+
 import falcon
 
 from mitmproxy import ctx
@@ -37,15 +39,27 @@ class BlackListResource:
         self.black_list_addon = black_list_addon
 
     def on_get(self, req, resp, method_name):
+        try:
+            asyncio.get_event_loop()
+        except:
+            asyncio.set_event_loop(asyncio.new_event_loop())
         getattr(self, "on_" + method_name)(req, resp)
 
     def on_put(self, req, resp, method_name):
+        try:
+            asyncio.get_event_loop()
+        except:
+            asyncio.set_event_loop(asyncio.new_event_loop())
         getattr(self, "on_" + method_name)(req, resp)
 
     def on_blacklist_requests(self, req, resp):
         url_pattern = req.get_param('urlPattern')
         status_code = req.get_param('statusCode')
         http_method_pattern = req.get_param('httpMethodPattern')
+
+        ctx.log.info(
+            'Blacklisting url pattern: {}, status code: {}, method pattern: {}'.
+                format(url_pattern, status_code, http_method_pattern))
 
         try:
             url_pattern_compiled = self.parse_regexp(url_pattern)
@@ -74,6 +88,10 @@ class BlackListResource:
                 http_method_pattern_compiled = None
                 if bl_item['httpMethodPattern'] is not None:
                     http_method_pattern_compiled = self.parse_regexp(bl_item['httpMethodPattern'])
+
+                ctx.log.info(
+                    'Blacklisting url pattern: {}, status code: {}, method pattern: {}'.
+                        format(bl_item['urlPattern'], bl_item['statusCode'], bl_item['httpMethodPattern']))
 
                 self.black_list_addon.black_list.append({
                     "status_code": bl_item['statusCode'],

@@ -16,6 +16,7 @@ import org.junit.Test
 import static com.github.tomakehurst.wiremock.client.WireMock.*
 import static org.hamcrest.Matchers.isEmptyOrNullString
 import static org.junit.Assert.assertEquals
+import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertThat
 
 class BlacklistTest extends MockServerTest {
@@ -43,6 +44,28 @@ class BlacklistTest extends MockServerTest {
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
             assertThat("Expected blacklisted response to contain 0-length body", responseBody, isEmptyOrNullString())
         }
+    }
+
+    @Test
+    void testBlacklistedHttpRequestNotRecordedToHar() {
+        proxy = new MitmProxyServer()
+        proxy.start()
+        int proxyPort = proxy.getPort()
+
+        proxy.blacklistRequests("http://www\\.blacklisted\\.domain/.*", 405)
+
+        NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
+            CloseableHttpResponse response = it.execute(new HttpGet("http://www.blacklisted.domain/someresource"))
+            assertEquals("Did not receive blacklisted status code in response", 405, response.getStatusLine().getStatusCode())
+
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
+            assertThat("Expected blacklisted response to contain 0-length body", responseBody, isEmptyOrNullString())
+        }
+
+        def har = proxy.getHar()
+
+        assertFalse('Expected not to find blacklisted requests in har entries',
+                har.log.entries.any { it.request.url.contains('blacklisted')} )
     }
 
     @Test

@@ -1,4 +1,5 @@
 import time
+import json
 
 from mitmproxy import ctx
 from mitmproxy.exceptions import TcpTimeout
@@ -6,7 +7,8 @@ from mitmproxy.exceptions import TcpTimeout
 RESOLUTION_FAILED_ERROR_MESSAGE = "Unable to resolve host: "
 CONNECTION_FAILED_ERROR_MESSAGE = "Unable to connect to host"
 RESPONSE_TIMED_OUT_ERROR_MESSAGE = "Response timed out"
-
+DEFAULT_PAGE_REF = "Default"
+DEFAULT_PAGE_TITLE = "Default"
 
 class HttpConnectCaptureResource:
 
@@ -74,6 +76,7 @@ class HttpConnectCaptureAddOn:
     def http_connect(self, flow):
         self.http_connect_timing = self.get_http_connect_timing()
         self.har_dump_addon.http_connect_timings[flow.client_conn] = self.http_connect_timing
+        ctx.log.info('xxx http connect!')
 
     def http_proxy_to_server_request_started(self, flow):
         self.send_started_nanos = self.now_time_nanos()
@@ -129,15 +132,14 @@ class HttpConnectCaptureAddOn:
 
     def populate_dns_timings(self):
         if self.dns_resolution_started_nanos > 0 and self.get_har_entry():
-            dns_nanos = int(round(
-                self.now_time_nanos())) - self.dns_resolution_started_nanos
-            dns_ms = int(dns_nanos / 1000)
-            self.get_har_entry()['timings']['dns'] = dns_ms
+            time_now = self.now_time_nanos()
+            dns_nanos = time_now - self.dns_resolution_started_nanos
+            self.get_har_entry()['timings']['dns'] = dns_nanos
 
     def populate_timings_for_failed_connect(self):
         if self.connection_started_nanos > 0:
-            self.get_har_entry()['timings']['connect'] = int(
-                round(self.now_time_nanos())) - self.connection_started_nanos
+            connect_nanos = self.now_time_nanos() - self.connection_started_nanos
+            self.get_har_entry()['timings']['connect'] = connect_nanos
         self.populate_dns_timings()
 
     def populate_server_ip_address(self, flow, original_error):
@@ -203,7 +205,7 @@ class HttpConnectCaptureAddOn:
                  (0 if timings['send'] == -1 else timings['send']) + \
                  (0 if timings['wait'] == -1 else timings['wait']) + \
                  (0 if timings['receive'] == -1 else timings['receive'])
-        return result
+        return self.nano_to_ms(result)
 
     def get_har_entry(self):
         return self.har_dump_addon.har_entry
@@ -225,7 +227,11 @@ class HttpConnectCaptureAddOn:
 
     @staticmethod
     def now_time_nanos():
-        return time.time() * 1000000
+        return int(round(time.time() * 1000000000))
+
+    @staticmethod
+    def nano_to_ms(time_nano):
+        return int(time_nano / 1000000)
 
 
 addons = [

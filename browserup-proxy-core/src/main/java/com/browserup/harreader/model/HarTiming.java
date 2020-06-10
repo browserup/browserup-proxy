@@ -179,9 +179,9 @@ public class HarTiming {
         return Math.toIntExact(getBlocked(TimeUnit.MILLISECONDS));
     }
 
-    public void setBlocked(Integer blocked) {
-        if (blocked == null) blocked = -1;
-        setBlocked(blocked, TimeUnit.MILLISECONDS);
+    public void setBlocked(Long blocked) {
+        if (blocked == null) blocked = -1L;
+        setBlocked(blocked, TimeUnit.NANOSECONDS);
     }
 
     /**
@@ -192,9 +192,9 @@ public class HarTiming {
         return Math.toIntExact(getDns(TimeUnit.MILLISECONDS));
     }
 
-    public void setDns(Integer dns) {
-        if (dns == null) dns = -1;
-        setDns(dns, TimeUnit.MILLISECONDS);
+    public void setDns(Long dns) {
+        if (dns == null) dns = -1L;
+        setDns(dns, TimeUnit.NANOSECONDS);
     }
 
     /**
@@ -205,9 +205,9 @@ public class HarTiming {
         return Math.toIntExact(getConnect(TimeUnit.MILLISECONDS));
     }
 
-    public void setConnect(Integer connect) {
-        if (connect == null) connect = -1;
-        setConnect(connect, TimeUnit.MILLISECONDS);
+    public void setConnect(Long connect) {
+        if (connect == null) connect = -1L;
+        setConnect(connect, TimeUnit.NANOSECONDS);
     }
 
     /**
@@ -219,9 +219,9 @@ public class HarTiming {
         return Math.toIntExact(getSend(TimeUnit.MILLISECONDS));
     }
 
-    public void setSend(Integer send) {
-        if (send == null) send = 0;
-        setSend(send, TimeUnit.MILLISECONDS);
+    public void setSend(Long send) {
+        if (send == null) send = 0L;
+        setSend(send, TimeUnit.NANOSECONDS);
     }
 
     /**
@@ -233,9 +233,9 @@ public class HarTiming {
         return Math.toIntExact(getWait(TimeUnit.MILLISECONDS));
     }
 
-    public void setWait(Integer wait) {
-        if (wait == null) wait = 0;
-        setWait(wait, TimeUnit.MILLISECONDS);
+    public void setWait(Long wait) {
+        if (wait == null) wait = 0L;
+        setWait(wait, TimeUnit.NANOSECONDS);
     }
 
     /**
@@ -247,9 +247,9 @@ public class HarTiming {
         return Math.toIntExact(getReceive(TimeUnit.MILLISECONDS));
     }
 
-    public void setReceive(Integer receive) {
-        if (receive == null) receive = 0;
-        setReceive(receive, TimeUnit.MILLISECONDS);
+    public void setReceive(Long receive) {
+        if (receive == null) receive = 0L;
+        setReceive(receive, TimeUnit.NANOSECONDS);
     }
 
     /**
@@ -262,9 +262,9 @@ public class HarTiming {
         return Math.toIntExact(getSsl(TimeUnit.MILLISECONDS));
     }
 
-    public void setSsl(Integer ssl) {
-        if (ssl == null) ssl = -1;
-        setSsl(ssl, TimeUnit.MILLISECONDS);
+    public void setSsl(Long ssl) {
+        if (ssl == null) ssl = -1L;
+        setSsl(ssl, TimeUnit.NANOSECONDS);
     }
 
     /**

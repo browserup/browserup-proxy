@@ -36,6 +36,10 @@ class RewriteUrlResource:
     def __init__(self, rewrite_url_addon):
         self.num = 0
         self.rewrite_url_addon = rewrite_url_addon
+        for a in ctx.master.addons.get("scriptloader").addons:
+            if 'har_dump.py' in a.fullpath:
+                self.rewrite_url_addon.har_dump_addon = a.addons[0].addons[0]
+
 
     def on_get(self, req, resp, method_name):
         getattr(self, "on_" + method_name)(req, resp)
@@ -73,12 +77,14 @@ class RewriteUrlResource:
 class RewriteUrlAddOn:
 
     def __init__(self):
+        self.har_dump_addon = None
         self.rules = {}
 
     def get_resource(self):
         return RewriteUrlResource(self)
 
     def request(self, flow):
+        self.har_dump_addon.get_or_create_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE, True)
         rewrote = False
         rewritten_url = flow.request.url
         for url, rule in self.rules.items():

@@ -670,7 +670,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         if (connectionQueuedNanos > 0L) {
             this.harEntry.getTimings().setBlocked(dnsResolutionStartedNanos - connectionQueuedNanos, NANOSECONDS);
         } else {
-            this.harEntry.getTimings().setBlocked(0);
+            this.harEntry.getTimings().setBlocked(0L);
         }
 
         return null;
@@ -696,7 +696,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         if (dnsResolutionStartedNanos > 0L) {
             this.harEntry.getTimings().setDns(dnsResolutionFinishedNanos - dnsResolutionStartedNanos, NANOSECONDS);
         } else {
-            this.harEntry.getTimings().setDns(0);
+            this.harEntry.getTimings().setDns(0L);
         }
 
         // the address *should* always be resolved at this point
@@ -739,7 +739,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         if (connectionStartedNanos > 0L) {
             this.harEntry.getTimings().setConnect(connectionSucceededTimeNanos - connectionStartedNanos, NANOSECONDS);
         } else {
-            this.harEntry.getTimings().setConnect(0);
+            this.harEntry.getTimings().setConnect(0L);
         }
     }
 
@@ -761,7 +761,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         if (sendStartedNanos > 0L) {
             this.harEntry.getTimings().setSend(sendFinishedNanos - sendStartedNanos, NANOSECONDS);
         } else {
-            this.harEntry.getTimings().setSend(0);
+            this.harEntry.getTimings().setSend(0L);
         }
     }
 
@@ -775,7 +775,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         if (sendFinishedNanos > 0L && sendFinishedNanos < responseReceiveStartedNanos) {
             this.harEntry.getTimings().setWait(responseReceiveStartedNanos - sendFinishedNanos, NANOSECONDS);
         } else {
-            this.harEntry.getTimings().setWait(0);
+            this.harEntry.getTimings().setWait(0L);
         }
     }
 
@@ -789,7 +789,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
         if (responseReceiveStartedNanos > 0L) {
             this.harEntry.getTimings().setReceive(responseReceivedNanos - responseReceiveStartedNanos, NANOSECONDS);
         } else {
-            this.harEntry.getTimings().setReceive(0);
+            this.harEntry.getTimings().setReceive(0L);
         }
     }
 }

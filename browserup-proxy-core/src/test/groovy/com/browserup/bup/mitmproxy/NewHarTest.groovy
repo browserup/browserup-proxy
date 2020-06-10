@@ -42,7 +42,40 @@ class NewHarTest extends MockServerTest {
     }
 
     @Test
-    void testDnsTimingPopulated() {
+    void testDnsTimingPopulatedIfNoDnsResolutionDelaySpecified() {
+        def stubUrl = "/testDnsTimingPopulated"
+        stubFor(get(urlEqualTo(stubUrl)).willReturn(ok().withBody("success")))
+
+        proxy = new MitmProxyServer()
+        proxy.setDnsResolvingDelayMs(0)
+
+        proxy.start()
+        int proxyPort = proxy.getPort()
+
+        proxy.newHar()
+
+        NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet("http://localhost:${mockServerPort}/testDnsTimingPopulated")).getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "success", responseBody)
+        }
+
+        Thread.sleep(500)
+        Har har = proxy.getHar()
+
+        assertNotNull("HAR should not be null", har)
+        assertNotNull("HAR log should not be null", har.getLog())
+        assertNotNull("HAR log entries should not be null", har.getLog().getEntries())
+        assertFalse("HAR entries should exist", har.getLog().getEntries().isEmpty())
+
+        HarEntry entry = Iterables.get(har.getLog().getEntries(), 0)
+        assertThat("Expected at least 1 second DNS delay", entry.getTimings().getDns(), lessThanOrEqualTo(1000))
+        assertNotNull(har.log.entries[0].time)
+
+        verify(1, getRequestedFor(urlEqualTo(stubUrl)))
+    }
+
+    @Test
+    void testDnsTimingPopulatedIfDnsResolutionDelaySpecified() {
         def stubUrl = "/testDnsTimingPopulated"
         stubFor(get(urlEqualTo(stubUrl)).willReturn(ok().withBody("success")))
 

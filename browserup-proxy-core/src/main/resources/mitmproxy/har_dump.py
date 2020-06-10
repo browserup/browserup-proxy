@@ -7,6 +7,10 @@ from datetime import datetime
 from datetime import timezone
 import dateutil.parser
 
+import asyncio
+
+from mitmproxy import ctx
+
 from enum import Enum, auto
 
 import falcon
@@ -77,6 +81,10 @@ class HarDumpAddonResource:
         self.harDumpAddOn = harDumpAddOn
 
     def on_get(self, req, resp, method_name):
+        try:
+            asyncio.get_event_loop()
+        except:
+            asyncio.set_event_loop(asyncio.new_event_loop())
         getattr(self, "on_" + method_name)(req, resp)
 
     def on_get_har(self, req, resp):
@@ -181,8 +189,6 @@ class HarDumpAddOn:
     def get_har(self, clean_har):
         if clean_har:
             return self.new_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE)
-        if self.har is None:
-            self.new_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE)
         return self.har
 
     def get_default_har_page(self):
@@ -306,6 +312,10 @@ class HarDumpAddOn:
         return self.har
 
     def new_page(self, page_ref, page_title):
+        ctx.log.info(
+            'Creating new page with initial page ref: {}, title: {}'.
+                format(page_ref, page_title))
+
         har = self.get_or_create_har(page_ref, page_title, False)
 
         end_of_page_har = None
@@ -391,6 +401,10 @@ class HarDumpAddOn:
         return None
 
     def new_har(self, initial_page_ref, initial_page_title, create_page=False):
+        ctx.log.info(
+            'Creating new har with initial page ref: {}, title: {}'.
+                format(initial_page_ref, initial_page_title))
+
         old_har = self.end_har()
 
         self.har_page_count = 0
@@ -403,6 +417,8 @@ class HarDumpAddOn:
         return old_har
 
     def end_har(self):
+        ctx.log.info('Ending current har...')
+
         old_har = self.har
         if old_har is None: return
 
@@ -413,6 +429,8 @@ class HarDumpAddOn:
         return old_har
 
     def end_page(self):
+        ctx.log.info('Ending current page...')
+
         previous_har_page = self.current_har_page
         self.current_har_page = None
 
@@ -502,6 +520,14 @@ class HarDumpAddOn:
         self.har['log']['entries'].append(self.har_entry)
 
     def request(self, flow):
+        if 'WhiteListFiltered' in flow.metadata or 'BlackListFiltered' in flow.metadata:
+            return
+
+        req_url = 'none'
+        if flow.request is not None:
+            req_url = flow.request.url
+        ctx.log.info('Incoming request, url: {}'.format(req_url))
+
         self.get_or_create_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE, True)
 
         self.create_har_entry_with_default_response(flow.request)
@@ -545,7 +571,10 @@ class HarDumpAddOn:
         }
 
     def response(self, flow):
+        ctx.log.info('Incoming response for request to url: {}'.format(flow.request.url))
+
         if 'WhiteListFiltered' in flow.metadata or 'BlackListFiltered' in flow.metadata:
+            ctx.log.info('Black/White list filtered, return nothing.')
             return
 
         # -1 indicates that these values do not apply to current request
@@ -565,7 +594,8 @@ class HarDumpAddOn:
             SERVERS_SEEN.add(flow.server_conn)
 
         timings = self.calculate_timings(connect_time, flow, ssl_time)
-        timings['dns'] = self.har_entry['timings']['dns']
+        timings['dns'] = int(self.har_entry['timings']['dns'])
+
         full_time = sum(v for v in timings.values() if v > -1)
 
         # Response body size and encoding
@@ -610,7 +640,7 @@ class HarDumpAddOn:
         har_response["bodySize"] = response_body_size
 
         self.har_entry['response'] = har_response
-        self.har_entry['time'] = full_time
+        self.har_entry['time'] = self.nano_to_ms(full_time)
         self.har_entry['pageref'] = self.get_current_page_ref()
 
         self.har_entry['timings'] = timings
@@ -628,8 +658,9 @@ class HarDumpAddOn:
             'ssl': ssl_time,
         }
         # HAR timings are integers in ms, so we re-encode the raw timings to that format.
+        # In HAR Timings parser we expect input metrincs in Nanos
         timings = {
-            k: int(1000 * v) if v != -1 else -1
+            k: int(self.sec_to_nano(v)) if v != -1 else -1
             for k, v in timings_raw.items()
         }
         return timings
@@ -673,6 +704,14 @@ class HarDumpAddOn:
             Convert (key, value) pairs to HAR format.
         """
         return [{"name": k, "value": v} for k, v in obj.items()]
+
+    @staticmethod
+    def nano_to_ms(time_nano):
+        return int(time_nano / 1000000)
+
+    @staticmethod
+    def sec_to_nano(time_sec):
+        return int(time_sec * 1000000000)
 
 addons = [
     HarDumpAddOn()

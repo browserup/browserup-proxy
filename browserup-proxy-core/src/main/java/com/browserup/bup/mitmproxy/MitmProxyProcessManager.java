@@ -114,12 +114,12 @@ public class MitmProxyProcessManager {
   private List<AbstractAddon> defaultAddons() {
     AbstractAddon[] addonsArray = new AbstractAddon[]{
             rewriteUrlAddOn,
+            whiteListAddOn,
+            blackListAddOn,
             httpConnectCaptureAddOn,
             harCaptureFilterAddOn,
             addonsManagerAddOn,
             proxyManagerAddOn,
-            whiteListAddOn,
-            blackListAddOn,
             authBasicFilterAddOn,
             additionalHeadersAddOn,
             latencyAddOn,
@@ -217,7 +217,7 @@ public class MitmProxyProcessManager {
     return latencyManager;
   }
 
-    public int getAddonsManagerApiPort() {
-        return addonsManagerApiPort;
-    }
+  public int getAddonsManagerApiPort() {
+    return addonsManagerApiPort;
+  }
 }

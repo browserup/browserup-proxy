@@ -6,6 +6,8 @@ package com.browserup.bup.mitmproxy
 
 import com.browserup.bup.BrowserUpProxyServer
 import com.browserup.bup.MitmProxyServer
+import com.browserup.bup.mitmproxy.addons.AddonsManagerAddOn
+import com.browserup.bup.mitmproxy.addons.ProxyManagerAddOn
 import com.browserup.bup.proxy.auth.AuthType
 import com.browserup.bup.proxy.test.util.MockServerTest
 import com.browserup.bup.proxy.test.util.NewProxyServerTestUtil
@@ -157,7 +159,7 @@ class ChainedProxyAuthTest extends MockServerTest {
     void testMitmproxyUsesHttpsUpstreamProxy() {
         upstreamMitmProxy = new MitmProxyServer()
         upstreamMitmProxy.setTrustAllServers(true)
-        upstreamMitmProxy.start(Collections.emptyList())
+        upstreamMitmProxy.start()
 
         def stubUrl = "/proxyauth"
         stubFor(get(urlEqualTo(stubUrl)).willReturn(ok().withBody("success")))
