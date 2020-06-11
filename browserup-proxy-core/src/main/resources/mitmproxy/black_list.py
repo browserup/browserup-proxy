@@ -2,7 +2,6 @@ import json
 import base64
 import typing
 import tempfile
-import orjson
 
 import re
 
@@ -79,7 +78,7 @@ class BlackListResource:
     def on_set_black_list(self, req, resp):
         self.black_list_addon.black_list = []
 
-        blacklist = orjson.loads(req.bounded_stream.read())
+        blacklist = json.loads(req.bounded_stream.read())
 
         for bl_item in blacklist:
             try:
