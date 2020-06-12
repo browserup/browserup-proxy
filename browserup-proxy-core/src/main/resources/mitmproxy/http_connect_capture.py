@@ -76,7 +76,6 @@ class HttpConnectCaptureAddOn:
     def http_connect(self, flow):
         self.http_connect_timing = self.get_http_connect_timing()
         self.har_dump_addon.http_connect_timings[flow.client_conn] = self.http_connect_timing
-        ctx.log.info('xxx http connect!')
 
     def http_proxy_to_server_request_started(self, flow):
         self.send_started_nanos = self.now_time_nanos()
@@ -134,12 +133,12 @@ class HttpConnectCaptureAddOn:
         if self.dns_resolution_started_nanos > 0 and self.get_har_entry():
             time_now = self.now_time_nanos()
             dns_nanos = time_now - self.dns_resolution_started_nanos
-            self.get_har_entry()['timings']['dns'] = dns_nanos
+            self.get_har_entry()['timings']['dnsNanos'] = dns_nanos
 
     def populate_timings_for_failed_connect(self):
         if self.connection_started_nanos > 0:
             connect_nanos = self.now_time_nanos() - self.connection_started_nanos
-            self.get_har_entry()['timings']['connect'] = connect_nanos
+            self.get_har_entry()['timings']['connectNanos'] = connect_nanos
         self.populate_dns_timings()
 
     def populate_server_ip_address(self, flow, original_error):
@@ -179,15 +178,15 @@ class HttpConnectCaptureAddOn:
 
         if self.send_started_nanos > 0 and self.send_finished_nanos == 0:
             self.get_har_entry()['timings'][
-                'send'] = current_time_nanos - self.send_started_nanos
+                'sendNanos'] = current_time_nanos - self.send_started_nanos
 
         elif self.send_finished_nanos > 0 and self.response_receive_started_nanos == 0:
             self.get_har_entry()['timings'][
-                'wait'] = current_time_nanos - self.send_finished_nanos
+                'waitNanos'] = current_time_nanos - self.send_finished_nanos
 
         elif self.response_receive_started_nanos > 0:
             self.get_har_entry()['timings'][
-                'receive'] = current_time_nanos - self.response_receive_started_nanos
+                'receiveNanos'] = current_time_nanos - self.response_receive_started_nanos
 
         self.get_har_entry()['time'] = self.calculate_total_elapsed_time()
 
@@ -199,12 +198,14 @@ class HttpConnectCaptureAddOn:
 
     def calculate_total_elapsed_time(self):
         timings = self.get_har_entry()['timings']
-        result = (0 if timings['blocked'] == -1 else timings['blocked']) + \
-                 (0 if timings['dns'] == -1 else timings['dns']) + \
-                 (0 if timings['connect'] == -1 else timings['connect']) + \
-                 (0 if timings['send'] == -1 else timings['send']) + \
-                 (0 if timings['wait'] == -1 else timings['wait']) + \
-                 (0 if timings['receive'] == -1 else timings['receive'])
+        result = (0 if timings['blockedNanos'] == -1 else timings['blockedNanos']) + \
+                 (0 if timings['dnsNanos'] == -1 else timings['dnsNanos']) + \
+                 (0 if timings['connectNanos'] == -1 else timings['connectNanos']) + \
+                 (0 if timings['sendNanos'] == -1 else timings['sendNanos']) + \
+                 (0 if timings['waitNanos'] == -1 else timings['waitNanos']) + \
+                 (0 if timings['receiveNanos'] == -1 else timings['receiveNanos'])
+
+
         return self.nano_to_ms(result)
 
     def get_har_entry(self):

@@ -41,7 +41,7 @@ subprojects {
 
 
     group = 'com.browserup'
-    version = '2.1.2-SNAPSHOT'
+    version = '2.1.3-SNAPSHOT'
 
     sourceCompatibility=1.8
 

@@ -253,13 +253,13 @@ class HarDumpAddOn:
 
     def generate_har_timings(self):
         return {
-            "blocked": -1,
-            "dns": -1,
-            "connect": -1,
-            "ssl": -1,
-            "send": 0,
-            "wait": 0,
-            "receive": 0,
+            "blockedNanos": -1,
+            "dnsNanos": -1,
+            "connectNanos": -1,
+            "sslNanos": -1,
+            "sendNanos": 0,
+            "waitNanos": 0,
+            "receiveNanos": 0,
             "comment": ""
         }
 
@@ -546,10 +546,10 @@ class HarDumpAddOn:
 
         connect_timing = self.consume_http_connect_timing(flow.client_conn)
         if connect_timing is not None:
-            self.har_entry['timings']['ssl'] = connect_timing['sslHandshakeTimeNanos']
-            self.har_entry['timings']['connect'] = connect_timing['connectTimeNanos']
-            self.har_entry['timings']['blocked'] = connect_timing['blockedTimeNanos']
-            self.har_entry['timings']['dns'] = connect_timing['dnsTimeNanos']
+            self.har_entry['timings']['sslNanos'] = connect_timing['sslHandshakeTimeNanos']
+            self.har_entry['timings']['connectNanos'] = connect_timing['connectTimeNanos']
+            self.har_entry['timings']['blockedNanos'] = connect_timing['blockedTimeNanos']
+            self.har_entry['timings']['dnsNanos'] = connect_timing['dnsTimeNanos']
 
     def capture_request_cookies(self, flow):
         self.har_entry['request']['cookies'] = \
@@ -594,7 +594,7 @@ class HarDumpAddOn:
             SERVERS_SEEN.add(flow.server_conn)
 
         timings = self.calculate_timings(connect_time, flow, ssl_time)
-        timings['dns'] = int(self.har_entry['timings']['dns'])
+        timings['dnsNanos'] = int(self.har_entry['timings']['dnsNanos'])
 
         full_time = sum(v for v in timings.values() if v > -1)
 
@@ -651,11 +651,11 @@ class HarDumpAddOn:
 
     def calculate_timings(self, connect_time, flow, ssl_time):
         timings_raw = {
-            'send': flow.request.timestamp_end - flow.request.timestamp_start,
-            'receive': flow.response.timestamp_end - flow.response.timestamp_start,
-            'wait': flow.response.timestamp_start - flow.request.timestamp_end,
-            'connect': connect_time,
-            'ssl': ssl_time,
+            'sendNanos': flow.request.timestamp_end - flow.request.timestamp_start,
+            'receiveNanos': flow.response.timestamp_end - flow.response.timestamp_start,
+            'waitNanos': flow.response.timestamp_start - flow.request.timestamp_end,
+            'connectNanos': connect_time,
+            'sslNanos': ssl_time,
         }
         # HAR timings are integers in ms, so we re-encode the raw timings to that format.
         # In HAR Timings parser we expect input metrincs in Nanos
@@ -663,6 +663,8 @@ class HarDumpAddOn:
             k: int(self.sec_to_nano(v)) if v != -1 else -1
             for k, v in timings_raw.items()
         }
+
+
         return timings
 
     def format_cookies(self, cookie_list):
