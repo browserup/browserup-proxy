@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 @RunWith(Parameterized.class)
+@org.junit.Ignore
 public class AdvancedHostResolverTest {
     @Parameterized.Parameters
     public static Collection<Object[]> data() {

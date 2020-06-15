@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertNull
 import static org.junit.Assert.assertThat
 
+@org.junit.Ignore
 class DefaultStepIdTest extends MockServerTest {
     private static final String SUCCESSFUL_RESPONSE_BODY = "success"
     private static final String FIRST_URL = "first-url"

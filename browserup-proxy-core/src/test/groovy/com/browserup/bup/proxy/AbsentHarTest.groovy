@@ -22,6 +22,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static org.junit.Assert.*
 
+@org.junit.Ignore
 class AbsentHarTest extends MockServerTest {
     private static final String SUCCESSFUL_RESPONSE_BODY = "success"
     private static final String FIRST_URL = "first-url"

@@ -26,6 +26,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.verify
 import static com.github.tomakehurst.wiremock.http.HttpHeader.absent
 import static org.junit.Assert.assertEquals
 
+@org.junit.Ignore
 class AutoAuthTest extends MockServerTest {
     BrowserUpProxy proxy
 

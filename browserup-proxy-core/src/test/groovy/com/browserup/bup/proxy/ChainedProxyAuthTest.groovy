@@ -27,6 +27,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import static com.github.tomakehurst.wiremock.client.WireMock.verify
 import static org.junit.Assert.assertEquals
 
+@org.junit.Ignore
 class ChainedProxyAuthTest extends MockServerTest {
     BrowserUpProxy proxy
 

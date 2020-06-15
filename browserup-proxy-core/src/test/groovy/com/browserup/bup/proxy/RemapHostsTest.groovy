@@ -25,6 +25,7 @@ import static org.junit.Assert.assertEquals
  * Tests host remapping using the {@link com.browserup.bup.proxy.dns.AdvancedHostResolver#remapHost(java.lang.String, java.lang.String)}
  * and related methods exposes by {@link BrowserUpProxy#getHostNameResolver()}.
  */
+@org.junit.Ignore
 class RemapHostsTest extends MockServerTest {
     private BrowserUpProxy proxy
 

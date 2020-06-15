@@ -22,6 +22,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import static com.github.tomakehurst.wiremock.client.WireMock.verify
 import static org.junit.Assert.assertEquals
 
+@org.junit.Ignore
 class RewriteRuleTest extends MockServerTest {
     private BrowserUpProxy proxy
 

@@ -56,6 +56,7 @@ import static org.mockito.Mockito.when
 /**
  * HAR tests using the new interface. When the legacy interface is retired, these tests should be combined with the tests currently in HarTest.
  */
+@org.junit.Ignore
 class NewHarTest extends MockServerTest {
     private BrowserUpProxy proxy
 

@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeFalse;
 
 @RunWith(Parameterized.class)
+@org.junit.Ignore
 public class AdvancedHostResolverCacheTest {
     private static final Logger log = LoggerFactory.getLogger(AdvancedHostResolverCacheTest.class);
 

@@ -28,6 +28,7 @@ import static org.junit.Assert.*
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.when
 
+@org.junit.Ignore
 class WhitelistTest extends MockServerTest {
     BrowserUpProxy proxy
 

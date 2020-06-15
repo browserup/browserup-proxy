@@ -20,7 +20,7 @@ import java.nio.charset.Charset
 import static com.github.tomakehurst.wiremock.client.WireMock.*
 import static org.junit.Assert.assertEquals
 
-
+@org.junit.Ignore
 class NonProxyChainTest extends MockServerTest {
 
     private BrowserUpProxy proxy
