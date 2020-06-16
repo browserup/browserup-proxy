@@ -147,12 +147,9 @@ class HttpConnectCaptureAddOn:
         self.populate_dns_timings()
 
     def populate_server_ip_address(self, flow, original_error):
-        if isinstance(original_error, (ConnectionRefusedError, TcpTimeout)):
-            if flow.server_conn and flow.server_conn.ip_address:
-                self.get_har_entry()['serverIPAddress'] = str(
-                    flow.server_conn.ip_address[0])
-        else:
-            ctx.log.info("Cannot populate server IP address, unknown error: {}".format(original_error))
+        if flow.server_conn is not None and flow.server_conn.ip_address is not None:
+            self.get_har_entry()['serverIPAddress'] = str(
+                flow.server_conn.ip_address[0])
 
     def get_resource(self):
         return HttpConnectCaptureResource(self)
