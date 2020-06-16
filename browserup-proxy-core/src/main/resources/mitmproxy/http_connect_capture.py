@@ -1,5 +1,6 @@
 import time
 import json
+import asyncio
 
 from mitmproxy import ctx
 from mitmproxy.exceptions import TcpTimeout
@@ -23,6 +24,10 @@ class HttpConnectCaptureResource:
                 self.har_connect_addon.har_dump_addon = a.addons[0].addons[0]
 
     def on_get(self, req, resp, method_name):
+        try:
+            asyncio.get_event_loop()
+        except:
+            asyncio.set_event_loop(asyncio.new_event_loop())
         getattr(self, "on_" + method_name)(req, resp)
 
 
@@ -146,6 +151,8 @@ class HttpConnectCaptureAddOn:
             if flow.server_conn and flow.server_conn.ip_address:
                 self.get_har_entry()['serverIPAddress'] = str(
                     flow.server_conn.ip_address[0])
+        else:
+            ctx.log.info("Cannot populate server IP address, unknown error: {}".format(original_error))
 
     def get_resource(self):
         return HttpConnectCaptureResource(self)
