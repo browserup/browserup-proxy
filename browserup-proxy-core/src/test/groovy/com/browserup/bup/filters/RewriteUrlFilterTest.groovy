@@ -36,6 +36,7 @@ import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.verify
 import static org.mockito.Mockito.when
 
+@org.junit.Ignore
 class RewriteUrlFilterTest extends MockServerTest {
     BrowserUpProxy proxy
 
