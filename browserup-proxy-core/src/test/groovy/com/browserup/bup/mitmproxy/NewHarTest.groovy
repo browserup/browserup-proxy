@@ -785,7 +785,7 @@ class NewHarTest extends MockServerTest {
         String capturedUrl = har.log.entries[0].request.url
         assertEquals("URL captured in HAR did not match request URL", requestUrl, capturedUrl)
 
-        assertEquals("Expected IP address to be populated", "127.0.0.1", har.log.entries[0].serverIPAddress)
+        assertTrue("Expected IP address to be populated", har.log.entries[0].serverIPAddress in ["127.0.0.1", "::1"] )
 
         HarResponse harResponse = har.log.entries[0].response
         assertNotNull("No HAR response found", harResponse)
