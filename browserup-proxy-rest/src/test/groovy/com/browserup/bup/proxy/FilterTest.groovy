@@ -14,6 +14,7 @@ import com.browserup.bup.filters.ResponseFilter
 import com.browserup.bup.proxy.bricks.ProxyResource
 import com.browserup.bup.proxy.test.util.ProxyResourceTest
 import org.apache.http.entity.ContentType
+import org.junit.Ignore
 import org.junit.Test
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse
@@ -34,6 +35,8 @@ import static org.mockito.Mockito.never
 import static org.mockito.Mockito.verify
 import static org.mockito.Mockito.when
 
+// Not implemented in MitmProxyManager yet
+@Ignore
 class FilterTest extends ProxyResourceTest {
     @Test
     void testCanModifyRequestHeadersWithJavascript() {

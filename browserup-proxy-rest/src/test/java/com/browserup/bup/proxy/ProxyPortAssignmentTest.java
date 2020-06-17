@@ -7,7 +7,7 @@ package com.browserup.bup.proxy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.browserup.bup.BrowserUpProxyServer;
+import com.browserup.bup.MitmProxyServer;
 import com.browserup.bup.exception.ProxyExistsException;
 import com.browserup.bup.exception.ProxyPortsExhaustedException;
 import com.browserup.bup.proxy.test.util.ProxyManagerTest;
@@ -22,7 +22,7 @@ public class ProxyPortAssignmentTest extends ProxyManagerTest {
     @Test
     public void testAutoAssignment() {
         int[] ports = {9091, 9092, 9093};
-        BrowserUpProxyServer p;
+        MitmProxyServer p;
         for(int port : ports){
             p = proxyManager.create();
             assertEquals(port, p.getPort());
@@ -47,7 +47,7 @@ public class ProxyPortAssignmentTest extends ProxyManagerTest {
 
     @Test
     public void testManualAssignment() {
-        BrowserUpProxyServer p = proxyManager.create(9094);
+        MitmProxyServer p = proxyManager.create(9094);
         assertEquals(9094, p.getPort());
         try{
             proxyManager.create(9094);
