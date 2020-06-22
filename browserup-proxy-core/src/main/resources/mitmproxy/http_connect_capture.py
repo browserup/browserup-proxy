@@ -202,12 +202,12 @@ class HttpConnectCaptureAddOn:
 
     def calculate_total_elapsed_time(self):
         timings = self.get_har_entry()['timings']
-        result = (0 if timings['blockedNanos'] == -1 else timings['blockedNanos']) + \
-                 (0 if timings['dnsNanos'] == -1 else timings['dnsNanos']) + \
-                 (0 if timings['connectNanos'] == -1 else timings['connectNanos']) + \
-                 (0 if timings['sendNanos'] == -1 else timings['sendNanos']) + \
-                 (0 if timings['waitNanos'] == -1 else timings['waitNanos']) + \
-                 (0 if timings['receiveNanos'] == -1 else timings['receiveNanos'])
+        result = (0 if timings.get('blockedNanos', -1) == -1 else timings['blockedNanos']) + \
+                 (0 if timings.get('dnsNanos', -1) == -1 else timings['dnsNanos']) + \
+                 (0 if timings.get('connectNanos', -1) == -1 else timings['connectNanos']) + \
+                 (0 if timings.get('sendNanos', -1) == -1 else timings['sendNanos']) + \
+                 (0 if timings.get('waitNanos', -1) == -1 else timings['waitNanos']) + \
+                 (0 if timings.get('receiveNanos', -1) == -1 else timings['receiveNanos'])
 
 
         return self.nano_to_ms(result)
