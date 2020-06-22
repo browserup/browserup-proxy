@@ -154,6 +154,7 @@ public class MitmProxyProcessManager {
     String logPrefix = "MitmProxy[" + this.proxyPort + "]: ";
     ProcessExecutor processExecutor = new ProcessExecutor(command)
             .readOutput(true)
+            .destroyOnExit()
             .redirectOutput(Slf4jStream.ofCaller().asInfo())
             .redirectOutput(new LogOutputStream() {
               @Override
