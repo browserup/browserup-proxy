@@ -387,6 +387,7 @@ class HarDumpAddOn:
         return default_page
 
     def add_default_page(self):
+        self.get_or_create_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE, False)
         new_page = self.generate_new_har_page()
         new_page['title'] = DEFAULT_PAGE_REF
         new_page['startedDateTime'] = datetime.utcnow().isoformat()
@@ -401,9 +402,12 @@ class HarDumpAddOn:
         return None
 
     def new_har(self, initial_page_ref, initial_page_title, create_page=False):
-        ctx.log.info(
-            'Creating new har with initial page ref: {}, title: {}'.
-                format(initial_page_ref, initial_page_title))
+        if create_page:
+            ctx.log.info(
+                'Creating new har with initial page ref: {}, title: {}'.
+                    format(initial_page_ref, initial_page_title))
+        else:
+            ctx.log.info('Creating new har without initial page')
 
         old_har = self.end_har()
 
