@@ -11,7 +11,7 @@ archivesBaseName = 'browserup-proxy-rest'
 
 ext {
     jerseyVersion = '2.31'
-    swaggerVersion = '2.1.2'
+    swaggerVersion = '2.1.3'
 }
 
 uploadArchives {
