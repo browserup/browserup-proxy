@@ -507,7 +507,7 @@ class HarDumpAddOn:
 
     def create_har_entry_with_default_response(self, request):
         self.har_entry = self.generate_har_entry()
-        self.har_entry['pageRef'] = self.get_current_page_ref()
+        self.har_entry['pageref'] = self.get_current_page_ref()
         self.har_entry['startedDateTime'] = datetime.fromtimestamp(
             request.timestamp_start, timezone.utc).isoformat()
         har_request = self.generate_har_entry_request()
