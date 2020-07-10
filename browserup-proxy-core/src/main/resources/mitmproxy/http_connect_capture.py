@@ -208,8 +208,6 @@ class HttpConnectCaptureAddOn:
                  (0 if timings.get('sendNanos', -1) == -1 else timings['sendNanos']) + \
                  (0 if timings.get('waitNanos', -1) == -1 else timings['waitNanos']) + \
                  (0 if timings.get('receiveNanos', -1) == -1 else timings['receiveNanos'])
-
-
         return self.nano_to_ms(result)
 
     def get_har_entry(self):

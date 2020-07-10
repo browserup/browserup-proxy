@@ -600,6 +600,8 @@ class HarDumpAddOn:
         timings = self.calculate_timings(connect_time, flow, ssl_time)
         timings['dnsNanos'] = int(self.har_entry['timings']['dnsNanos'])
 
+        ctx.log.info('Nano timings for request: {} \nare: {}'.format(flow.request.url, json.dumps(timings)))
+
         full_time = sum(v for v in timings.values() if v > -1)
 
         # Response body size and encoding
