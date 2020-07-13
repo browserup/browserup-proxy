@@ -4,10 +4,10 @@
 
 package com.browserup.bup.proxy;
 
-import com.browserup.bup.BrowserUpProxyServer;
 import com.browserup.bup.MitmProxyServer;
 import com.browserup.bup.exception.ProxyExistsException;
 import com.browserup.bup.exception.ProxyPortsExhaustedException;
+import com.browserup.bup.mitmproxy.MitmProxyProcessManager.MitmProxyLoggingLevel;
 import com.browserup.bup.proxy.auth.AuthType;
 import com.browserup.bup.util.BrowserUpProxyUtil;
 import com.google.common.cache.Cache;
@@ -131,14 +131,18 @@ public class MitmProxyManager {
     }
 
     public MitmProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword, Integer port, String bindAddr, String serverBindAddr, boolean useEcc, boolean trustAllServers) {
-        return create(upstreamHttpProxy, false, null, proxyUsername, proxyPassword, port, bindAddr, serverBindAddr, useEcc, trustAllServers);
+        return create(upstreamHttpProxy, false, null, proxyUsername, proxyPassword, port, bindAddr, serverBindAddr, useEcc, trustAllServers, MitmProxyLoggingLevel.info);
     }
 
-    public MitmProxyServer create(String upstreamHttpProxy, boolean upstreamProxyHttps, String proxyUsername, String proxyPassword, Integer port, String bindAddr, String serverBindAddr, boolean useEcc, boolean trustAllServers) {
-        return create(upstreamHttpProxy, upstreamProxyHttps, null, proxyUsername, proxyPassword, port, bindAddr, serverBindAddr, useEcc, trustAllServers);
+    public MitmProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword, Integer port, String bindAddr, String serverBindAddr, boolean useEcc, boolean trustAllServers, MitmProxyLoggingLevel loggingLevel) {
+        return create(upstreamHttpProxy, false, null, proxyUsername, proxyPassword, port, bindAddr, serverBindAddr, useEcc, trustAllServers, loggingLevel);
     }
 
-    public MitmProxyServer create(String upstreamHttpProxy, boolean upstreamProxyHttps, List<String> upstreamNonProxyHosts, String proxyUsername, String proxyPassword, Integer port, String bindAddr, String serverBindAddr, boolean useEcc, boolean trustAllServers) {
+    public MitmProxyServer create(String upstreamHttpProxy, boolean upstreamProxyHttps, String proxyUsername, String proxyPassword, Integer port, String bindAddr, String serverBindAddr, boolean useEcc, boolean trustAllServers, MitmProxyLoggingLevel loggingLevel) {
+        return create(upstreamHttpProxy, upstreamProxyHttps, null, proxyUsername, proxyPassword, port, bindAddr, serverBindAddr, useEcc, trustAllServers, loggingLevel);
+    }
+
+    public MitmProxyServer create(String upstreamHttpProxy, boolean upstreamProxyHttps, List<String> upstreamNonProxyHosts, String proxyUsername, String proxyPassword, Integer port, String bindAddr, String serverBindAddr, boolean useEcc, boolean trustAllServers, MitmProxyLoggingLevel loggingLevel) {
 
         LOG.debug("Instantiate ProxyServer...");
         MitmProxyServer proxy = new MitmProxyServer();
@@ -146,6 +150,8 @@ public class MitmProxyManager {
         if (trustAllServers) {
             proxy.setTrustAllServers(true);
         }
+
+        proxy.setMitmProxyLoggingLevel(loggingLevel);
 
         // this is a short-term work-around for Proxy Auth in the REST API until the upcoming REST API refactor
         if (proxyUsername != null && proxyPassword != null) {
@@ -208,24 +214,24 @@ public class MitmProxyManager {
         throw new ProxyPortsExhaustedException();
     }
 
-    public MitmProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword, Integer port, String bindAddr, boolean useEcc, boolean trustAllServers) {
-        return create(upstreamHttpProxy, false, null, proxyUsername, proxyPassword, port, null, null, false, false);
+    public MitmProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword, Integer port, String bindAddr, boolean useEcc, boolean trustAllServers, MitmProxyLoggingLevel level) {
+        return create(upstreamHttpProxy, false, null, proxyUsername, proxyPassword, port, null, null, false, false, level);
     }
 
     public MitmProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword, Integer port) {
-        return create(upstreamHttpProxy, false, null, proxyUsername, proxyPassword, port, null, null, false, false);
+        return create(upstreamHttpProxy, false, null, proxyUsername, proxyPassword, port, null, null, false, false, MitmProxyLoggingLevel.info);
     }
 
     public MitmProxyServer create(String upstreamHttpProxy, String proxyUsername, String proxyPassword) {
-        return create(upstreamHttpProxy, false, null, proxyUsername, proxyPassword, null, null, null, false, false);
+        return create(upstreamHttpProxy, false, null, proxyUsername, proxyPassword, null, null, null, false, false, MitmProxyLoggingLevel.info);
     }
 
     public MitmProxyServer create() {
-        return create(null, false, null, null, null, null, null, null, false, false);
+        return create(null, false, null, null, null, null, null, null, false, false, MitmProxyLoggingLevel.info);
     }
 
     public MitmProxyServer create(int port) {
-        return create(null, false, null, null, null, port, null, null, false, false);
+        return create(null, false, null, null, null, port, null, null, false, false, MitmProxyLoggingLevel.info);
     }
 
     public MitmProxyServer get(int port) {

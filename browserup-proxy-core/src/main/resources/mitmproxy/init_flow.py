@@ -20,34 +20,33 @@ from mitmproxy.utils import strutils
 from mitmproxy.net.http import cookies
 from mitmproxy import http
 
-class LatencyResource:
+class InitFlowResource:
 
     def addon_path(self):
-        return "latency"
+        return "init_flow"
 
-    def __init__(self, latency_addon):
-        self.latency_addon = latency_addon
+    def __init__(self, init_flow_addon):
+        self.init_flow_addon = init_flow_addon
+        for a in ctx.master.addons.get("scriptloader").addons:
+            if 'har_dump.py' in a.fullpath:
+                self.init_flow_addon.har_dump_addon = a.addons[0].addons[0]
 
     def on_get(self, req, resp, method_name):
         getattr(self, "on_" + method_name)(req, resp)
 
-    def on_set_latency(self, req, resp):
-        self.latency_addon.latency_ms = int(req.get_param('latency'))
 
-
-class LatencyAddOn:
+class InitFlowAddOn:
 
     def __init__(self):
         self.num = 0
-        self.latency_ms = 0
+        self.har_dump_addon = None
 
     def get_resource(self):
-        return LatencyResource(self)
+        return InitFlowResource(self)
 
-    def response(self, flow):
-        if self.latency_ms != 0:
-            sleep(self.latency_ms / 1000)
+    def request(self, flow):
+        self.har_dump_addon.har_entry = None
 
 addons = [
-    LatencyAddOn()
+    InitFlowAddOn()
 ]

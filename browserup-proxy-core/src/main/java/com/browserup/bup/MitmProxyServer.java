@@ -17,6 +17,7 @@ import com.browserup.bup.filters.RequestFilter;
 import com.browserup.bup.filters.ResponseFilter;
 import com.browserup.bup.mitm.TrustSource;
 import com.browserup.bup.mitmproxy.MitmProxyProcessManager;
+import com.browserup.bup.mitmproxy.MitmProxyProcessManager.MitmProxyLoggingLevel;
 import com.browserup.bup.mitmproxy.NetworkUtils;
 import com.browserup.bup.mitmproxy.addons.AbstractAddon;
 import com.browserup.bup.mitmproxy.management.HarCaptureManager;
@@ -481,6 +482,14 @@ public class MitmProxyServer implements BrowserUpProxy {
   @Override
   public void setTrustSource(TrustSource trustSource) {
 
+  }
+
+  public void setMitmProxyLoggingLevel(MitmProxyLoggingLevel level) {
+    this.mitmProxyManager.setMitmProxyLoggingLevel(level);
+  }
+
+  public MitmProxyLoggingLevel getMitmProxyLoggingLevel() {
+    return this.mitmProxyManager.getMitmProxyLoggingLevel();
   }
 
   @Override

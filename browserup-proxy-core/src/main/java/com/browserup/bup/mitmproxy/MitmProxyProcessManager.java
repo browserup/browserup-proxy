@@ -23,6 +23,14 @@ import java.util.concurrent.TimeUnit;
 public class MitmProxyProcessManager {
   private static final Logger LOGGER = LoggerFactory.getLogger(MitmProxyProcessManager.class);
 
+  public enum MitmProxyLoggingLevel {
+    error,
+    warn,
+    info,
+    alert,
+    debug
+  }
+
   private final int addonsManagerApiPort = NetworkUtils.getFreePort();
   private StartedProcess startedProcess = null;
 
@@ -36,6 +44,7 @@ public class MitmProxyProcessManager {
   private HttpConnectCaptureAddOn httpConnectCaptureAddOn = new HttpConnectCaptureAddOn();
   private RewriteUrlAddOn rewriteUrlAddOn = new RewriteUrlAddOn();
   private LatencyAddOn latencyAddOn = new LatencyAddOn();
+  private InitFlowAddOn initFlowAddOn = new InitFlowAddOn();
 
   private AddonsManagerClient addonsManagerClient = new AddonsManagerClient(addonsManagerApiPort);
 
@@ -52,6 +61,7 @@ public class MitmProxyProcessManager {
 
   private boolean isRunning = false;
   private boolean trustAll = false;
+  private MitmProxyLoggingLevel mitmProxyLoggingLevel = MitmProxyLoggingLevel.info;
 
   private StringBuilder proxyLog = new StringBuilder();
 
@@ -76,6 +86,14 @@ public class MitmProxyProcessManager {
       stop();
       throw ex;
     }
+  }
+
+  public MitmProxyLoggingLevel getMitmProxyLoggingLevel() {
+    return mitmProxyLoggingLevel;
+  }
+
+  public void setMitmProxyLoggingLevel(MitmProxyLoggingLevel mitmProxyLoggingLevel) {
+    this.mitmProxyLoggingLevel = mitmProxyLoggingLevel;
   }
 
   private void configureProxy() {
@@ -113,6 +131,7 @@ public class MitmProxyProcessManager {
 
   private List<AbstractAddon> defaultAddons() {
     AbstractAddon[] addonsArray = new AbstractAddon[]{
+            initFlowAddOn,
             rewriteUrlAddOn,
             whiteListAddOn,
             blackListAddOn,
@@ -146,6 +165,9 @@ public class MitmProxyProcessManager {
       command.add("--mode");
       command.add("upstream:" + schema + "://" + upstreamProxyAddress.getHostName() + ":" + upstreamProxyAddress.getPort());
     }
+
+    command.add("--set");
+    command.add("termlog_verbosity=" + getMitmProxyLoggingLevel());
 
     addons.forEach(addon -> command.addAll(Arrays.asList(addon.getCommandParams())));
 

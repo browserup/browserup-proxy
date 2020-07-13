@@ -20,21 +20,12 @@ from mitmproxy.utils import strutils
 from mitmproxy.net.http import cookies
 from mitmproxy import http
 
-# A list of server seen till now is maintained so we can avoid
-# using 'connect' time for entries that use an existing connection.
-SERVERS_SEEN: typing.Set[connections.ServerConnection] = set()
-
-DEFAULT_PAGE_REF = "Default"
-DEFAULT_PAGE_TITLE = "Default"
-
-
 class BlackListResource:
 
     def addon_path(self):
         return "blacklist"
 
     def __init__(self, black_list_addon):
-        self.num = 0
         self.black_list_addon = black_list_addon
 
     def on_get(self, req, resp, method_name):

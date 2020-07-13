@@ -18,21 +18,12 @@ from mitmproxy.utils import strutils
 from mitmproxy.net.http import cookies
 from mitmproxy import http
 
-# A list of server seen till now is maintained so we can avoid
-# using 'connect' time for entries that use an existing connection.
-SERVERS_SEEN: typing.Set[connections.ServerConnection] = set()
-
-DEFAULT_PAGE_REF = "Default"
-DEFAULT_PAGE_TITLE = "Default"
-
-
 class AddHeadersResource:
 
     def addon_path(self):
         return "additional_headers"
 
     def __init__(self, additional_headers_addon):
-        self.num = 0
         self.additional_headers_addon = additional_headers_addon
 
     def on_get(self, req, resp, method_name):

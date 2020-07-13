@@ -456,6 +456,8 @@ class HarDumpAddOn:
                     ).total_seconds() * 1000
 
     def add_har_page(self, pageRef, pageTitle):
+        ctx.log.debug('Adding har page with ref: {} and title: {}'.format(pageRef, pageTitle))
+
         har_page = {
             "id": pageRef,
             "title:": pageTitle,
@@ -506,13 +508,17 @@ class HarDumpAddOn:
         return None
 
     def create_har_entry_with_default_response(self, request):
+        full_url = self.get_full_url(request)
+
+        ctx.log.debug('Creating new har entry for request: {}'.format(full_url))
+
         self.har_entry = self.generate_har_entry()
         self.har_entry['pageref'] = self.get_current_page_ref()
         self.har_entry['startedDateTime'] = datetime.fromtimestamp(
             request.timestamp_start, timezone.utc).isoformat()
         har_request = self.generate_har_entry_request()
         har_request['method'] = request.method
-        har_request['url'] = self.get_full_url(request)
+        har_request['url'] = full_url
         har_request['httpVersion'] = request.http_version
         har_request['queryString'] = self.name_value(request.query or {})
         har_request['headersSize'] = len(str(request.headers))
@@ -530,7 +536,8 @@ class HarDumpAddOn:
         req_url = 'none'
         if flow.request is not None:
             req_url = flow.request.url
-        ctx.log.info('Incoming request, url: {}'.format(req_url))
+
+        ctx.log.debug('Incoming request, url: {}'.format(req_url))
 
         self.get_or_create_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE, True)
 
@@ -575,10 +582,15 @@ class HarDumpAddOn:
         }
 
     def response(self, flow):
-        ctx.log.info('Incoming response for request to url: {}'.format(flow.request.url))
+        ctx.log.debug('Incoming response for request to url: {}'.format(flow.request.url))
+
+        if self.har_entry is not None:
+            ctx.log.debug(
+                'Response handling for request: {} for current har entry with url: {}'
+                    .format(flow.request.url, self.har_entry['request']['url']))
 
         if 'WhiteListFiltered' in flow.metadata or 'BlackListFiltered' in flow.metadata:
-            ctx.log.info('Black/White list filtered, return nothing.')
+            ctx.log.debug('Black/White list filtered, return nothing.')
             return
 
         # -1 indicates that these values do not apply to current request
@@ -599,8 +611,6 @@ class HarDumpAddOn:
 
         timings = self.calculate_timings(connect_time, flow, ssl_time)
         timings['dnsNanos'] = int(self.har_entry['timings']['dnsNanos'])
-
-        ctx.log.info('Nano timings for request: {} \nare: {}'.format(flow.request.url, json.dumps(timings)))
 
         full_time = sum(v for v in timings.values() if v > -1)
 
@@ -664,14 +674,11 @@ class HarDumpAddOn:
             'sslNanos': ssl_time,
         }
         # HAR timings are integers in ms, so we re-encode the raw timings to that format.
-        # In HAR Timings parser we expect input metrincs in Nanos
-        timings = {
+        # In HAR Timings parser we expect input metrics in Nanos
+        return {
             k: int(self.sec_to_nano(v)) if v != -1 else -1
             for k, v in timings_raw.items()
         }
-
-
-        return timings
 
     def format_cookies(self, cookie_list):
         rv = []

@@ -8,8 +8,6 @@ from mitmproxy.exceptions import TcpTimeout
 RESOLUTION_FAILED_ERROR_MESSAGE = "Unable to resolve host: "
 CONNECTION_FAILED_ERROR_MESSAGE = "Unable to connect to host"
 RESPONSE_TIMED_OUT_ERROR_MESSAGE = "Response timed out"
-DEFAULT_PAGE_REF = "Default"
-DEFAULT_PAGE_TITLE = "Default"
 
 class HttpConnectCaptureResource:
 
@@ -17,7 +15,6 @@ class HttpConnectCaptureResource:
         return "http_connect_capture"
 
     def __init__(self, har_connect_addon):
-        self.num = 0
         self.har_connect_addon = har_connect_addon
         for a in ctx.master.addons.get("scriptloader").addons:
             if 'har_dump.py' in a.fullpath:

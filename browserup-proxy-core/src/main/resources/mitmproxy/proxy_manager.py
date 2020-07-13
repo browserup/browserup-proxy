@@ -25,13 +25,6 @@ from mitmproxy import version
 from mitmproxy.utils import strutils
 from mitmproxy.net.http import cookies
 
-# A list of server seen till now is maintained so we can avoid
-# using 'connect' time for entries that use an existing connection.
-SERVERS_SEEN: typing.Set[connections.ServerConnection] = set()
-
-DEFAULT_PAGE_REF = "Default"
-DEFAULT_PAGE_TITLE = "Default"
-
 
 class ProxyManagerResource:
 
@@ -39,7 +32,6 @@ class ProxyManagerResource:
         return "proxy_manager"
 
     def __init__(self, harDumpAddOn):
-        self.num = 0
         ctx.options.connection_idle_seconds = -1
         ctx.options.dns_resolving_delay_ms = -1
 

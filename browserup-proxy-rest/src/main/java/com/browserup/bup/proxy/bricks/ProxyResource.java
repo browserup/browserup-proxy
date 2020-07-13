@@ -9,6 +9,8 @@ import com.browserup.bup.exception.ProxyExistsException;
 import com.browserup.bup.exception.ProxyPortsExhaustedException;
 import com.browserup.bup.exception.UnsupportedCharsetException;
 import com.browserup.bup.filters.JavascriptRequestResponseFilter;
+import com.browserup.bup.mitmproxy.MitmProxyProcessManager;
+import com.browserup.bup.mitmproxy.MitmProxyProcessManager.MitmProxyLoggingLevel;
 import com.browserup.bup.proxy.CaptureType;
 import com.browserup.bup.proxy.MitmProxyManager;
 import com.browserup.bup.proxy.auth.AuthType;
@@ -115,6 +117,12 @@ public class ProxyResource {
         String useEccString = request.param("useEcc");
         boolean useEcc = Boolean.parseBoolean(useEccString);
 
+        String loggingLevel = request.param("mitmProxyLoggingLevel");
+        MitmProxyLoggingLevel level = MitmProxyLoggingLevel.info;
+        if (StringUtils.isNotEmpty(loggingLevel)) {
+            level = MitmProxyLoggingLevel.valueOf(loggingLevel);
+        }
+
         String trustAllServersString = request.param("trustAllServers");
         boolean trustAllServers = Boolean.parseBoolean(trustAllServersString);
 
@@ -122,7 +130,7 @@ public class ProxyResource {
                 paramBindAddr, paramPort, paramServerBindAddr);
         MitmProxyServer proxy;
         try {
-            proxy = proxyManager.create(upstreamHttpProxy, upstreamProxyHttps, upstreamNonProxyHosts, proxyUsername, proxyPassword, paramPort, paramBindAddr, paramServerBindAddr, useEcc, trustAllServers);
+            proxy = proxyManager.create(upstreamHttpProxy, upstreamProxyHttps, upstreamNonProxyHosts, proxyUsername, proxyPassword, paramPort, paramBindAddr, paramServerBindAddr, useEcc, trustAllServers, level);
         } catch (ProxyExistsException ex) {
             return Reply.with(new ProxyDescriptor(ex.getPort())).status(455).as(Json.class);
         } catch (ProxyPortsExhaustedException ex) {
