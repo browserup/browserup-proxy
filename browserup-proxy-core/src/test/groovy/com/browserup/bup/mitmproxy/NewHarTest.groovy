@@ -824,7 +824,7 @@ class NewHarTest extends MockServerTest {
             assertEquals("Did not receive HTTP 502 from proxy", 502, response.getStatusLine().getStatusCode())
         }
 
-        Thread.sleep(500)
+        Thread.sleep(1000)
         Har har = proxy.getHar()
 
         assertThat("Expected to find entries in the HAR", har.getLog().getEntries(), not(empty()))
