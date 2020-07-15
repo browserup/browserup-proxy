@@ -44,8 +44,13 @@ class InitFlowAddOn:
     def get_resource(self):
         return InitFlowResource(self)
 
+    def http_connect(self, flow):
+        if not hasattr(flow.server_conn, 'currentHarEntry'):
+            setattr(flow.server_conn, 'currentHarEntry', self.har_dump_addon.generate_har_entry())
+
     def request(self, flow):
-        self.har_dump_addon.har_entry = None
+        if not hasattr(flow.server_conn, 'currentHarEntry'):
+            setattr(flow.server_conn, 'currentHarEntry', self.har_dump_addon.generate_har_entry())
 
 addons = [
     InitFlowAddOn()
