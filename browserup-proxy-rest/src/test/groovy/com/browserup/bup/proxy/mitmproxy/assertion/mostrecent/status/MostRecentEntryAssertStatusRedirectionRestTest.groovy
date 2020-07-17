@@ -117,7 +117,7 @@ class MostRecentEntryAssertStatusRedirectionRestTest extends BaseRestTest {
     }
 
     protected void mockTargetServerResponse(String url, int status) {
-        def redirectUrl = 'test.com'
+        def redirectUrl = 'http://test.com'
         def response = aResponse().withStatus(status)
                 .withHeader('Location', redirectUrl)
                 .withHeader('Content-Type', 'text/plain')
