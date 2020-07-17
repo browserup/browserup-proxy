@@ -56,6 +56,8 @@ class HttpConnectCaptureAddOn:
     # TCP Callbacks
 
     def tcp_resolving_server_address_finished(self, server_conn):
+        if not hasattr(server_conn, 'currentHarEntry'):
+            return
         self.populate_dns_timings(server_conn)
         self.dns_resolution_finished_nanos = self.now_time_nanos()
 
@@ -122,6 +124,8 @@ class HttpConnectCaptureAddOn:
         if flow.request.port != 80:
             req_host_port = req_host_port + ':' + str(flow.request.port)
         original_error = HttpConnectCaptureAddOn.get_original_exception(flow.error)
+
+        self.har_dump_addon.populate_har_entry_with_default_response(flow)
 
         if 'Name or service not known' in str(original_error):
             self.proxy_to_server_resolution_failed(flow, req_host_port, original_error)
@@ -193,13 +197,10 @@ class HttpConnectCaptureAddOn:
 
     def create_har_entry_for_failed_connect(self, flow, msg):
         har_entry = self.get_har_entry(flow.server_conn)
-        if not har_entry:
-            self.har_dump_addon.populate_har_entry_with_default_response(flow)
-
         har_entry['response']['_errorMessage'] = msg
 
     def calculate_total_elapsed_time(self, flow):
-        timings = self.get_har_entry(flow)['timings']
+        timings = self.get_har_entry(flow.server_conn)['timings']
         result = (0 if timings.get('blockedNanos', -1) == -1 else timings['blockedNanos']) + \
                  (0 if timings.get('dnsNanos', -1) == -1 else timings['dnsNanos']) + \
                  (0 if timings.get('connectNanos', -1) == -1 else timings['connectNanos']) + \
