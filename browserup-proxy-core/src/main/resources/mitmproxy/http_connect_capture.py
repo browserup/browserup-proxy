@@ -55,10 +55,10 @@ class HttpConnectCaptureAddOn:
 
     # TCP Callbacks
 
-    def tcp_resolving_server_address_finished(self, server_conn):
-        if not hasattr(server_conn, 'currentHarEntry'):
+    def tcp_resolving_server_address_finished(self, flow):
+        if 'har_entry' not in flow.metadata:
             return
-        self.populate_dns_timings(server_conn)
+        self.populate_dns_timings(flow)
         self.dns_resolution_finished_nanos = self.now_time_nanos()
 
         if self.dns_resolution_started_nanos > 0:
@@ -67,7 +67,7 @@ class HttpConnectCaptureAddOn:
         else:
             self.get_http_connect_timing()['dnsTimeNanos'] = 0
 
-    def tcp_resolving_server_address_started(self, server_conn):
+    def tcp_resolving_server_address_started(self, flow):
         self.dns_resolution_started_nanos = int(round(self.now_time_nanos()))
         self.connection_started_nanos = int(round(self.now_time_nanos()))
         self.proxy_to_server_resolution_started()
@@ -89,10 +89,10 @@ class HttpConnectCaptureAddOn:
     def http_proxy_to_server_request_finished(self, flow):
         self.send_finished_nanos = self.now_time_nanos()
         if self.send_started_nanos > 0:
-            self.get_har_entry(flow.server_conn)['timings'][
+            self.get_har_entry(flow)['timings'][
                 'send'] = self.send_finished_nanos - self.send_started_nanos
         else:
-            self.get_har_entry(flow.server_conn)['timings']['send'] = 0
+            self.get_har_entry(flow)['timings']['send'] = 0
 
     def http_server_to_proxy_response_receiving(self, flow):
         self.response_receive_started_nanos = self.now_time_nanos()
@@ -136,23 +136,23 @@ class HttpConnectCaptureAddOn:
 
     # Populate data
 
-    def populate_dns_timings(self, server_conn):
-        har_entry = self.get_har_entry(server_conn)
+    def populate_dns_timings(self, flow):
+        har_entry = self.get_har_entry(flow)
         if self.dns_resolution_started_nanos > 0 and har_entry:
             time_now = self.now_time_nanos()
             dns_nanos = time_now - self.dns_resolution_started_nanos
             har_entry['timings']['dnsNanos'] = dns_nanos
 
     def populate_timings_for_failed_connect(self, flow):
-        har_entry = self.get_har_entry(flow.server_conn)
+        har_entry = self.get_har_entry(flow)
         if self.connection_started_nanos > 0:
             connect_nanos = self.now_time_nanos() - self.connection_started_nanos
             har_entry['timings']['connectNanos'] = connect_nanos
-        self.populate_dns_timings(flow.server_conn)
+        self.populate_dns_timings(flow)
 
     def populate_server_ip_address(self, flow, original_error):
         if flow.server_conn is not None and flow.server_conn.ip_address is not None:
-            self.get_har_entry(flow.server_conn)['serverIPAddress'] = str(
+            self.get_har_entry(flow)['serverIPAddress'] = str(
                 flow.server_conn.ip_address[0])
 
     def get_resource(self):
@@ -161,10 +161,10 @@ class HttpConnectCaptureAddOn:
     def proxy_to_server_resolution_failed(self, flow, req_host_port, original_error):
         msg = RESOLUTION_FAILED_ERROR_MESSAGE + req_host_port
         self.create_har_entry_for_failed_connect(flow, msg)
-        self.populate_dns_timings(flow.server_conn)
+        self.populate_dns_timings(flow)
         self.populate_server_ip_address(flow, original_error)
 
-        self.get_har_entry(flow.server_conn)['time'] = self.calculate_total_elapsed_time(flow)
+        self.get_har_entry(flow)['time'] = self.calculate_total_elapsed_time(flow)
 
     def proxy_to_server_connection_failed(self, flow, original_error):
         msg = CONNECTION_FAILED_ERROR_MESSAGE
@@ -172,7 +172,7 @@ class HttpConnectCaptureAddOn:
         self.populate_timings_for_failed_connect(flow)
         self.populate_server_ip_address(flow, original_error)
 
-        self.get_har_entry(flow.server_conn)['time'] = self.calculate_total_elapsed_time(flow)
+        self.get_har_entry(flow)['time'] = self.calculate_total_elapsed_time(flow)
 
     def server_to_proxy_response_timed_out(self, flow, req_host_port, original_error):
         msg = RESPONSE_TIMED_OUT_ERROR_MESSAGE
@@ -182,7 +182,7 @@ class HttpConnectCaptureAddOn:
 
         current_time_nanos = self.now_time_nanos()
 
-        har_entry = self.get_har_entry(flow.server_conn)
+        har_entry = self.get_har_entry(flow)
 
         if self.send_started_nanos > 0 and self.send_finished_nanos == 0:
             har_entry['timings']['sendNanos'] = current_time_nanos - self.send_started_nanos
@@ -196,11 +196,11 @@ class HttpConnectCaptureAddOn:
         har_entry['time'] = self.calculate_total_elapsed_time(flow)
 
     def create_har_entry_for_failed_connect(self, flow, msg):
-        har_entry = self.get_har_entry(flow.server_conn)
+        har_entry = self.get_har_entry(flow)
         har_entry['response']['_errorMessage'] = msg
 
     def calculate_total_elapsed_time(self, flow):
-        timings = self.get_har_entry(flow.server_conn)['timings']
+        timings = self.get_har_entry(flow)['timings']
         result = (0 if timings.get('blockedNanos', -1) == -1 else timings['blockedNanos']) + \
                  (0 if timings.get('dnsNanos', -1) == -1 else timings['dnsNanos']) + \
                  (0 if timings.get('connectNanos', -1) == -1 else timings['connectNanos']) + \
@@ -209,8 +209,8 @@ class HttpConnectCaptureAddOn:
                  (0 if timings.get('receiveNanos', -1) == -1 else timings['receiveNanos'])
         return self.nano_to_ms(result)
 
-    def get_har_entry(self, server_conn):
-        return server_conn.currentHarEntry
+    def get_har_entry(self, flow):
+        return flow.metadata['har_entry']
 
     def get_http_connect_timing(self):
         if self.http_connect_timing is None:

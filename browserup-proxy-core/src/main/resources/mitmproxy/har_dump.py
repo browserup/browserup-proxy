@@ -513,7 +513,7 @@ class HarDumpAddOn:
 
         ctx.log.debug('Creating new har entry for request: {}'.format(full_url))
 
-        har_entry = flow.server_conn.currentHarEntry
+        har_entry = flow.metadata['har_entry']
 
         har_entry['pageref'] = self.get_current_page_ref()
         har_entry['startedDateTime'] = datetime.fromtimestamp(flow.request.timestamp_start, timezone.utc).isoformat()
@@ -555,7 +555,7 @@ class HarDumpAddOn:
         if HarCaptureTypes.RESPONSE_CONTENT in self.har_capture_types:
             self.capture_request_content(flow)
 
-        har_entry = flow.server_conn.currentHarEntry
+        har_entry = flow.metadata['har_entry']
         har_entry['request']['bodySize'] = \
             len(flow.request.raw_content) if flow.request.raw_content else 0
 
@@ -589,7 +589,7 @@ class HarDumpAddOn:
         }
 
     def response(self, flow):
-        har_entry = flow.server_conn.currentHarEntry
+        har_entry = flow.metadata['har_entry']
 
         ctx.log.debug('Incoming response for request to url: {}'.format(flow.request.url))
 

@@ -22,9 +22,11 @@ import org.junit.Test
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
 
+import static com.browserup.bup.mitmproxy.MitmProxyProcessManager.MitmProxyLoggingLevel.*
 import static com.github.tomakehurst.wiremock.client.WireMock.*
 import static org.hamcrest.Matchers.*
 import static org.junit.Assert.*
+import static org.mockito.ArgumentMatchers.eq
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.when
 
@@ -118,9 +120,9 @@ class NewHarTest extends MockServerTest {
         )
 
         proxy = new MitmProxyServer()
-        proxy.setHarCaptureTypes([CaptureType.RESPONSE_COOKIES] as Set)
         proxy.setTrustAllServers(true)
         proxy.start()
+        proxy.setHarCaptureTypes([CaptureType.RESPONSE_COOKIES] as Set)
 
         proxy.newHar()
 
@@ -138,7 +140,7 @@ class NewHarTest extends MockServerTest {
         Thread.sleep(500)
         Har har = proxy.getHar()
 
-        assertThat("Expected to find entries in the HAR", har.getLog().getEntries(), not(empty()))
+        assertThat("Expected one HAR entry", har.getLog().getEntries(), hasSize(1))
         assertThat("Expected to find two cookies in the HAR", har.getLog().getEntries().first().response.cookies, hasSize(2))
 
         HarCookie maxAgeCookie = har.getLog().getEntries().first().response.cookies[0]
