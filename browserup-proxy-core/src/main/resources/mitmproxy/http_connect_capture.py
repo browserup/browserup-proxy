@@ -2,13 +2,19 @@ import time
 import json
 import asyncio
 
+import typing
+
 from mitmproxy import ctx
+from mitmproxy import connections
 from mitmproxy.exceptions import TcpTimeout
 
 RESOLUTION_FAILED_ERROR_MESSAGE = "Unable to resolve host: "
 CONNECTION_FAILED_ERROR_MESSAGE = "Unable to connect to host"
 RESPONSE_TIMED_OUT_ERROR_MESSAGE = "Response timed out"
 
+# A list of server seen till now is maintained so we can avoid
+# using 'connect' time for entries that use an existing connection.
+SERVERS_SEEN: typing.Set[connections.ServerConnection] = set()
 
 class HttpConnectCaptureResource:
 
@@ -56,7 +62,7 @@ class HttpConnectCaptureAddOn:
     # TCP Callbacks
 
     def tcp_resolving_server_address_finished(self, flow):
-        if 'har_entry' not in flow.metadata:
+        if not hasattr(flow.request, 'har_entry'):
             return
         self.populate_dns_timings(flow)
         self.dns_resolution_finished_nanos = self.now_time_nanos()
@@ -119,7 +125,15 @@ class HttpConnectCaptureAddOn:
         else:
             self.get_http_connect_timing()['sslHandshakeTimeNanos'] = 0
 
+    def init_har_entry(self, flow):
+        ctx.log.debug("Initializing har entry for flow request: {}".format(str(flow.request)))
+        setattr(flow.request, 'har_entry', self.har_dump_addon.generate_har_entry())
+        self.har_dump_addon.append_har_entry(flow.request.har_entry)
+
     def error(self, flow):
+        if not hasattr(flow.request, 'har_entry'):
+            self.init_har_entry(flow)
+
         req_host_port = flow.request.host
         if flow.request.port != 80:
             req_host_port = req_host_port + ':' + str(flow.request.port)
@@ -155,6 +169,25 @@ class HttpConnectCaptureAddOn:
             self.get_har_entry(flow)['serverIPAddress'] = str(
                 flow.server_conn.ip_address[0])
 
+    def populate_connect_and_ssl_timings(self, flow):
+        ssl_time = -1
+        connect_time = -1
+
+        if flow.server_conn and flow.server_conn not in SERVERS_SEEN:
+            connect_time = (flow.server_conn.timestamp_tcp_setup -
+                            flow.server_conn.timestamp_start)
+            connect_time = self.timestamp_to_nanos(connect_time)
+
+            if flow.server_conn.timestamp_tls_setup is not None:
+                ssl_time = (flow.server_conn.timestamp_tls_setup -
+                            flow.server_conn.timestamp_tcp_setup)
+                ssl_time = self.timestamp_to_nanos(ssl_time)
+
+            SERVERS_SEEN.add(flow.server_conn)
+        har_entry = self.get_har_entry(flow)
+        har_entry['timings']['sslNanos'] = ssl_time
+        har_entry['timings']['connectNanos'] = connect_time
+
     def get_resource(self):
         return HttpConnectCaptureResource(self)
 
@@ -179,6 +212,7 @@ class HttpConnectCaptureAddOn:
         self.create_har_entry_for_failed_connect(flow, msg)
         self.populate_timings_for_failed_connect(flow)
         self.populate_server_ip_address(flow, original_error)
+        self.populate_connect_and_ssl_timings(flow)
 
         current_time_nanos = self.now_time_nanos()
 
@@ -210,7 +244,7 @@ class HttpConnectCaptureAddOn:
         return self.nano_to_ms(result)
 
     def get_har_entry(self, flow):
-        return flow.metadata['har_entry']
+        return flow.request.har_entry
 
     def get_http_connect_timing(self):
         if self.http_connect_timing is None:
@@ -230,6 +264,10 @@ class HttpConnectCaptureAddOn:
     @staticmethod
     def now_time_nanos():
         return int(round(time.time() * 1000000000))
+
+    @staticmethod
+    def timestamp_to_nanos(timestamp):
+        return int(round(timestamp * 1000000000))
 
     @staticmethod
     def nano_to_ms(time_nano):

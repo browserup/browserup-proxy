@@ -187,6 +187,9 @@ class HarDumpAddOn:
         self.response_receive_started_nanos = 0
         self.http_connect_timings = {}
 
+    def get_har_entry(self, flow):
+        return flow.request.har_entry
+
     def get_har(self, clean_har):
         if clean_har:
             return self.new_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE)
@@ -511,9 +514,9 @@ class HarDumpAddOn:
     def populate_har_entry_with_default_response(self, flow):
         full_url = self.get_full_url(flow.request)
 
-        ctx.log.debug('Creating new har entry for request: {}'.format(full_url))
+        ctx.log.debug('Populating har entry for request: {}'.format(full_url))
 
-        har_entry = flow.metadata['har_entry']
+        har_entry = self.get_har_entry(flow)
 
         har_entry['pageref'] = self.get_current_page_ref()
         har_entry['startedDateTime'] = datetime.fromtimestamp(flow.request.timestamp_start, timezone.utc).isoformat()
@@ -536,6 +539,8 @@ class HarDumpAddOn:
         if 'WhiteListFiltered' in flow.metadata or 'BlackListFiltered' in flow.metadata:
             return
 
+        har_entry = self.get_har_entry(flow)
+
         self.populate_har_entry_with_default_response(flow)
 
         req_url = 'none'
@@ -555,11 +560,10 @@ class HarDumpAddOn:
         if HarCaptureTypes.RESPONSE_CONTENT in self.har_capture_types:
             self.capture_request_content(flow)
 
-        har_entry = flow.metadata['har_entry']
         har_entry['request']['bodySize'] = \
             len(flow.request.raw_content) if flow.request.raw_content else 0
 
-        connect_timing = self.consume_http_connect_timing(flow.client_conn)
+        connect_timing = self.consume_http_connect_timing(flow)
         if connect_timing is not None:
             har_entry['timings']['sslNanos'] = connect_timing['sslHandshakeTimeNanos']
             har_entry['timings']['connectNanos'] = connect_timing['connectTimeNanos']
@@ -589,7 +593,7 @@ class HarDumpAddOn:
         }
 
     def response(self, flow):
-        har_entry = flow.metadata['har_entry']
+        har_entry = self.get_har_entry(flow)
 
         ctx.log.debug('Incoming response for request to url: {}'.format(flow.request.url))
 
@@ -668,6 +672,8 @@ class HarDumpAddOn:
         if flow.server_conn.connected():
             har_entry["serverIPAddress"] = str(
                 flow.server_conn.ip_address[0])
+
+        ctx.log.debug('Populated har entry for response: {}, entry: {}'.format(flow.request.url, str(har_entry)))
 
     def calculate_timings(self, connect_time, flow, ssl_time):
         timings_raw = {

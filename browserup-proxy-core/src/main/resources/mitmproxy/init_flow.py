@@ -44,17 +44,18 @@ class InitFlowAddOn:
     def get_resource(self):
         return InitFlowResource(self)
 
-    def http_connect(self, flow):
-        if 'har_entry' not in flow.metadata:
-            self.init_har_entry(flow)
+    # def http_connect(self, flow):
+    #     if not hasattr(flow.request, 'har_entry'):
+    #         self.init_har_entry(flow)
 
     def request(self, flow):
-        if 'har_entry' not in flow.metadata:
+        if not hasattr(flow.request, 'har_entry'):
             self.init_har_entry(flow)
 
     def init_har_entry(self, flow):
-        flow.metadata['har_entry'] = self.har_dump_addon.generate_har_entry()
-        self.har_dump_addon.append_har_entry(flow.metadata['har_entry'])
+        ctx.log.debug("Initializing har entry for flow request: {}".format(str(flow.request)))
+        setattr(flow.request, 'har_entry', self.har_dump_addon.generate_har_entry())
+        self.har_dump_addon.append_har_entry(flow.request.har_entry)
 
 addons = [
     InitFlowAddOn()

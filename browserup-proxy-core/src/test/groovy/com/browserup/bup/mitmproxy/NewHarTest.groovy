@@ -85,6 +85,7 @@ class NewHarTest extends MockServerTest {
         proxy.setDnsResolvingDelayMs(1000)
 
         proxy.start()
+
         int proxyPort = proxy.getPort()
 
         proxy.newHar()
