@@ -571,17 +571,17 @@ class HarDumpAddOn:
             har_entry['timings']['dnsNanos'] = connect_timing['dnsTimeNanos']
 
     def capture_request_cookies(self, flow):
-        har_entry = flow.metadata['currentHarEntry']
+        har_entry = self.get_har_entry(flow)
         har_entry['request']['cookies'] = \
             self.format_request_cookies(flow.request.cookies.fields)
 
     def capture_request_headers(self, flow):
-        har_entry = flow.metadata['currentHarEntry']
+        har_entry = self.get_har_entry(flow)
         har_entry['request']['headers'] = \
             self.name_value(flow.request.headers)
 
     def capture_request_content(self, flow):
-        har_entry = flow.metadata['currentHarEntry']
+        har_entry = self.get_har_entry(flow)
         params = [
             {"name": a, "value": b}
             for a, b in flow.request.urlencoded_form.items(multi=True)
