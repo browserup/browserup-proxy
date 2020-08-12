@@ -6,6 +6,8 @@ import com.browserup.harreader.model.Har;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,6 +18,8 @@ import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.tuple.Pair.of;
 
 public class HarCaptureManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HarCaptureManager.class);
+
     private final AddonsManagerClient addonsManagerClient;
     private final MitmProxyProcessManager mitmProxyManager;
     private Har lastHar = new Har();
@@ -41,7 +45,7 @@ public class HarCaptureManager {
                             add(of("cleanHar", valueOf(cleanHar)));
                         }},
                         HarResponse.class);
-        System.out.println("PARSING HAR: " + response.path);
+        LOGGER.info("Parsing HAR from file: " + response.path);
         return parseHar(response.path);
     }
 

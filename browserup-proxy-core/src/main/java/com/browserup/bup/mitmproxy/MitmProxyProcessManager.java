@@ -14,6 +14,7 @@ import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,7 +74,7 @@ public class MitmProxyProcessManager {
     try {
       this.proxyPort = port;
 
-      startProxy(port, addons);
+      startProxyWithRetries(port, addons, 3);
 
       this.isRunning = true;
 
@@ -119,10 +120,11 @@ public class MitmProxyProcessManager {
   public void stop() {
     this.isRunning = false;
 
-    Process process = startedProcess.getProcess();
-    process.destroyForcibly();
-
-    Awaitility.await().atMost(10, TimeUnit.SECONDS).until(() -> !process.isAlive());
+    if (startedProcess != null) {
+      Process process = startedProcess.getProcess();
+      process.destroyForcibly();
+      Awaitility.await().atMost(10, TimeUnit.SECONDS).until(() -> !process.isAlive());
+    }
   }
 
   public void setTrustAll(boolean trustAll) {
@@ -146,6 +148,26 @@ public class MitmProxyProcessManager {
     return Arrays.asList(addonsArray);
   }
 
+  private void startProxyWithRetries(int port, List<AbstractAddon> addons, int retryCount) {
+    for (int attempt = 1; attempt <= retryCount; attempt++) {
+      try {
+        startProxy(port, addons);
+        break;
+      } catch (Exception ex) {
+        // For binding exception not going to retry (let driver to try another port)
+        if (ex.getCause() != null && ex.getCause() instanceof BindException) {
+          throw ex;
+        }
+        if (attempt < retryCount) {
+          LOGGER.error("Failed to start proxy, attempt: {}, retries count: {}, going to retry...", attempt, retryCount, ex);
+        } else {
+          LOGGER.error("Failed to start proxy, no retries left, throwing exception", ex);
+          throw ex;
+        }
+      }
+    }
+  }
+
   private void startProxy(int port, List<AbstractAddon> addons) {
     List<String> command = new ArrayList<String>() {{
       add("mitmdump");
@@ -156,25 +178,59 @@ public class MitmProxyProcessManager {
       command.add("--ssl-insecure");
     }
 
-    InetSocketAddress upstreamProxyAddress = proxyManager.getUpstreamProxyAddress();
-    if (upstreamProxyAddress != null) {
-      String schema = "http";
-      if (proxyManager.isUseHttpsUpstreamProxy()) {
-        schema = "https";
-      }
-      command.add("--mode");
-      command.add("upstream:" + schema + "://" + upstreamProxyAddress.getHostName() + ":" + upstreamProxyAddress.getPort());
-    }
-
-    command.add("--set");
-    command.add("termlog_verbosity=" + getMitmProxyLoggingLevel());
-
-    addons.forEach(addon -> command.addAll(Arrays.asList(addon.getCommandParams())));
+    updateCommandWithUpstreamProxy(command);
+    updateCommandWithLogLevel(command);
+    updateCommandWithAddOns(addons, command);
 
     LOGGER.info("Starting proxy using command: " + String.join(" ", command));
 
+    ProcessExecutor processExecutor = createProcessExecutor(command);
+    try {
+      startedProcess = processExecutor.start();
+    } catch (Exception ex) {
+      throw new RuntimeException("Couldn't start mitmproxy process", ex);
+    }
+    try {
+      Awaitility.await()
+              .atMost(5, TimeUnit.SECONDS)
+              .until(this.proxyManager::callHealthCheck);
+    } catch (ConditionTimeoutException ex) {
+      handleHealthCheckFailure();
+    }
+  }
+
+  private void handleHealthCheckFailure() {
+    LOGGER.error("MitmProxy might not started properly, healthcheck failed for port: " + this.proxyPort);
+    if (startedProcess == null) return;
+
+    if (startedProcess.getProcess().isAlive()) {
+      LOGGER.error("MitmProxy's healthcheck failed but process is alive, killing mitmproxy process...");
+      startedProcess.getProcess().destroyForcibly();
+      try {
+        Awaitility.await()
+                .atMost(5, TimeUnit.SECONDS)
+                .until(() -> !startedProcess.getProcess().isAlive());
+        LOGGER.info("MitmProxy process was killed successfully.");
+      } catch (ConditionTimeoutException ex2) {
+        LOGGER.error("Didn't manage to kill MitmProxy in time, throwing error");
+        throw new RuntimeException("Couldn't kill mitmproxy in time", ex2);
+      }
+    }
+    if (!startedProcess.getProcess().isAlive() && startedProcess.getProcess().exitValue() > 0) {
+      Throwable cause = null;
+      if (proxyLog.toString().contains("Address already in use")) {
+        cause = new BindException();
+      }
+      throw new RuntimeException(
+              "Couldn't start mitmproxy process on port: " + this.proxyPort +
+                      ", exit with code: " + startedProcess.getProcess().exitValue(), cause);
+    }
+  }
+
+  private ProcessExecutor createProcessExecutor(List<String> command) {
     String logPrefix = "MitmProxy[" + this.proxyPort + "]: ";
-    ProcessExecutor processExecutor = new ProcessExecutor(command)
+
+    return new ProcessExecutor(command)
             .readOutput(true)
             .destroyOnExit()
             .redirectOutput(Slf4jStream.ofCaller().asInfo())
@@ -185,26 +241,26 @@ public class MitmProxyProcessManager {
                 proxyLog.append(line).append("\n");
               }
             });
+  }
 
-    try {
-      startedProcess = processExecutor.start();
-    } catch (Exception ex) {
-      throw new RuntimeException("Couldn't start mitmproxy process", ex);
-    }
+  private void updateCommandWithAddOns(List<AbstractAddon> addons, List<String> command) {
+    addons.forEach(addon -> command.addAll(Arrays.asList(addon.getCommandParams())));
+  }
 
-    try {
-      Awaitility.await()
-              .atMost(5, TimeUnit.SECONDS)
-              .until(this.proxyManager::callHealthCheck);
-    } catch (ConditionTimeoutException ex) {
-      LOGGER.error("MitmProxy might not started properly, healthcheck failed for port: " + this.proxyPort);
-      if (startedProcess != null && startedProcess.getProcess().exitValue() > 0) {
-        Throwable cause = null;
-        if (proxyLog.toString().contains("Address already in use")) {
-          cause = new java.net.BindException();
-        }
-        throw new RuntimeException("Couldn't start mitmproxy process on port: " + this.proxyPort + ", exit with code: " + startedProcess.getProcess().exitValue(), cause);
+  private void updateCommandWithLogLevel(List<String> command) {
+    command.add("--set");
+    command.add("termlog_verbosity=" + getMitmProxyLoggingLevel());
+  }
+
+  private void updateCommandWithUpstreamProxy(List<String> command) {
+    InetSocketAddress upstreamProxyAddress = proxyManager.getUpstreamProxyAddress();
+    if (upstreamProxyAddress != null) {
+      String schema = "http";
+      if (proxyManager.isUseHttpsUpstreamProxy()) {
+        schema = "https";
       }
+      command.add("--mode");
+      command.add("upstream:" + schema + "://" + upstreamProxyAddress.getHostName() + ":" + upstreamProxyAddress.getPort());
     }
   }
 
