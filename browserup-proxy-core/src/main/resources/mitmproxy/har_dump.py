@@ -29,6 +29,8 @@ SERVERS_SEEN: typing.Set[connections.ServerConnection] = set()
 DEFAULT_PAGE_REF = "Default"
 DEFAULT_PAGE_TITLE = "Default"
 
+REQUEST_SUBMITTED_FLAG = "_request_submitted"
+
 class HarCaptureTypes(Enum):
     REQUEST_HEADERS = auto()
     REQUEST_COOKIES = auto()
@@ -93,12 +95,17 @@ class HarDumpAddonResource:
         clean_har = req.get_param('cleanHar') == 'true'
         har = self.harDumpAddOn.get_har(clean_har)
 
-        har_file = self.harDumpAddOn.save_har(har)
+        filtered_har = self.harDumpAddOn.filter_har_for_report(har)
+
+        har_file = self.harDumpAddOn.save_har(filtered_har)
+
+        self.harDumpAddOn.mark_har_entries_submitted(har)
 
         resp.status = falcon.HTTP_200
+        resp.content_type = falcon.MEDIA_JSON
         resp.body = json.dumps({
             "path": har_file.name,
-            "json": har
+            "json": filtered_har
         }, ensure_ascii=False)
 
     def on_new_har(self, req, resp):
@@ -189,6 +196,38 @@ class HarDumpAddOn:
 
     def get_har_entry(self, flow):
         return flow.request.har_entry
+
+    def is_har_entry_submitted(self, har_entry):
+        return REQUEST_SUBMITTED_FLAG in har_entry
+
+    def har_entry_has_response(self, har_entry):
+        return bool(har_entry['response'])
+
+    def har_entry_clear_request(self, har_entry):
+        har_entry['request'] = {}
+
+    def filter_har_for_report(self, har):
+        if har is None:
+            return har
+
+        har_copy = copy.deepcopy(har)
+        entries_to_report = []
+        for entry in har_copy['log']['entries']:
+            if self.is_har_entry_submitted(entry):
+                if self.har_entry_has_response(entry):
+                    del entry[REQUEST_SUBMITTED_FLAG]
+                    self.har_entry_clear_request(entry)
+                    entries_to_report.append(entry)
+            else:
+                entries_to_report.append(entry)
+        har_copy['log']['entries'] = entries_to_report
+
+        return har_copy
+
+    def mark_har_entries_submitted(self, har):
+        if har is not None:
+            for entry in har['log']['entries']:
+                entry[REQUEST_SUBMITTED_FLAG] = True
 
     def get_har(self, clean_har):
         if clean_har:
@@ -422,7 +461,15 @@ class HarDumpAddOn:
         if create_page:
             self.new_page(initial_page_ref, initial_page_title)
 
+        self.copy_entries_without_response(old_har)
+
         return old_har
+
+    def copy_entries_without_response(self, old_har):
+        if old_har is not None:
+            for entry in old_har['log']['entries']:
+                if not self.har_entry_has_response(entry):
+                    self.har['log']['entries'].append(entry)
 
     def end_har(self):
         ctx.log.info('Ending current har...')
@@ -526,10 +573,8 @@ class HarDumpAddOn:
         har_request['httpVersion'] = flow.request.http_version
         har_request['queryString'] = self.name_value(flow.request.query or {})
         har_request['headersSize'] = len(str(flow.request.headers))
-        har_response = self.generate_har_entry_response_for_failure()
 
         har_entry['request'] = har_request
-        har_entry['response'] = har_response
 
     def append_har_entry(self, har_entry):
         har = self.get_or_create_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE, True)
