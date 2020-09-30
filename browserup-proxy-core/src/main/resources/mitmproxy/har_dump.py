@@ -99,7 +99,8 @@ class HarDumpAddonResource:
 
         har_file = self.harDumpAddOn.save_har(filtered_har)
 
-        self.harDumpAddOn.mark_har_entries_submitted(har)
+        if clean_har:
+            self.harDumpAddOn.mark_har_entries_submitted(har)
 
         resp.status = falcon.HTTP_200
         resp.content_type = falcon.MEDIA_JSON
