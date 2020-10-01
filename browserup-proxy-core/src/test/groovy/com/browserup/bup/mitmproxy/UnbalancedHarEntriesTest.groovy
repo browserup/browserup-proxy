@@ -118,21 +118,23 @@ class UnbalancedHarEntriesTest extends MockServerTest {
     @Test
     void testMultipleRequestsAndForSlowOneWeGetOnlyResponseOnlyEntry() {
         //GIVEN
-        def stubUrl = "/testResponseTimeoutCapturedInHar"
+        def slowEndpointUrl = "/testSlowEndpoint"
+        def fastEndpointUrl = "/testFastEndpoint.*"
         def targetServerDelaySec = 5
         def targetServiceResponseCode = 200
         def idleConnectionTimeoutSec = targetServerDelaySec + 1
 
-        configureMockServer(stubUrl, targetServerDelaySec, targetServiceResponseCode)
+        configureMockServer(slowEndpointUrl, targetServerDelaySec, targetServiceResponseCode)
+        configureMockServer(fastEndpointUrl, 0, targetServiceResponseCode)
 
         proxy = startProxyAndCreateHar(idleConnectionTimeoutSec)
 
-        def requestUrl = "http://localhost:${mockServerPort}$stubUrl".toString()
+        def requestUrl = "http://localhost:${mockServerPort}$slowEndpointUrl".toString()
 
         def otherRequests = [
-                'https://browserup.com/wp-content/themes/browserup/images/logo-text-475x93.png?1',
-                'https://browserup.com/wp-content/themes/browserup/images/logo-text-475x93.png?2',
-                'https://browserup.com/wp-content/themes/browserup/images/logo-text-475x93.png?3'
+                "http://localhost:${mockServerPort}$fastEndpointUrl/?1".toString(),
+                "http://localhost:${mockServerPort}$fastEndpointUrl/?2".toString(),
+                "http://localhost:${mockServerPort}$fastEndpointUrl/?3".toString()
         ]
 
         //WHEN
@@ -143,7 +145,7 @@ class UnbalancedHarEntriesTest extends MockServerTest {
         }
         def totalNumberOfRequests = otherRequests.size() + 1
 
-        // Wait for 'other' requests
+        // Wait for 'fast' requests
         await().atMost(7, TimeUnit.SECONDS).until {
             !responsesReceived.any { !it.get()}
         }
@@ -153,10 +155,10 @@ class UnbalancedHarEntriesTest extends MockServerTest {
         def har = proxy.getHar()
         assertEquals("Expected to get correct number of entries", totalNumberOfRequests, har.log.entries.size())
 
-        def harEntryForMockedServer = har.log.entries.find { it.request.url.contains("localhost") }
-        def capturedUrl = harEntryForMockedServer.request.url
+        def entryForSlowEndpoint = har.log.entries.find { it.request.url.contains(slowEndpointUrl) }
+        def capturedUrl = entryForSlowEndpoint.request.url
         assertEquals("URL captured in HAR did not match request URL", requestUrl, capturedUrl)
-        assertEquals("Expected response to be default", DEFAULT_HAR_RESPONSE, harEntryForMockedServer.response)
+        assertEquals("Expected response to be default", DEFAULT_HAR_RESPONSE, entryForSlowEndpoint.response)
 
         // Wait until response it received
         await().atMost(targetServerDelaySec + 1, TimeUnit.SECONDS).until({ responseReceived.get() })
@@ -165,34 +167,36 @@ class UnbalancedHarEntriesTest extends MockServerTest {
         har = proxy.getHar()
         assertEquals("Expected to get correct number of entries", totalNumberOfRequests, har.log.entries.size())
 
-        harEntryForMockedServer = har.log.entries.find { it.request.url.contains("localhost") }
-        assertNotEquals("Expected request to be not default", DEFAULT_HAR_REQUEST, harEntryForMockedServer.request)
-        assertEquals("URL captured in HAR did not match request URL", requestUrl, harEntryForMockedServer.request.url)
-        assertNotEquals("Expected response to be not defualt", DEFAULT_HAR_RESPONSE, harEntryForMockedServer.response)
+        entryForSlowEndpoint = har.log.entries.find { it.request.url.contains(slowEndpointUrl) }
+        assertNotEquals("Expected request to be not default", DEFAULT_HAR_REQUEST, entryForSlowEndpoint.request)
+        assertEquals("URL captured in HAR did not match request URL", requestUrl, entryForSlowEndpoint.request.url)
+        assertNotEquals("Expected response to be not defualt", DEFAULT_HAR_RESPONSE, entryForSlowEndpoint.response)
         assertEquals("Got unexpected response status",
-                harEntryForMockedServer.response.status, targetServiceResponseCode)
+                entryForSlowEndpoint.response.status, targetServiceResponseCode)
         assertNotEquals("Expected response http version to be populated",
-                harEntryForMockedServer.response.httpVersion, DEFAULT_HAR_RESPONSE.httpVersion)
+                entryForSlowEndpoint.response.httpVersion, DEFAULT_HAR_RESPONSE.httpVersion)
     }
 
     @Test
     void testMultipleRequestsAndAfterCleanHarWeGetOnlyOneResponseOnlyEntry() {
         //GIVEN
-        def stubUrl = "/testResponseTimeoutCapturedInHar"
+        def slowEndpointUrl = "/testSlowEndpoint"
+        def fastEndpointUrl = "/testFastEndpoint.*"
         def targetServerDelaySec = 5
         def targetServiceResponseCode = 200
         def idleConnectionTimeoutSec = targetServerDelaySec + 1
 
-        configureMockServer(stubUrl, targetServerDelaySec, targetServiceResponseCode)
+        configureMockServer(slowEndpointUrl, targetServerDelaySec, targetServiceResponseCode)
+        configureMockServer(fastEndpointUrl, 0, targetServiceResponseCode)
 
         proxy = startProxyAndCreateHar(idleConnectionTimeoutSec)
 
-        def requestUrl = "http://localhost:${mockServerPort}$stubUrl".toString()
+        def requestUrl = "http://localhost:${mockServerPort}$slowEndpointUrl".toString()
 
         def otherRequests = [
-                'https://browserup.com/wp-content/themes/browserup/images/logo-text-475x93.png?1',
-                'https://browserup.com/wp-content/themes/browserup/images/logo-text-475x93.png?2',
-                'https://browserup.com/wp-content/themes/browserup/images/logo-text-475x93.png?3'
+                "http://localhost:${mockServerPort}$fastEndpointUrl/?1".toString(),
+                "http://localhost:${mockServerPort}$fastEndpointUrl/?2".toString(),
+                "http://localhost:${mockServerPort}$fastEndpointUrl/?3".toString()
         ]
 
         //WHEN
@@ -203,7 +207,7 @@ class UnbalancedHarEntriesTest extends MockServerTest {
         }
         def totalNumberOfRequests = otherRequests.size() + 1
 
-        // Wait for 'other' requests
+        // Wait for 'fast' requests
         await().atMost(7, TimeUnit.SECONDS).until {
             !responsesReceived.any { !it.get()}
         }
@@ -213,10 +217,10 @@ class UnbalancedHarEntriesTest extends MockServerTest {
         def har = proxy.getHar(true)
         assertEquals("Expected to get correct number of entries", totalNumberOfRequests, har.log.entries.size())
 
-        def harEntryForMockedServer = har.log.entries.find { it.request.url.contains("localhost") }
-        def capturedUrl = harEntryForMockedServer.request.url
+        def entryForSlowEndpoint = har.log.entries.find { it.request.url.contains(slowEndpointUrl) }
+        def capturedUrl = entryForSlowEndpoint.request.url
         assertEquals("URL captured in HAR did not match request URL", requestUrl, capturedUrl)
-        assertEquals("Expected response to be default", DEFAULT_HAR_RESPONSE, harEntryForMockedServer.response)
+        assertEquals("Expected response to be default", DEFAULT_HAR_RESPONSE, entryForSlowEndpoint.response)
 
         // Wait until response it received
         await().atMost(targetServerDelaySec + 1, TimeUnit.SECONDS).until({ responseReceived.get() })
@@ -225,13 +229,13 @@ class UnbalancedHarEntriesTest extends MockServerTest {
         har = proxy.getHar()
         assertEquals("Expected to get only one entry for slow request after clean har", 1, har.log.entries.size())
 
-        harEntryForMockedServer = har.log.entries.first()
-        assertEquals("Expected request to be default", DEFAULT_HAR_REQUEST, harEntryForMockedServer.request)
-        assertNotEquals("Expected response to be not defualt", DEFAULT_HAR_RESPONSE, harEntryForMockedServer.response)
+        entryForSlowEndpoint = har.log.entries.first()
+        assertEquals("Expected request to be default", DEFAULT_HAR_REQUEST, entryForSlowEndpoint.request)
+        assertNotEquals("Expected response to be not defualt", DEFAULT_HAR_RESPONSE, entryForSlowEndpoint.response)
         assertEquals("Got unexpected response status",
-                harEntryForMockedServer.response.status, targetServiceResponseCode)
+                entryForSlowEndpoint.response.status, targetServiceResponseCode)
         assertNotEquals("Expected response http version to be populated",
-                harEntryForMockedServer.response.httpVersion, DEFAULT_HAR_RESPONSE.httpVersion)
+                entryForSlowEndpoint.response.httpVersion, DEFAULT_HAR_RESPONSE.httpVersion)
     }
 
     @Test
@@ -282,7 +286,7 @@ class UnbalancedHarEntriesTest extends MockServerTest {
     }
 
     private void configureMockServer(String url, int delaySec, int responseCode) {
-        stubFor(get(urlEqualTo(url))
+        stubFor(get(urlMatching(url))
                 .willReturn(aResponse().withStatus(responseCode)
                         .withFixedDelay(TimeUnit.SECONDS.toMillis(delaySec) as Integer)
                         .withBody("success"))
