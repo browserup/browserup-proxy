@@ -85,7 +85,7 @@ dependencies {
     implementation 'org.zeroturnaround:zt-exec:1.11'
 
     testImplementation 'junit:junit:4.13'
-    testImplementation 'org.codehaus.groovy:groovy-all:2.5.8'
+    testImplementation 'org.codehaus.groovy:groovy-all:3.0.6'
     testImplementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
     testImplementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
     testImplementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
@@ -93,7 +93,7 @@ dependencies {
     testImplementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
     testImplementation "org.eclipse.jetty:jetty-servlet:${jettyVersion}"
     testImplementation "org.eclipse.jetty:jetty-servlets:${jettyVersion}"
-    testImplementation 'org.hamcrest:hamcrest:2.2'    
+    testImplementation 'org.hamcrest:hamcrest:2.2'
     testImplementation 'org.hamcrest:hamcrest-library:2.2'
     testImplementation 'com.github.tomakehurst:wiremock-jre8:2.26.3'
     testImplementation 'org.mockito:mockito-core:3.3.3'
