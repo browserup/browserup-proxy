@@ -127,7 +127,7 @@ class HttpConnectCaptureAddOn:
 
     def init_har_entry(self, flow):
         ctx.log.debug("Initializing har entry for flow request: {}".format(str(flow.request)))
-        setattr(flow.request, 'har_entry', self.har_dump_addon.generate_har_entry())
+        setattr(flow.request, 'har_entry', self.har_dump_addon.generate_har_entry(flow.request.url))
         self.har_dump_addon.append_har_entry(flow.request.har_entry)
 
     def error(self, flow):

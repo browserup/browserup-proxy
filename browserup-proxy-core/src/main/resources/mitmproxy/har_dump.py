@@ -336,7 +336,7 @@ class HarDumpAddOn:
         result['_errorMessage'] = "No response received"
         return result
 
-    def generate_har_entry(self):
+    def generate_har_entry(self, request_url):
         return {
             "pageref": "",
             "startedDateTime": "",
@@ -347,7 +347,8 @@ class HarDumpAddOn:
             "timings": self.generate_har_timings(),
             "serverIPAddress": "",
             "connection": "",
-            "comment": ""
+            "comment": "",
+            "_url": request_url
         }
 
     def get_or_create_har(self, page_ref, page_title, create_page=False):

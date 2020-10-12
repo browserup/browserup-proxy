@@ -13,6 +13,7 @@ import com.browserup.bup.proxy.test.util.NewProxyServerTestUtil
 import com.browserup.harreader.model.*
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.google.common.collect.Iterables
+import org.apache.commons.lang3.StringUtils
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
@@ -390,6 +391,9 @@ class NewHarTest extends MockServerTest {
 
         assertEquals("Expected to not capture body content in HAR", "", content.text)
 
+        assertTrue("Expected HAR entries to have _url field",
+                har.log.entries.every { StringUtils.isNotEmpty(it.url) })
+
         verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
@@ -467,6 +471,9 @@ class NewHarTest extends MockServerTest {
             assertNotNull("Expected to find HAR content", newContent)
 
             assertEquals("Expected to capture body content in HAR", "success", newContent.text)
+
+            assertTrue("Expected HAR entries to have _url field",
+                    populatedHar.log.entries.every { StringUtils.isNotEmpty(it.url) })
         }
     }
 
@@ -517,6 +524,8 @@ class NewHarTest extends MockServerTest {
 
         assertEquals("Expected HAR returned from newPage() not to contain second page", 1, harWithFirstPageOnly.log.pages.size())
         assertEquals("Expected id of HAR page to be 'first-page'", "first-page", harWithFirstPageOnly.log.pages.first().id)
+        assertTrue("Expected HAR entries to have _url field",
+                har.log.entries.every { StringUtils.isNotEmpty(it.url) })
     }
 
     @Test
@@ -546,7 +555,8 @@ class NewHarTest extends MockServerTest {
 
         String capturedUrl = har.log.entries[0].request.url
         assertEquals("URL captured in HAR did not match request URL", requestUrl, capturedUrl)
-
+        assertTrue("Expected HAR entries to have _url field",
+                har.log.entries.every { StringUtils.isNotEmpty(it.url) })
         verify(1, getRequestedFor(urlEqualTo(stubUrl)))
     }
 
@@ -582,7 +592,8 @@ class NewHarTest extends MockServerTest {
 
         assertEquals("Expected first query parameter name to be param1", "param1", har.log.entries[0].request.queryString[0].name)
         assertEquals("Expected first query parameter value to be value1", "value1", har.log.entries[0].request.queryString[0].value)
-
+        assertTrue("Expected HAR entries to have _url field",
+                har.log.entries.every { StringUtils.isNotEmpty(it.url) })
         verify(1, getRequestedFor(urlMatching(stubUrl)))
     }
 
@@ -620,7 +631,8 @@ class NewHarTest extends MockServerTest {
 
         assertEquals("Expected first query parameter name to be param1", "param1", har.log.entries[0].request.queryString[0].name)
         assertEquals("Expected first query parameter value to be value1", "value1", har.log.entries[0].request.queryString[0].value)
-
+        assertTrue("Expected HAR entries to have _url field",
+                har.log.entries.every { StringUtils.isNotEmpty(it.url) })
         verify(1, getRequestedFor(urlMatching(stubUrl)))
     }
 
@@ -662,7 +674,8 @@ class NewHarTest extends MockServerTest {
 
         assertEquals("Expected first query parameter name to be param1", "param1", har.log.entries[0].request.queryString[0].name)
         assertEquals("Expected first query parameter value to be value1", "value1", har.log.entries[0].request.queryString[0].value)
-
+        assertTrue("Expected HAR entries to have _url field",
+                har.log.entries.every { StringUtils.isNotEmpty(it.url) })
         verify(1, getRequestedFor(urlMatching(stubUrl)))
     }
 
@@ -711,6 +724,8 @@ class NewHarTest extends MockServerTest {
         assertEquals("Expected HAR timings to contain default values after DNS failure", 0L, harTimings.getSend(TimeUnit.NANOSECONDS))
         assertEquals("Expected HAR timings to contain default values after DNS failure", 0L, harTimings.getWait(TimeUnit.NANOSECONDS))
         assertEquals("Expected HAR timings to contain default values after DNS failure", 0L, harTimings.getReceive(TimeUnit.NANOSECONDS))
+        assertTrue("Expected HAR entries to have _url field",
+                har.log.entries.every { StringUtils.isNotEmpty(it.url) })
         assertNotNull(har.log.entries[0].time)
     }
 
@@ -760,6 +775,8 @@ class NewHarTest extends MockServerTest {
         assertEquals("Expected HAR timings to contain default values after DNS failure", 0L, harTimings.getSend(TimeUnit.NANOSECONDS))
         assertEquals("Expected HAR timings to contain default values after DNS failure", 0L, harTimings.getWait(TimeUnit.NANOSECONDS))
         assertEquals("Expected HAR timings to contain default values after DNS failure", 0L, harTimings.getReceive(TimeUnit.NANOSECONDS))
+        assertTrue("Expected HAR entries to have _url field",
+                har.log.entries.every { StringUtils.isNotEmpty(it.url) })
         assertNotNull(har.log.entries[0].time)
     }
 
@@ -808,6 +825,8 @@ class NewHarTest extends MockServerTest {
         assertEquals("Expected HAR timings to contain default values after connection failure", 0L, harTimings.getSend(TimeUnit.NANOSECONDS))
         assertEquals("Expected HAR timings to contain default values after connection failure", 0L, harTimings.getWait(TimeUnit.NANOSECONDS))
         assertEquals("Expected HAR timings to contain default values after connection failure", 0L, harTimings.getReceive(TimeUnit.NANOSECONDS))
+        assertTrue("Expected HAR entries to have _url field",
+                har.log.entries.every { StringUtils.isNotEmpty(it.url) })
         assertNotNull(har.log.entries[0].time)
     }
 
@@ -856,6 +875,8 @@ class NewHarTest extends MockServerTest {
         assertEquals("Expected HAR timings to contain default values after connection failure", 0L, harTimings.getSend(TimeUnit.NANOSECONDS))
         assertEquals("Expected HAR timings to contain default values after connection failure", 0L, harTimings.getWait(TimeUnit.NANOSECONDS))
         assertEquals("Expected HAR timings to contain default values after connection failure", 0L, harTimings.getReceive(TimeUnit.NANOSECONDS))
+        assertTrue("Expected HAR entries to have _url field",
+                har.log.entries.every { StringUtils.isNotEmpty(it.url) })
         assertTrue(har.log.entries[0].time > 0)
     }
 
@@ -914,6 +935,8 @@ class NewHarTest extends MockServerTest {
         assertThat("Expected wait time to be populated", harTimings.getWait(TimeUnit.NANOSECONDS), greaterThan(0L))
 
         assertEquals("Expected receive time to not be populated", 0L, harTimings.getReceive(TimeUnit.NANOSECONDS))
+        assertTrue("Expected HAR entries to have _url field",
+                har.log.entries.every { StringUtils.isNotEmpty(it.url) })
         assertTrue(har.log.entries[0].time > 0)
     }
 
@@ -973,6 +996,8 @@ class NewHarTest extends MockServerTest {
         assertThat("Expected wait time to be populated", harTimings.getWait(TimeUnit.NANOSECONDS), greaterThan(0L))
 
         assertEquals("Expected receive time to not be populated", 0L, harTimings.getReceive(TimeUnit.NANOSECONDS))
+        assertTrue("Expected HAR entries to have _url field",
+                har.log.entries.every { StringUtils.isNotEmpty(it.url) })
         assertTrue(har.log.entries[0].time > 0)
     }
 

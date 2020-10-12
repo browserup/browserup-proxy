@@ -8,12 +8,14 @@ import com.browserup.bup.MitmProxyServer
 import com.browserup.bup.proxy.test.util.MockServerTest
 import com.browserup.bup.proxy.test.util.NewProxyServerTestUtil
 import com.browserup.harreader.model.*
+import org.apache.commons.lang3.StringUtils
 import org.apache.http.client.methods.HttpGet
 import org.junit.After
 import org.junit.Test
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*
 import static org.junit.Assert.assertNotNull
+import static org.junit.Assert.assertTrue
 
 class HarValidationTest extends MockServerTest {
     private MitmProxyServer proxy
@@ -23,6 +25,34 @@ class HarValidationTest extends MockServerTest {
         if (proxy?.started) {
             proxy.abort()
         }
+    }
+
+    @Test
+    void testHarEntryContainsUrlField() {
+        def stubUrl = "/testUrl.*"
+        stubFor(get(urlMatching(stubUrl)).willReturn(ok()))
+
+        proxy = new MitmProxyServer()
+        proxy.start()
+
+        proxy.newHar()
+
+        def requestUrl = "http://localhost:${mockServerPort}/testUrl"
+
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            NewProxyServerTestUtil.toStringAndClose(it.execute(new HttpGet(requestUrl)).getEntity().getContent())
+        }
+
+        Thread.sleep(500)
+        def har = proxy.getHar()
+
+        assertNotNull("Expected not null log creator name", har.log.creator.name)
+        assertNotNull("Expected not null log creator version", har.log.creator.version)
+
+        har.log.entries.each {
+            assertTrue(StringUtils.isNotEmpty(it.url))
+        }
+        verify(1, getRequestedFor(urlMatching(stubUrl)))
     }
 
     @Test
