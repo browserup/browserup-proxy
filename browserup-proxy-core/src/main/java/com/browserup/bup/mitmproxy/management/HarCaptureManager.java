@@ -22,7 +22,6 @@ public class HarCaptureManager {
 
     private final AddonsManagerClient addonsManagerClient;
     private final MitmProxyProcessManager mitmProxyManager;
-    private Har lastHar = new Har();
     private EnumSet<CaptureType> lastCaptureTypes = EnumSet.noneOf(CaptureType.class);
 
     public HarCaptureManager(AddonsManagerClient addonsManagerClient, MitmProxyProcessManager mitmProxyManager) {
@@ -35,11 +34,7 @@ public class HarCaptureManager {
     }
 
     public Har getHar(Boolean cleanHar) {
-        if (!mitmProxyManager.isRunning()) return lastHar;
-
-        if (cleanHar) {
-            this.lastHar = null;
-        }
+        if (!mitmProxyManager.isRunning()) return null;
 
         HarResponse response = addonsManagerClient.
                 getRequestToAddonsManager(
@@ -62,7 +57,7 @@ public class HarCaptureManager {
     }
 
     public Har newHar(String pageRef, String pageTitle) {
-        if (!mitmProxyManager.isRunning()) return lastHar;
+        if (!mitmProxyManager.isRunning()) return null;
 
         HarResponse response = addonsManagerClient.
                 getRequestToAddonsManager(
@@ -77,7 +72,7 @@ public class HarCaptureManager {
     }
 
     public Har endHar() {
-        if (!mitmProxyManager.isRunning()) return lastHar;
+        if (!mitmProxyManager.isRunning()) return null;
 
         HarResponse response = addonsManagerClient.
                 getRequestToAddonsManager(
@@ -97,7 +92,7 @@ public class HarCaptureManager {
     }
 
     public Har newPage(String pageRef, String pageTitle) {
-        if (!mitmProxyManager.isRunning()) return lastHar;
+        if (!mitmProxyManager.isRunning()) return null;
 
         HarResponse response = addonsManagerClient.
                 getRequestToAddonsManager(
@@ -131,7 +126,6 @@ public class HarCaptureManager {
         } catch (IOException e) {
             throw new RuntimeException("Couldn't read HAR file: " + harFile.getAbsolutePath(), e);
         }
-        lastHar = har;
         return har;
     }
 
