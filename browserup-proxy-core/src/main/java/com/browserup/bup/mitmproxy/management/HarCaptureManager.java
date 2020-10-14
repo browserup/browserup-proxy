@@ -37,6 +37,10 @@ public class HarCaptureManager {
     public Har getHar(Boolean cleanHar) {
         if (!mitmProxyManager.isRunning()) return lastHar;
 
+        if (cleanHar) {
+            this.lastHar = null;
+        }
+
         HarResponse response = addonsManagerClient.
                 getRequestToAddonsManager(
                         "har",
