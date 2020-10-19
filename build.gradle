@@ -17,7 +17,7 @@ configurations.all {
         // conflicts later. BrowserUpDriver _should_ be allowed to use whatever libs it wants.
         //resolutionStrategy.force 'com.google.guava:guava:*', 'com.google.guava:guava:22.0'
         // UPDATE Jan 27, 2019: I forked org.littleshoot.proxy to Browserup and upgraded it to Guava 27.0.1-jre
-        resolutionStrategy.force 'com.google.guava:guava:*', 'com.google.guava:guava:28.2-jre'
+        resolutionStrategy.force 'com.google.guava:guava:*', 'com.google.guava:guava:30.0-jre'
     }
 }
 
