@@ -26,7 +26,7 @@ To use BrowserUp Proxy in your tests or application, add the `browserup-proxy-co
     <dependency>
         <groupId>com.browserup</groupId>
         <artifactId>browserup-proxy-core</artifactId>
-        <version>1.0.0</version>
+        <version>3.0.0</version>
         <scope>test</scope>
     </dependency>
 ```
@@ -343,11 +343,11 @@ When you build the latest code from source, you'll have access to the latest sna
     <dependency>
         <groupId>com.browserup</groupId>
         <artifactId>browserup-proxy-core</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>3.0.0-SNAPSHOT</version>
         <scope>test</scope>
     </dependency>
 ```
 Or for gradle:
 ```yml
-testImplementation 'com.browserup:browserup-proxy-core:1.0.0-SNAPSHOT'
+testImplementation 'com.browserup:browserup-proxy-core:3.0.0-SNAPSHOT'
 ```

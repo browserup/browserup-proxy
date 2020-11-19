@@ -57,7 +57,7 @@ uploadArchives {
 }
 
 dependencies {
-    implementation 'com.google.guava:guava:30.0-jre'
+    implementation "com.google.guava:guava:${guavaVersion}"
 
     implementation "org.bouncycastle:bcpkix-jdk15on:${bcpVersion}"
     implementation "org.bouncycastle:bcprov-jdk15on:${bcpVersion}"
@@ -83,5 +83,5 @@ dependencies {
     testImplementation 'org.codehaus.groovy:groovy-all:3.0.6'
     testImplementation 'org.hamcrest:hamcrest:2.2'
     testImplementation 'org.hamcrest:hamcrest-library:2.2'
-    testImplementation 'org.mockito:mockito-core:3.3.3'
+    testImplementation 'org.mockito:mockito-core:3.6.0'
 }
