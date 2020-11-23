@@ -66,7 +66,7 @@ dependencies {
     implementation "io.netty:netty-codec:${nettyVersion}"
     implementation "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
     implementation "org.slf4j:slf4j-api:${slf4jVersion}"
-    implementation('xyz.rogfam:littleproxy:2.0.1') {
+    implementation("xyz.rogfam:littleproxy:${littleProxyVersion}") {
         exclude(group: 'io.netty', module: 'netty-all')
     }
 
