@@ -465,6 +465,21 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         proxyServer = bootstrap.start();
 
         addHarCaptureFilter();
+
+        addHttpFilterFactory(new HttpFiltersSourceAdapter() {
+            @Override
+            public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
+                return new BlacklistFilter(originalRequest, ctx, getBlacklist());
+            }
+        });
+
+        addHttpFilterFactory(new HttpFiltersSourceAdapter() {
+            @Override
+            public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
+                Whitelist currentWhitelist = whitelist.get();
+                return new WhitelistFilter(originalRequest, ctx, isWhitelistEnabled(), currentWhitelist.getStatusCode(), currentWhitelist.getPatterns());
+            }
+        });
     }
 
     @Override
@@ -1450,21 +1465,6 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
             @Override
             public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
                 return new HttpsOriginalHostCaptureFilter(originalRequest, ctx);
-            }
-        });
-
-        addHttpFilterFactory(new HttpFiltersSourceAdapter() {
-            @Override
-            public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
-                return new BlacklistFilter(originalRequest, ctx, getBlacklist());
-            }
-        });
-
-        addHttpFilterFactory(new HttpFiltersSourceAdapter() {
-            @Override
-            public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
-                Whitelist currentWhitelist = whitelist.get();
-                return new WhitelistFilter(originalRequest, ctx, isWhitelistEnabled(), currentWhitelist.getStatusCode(), currentWhitelist.getPatterns());
             }
         });
 

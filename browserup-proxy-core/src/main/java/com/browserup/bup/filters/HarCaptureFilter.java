@@ -47,7 +47,6 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.browserup.bup.util.BrowserUpProxyUtil.getTotalElapsedTime;
@@ -120,12 +119,14 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
      */
     private volatile HttpRequest capturedOriginalRequest;
 
+    private volatile boolean isResponse = false;
+
     /**
      * True if this filter instance processed a {@link #proxyToServerResolutionSucceeded(String, java.net.InetSocketAddress)} call, indicating
      * that the hostname was resolved and populated in the HAR (if this is not a CONNECT).
      */
     private volatile boolean addressResolved = false;
-
+    
     /**
      * Create a new instance of the HarCaptureFilter that will capture request and response information. If no har is specified in the
      * constructor, this filter will do nothing.
@@ -255,6 +256,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
     @Override
     public HttpObject serverToProxyResponse(HttpObject httpObject) {
+        isResponse = true;
         // if a ServerResponseCaptureFilter is configured, delegate to it to collect the server's response. if it is not
         // configured, we still need to capture basic information (timings, HTTP status, etc.), just not content.
         if (responseCaptureFilter != null) {
@@ -287,7 +289,19 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
     }
 
     @Override
+    public HttpObject proxyToClientResponse(HttpObject httpObject) {
+        // if a subsequent filter short-circuited the response, capture it here
+        if (!isResponse && httpObject instanceof HttpResponse) {
+            HttpResponse httpResponse = (HttpResponse) httpObject;
+            captureResponse(httpResponse);
+            harEntry.setTime(getTotalElapsedTime(harEntry.getTimings()));
+        }
+        return super.proxyToClientResponse(httpObject); 
+    }
+
+    @Override
     public void serverToProxyResponseTimedOut() {
+        isResponse = true;
         // replace any existing HarResponse that was created if the server sent a partial response
         HarResponse response = HarCaptureUtil.createHarResponseForFailure();
         harEntry.setResponse(response);
@@ -678,6 +692,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
     @Override
     public void proxyToServerResolutionFailed(String hostAndPort) {
+        isResponse = true;
         HarResponse response = HarCaptureUtil.createHarResponseForFailure();
         this.harEntry.setResponse(response);
 
@@ -720,6 +735,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
     @Override
     public void proxyToServerConnectionFailed() {
+        isResponse = true;
         HarResponse response = HarCaptureUtil.createHarResponseForFailure();
         this.harEntry.setResponse(response);
 
@@ -733,6 +749,7 @@ public class HarCaptureFilter extends HttpsAwareFiltersAdapter {
 
     @Override
     public void proxyToServerConnectionSucceeded(ChannelHandlerContext serverCtx) {
+        isResponse = true;
         long connectionSucceededTimeNanos = System.nanoTime();
 
         // make sure the previous timestamp was captured, to avoid setting an absurd value in the har (see serverToProxyResponseReceiving())
