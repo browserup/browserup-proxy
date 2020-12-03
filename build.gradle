@@ -39,7 +39,7 @@ subprojects {
         javassistVersion = '3.27.0-GA'
         jettyVersion = '9.4.35.v20201120'
         log4jVersion = '2.14.0'
-        nettyVersion = '4.1.50.Final'
+        nettyVersion = '4.1.54.Final'
         slf4jVersion = '1.7.30'
     }
 
