@@ -58,7 +58,7 @@ uploadArchives {
 
 dependencies {
     api "io.netty:netty-codec:${nettyVersion}"
-    api('xyz.rogfam:littleproxy:2.0.0-beta-5') {
+    api('xyz.rogfam:littleproxy:2.0.1') {
         exclude(group: 'io.netty', module: 'netty-all')
     }
 
