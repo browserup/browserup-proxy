@@ -10,8 +10,8 @@ plugins {
 archivesBaseName = 'browserup-proxy-rest'
 
 ext {
-    jerseyVersion = '2.31'
-    swaggerVersion = '2.1.2'
+    jerseyVersion = '2.32'
+    swaggerVersion = '2.1.5'
 }
 
 uploadArchives {
@@ -64,7 +64,7 @@ uploadArchives {
 dependencies {
     implementation project(':browserup-proxy-core')
 
-    implementation 'com.google.guava:guava:28.2-jre'
+    implementation 'com.google.guava:guava:30.0-jre'
     implementation "com.google.inject:guice:${guiceVersion}"
     implementation "com.google.inject.extensions:guice-servlet:${guiceVersion}"
     implementation "com.google.inject.extensions:guice-multibindings:${guiceVersion}"
@@ -77,7 +77,7 @@ dependencies {
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
     implementation "org.eclipse.jetty:jetty-servlet:${jettyVersion}"
     implementation "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
-    implementation 'org.apache.commons:commons-lang3:3.10'
+    implementation 'org.apache.commons:commons-lang3:3.11'
 
     implementation "org.glassfish.jersey.containers:jersey-container-servlet-core:${jerseyVersion}"
     implementation "org.glassfish.jersey.media:jersey-media-json-jackson:${jerseyVersion}"
@@ -92,11 +92,11 @@ dependencies {
 
     testImplementation project(':browserup-proxy-mitm')
 
-    testImplementation 'junit:junit:4.13'
+    testImplementation 'junit:junit:4.13.1'
     testImplementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
     testImplementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
     testImplementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
-    testImplementation 'org.codehaus.groovy:groovy-all:2.5.8'
+    testImplementation 'org.codehaus.groovy:groovy-all:3.0.6'
     testImplementation 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.2'
     testImplementation 'org.hamcrest:hamcrest:2.2'
     testImplementation 'org.hamcrest:hamcrest-library:2.2'

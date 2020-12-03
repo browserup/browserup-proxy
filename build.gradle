@@ -17,7 +17,7 @@ configurations.all {
         // conflicts later. BrowserUpDriver _should_ be allowed to use whatever libs it wants.
         //resolutionStrategy.force 'com.google.guava:guava:*', 'com.google.guava:guava:22.0'
         // UPDATE Jan 27, 2019: I forked org.littleshoot.proxy to Browserup and upgraded it to Guava 27.0.1-jre
-        resolutionStrategy.force 'com.google.guava:guava:*', 'com.google.guava:guava:28.2-jre'
+        resolutionStrategy.force 'com.google.guava:guava:*', 'com.google.guava:guava:30.0-jre'
     }
 }
 
@@ -33,19 +33,19 @@ subprojects {
     sourceCompatibility=1.8
 
     ext {
-        bcpVersion = '1.64'
+        bcpVersion = '1.67'
         guiceVersion = '4.2.3'
-        jacksonVersion = '2.10.3'
+        jacksonVersion = '2.12.0'
         javassistVersion = '3.27.0-GA'
-        jettyVersion = '9.4.29.v20200521'
-        log4jVersion = '2.13.1'
-        nettyVersion = '4.1.50.Final'
+        jettyVersion = '9.4.35.v20201120'
+        log4jVersion = '2.14.0'
+        nettyVersion = '4.1.54.Final'
         slf4jVersion = '1.7.30'
     }
 
     repositories {
-        jcenter()
         mavenCentral()
+        jcenter()
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
         maven { url "https://oss.sonatype.org/service/local/staging/deploy/maven2/" }
     }

@@ -19,7 +19,7 @@ public class HarResponse {
 
     private HttpStatus status;
     private String statusText = "";
-    private String httpVersion = "HTTP/1.1";
+    private String httpVersion = "unknown";
     private List<HarCookie> cookies;
     private List<HarHeader> headers;
     private HarContent content;

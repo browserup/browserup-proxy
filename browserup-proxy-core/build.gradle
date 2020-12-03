@@ -58,7 +58,7 @@ uploadArchives {
 
 dependencies {
     api "io.netty:netty-codec:${nettyVersion}"
-    api('xyz.rogfam:littleproxy:2.0.0-beta-5') {
+    api('xyz.rogfam:littleproxy:2.0.1') {
         exclude(group: 'io.netty', module: 'netty-all')
     }
 
@@ -70,9 +70,9 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
     implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     implementation "com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}"
-    implementation 'com.google.guava:guava:28.2-jre'
+    implementation 'com.google.guava:guava:30.0-jre'
     implementation 'com.jcraft:jzlib:1.1.3'
-    implementation 'dnsjava:dnsjava:3.1.0'
+    implementation 'dnsjava:dnsjava:3.3.1'
     implementation "io.netty:netty-all:${nettyVersion}"
     implementation "org.bouncycastle:bcpkix-jdk15on:${bcpVersion}"
     implementation "org.bouncycastle:bcprov-jdk15on:${bcpVersion}"
@@ -82,10 +82,9 @@ dependencies {
     implementation "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
     implementation "org.slf4j:slf4j-api:${slf4jVersion}"
     implementation "com.squareup.okhttp3:okhttp:4.9.0"
-    implementation 'org.zeroturnaround:zt-exec:1.11'
-
-    testImplementation 'junit:junit:4.13'
-    testImplementation 'org.codehaus.groovy:groovy-all:2.5.8'
+    implementation 'org.zeroturnaround:zt-exec:1.12'
+    testImplementation 'junit:junit:4.13.1'
+    testImplementation 'org.codehaus.groovy:groovy-all:3.0.6'
     testImplementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
     testImplementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
     testImplementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
@@ -93,11 +92,11 @@ dependencies {
     testImplementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
     testImplementation "org.eclipse.jetty:jetty-servlet:${jettyVersion}"
     testImplementation "org.eclipse.jetty:jetty-servlets:${jettyVersion}"
-    testImplementation 'org.hamcrest:hamcrest:2.2'    
+    testImplementation 'org.hamcrest:hamcrest:2.2'
     testImplementation 'org.hamcrest:hamcrest-library:2.2'
     testImplementation 'com.github.tomakehurst:wiremock-jre8:2.26.3'
     testImplementation 'org.mockito:mockito-core:3.3.3'
     testImplementation 'org.seleniumhq.selenium:selenium-firefox-driver:3.141.59'
-    testImplementation 'org.apache.httpcomponents:httpclient:4.5.12'
+    testImplementation 'org.apache.httpcomponents:httpclient:4.5.13'
 }
 

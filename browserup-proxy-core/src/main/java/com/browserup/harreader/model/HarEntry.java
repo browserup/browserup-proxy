@@ -1,10 +1,6 @@
 package com.browserup.harreader.model;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.*;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -29,6 +25,7 @@ public class HarEntry {
     private String serverIPAddress;
     private String connection;
     private String comment;
+    private String _url;
     private Map<String, Object> additional = new HashMap<>();
 
     /**
@@ -119,6 +116,19 @@ public class HarEntry {
 
     public void setTimings(HarTiming timings) {
         this.timings = timings;
+    }
+
+    @JsonProperty("_url")
+    public String getUrl() {
+        if (_url == null) {
+            _url = "";
+        }
+        return _url;
+    }
+
+    @JsonProperty("_url")
+    public void setUrl(String url) {
+        this._url = url;
     }
 
     /**

@@ -4,9 +4,9 @@
 
 package com.browserup.bup.filters;
 
+import com.browserup.bup.util.HttpStatusClass;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
@@ -15,7 +15,6 @@ import io.netty.handler.codec.http.HttpUtil;
 import org.littleshoot.proxy.impl.ProxyUtils;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.regex.Pattern;
 
 import static java.util.Collections.*;
@@ -58,12 +57,17 @@ public class WhitelistFilter extends HttpsAwareFiltersAdapter {
 
             boolean urlWhitelisted;
 
-            String url = getFullUrl(httpRequest);
+            String url = getOriginalUrl();
 
             urlWhitelisted = whitelistUrls.stream().anyMatch(pattern -> pattern.matcher(url).matches());
 
             if (!urlWhitelisted) {
-                HttpResponseStatus status = HttpResponseStatus.valueOf(whitelistResponseCode);
+                HttpResponseStatus status;
+                if(HttpStatusClass.UNKNOWN.equals(HttpStatusClass.valueOf(whitelistResponseCode))) {
+                    status = new HttpResponseStatus(whitelistResponseCode, BlacklistFilter.BLOCKED_PHRASE);
+                } else {
+                    status = HttpResponseStatus.valueOf(whitelistResponseCode);
+                }
                 HttpResponse resp = new DefaultFullHttpResponse(httpRequest.protocolVersion(), status);
                 HttpUtil.setContentLength(resp, 0L);
 

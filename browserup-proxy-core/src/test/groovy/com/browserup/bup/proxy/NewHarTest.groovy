@@ -26,6 +26,7 @@ import org.junit.After
 import org.junit.Test
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
+import static org.hamcrest.Matchers.isEmptyOrNullString
 
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
@@ -914,6 +915,74 @@ class NewHarTest extends MockServerTest {
 
         assertEquals("Expected receive time to not be populated", 0L, harTimings.getReceive(TimeUnit.NANOSECONDS))
         assertTrue(har.log.entries[0].time > 0)
+    }
+
+    @Test
+    void testHttpsBlacklistedUrlInHar() {
+        def stubUrl = "/httpsblacklistedurl"
+        stubFor(get(urlEqualTo(stubUrl))
+                .willReturn(ok())
+        )
+        proxy = new BrowserUpProxyServer()
+        proxy.blacklistRequests(".*", 405)
+        proxy.setTrustAllServers(true)
+        proxy.start()
+
+        proxy.newHar()
+
+        String requestUrl = "https://localhost:${mockServerHttpsPort}/httpsblacklistedurl"
+
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
+            assertEquals("Did not receive blacklisted status code in response", 405, response.getStatusLine().getStatusCode())
+
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
+            assertThat("Expected blacklisted response to contain 0-length body", responseBody, isEmptyOrNullString())
+        }
+
+        Thread.sleep(500)
+        Har har = proxy.getHar()
+
+        assertThat("Expected to find entries in the HAR", har.getLog().getEntries(), not(empty()))
+
+        HarResponse harResponse = har.log.entries[0].response
+        assertNotNull("No HAR response found", harResponse)
+        assertEquals("Expected blacklisted status code for the request", 405, harResponse.status)
+        assertEquals("Expected default value for bodySize for response timeout", -1L, harResponse.bodySize)
+    }
+
+    @Test
+    void testHttpsWhitelistedUrlInHar() {
+        def stubUrl = "/httpsblacklistedurl"
+        stubFor(get(urlEqualTo(stubUrl))
+                .willReturn(ok())
+        )
+        proxy = new BrowserUpProxyServer()
+        proxy.whitelistRequests(null, 405)
+        proxy.setTrustAllServers(true)
+        proxy.start()
+
+        proxy.newHar()
+
+        String requestUrl = "https://localhost:${mockServerHttpsPort}/httpsblacklistedurl"
+
+        NewProxyServerTestUtil.getNewHttpClient(proxy.port).withCloseable {
+            CloseableHttpResponse response = it.execute(new HttpGet(requestUrl))
+            assertEquals("Did not receive blacklisted status code in response", 405, response.getStatusLine().getStatusCode())
+
+            String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
+            assertThat("Expected blacklisted response to contain 0-length body", responseBody, isEmptyOrNullString())
+        }
+
+        Thread.sleep(500)
+        Har har = proxy.getHar()
+
+        assertThat("Expected to find entries in the HAR", har.getLog().getEntries(), not(empty()))
+
+        HarResponse harResponse = har.log.entries[0].response
+        assertNotNull("No HAR response found", harResponse)
+        assertEquals("Expected blacklisted status code for the request", 405, harResponse.status)
+        assertEquals("Expected default value for bodySize for response timeout", -1L, harResponse.bodySize)
     }
 
     @Test

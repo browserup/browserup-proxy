@@ -173,6 +173,8 @@ public class MitmProxyProcessManager {
       add("mitmdump");
       add("-p");
       add(String.valueOf(port));
+      add("--set");
+      add("flow_detail=3");
     }};
     if (trustAll) {
       command.add("--ssl-insecure");

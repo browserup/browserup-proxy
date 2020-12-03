@@ -57,7 +57,7 @@ uploadArchives {
 }
 
 dependencies {
-    implementation 'com.google.guava:guava:28.2-jre'
+    implementation 'com.google.guava:guava:30.0-jre'
 
     implementation "org.bouncycastle:bcpkix-jdk15on:${bcpVersion}"
     implementation "org.bouncycastle:bcprov-jdk15on:${bcpVersion}"
@@ -66,21 +66,21 @@ dependencies {
     implementation "io.netty:netty-codec:${nettyVersion}"
     implementation "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
     implementation "org.slf4j:slf4j-api:${slf4jVersion}"
-    implementation('xyz.rogfam:littleproxy:2.0.0-beta-5') {
+    implementation('xyz.rogfam:littleproxy:2.0.1') {
         exclude(group: 'io.netty', module: 'netty-all')
     }
 
     testImplementation "com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}"
     testImplementation "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
     testImplementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
-    testImplementation 'junit:junit:4.13'
-    testImplementation('org.apache.httpcomponents:httpclient:4.5.12') {
+    testImplementation 'junit:junit:4.13.1'
+    testImplementation('org.apache.httpcomponents:httpclient:4.5.13') {
         exclude(module: 'commons-logging')
     }
     testImplementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
     testImplementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
     testImplementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
-    testImplementation 'org.codehaus.groovy:groovy-all:2.5.8'
+    testImplementation 'org.codehaus.groovy:groovy-all:3.0.6'
     testImplementation 'org.hamcrest:hamcrest:2.2'
     testImplementation 'org.hamcrest:hamcrest-library:2.2'
     testImplementation 'org.mockito:mockito-core:3.3.3'
