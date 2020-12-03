@@ -38,7 +38,7 @@ subprojects {
         jacksonVersion = '2.10.3'
         javassistVersion = '3.27.0-GA'
         jettyVersion = '9.4.29.v20200521'
-        log4jVersion = '2.13.1'
+        log4jVersion = '2.13.3'
         nettyVersion = '4.1.50.Final'
         slf4jVersion = '1.7.30'
     }
