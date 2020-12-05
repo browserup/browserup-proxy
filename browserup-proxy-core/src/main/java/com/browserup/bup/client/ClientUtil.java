@@ -92,6 +92,20 @@ public class ClientUtil {
     }
 
     /**
+     * Creates a Selenium Proxy object from the BrowserUpProxy instance, using the specified hostnameOrAddress as the Selenium Proxy object's
+     * proxy address. Determines the port using {@link BrowserUpProxy#getPort()}. The BrowserUpProxy must be started.
+     *
+     * @param browserUpProxy    started BrowserUpProxy instance to read the port from
+     * @param hostnameOrAddress the hostnameOrAddress or the String form of the address the Selenium Proxy will use to
+     *                          reach its proxy server.
+     * @return a Selenium Proxy instance, configured to use the BrowserUpProxy instance as its proxy server
+     * @throws java.lang.IllegalStateException if the proxy has not been started.
+     */
+    public static org.openqa.selenium.Proxy createSeleniumProxy(BrowserUpProxy browserUpProxy, String hostnameOrAddress) {
+        return createSeleniumProxy(hostnameOrAddress, browserUpProxy.getPort());
+    }
+
+    /**
      * Creates a Selenium Proxy object using the specified connectableAddressAndPort as the HTTP proxy server.
      *
      * @param connectableAddressAndPort the network address (or hostname) and port the Selenium Proxy will use to reach its
@@ -99,10 +113,22 @@ public class ClientUtil {
      * @return a Selenium Proxy instance, configured to use the specified address and port as its proxy server
      */
     public static org.openqa.selenium.Proxy createSeleniumProxy(InetSocketAddress connectableAddressAndPort) {
+        return createSeleniumProxy(connectableAddressAndPort.getHostString(), connectableAddressAndPort.getPort());
+    }
+
+    /**
+     * Creates a Selenium Proxy object using the specified connectableAddressAndPort as the HTTP proxy server.
+     *
+     * @param hostnameOrAddress the hostnameOrAddress or the String form of the address the Selenium Proxy will use to
+     *                          reach its proxy server.
+     * @param port              the port the Selenium Proxy will use to reach its proxy server.
+     * @return a Selenium Proxy instance, configured to use the specified address and port as its proxy server
+     */
+    public static org.openqa.selenium.Proxy createSeleniumProxy(String hostnameOrAddress, int port) {
         Proxy proxy = new Proxy();
         proxy.setProxyType(Proxy.ProxyType.MANUAL);
 
-        String proxyStr = String.format("%s:%d", connectableAddressAndPort.getHostString(), connectableAddressAndPort.getPort());
+        String proxyStr = String.format("%s:%d", hostnameOrAddress, port);
         proxy.setHttpProxy(proxyStr);
         proxy.setSslProxy(proxyStr);
 
