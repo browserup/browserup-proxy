@@ -17,7 +17,7 @@ configurations.all {
         // conflicts later. BrowserUpDriver _should_ be allowed to use whatever libs it wants.
         //resolutionStrategy.force 'com.google.guava:guava:*', 'com.google.guava:guava:22.0'
         // UPDATE Jan 27, 2019: I forked org.littleshoot.proxy to Browserup and upgraded it to Guava 27.0.1-jre
-        resolutionStrategy.force 'com.google.guava:guava:*', 'com.google.guava:guava:30.0-jre'
+        resolutionStrategy.force 'com.google.guava:guava:*', "com.google.guava:guava:${guavaVersion}"
     }
 }
 
@@ -40,7 +40,9 @@ subprojects {
         jettyVersion = '9.4.35.v20201120'
         log4jVersion = '2.14.0'
         nettyVersion = '4.1.54.Final'
+        littleProxyVersion = '2.0.1'
         slf4jVersion = '1.7.30'
+        guavaVersion = '30.0-jre'
     }
 
     repositories {

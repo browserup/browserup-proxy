@@ -64,7 +64,7 @@ uploadArchives {
 dependencies {
     implementation project(':browserup-proxy-core')
 
-    implementation 'com.google.guava:guava:30.0-jre'
+    implementation "com.google.guava:guava:${guavaVersion}"
     implementation "com.google.inject:guice:${guiceVersion}"
     implementation "com.google.inject.extensions:guice-servlet:${guiceVersion}"
     implementation "com.google.inject.extensions:guice-multibindings:${guiceVersion}"
@@ -100,6 +100,7 @@ dependencies {
     testImplementation 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.2'
     testImplementation 'org.hamcrest:hamcrest:2.2'
     testImplementation 'org.hamcrest:hamcrest-library:2.2'
+
     testImplementation 'org.mockito:mockito-core:3.6.28'
     testImplementation 'org.seleniumhq.selenium:selenium-api:3.4.0'
     testImplementation 'org.awaitility:awaitility:4.0.2'
