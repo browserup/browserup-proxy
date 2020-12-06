@@ -1,7 +1,7 @@
 package com.browserup.bup.mitmproxy.management;
 
 import com.browserup.bup.mitmproxy.MitmProxyProcessManager;
-import com.browserup.bup.proxy.Whitelist;
+import com.browserup.bup.proxy.Allowlist;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -15,26 +15,26 @@ import static java.lang.String.valueOf;
 import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.lang3.tuple.Pair.of;
 
-public class WhiteListManager {
+public class AllowListManager {
     private final AddonsManagerClient addonsManagerClient;
     private final MitmProxyProcessManager mitmProxyManager;
 
-    private final AtomicReference<Whitelist> whitelist = new AtomicReference<>(Whitelist.WHITELIST_DISABLED);
+    private final AtomicReference<Allowlist> allowlist = new AtomicReference<>(Allowlist.ALLOWLIST_DISABLED);
 
-    public WhiteListManager(AddonsManagerClient addonsManagerClient, MitmProxyProcessManager mitmProxyManager) {
+    public AllowListManager(AddonsManagerClient addonsManagerClient, MitmProxyProcessManager mitmProxyManager) {
         this.addonsManagerClient = addonsManagerClient;
         this.mitmProxyManager = mitmProxyManager;
     }
 
-    public void whitelistRequests(Collection<String> urlPatterns, int statusCode) {
-        this.whitelist.set(new Whitelist(urlPatterns, statusCode));
+    public void allowlistRequests(Collection<String> urlPatterns, int statusCode) {
+        this.allowlist.set(new Allowlist(urlPatterns, statusCode));
 
         if (!mitmProxyManager.isRunning()) return;
 
         addonsManagerClient.
                 getRequestToAddonsManager(
-                        "whitelist",
-                        "whitelist_requests",
+                        "allowlist",
+                        "allowlist_requests",
                         new ArrayList<Pair<String, String>>() {{
                             add(of("urlPatterns", valueOf(urlPatterns)));
                             add(of("statusCode", valueOf(statusCode)));
@@ -42,28 +42,28 @@ public class WhiteListManager {
                         Void.class);
     }
 
-    public void addWhitelistPattern(String urlPattern) {
+    public void addAllowlistPattern(String urlPattern) {
         if (!mitmProxyManager.isRunning()) return;
 
-        boolean whitelistUpdated = false;
-        while (!whitelistUpdated) {
-            Whitelist currentWhitelist = this.whitelist.get();
-            if (!currentWhitelist.isEnabled()) {
-                throw new IllegalStateException("Whitelist is disabled. Cannot add patterns to a disabled whitelist.");
+        boolean allowlistUpdated = false;
+        while (!allowlistUpdated) {
+            Allowlist currentAllowlist = this.allowlist.get();
+            if (!currentAllowlist.isEnabled()) {
+                throw new IllegalStateException("Allowlist is disabled. Cannot add patterns to a disabled allowlist.");
             }
-            int statusCode = currentWhitelist.getStatusCode();
-            List<String> newPatterns = currentWhitelist.getPatterns().stream()
+            int statusCode = currentAllowlist.getStatusCode();
+            List<String> newPatterns = currentAllowlist.getPatterns().stream()
                     .map(Pattern::pattern)
-                    .collect(toCollection(() -> new ArrayList<>(currentWhitelist.getPatterns().size() + 1)));
+                    .collect(toCollection(() -> new ArrayList<>(currentAllowlist.getPatterns().size() + 1)));
             newPatterns.add(urlPattern);
 
-            Whitelist newWhitelist = new Whitelist(newPatterns, statusCode);
-            whitelistUpdated = this.whitelist.compareAndSet(currentWhitelist, newWhitelist);
+            Allowlist newAllowlist = new Allowlist(newPatterns, statusCode);
+            allowlistUpdated = this.allowlist.compareAndSet(currentAllowlist, newAllowlist);
 
             addonsManagerClient.
                     getRequestToAddonsManager(
-                            "whitelist",
-                            "add_whitelist_pattern",
+                            "allowlist",
+                            "add_allowlist_pattern",
                             new ArrayList<Pair<String, String>>() {{
                                 add(of("urlPattern", valueOf(urlPattern)));
                             }},
@@ -71,45 +71,45 @@ public class WhiteListManager {
         }
     }
 
-    public void enableEmptyWhitelist(int statusCode) {
+    public void enableEmptyAllowlist(int statusCode) {
         if (!mitmProxyManager.isRunning()) return;
 
-        whitelist.set(new Whitelist(statusCode));
+        allowlist.set(new Allowlist(statusCode));
 
         addonsManagerClient.
                 getRequestToAddonsManager(
-                        "whitelist",
-                        "enable_empty_whitelist",
+                        "allowlist",
+                        "enable_empty_allowlist",
                         new ArrayList<Pair<String, String>>() {{
                             add(of("statusCode", valueOf(statusCode)));
                         }},
                         Void.class);
     }
 
-    public void disableWhitelist() {
+    public void disableAllowlist() {
         if (!mitmProxyManager.isRunning()) return;
 
-        whitelist.set(Whitelist.WHITELIST_DISABLED);
+        allowlist.set(Allowlist.ALLOWLIST_DISABLED);
 
         addonsManagerClient.
                 getRequestToAddonsManager(
-                        "whitelist",
-                        "disable_whitelist",
+                        "allowlist",
+                        "disable_allowlist",
                         new ArrayList<>(),
                         Void.class);
     }
 
-    public int getWhitelistStatusCode() {
-        return whitelist.get().getStatusCode();
+    public int getAllowlistStatusCode() {
+        return allowlist.get().getStatusCode();
     }
 
-    public boolean isWhitelistEnabled() {
-        return whitelist.get().isEnabled();
+    public boolean isAllowlistEnabled() {
+        return allowlist.get().isEnabled();
     }
 
-    public Collection<String> getWhitelistUrls() {
+    public Collection<String> getAllowlistUrls() {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
-        whitelist.get().getPatterns().stream()
+        allowlist.get().getPatterns().stream()
                 .map(Pattern::pattern)
                 .forEach(builder::add);
 

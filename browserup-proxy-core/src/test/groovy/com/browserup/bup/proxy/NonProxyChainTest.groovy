@@ -144,7 +144,7 @@ class NonProxyChainTest extends MockServerTest {
     }
 
     /**
-     * Provides a HttpFiltersSource for configuring an upstream proxy while blacklisting "external.domain.com" and returning 502 Status Code.
+     * Provides a HttpFiltersSource for configuring an upstream proxy while blocklisting "external.domain.com" and returning 502 Status Code.
      * @return
      */
     private HttpFiltersSource getFiltersSource() {

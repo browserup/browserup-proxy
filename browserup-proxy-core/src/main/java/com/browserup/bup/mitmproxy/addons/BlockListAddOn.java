@@ -1,7 +1,7 @@
 package com.browserup.bup.mitmproxy.addons;
 
-public class BlackListAddOn extends AbstractAddon {
-  private static final String BLACK_LIST_ADDON_FILE = "black_list.py";
+public class BlockListAddOn extends AbstractAddon {
+  private static final String BLOCK_LIST_ADDON_FILE = "block_list.py";
 
   @Override
   public String[] getCommandParams() {
@@ -12,6 +12,6 @@ public class BlackListAddOn extends AbstractAddon {
 
   @Override
   public String getAddOnFileName() {
-    return BLACK_LIST_ADDON_FILE;
+    return BLOCK_LIST_ADDON_FILE;
   }
 }

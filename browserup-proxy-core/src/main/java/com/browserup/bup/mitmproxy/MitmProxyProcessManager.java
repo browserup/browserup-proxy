@@ -38,8 +38,8 @@ public class MitmProxyProcessManager {
   private HarCaptureAddOn harCaptureFilterAddOn = new HarCaptureAddOn();
   private ProxyManagerAddOn proxyManagerAddOn = new ProxyManagerAddOn();
   private AddonsManagerAddOn addonsManagerAddOn = new AddonsManagerAddOn(addonsManagerApiPort);
-  private WhiteListAddOn whiteListAddOn = new WhiteListAddOn();
-  private BlackListAddOn blackListAddOn = new BlackListAddOn();
+  private AllowListAddOn allowListAddOn = new AllowListAddOn();
+  private BlockListAddOn blockListAddOn = new BlockListAddOn();
   private AuthBasicAddOn authBasicFilterAddOn = new AuthBasicAddOn();
   private AdditionalHeadersAddOn additionalHeadersAddOn = new AdditionalHeadersAddOn();
   private HttpConnectCaptureAddOn httpConnectCaptureAddOn = new HttpConnectCaptureAddOn();
@@ -51,8 +51,8 @@ public class MitmProxyProcessManager {
 
   private HarCaptureManager harCaptureFilterManager = new HarCaptureManager(addonsManagerClient, this);
   private ProxyManager proxyManager = new ProxyManager(addonsManagerClient, this);
-  private WhiteListManager whiteListManager = new WhiteListManager(addonsManagerClient, this);
-  private BlackListManager blackListManager = new BlackListManager(addonsManagerClient, this);
+  private AllowListManager allowListManager = new AllowListManager(addonsManagerClient, this);
+  private BlockListManager blockListManager = new BlockListManager(addonsManagerClient, this);
   private AuthBasicManager authBasicFilterManager = new AuthBasicManager(addonsManagerClient, this);
   private AdditionalHeadersManager additionalHeadersManager = new AdditionalHeadersManager(addonsManagerClient, this);
   private RewriteUrlManager rewriteUrlManager = new RewriteUrlManager(addonsManagerClient, this);
@@ -135,8 +135,8 @@ public class MitmProxyProcessManager {
     AbstractAddon[] addonsArray = new AbstractAddon[]{
             initFlowAddOn,
             rewriteUrlAddOn,
-            whiteListAddOn,
-            blackListAddOn,
+            allowListAddOn,
+            blockListAddOn,
             httpConnectCaptureAddOn,
             harCaptureFilterAddOn,
             addonsManagerAddOn,
@@ -274,12 +274,12 @@ public class MitmProxyProcessManager {
     return proxyManager;
   }
 
-  public WhiteListManager getWhiteListManager() {
-    return whiteListManager;
+  public AllowListManager getAllowListManager() {
+    return allowListManager;
   }
 
-  public BlackListManager getBlackListManager() {
-    return blackListManager;
+  public BlockListManager getBlockListManager() {
+    return blockListManager;
   }
 
   public AuthBasicManager getAuthBasicFilterManager() {

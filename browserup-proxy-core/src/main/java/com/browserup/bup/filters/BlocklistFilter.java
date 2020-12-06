@@ -11,7 +11,7 @@ import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import com.browserup.bup.proxy.BlacklistEntry;
+import com.browserup.bup.proxy.BlocklistEntry;
 import com.browserup.bup.util.HttpStatusClass;
 import io.netty.handler.codec.http.HttpUtil;
 
@@ -19,20 +19,20 @@ import java.util.Collection;
 import java.util.Collections;
 
 /**
- * Applies blacklist entries to this request. The filter does not make a defensive copy of the blacklist entries, so there is no guarantee
- * that the blacklist at the time of construction will contain the same values when the filter is actually invoked, if the entries are modified concurrently.
+ * Applies blocklist entries to this request. The filter does not make a defensive copy of the blocklist entries, so there is no guarantee
+ * that the blocklist at the time of construction will contain the same values when the filter is actually invoked, if the entries are modified concurrently.
  */
-public class BlacklistFilter extends HttpsAwareFiltersAdapter {
+public class BlocklistFilter extends HttpsAwareFiltersAdapter {
     public static final String BLOCKED_PHRASE = "Request blocked";
-    private final Collection<BlacklistEntry> blacklistedUrls;
+    private final Collection<BlocklistEntry> blocklistedUrls;
 
-    public BlacklistFilter(HttpRequest originalRequest, ChannelHandlerContext ctx, Collection<BlacklistEntry> blacklistedUrls) {
+    public BlocklistFilter(HttpRequest originalRequest, ChannelHandlerContext ctx, Collection<BlocklistEntry> blocklistedUrls) {
         super(originalRequest, ctx);
 
-        if (blacklistedUrls != null) {
-            this.blacklistedUrls = blacklistedUrls;
+        if (blocklistedUrls != null) {
+            this.blocklistedUrls = blocklistedUrls;
         } else {
-            this.blacklistedUrls = Collections.emptyList();
+            this.blocklistedUrls = Collections.emptyList();
         }
     }
 
@@ -43,9 +43,9 @@ public class BlacklistFilter extends HttpsAwareFiltersAdapter {
 
             String url = getOriginalUrl();
 
-            for (BlacklistEntry entry : blacklistedUrls) {
+            for (BlocklistEntry entry : blocklistedUrls) {
                 if (HttpMethod.CONNECT.equals(httpRequest.method()) && entry.getHttpMethodPattern() == null) {
-                    // do not allow CONNECTs to be blacklisted unless a method pattern is explicitly specified
+                    // do not allow CONNECTs to be blocklisted unless a method pattern is explicitly specified
                     continue;
                 }
 

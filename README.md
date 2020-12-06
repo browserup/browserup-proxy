@@ -65,7 +65,7 @@ For more information on the features available in the REST API, see [the REST AP
 
 The proxy is programmatically controlled via a REST interface or by being embedded directly inside Java-based programs and unit tests. It captures performance data in the [HAR format](http://groups.google.com/group/http-archive-specification). In addition it can actually control HTTP traffic, such as:
 
- - blacklisting and whitelisting certain URL patterns
+ - blocklisting and allowlisting certain URL patterns
  - simulating various bandwidth and latency
  - remapping DNS lookups
  - flushing DNS caching
@@ -107,12 +107,12 @@ Creates a new proxy to run requests off of | POST | */proxy* | <p>*port* - Integ
 Starts a new page on the existing HAR. *[port]* in request path it is port where your proxy was started | PUT | */proxy/[port]/har/pageRef* |<p>*pageRef* - The string name of the first page ref that should be used in the HAR. Optional, default to "Page N" where N is the next page number.</p><p>*pageTitle* - The title of new HAR page. Optional, default to `pageRef`.</p>
 Shuts down the proxy and closes the port. *[port]* in request path it is port where your proxy was started | DELETE | */proxy/[port]* ||
 Returns the JSON/HAR content representing all the HTTP traffic passed through the proxy (provided you have already created the HAR with [this method](#harcreate)) | GET | */proxy/[port]/har* ||
-Displays whitelisted items | GET | */proxy/[port]/whitelist* ||
-Sets a list of URL patterns to whitelist | PUT | */proxy/[port]/whitelist* |<p>*regex* - A comma separated list of regular expressions.</p><p>*status* - The HTTP status code to return for URLs that do not match the whitelist.</p>|
-Clears all URL patterns from the whitelist  | DELETE | */proxy/[port]/whitelist* ||
-Displays blacklisted items | GET | */proxy/[port]/blacklist* ||
-Set a URL to blacklist | PUT | */proxy/[port]/blacklist* |<p>*regex* - The blacklist regular expression.</p><p>*status* - The HTTP status code to return for URLs that are blacklisted.</p><p>*method* - The regular expression for matching HTTP method (GET, POST, PUT, etc). Optional, by default processing all HTTP method.</p>|
-Clears all URL patterns from the blacklist | DELETE | */proxy/[port]/blacklist* ||
+Displays allowlisted items | GET | */proxy/[port]/allowlist* ||
+Sets a list of URL patterns to allowlist | PUT | */proxy/[port]/allowlist* |<p>*regex* - A comma separated list of regular expressions.</p><p>*status* - The HTTP status code to return for URLs that do not match the allowlist.</p>|
+Clears all URL patterns from the allowlist  | DELETE | */proxy/[port]/allowlist* ||
+Displays blocklisted items | GET | */proxy/[port]/blocklist* ||
+Set a URL to blocklist | PUT | */proxy/[port]/blocklist* |<p>*regex* - The blocklist regular expression.</p><p>*status* - The HTTP status code to return for URLs that are blocklisted.</p><p>*method* - The regular expression for matching HTTP method (GET, POST, PUT, etc). Optional, by default processing all HTTP method.</p>|
+Clears all URL patterns from the blocklist | DELETE | */proxy/[port]/blocklist* ||
 Limit the bandwidth through the proxy on the *[port]* | PUT | */proxy/[port]/limit* |<p>*downstreamKbps* - Sets the downstream bandwidth limit in kbps. Optional.</p><p>*upstreamKbps* - Sets the upstream bandwidth limit kbps. Optional, by default unlimited.</p><p>*downstreamMaxKB* - Specifies how many kilobytes in total the client is allowed to download through the proxy. Optional, by default unlimited.</p><p>*upstreamMaxKB* - Specifies how many kilobytes in total the client is allowed to upload through the proxy. Optional, by default unlimited.</p><p>*latency* - Add the given latency to each HTTP request. Optional, by default all requests are invoked without latency.</p><p>*enable* - A boolean that enable bandwidth limiter. Optional, by default to "false", but setting any of the properties above will implicitly enable throttling</p><p>*payloadPercentage* - Specifying what percentage of data sent is payload, e.g. use this to take into account overhead due to tcp/ip. Optional.</p><p>*maxBitsPerSecond* - The max bits per seconds you want this instance of StreamManager to respect. Optional.</p>
 Displays the amount of data remaining to be uploaded/downloaded until the limit is reached | GET | */proxy/[port]/limit* ||
 Set and override HTTP Request headers | POST | */proxy/[port]/headers* | Payload data should be **JSON** encoded set of headers. Where key is a header name (such as "User-Agent") and  value is a value of HTTP header to setup (such as "BrowserUp-Agent"). Example: `{"User-Agent": "BrowserUp-Agent"}`|

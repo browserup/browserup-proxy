@@ -1,7 +1,7 @@
 package com.browserup.bup.mitmproxy.addons;
 
 public class AuthBasicAddOn extends AbstractAddon {
-  private static final String WHITE_LIST_ADDON_FILE = "auth_basic.py";
+  private static final String ALLOW_LIST_ADDON_FILE = "auth_basic.py";
 
   @Override
   public String[] getCommandParams() {
@@ -12,6 +12,6 @@ public class AuthBasicAddOn extends AbstractAddon {
 
   @Override
   public String getAddOnFileName() {
-    return WHITE_LIST_ADDON_FILE;
+    return ALLOW_LIST_ADDON_FILE;
   }
 }

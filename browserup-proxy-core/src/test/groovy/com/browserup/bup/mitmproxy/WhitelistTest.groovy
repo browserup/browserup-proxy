@@ -5,7 +5,7 @@
 package com.browserup.bup.mitmproxy
 
 import com.browserup.bup.MitmProxyServer
-import com.browserup.bup.filters.WhitelistFilter
+import com.browserup.bup.filters.AllowlistFilter
 import com.browserup.bup.proxy.test.util.MockServerTest
 import com.browserup.bup.proxy.test.util.NewProxyServerTestUtil
 import io.netty.channel.ChannelHandlerContext
@@ -24,7 +24,7 @@ import static org.junit.Assert.*
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.when
 
-class WhitelistTest extends MockServerTest {
+class AllowlistTest extends MockServerTest {
     MitmProxyServer proxy
 
     @After
@@ -35,40 +35,40 @@ class WhitelistTest extends MockServerTest {
     }
 
     @Test
-    void testWhitelistCannotShortCircuitCONNECT() {
+    void testAllowlistCannotShortCircuitCONNECT() {
         HttpRequest request = mock(HttpRequest.class)
         when(request.method()).thenReturn(HttpMethod.CONNECT)
         when(request.uri()).thenReturn('somedomain.com:443')
         when(request.protocolVersion()).thenReturn(HttpVersion.HTTP_1_1)
         ChannelHandlerContext mockCtx = mock(ChannelHandlerContext)
 
-        // create a whitelist filter that whitelists no requests (i.e., all requests should return the specified HTTP 500 status code)
-        WhitelistFilter filter = new WhitelistFilter(request, mockCtx, true, 500, [])
+        // create a allowlist filter that allowlists no requests (i.e., all requests should return the specified HTTP 500 status code)
+        AllowlistFilter filter = new AllowlistFilter(request, mockCtx, true, 500, [])
         HttpResponse response = filter.clientToProxyRequest(request)
 
-        assertNull("Whitelist short-circuited HTTP CONNECT. Expected all HTTP CONNECTs to be whitelisted.", response)
+        assertNull("Allowlist short-circuited HTTP CONNECT. Expected all HTTP CONNECTs to be allowlisted.", response)
     }
 
     @Test
-    void testNonWhitelistedHttpRequestReturnsWhitelistStatusCode() {
+    void testNonAllowlistedHttpRequestReturnsAllowlistStatusCode() {
         proxy = new MitmProxyServer()
         proxy.start()
         int proxyPort = proxy.getPort()
 
-        proxy.whitelistRequests(["http://localhost/.*"], 500)
+        proxy.allowlistRequests(["http://localhost/.*"], 500)
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
             CloseableHttpResponse response = it.execute(new HttpGet("http://www.someother.domain/someresource"))
-            assertEquals("Did not receive whitelist status code in response", 500, response.getStatusLine().getStatusCode())
+            assertEquals("Did not receive allowlist status code in response", 500, response.getStatusLine().getStatusCode())
 
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
-            assertThat("Expected whitelist response to contain 0-length body", responseBody, isEmptyOrNullString())
+            assertThat("Expected allowlist response to contain 0-length body", responseBody, isEmptyOrNullString())
         }
     }
 
     @Test
-    void testNonWhitelistedHttpsRequestReturnsWhitelistStatusCode() {
-        String url = "/nonwhitelistedresource"
+    void testNonAllowlistedHttpsRequestReturnsAllowlistStatusCode() {
+        String url = "/nonallowlistedresource"
 
         stubFor(get(urlEqualTo(url)).willReturn(ok().withBody("should never be returned")))
 
@@ -77,67 +77,67 @@ class WhitelistTest extends MockServerTest {
         proxy.start()
         int proxyPort = proxy.getPort()
 
-        proxy.whitelistRequests(["https://some-other-domain/.*"], 500)
+        proxy.allowlistRequests(["https://some-other-domain/.*"], 500)
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/nonwhitelistedresource"))
-            assertEquals("Did not receive whitelist status code in response", 500, response.getStatusLine().getStatusCode())
+            CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/nonallowlistedresource"))
+            assertEquals("Did not receive allowlist status code in response", 500, response.getStatusLine().getStatusCode())
 
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
-            assertThat("Expected whitelist response to contain 0-length body", responseBody, isEmptyOrNullString())
+            assertThat("Expected allowlist response to contain 0-length body", responseBody, isEmptyOrNullString())
         }
     }
 
     @Test
-    void testWhitelistedHttpRequestNotShortCircuited() {
-        String url = "/whitelistedresource"
+    void testAllowlistedHttpRequestNotShortCircuited() {
+        String url = "/allowlistedresource"
 
-        stubFor(get(urlEqualTo(url)).willReturn(ok().withBody("whitelisted")))
+        stubFor(get(urlEqualTo(url)).willReturn(ok().withBody("allowlisted")))
 
         proxy = new MitmProxyServer()
         proxy.start()
         int proxyPort = proxy.getPort()
 
-        proxy.whitelistRequests(["http://localhost:${mockServerPort}/.*".toString()], 500)
+        proxy.allowlistRequests(["http://localhost:${mockServerPort}/.*".toString()], 500)
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            CloseableHttpResponse response = it.execute(new HttpGet("http://localhost:${mockServerPort}/whitelistedresource"))
-            assertEquals("Did not receive expected response from mock server for whitelisted url", 200, response.getStatusLine().getStatusCode())
+            CloseableHttpResponse response = it.execute(new HttpGet("http://localhost:${mockServerPort}/allowlistedresource"))
+            assertEquals("Did not receive expected response from mock server for allowlisted url", 200, response.getStatusLine().getStatusCode())
 
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
-            assertEquals("Did not receive expected response body from mock server for whitelisted url", "whitelisted", responseBody)
+            assertEquals("Did not receive expected response body from mock server for allowlisted url", "allowlisted", responseBody)
         }
     }
 
     @Test
-    void testWhitelistedHttpsRequestNotShortCircuited() {
-        String url = "/whitelistedresource"
+    void testAllowlistedHttpsRequestNotShortCircuited() {
+        String url = "/allowlistedresource"
 
-        stubFor(get(urlEqualTo(url)).willReturn(ok().withBody("whitelisted")))
+        stubFor(get(urlEqualTo(url)).willReturn(ok().withBody("allowlisted")))
 
         proxy = new MitmProxyServer()
         proxy.setTrustAllServers(true)
         proxy.start()
         int proxyPort = proxy.getPort()
 
-        proxy.whitelistRequests(["https://localhost:${mockServerHttpsPort}/.*".toString()], 500)
+        proxy.allowlistRequests(["https://localhost:${mockServerHttpsPort}/.*".toString()], 500)
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/whitelistedresource"))
-            assertEquals("Did not receive expected response from mock server for whitelisted url", 200, response.getStatusLine().getStatusCode())
+            CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/allowlistedresource"))
+            assertEquals("Did not receive expected response from mock server for allowlisted url", 200, response.getStatusLine().getStatusCode())
 
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
-            assertEquals("Did not receive expected response body from mock server for whitelisted url", "whitelisted", responseBody)
+            assertEquals("Did not receive expected response body from mock server for allowlisted url", "allowlisted", responseBody)
         }
     }
 
     @Test
-    void testCanWhitelistSpecificHttpResource() {
-        String url = "/whitelistedresource"
+    void testCanAllowlistSpecificHttpResource() {
+        String url = "/allowlistedresource"
 
-        stubFor(get(urlEqualTo(url)).willReturn(ok().withBody("whitelisted")))
+        stubFor(get(urlEqualTo(url)).willReturn(ok().withBody("allowlisted")))
 
-        String url2 = "/nonwhitelistedresource"
+        String url2 = "/nonallowlistedresource"
 
         stubFor(get(urlEqualTo(url2)).willReturn(ok().withBody("should never be returned")))
 
@@ -145,30 +145,30 @@ class WhitelistTest extends MockServerTest {
         proxy.start()
         int proxyPort = proxy.getPort()
 
-        proxy.whitelistRequests(["http://localhost:${mockServerPort}/whitelistedresource".toString()], 500)
+        proxy.allowlistRequests(["http://localhost:${mockServerPort}/allowlistedresource".toString()], 500)
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            CloseableHttpResponse nonWhitelistedResponse = it.execute(new HttpGet("http://localhost:${mockServerPort}/nonwhitelistedresource"))
-            assertEquals("Did not receive whitelist status code in response", 500, nonWhitelistedResponse.getStatusLine().getStatusCode())
+            CloseableHttpResponse nonAllowlistedResponse = it.execute(new HttpGet("http://localhost:${mockServerPort}/nonallowlistedresource"))
+            assertEquals("Did not receive allowlist status code in response", 500, nonAllowlistedResponse.getStatusLine().getStatusCode())
 
-            String nonWhitelistedResponseBody = NewProxyServerTestUtil.toStringAndClose(nonWhitelistedResponse.getEntity().getContent())
-            assertThat("Expected whitelist response to contain 0-length body", nonWhitelistedResponseBody, isEmptyOrNullString())
+            String nonAllowlistedResponseBody = NewProxyServerTestUtil.toStringAndClose(nonAllowlistedResponse.getEntity().getContent())
+            assertThat("Expected allowlist response to contain 0-length body", nonAllowlistedResponseBody, isEmptyOrNullString())
 
-            CloseableHttpResponse whitelistedResponse = it.execute(new HttpGet("http://localhost:${mockServerPort}/whitelistedresource"))
-            assertEquals("Did not receive expected response from mock server for whitelisted url", 200, whitelistedResponse.getStatusLine().getStatusCode())
+            CloseableHttpResponse allowlistedResponse = it.execute(new HttpGet("http://localhost:${mockServerPort}/allowlistedresource"))
+            assertEquals("Did not receive expected response from mock server for allowlisted url", 200, allowlistedResponse.getStatusLine().getStatusCode())
 
-            String whitelistedResponseBody = NewProxyServerTestUtil.toStringAndClose(whitelistedResponse.getEntity().getContent())
-            assertEquals("Did not receive expected response body from mock server for whitelisted url", "whitelisted", whitelistedResponseBody)
+            String allowlistedResponseBody = NewProxyServerTestUtil.toStringAndClose(allowlistedResponse.getEntity().getContent())
+            assertEquals("Did not receive expected response body from mock server for allowlisted url", "allowlisted", allowlistedResponseBody)
         }
     }
 
     @Test
-    void testCanWhitelistSpecificHttpsResource() {
-        String url = "/whitelistedresource"
+    void testCanAllowlistSpecificHttpsResource() {
+        String url = "/allowlistedresource"
 
-        stubFor(get(urlEqualTo(url)).willReturn(ok().withBody("whitelisted")))
+        stubFor(get(urlEqualTo(url)).willReturn(ok().withBody("allowlisted")))
 
-        String url2 = "/nonwhitelistedresource"
+        String url2 = "/nonallowlistedresource"
 
         stubFor(get(urlEqualTo(url2)).willReturn(ok().withBody("should never be returned")))
 
@@ -177,20 +177,20 @@ class WhitelistTest extends MockServerTest {
         proxy.start()
         int proxyPort = proxy.getPort()
 
-        proxy.whitelistRequests(["https://localhost:${mockServerHttpsPort}/whitelistedresource".toString()], 500)
+        proxy.allowlistRequests(["https://localhost:${mockServerHttpsPort}/allowlistedresource".toString()], 500)
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            CloseableHttpResponse nonWhitelistedResponse = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/nonwhitelistedresource"))
-            assertEquals("Did not receive whitelist status code in response", 500, nonWhitelistedResponse.getStatusLine().getStatusCode())
+            CloseableHttpResponse nonAllowlistedResponse = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/nonallowlistedresource"))
+            assertEquals("Did not receive allowlist status code in response", 500, nonAllowlistedResponse.getStatusLine().getStatusCode())
 
-            String nonWhitelistedResponseBody = NewProxyServerTestUtil.toStringAndClose(nonWhitelistedResponse.getEntity().getContent())
-            assertThat("Expected whitelist response to contain 0-length body", nonWhitelistedResponseBody, isEmptyOrNullString())
+            String nonAllowlistedResponseBody = NewProxyServerTestUtil.toStringAndClose(nonAllowlistedResponse.getEntity().getContent())
+            assertThat("Expected allowlist response to contain 0-length body", nonAllowlistedResponseBody, isEmptyOrNullString())
 
-            CloseableHttpResponse whitelistedResponse = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/whitelistedresource"))
-            assertEquals("Did not receive expected response from mock server for whitelisted url", 200, whitelistedResponse.getStatusLine().getStatusCode())
+            CloseableHttpResponse allowlistedResponse = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/allowlistedresource"))
+            assertEquals("Did not receive expected response from mock server for allowlisted url", 200, allowlistedResponse.getStatusLine().getStatusCode())
 
-            String whitelistedResponseBody = NewProxyServerTestUtil.toStringAndClose(whitelistedResponse.getEntity().getContent())
-            assertEquals("Did not receive expected response body from mock server for whitelisted url", "whitelisted", whitelistedResponseBody)
+            String allowlistedResponseBody = NewProxyServerTestUtil.toStringAndClose(allowlistedResponse.getEntity().getContent())
+            assertEquals("Did not receive expected response body from mock server for allowlisted url", "allowlisted", allowlistedResponseBody)
         }
     }
 }

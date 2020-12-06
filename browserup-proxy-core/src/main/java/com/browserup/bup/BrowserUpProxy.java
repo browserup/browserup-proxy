@@ -8,7 +8,7 @@ import com.browserup.bup.assertion.model.AssertionResult;
 import com.browserup.bup.filters.RequestFilter;
 import com.browserup.bup.filters.ResponseFilter;
 import com.browserup.bup.mitm.TrustSource;
-import com.browserup.bup.proxy.BlacklistEntry;
+import com.browserup.bup.proxy.BlocklistEntry;
 import com.browserup.bup.proxy.CaptureType;
 import com.browserup.bup.proxy.auth.AuthType;
 import com.browserup.bup.proxy.dns.AdvancedHostResolver;
@@ -406,105 +406,105 @@ public interface BrowserUpProxy {
     void clearRewriteRules();
 
     /**
-     * Adds a URL-matching regular expression to the blacklist. Requests that match a blacklisted URL will return the specified HTTP
-     * statusCode for all HTTP methods. If there are existing patterns on the blacklist, the urlPattern will be evaluated last,
-     * after the URL is checked against all other blacklist entries.
+     * Adds a URL-matching regular expression to the blocklist. Requests that match a blocklisted URL will return the specified HTTP
+     * statusCode for all HTTP methods. If there are existing patterns on the blocklist, the urlPattern will be evaluated last,
+     * after the URL is checked against all other blocklist entries.
      * The urlPattern matches the full URL of the request, including scheme, host, and port, path, and query parameters
-     * for both HTTP and HTTPS requests. For example, to blacklist both HTTP and HTTPS requests to www.google.com,
+     * for both HTTP and HTTPS requests. For example, to blocklist both HTTP and HTTPS requests to www.google.com,
      * use a urlPattern of "https?://www\\.google\\.com/.*".
      *
-     * @param urlPattern URL-matching regular expression to blacklist
+     * @param urlPattern URL-matching regular expression to blocklist
      * @param statusCode HTTP status code to return
      */
-    void blacklistRequests(String urlPattern, int statusCode);
+    void blocklistRequests(String urlPattern, int statusCode);
 
     /**
-     * Adds a URL-matching regular expression to the blacklist. Requests that match a blacklisted URL will return the specified HTTP
+     * Adds a URL-matching regular expression to the blocklist. Requests that match a blocklisted URL will return the specified HTTP
      * statusCode only when the request's HTTP method (GET, POST, PUT, etc.) matches the specified httpMethodPattern regular expression.
-     * If there are existing patterns on the blacklist, the urlPattern will be evaluated last, after the URL is checked against all
-     * other blacklist entries.
-     * See {@link #blacklistRequests(String, int)} for details on the URL the urlPattern will match.
+     * If there are existing patterns on the blocklist, the urlPattern will be evaluated last, after the URL is checked against all
+     * other blocklist entries.
+     * See {@link #blocklistRequests(String, int)} for details on the URL the urlPattern will match.
      *
-     * @param urlPattern URL-matching regular expression to blacklist
+     * @param urlPattern URL-matching regular expression to blocklist
      * @param statusCode HTTP status code to return
      * @param httpMethodPattern regular expression matching a request's HTTP method
      */
-    void blacklistRequests(String urlPattern, int statusCode, String httpMethodPattern);
+    void blocklistRequests(String urlPattern, int statusCode, String httpMethodPattern);
 
     /**
-     * Replaces any existing blacklist with the specified blacklist. URLs will be evaluated against the blacklist in the order
+     * Replaces any existing blocklist with the specified blocklist. URLs will be evaluated against the blocklist in the order
      * specified by the Collection's iterator.
      *
-     * @param blacklist new blacklist entries
+     * @param blocklist new blocklist entries
      */
-    void setBlacklist(Collection<BlacklistEntry> blacklist);
+    void setBlocklist(Collection<BlocklistEntry> blocklist);
 
     /**
-     * Returns all blacklist entries currently in effect. Iterating over the returned Collection is guaranteed to return
-     * blacklist entries in the order in which URLs are actually evaluated against the blacklist.
+     * Returns all blocklist entries currently in effect. Iterating over the returned Collection is guaranteed to return
+     * blocklist entries in the order in which URLs are actually evaluated against the blocklist.
      *
-     * @return blacklist entries, or an empty collection if none exist
+     * @return blocklist entries, or an empty collection if none exist
      */
-    Collection<BlacklistEntry> getBlacklist();
+    Collection<BlocklistEntry> getBlocklist();
 
     /**
-     * Clears any existing blacklist.
+     * Clears any existing blocklist.
      */
-    void clearBlacklist();
+    void clearBlocklist();
 
     /**
-     * Whitelists URLs matching the specified regular expression patterns. Replaces any existing whitelist.
+     * Allowlists URLs matching the specified regular expression patterns. Replaces any existing allowlist.
      * The urlPattern matches the full URL of the request, including scheme, host, and port, path, and query parameters
-     * for both HTTP and HTTPS requests. For example, to whitelist both HTTP and HTTPS requests to www.google.com, use a urlPattern
+     * for both HTTP and HTTPS requests. For example, to allowlist both HTTP and HTTPS requests to www.google.com, use a urlPattern
      * of "https?://www\\.google\\.com/.*".
-     * <b>Note:</b> All HTTP CONNECT requests are automatically whitelisted and cannot be short-circuited using the
-     * whitelist response code.
+     * <b>Note:</b> All HTTP CONNECT requests are automatically allowlisted and cannot be short-circuited using the
+     * allowlist response code.
      *
-     * @param urlPatterns URL-matching regular expressions to whitelist; null or an empty collection will enable an empty whitelist
+     * @param urlPatterns URL-matching regular expressions to allowlist; null or an empty collection will enable an empty allowlist
      * @param statusCode HTTP status code to return to clients when a URL matches a pattern
      */
-    void whitelistRequests(Collection<String> urlPatterns, int statusCode);
+    void allowlistRequests(Collection<String> urlPatterns, int statusCode);
 
     /**
-     * Adds a URL-matching regular expression to an existing whitelist.
+     * Adds a URL-matching regular expression to an existing allowlist.
      *
-     * @param urlPattern URL-matching regular expressions to whitelist
-     * @throws java.lang.IllegalStateException if the whitelist is not enabled
+     * @param urlPattern URL-matching regular expressions to allowlist
+     * @throws java.lang.IllegalStateException if the allowlist is not enabled
      */
-    void addWhitelistPattern(String urlPattern);
+    void addAllowlistPattern(String urlPattern);
 
     /**
-     * Enables the whitelist, but with no matching URLs. All requests will generated the specified HTTP statusCode.
+     * Enables the allowlist, but with no matching URLs. All requests will generated the specified HTTP statusCode.
      *
      * @param statusCode HTTP status code to return to clients on all requests
      */
-    void enableEmptyWhitelist(int statusCode);
+    void enableEmptyAllowlist(int statusCode);
 
     /**
-     * Clears any existing whitelist and disables whitelisting.
+     * Clears any existing allowlist and disables allowlisting.
      */
-    void disableWhitelist();
+    void disableAllowlist();
 
     /**
-     * Returns the URL-matching regular expressions currently in effect. If the whitelist is disabled, this method always returns an empty collection.
-     * If the whitelist is enabled but empty, this method return an empty collection.
+     * Returns the URL-matching regular expressions currently in effect. If the allowlist is disabled, this method always returns an empty collection.
+     * If the allowlist is enabled but empty, this method return an empty collection.
      *
-     * @return whitelist currently in effect, or an empty collection if the whitelist is disabled or empty
+     * @return allowlist currently in effect, or an empty collection if the allowlist is disabled or empty
      */
-    Collection<String> getWhitelistUrls();
+    Collection<String> getAllowlistUrls();
 
     /**
-     * Returns the status code returned for all URLs that do not match the whitelist. If the whitelist is not currently enabled, returns -1.
+     * Returns the status code returned for all URLs that do not match the allowlist. If the allowlist is not currently enabled, returns -1.
      *
-     * @return HTTP status code returned for non-whitelisted URLs, or -1 if the whitelist is disabled.
+     * @return HTTP status code returned for non-allowlisted URLs, or -1 if the allowlist is disabled.
      */
-    int getWhitelistStatusCode();
+    int getAllowlistStatusCode();
 
     /**
-     * Returns true if the whitelist is enabled, otherwise false.
-     * @return is WhitelistEnabled
+     * Returns true if the allowlist is enabled, otherwise false.
+     * @return is AllowlistEnabled
      */
-    boolean isWhitelistEnabled();
+    boolean isAllowlistEnabled();
 
     /**
      * Adds the specified HTTP headers to every request. Replaces any existing additional headers with the specified headers.

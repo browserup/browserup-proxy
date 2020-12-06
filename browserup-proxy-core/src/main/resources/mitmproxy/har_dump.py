@@ -583,7 +583,7 @@ class HarDumpAddOn:
         har['log']['entries'].append(har_entry)
 
     def request(self, flow):
-        if 'WhiteListFiltered' in flow.metadata or 'BlackListFiltered' in flow.metadata:
+        if 'AllowListFiltered' in flow.metadata or 'BlockListFiltered' in flow.metadata:
             return
 
         har_entry = self.get_har_entry(flow)
@@ -644,8 +644,8 @@ class HarDumpAddOn:
 
         ctx.log.debug('Incoming response for request to url: {}'.format(flow.request.url))
 
-        if 'WhiteListFiltered' in flow.metadata or 'BlackListFiltered' in flow.metadata:
-            ctx.log.debug('Black/White list filtered, return nothing.')
+        if 'AllowListFiltered' in flow.metadata or 'BlockListFiltered' in flow.metadata:
+            ctx.log.debug('Block/Allow list filtered, return nothing.')
             return
 
         # -1 indicates that these values do not apply to current request
