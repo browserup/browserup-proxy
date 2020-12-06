@@ -29,7 +29,7 @@ import com.browserup.bup.assertion.supplier.UrlFilteredHarEntriesSupplier;
 import com.browserup.bup.client.ClientUtil;
 import com.browserup.bup.filters.AddHeadersFilter;
 import com.browserup.bup.filters.AutoBasicAuthFilter;
-import com.browserup.bup.filters.BlacklistFilter;
+import com.browserup.bup.filters.BlocklistFilter;
 import com.browserup.bup.filters.BrowserUpHttpFilterChain;
 import com.browserup.bup.filters.HarCaptureFilter;
 import com.browserup.bup.filters.HttpConnectHarCaptureFilter;
@@ -44,17 +44,17 @@ import com.browserup.bup.filters.ResponseFilter;
 import com.browserup.bup.filters.ResponseFilterAdapter;
 import com.browserup.bup.filters.RewriteUrlFilter;
 import com.browserup.bup.filters.UnregisterRequestFilter;
-import com.browserup.bup.filters.WhitelistFilter;
+import com.browserup.bup.filters.AllowlistFilter;
 import com.browserup.bup.mitm.KeyStoreFileCertificateSource;
 import com.browserup.bup.mitm.TrustSource;
 import com.browserup.bup.mitm.keys.ECKeyGenerator;
 import com.browserup.bup.mitm.keys.RSAKeyGenerator;
 import com.browserup.bup.mitm.manager.ImpersonatingMitmManager;
 import com.browserup.bup.proxy.ActivityMonitor;
-import com.browserup.bup.proxy.BlacklistEntry;
+import com.browserup.bup.proxy.BlocklistEntry;
 import com.browserup.bup.proxy.CaptureType;
 import com.browserup.bup.proxy.RewriteRule;
-import com.browserup.bup.proxy.Whitelist;
+import com.browserup.bup.proxy.Allowlist;
 import com.browserup.bup.proxy.auth.AuthType;
 import com.browserup.bup.proxy.dns.AdvancedHostResolver;
 import com.browserup.bup.proxy.dns.DelegatingHostResolver;
@@ -181,7 +181,7 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     /**
      * List of rejected URL patterns
      */
-    private volatile Collection<BlacklistEntry> blacklistEntries = new CopyOnWriteArrayList<>();
+    private volatile Collection<BlocklistEntry> blocklistEntries = new CopyOnWriteArrayList<>();
 
     /**
      * List of URLs to rewrite
@@ -215,9 +215,9 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
      */
     private volatile long writeBandwidthLimitBps;
     /**
-     * List of accepted URL patterns. Unlisted URL patterns will be rejected with the response code contained in the Whitelist.
+     * List of accepted URL patterns. Unlisted URL patterns will be rejected with the response code contained in the Allowlist.
      */
-    private final AtomicReference<Whitelist> whitelist = new AtomicReference<>(Whitelist.WHITELIST_DISABLED);
+    private final AtomicReference<Allowlist> allowlist = new AtomicReference<>(Allowlist.ALLOWLIST_DISABLED);
 
     /**
      * Additional headers that will be sent with every request. The map is declared as a ConcurrentMap to indicate that writes may be performed
@@ -469,15 +469,15 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
         addHttpFilterFactory(new HttpFiltersSourceAdapter() {
             @Override
             public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
-                return new BlacklistFilter(originalRequest, ctx, getBlacklist());
+                return new BlocklistFilter(originalRequest, ctx, getBlocklist());
             }
         });
 
         addHttpFilterFactory(new HttpFiltersSourceAdapter() {
             @Override
             public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
-                Whitelist currentWhitelist = whitelist.get();
-                return new WhitelistFilter(originalRequest, ctx, isWhitelistEnabled(), currentWhitelist.getStatusCode(), currentWhitelist.getPatterns());
+                Allowlist currentAllowlist = allowlist.get();
+                return new AllowlistFilter(originalRequest, ctx, isAllowlistEnabled(), currentAllowlist.getStatusCode(), currentAllowlist.getPatterns());
             }
         });
     }
@@ -872,34 +872,34 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     }
 
     @Override
-    public void blacklistRequests(String pattern, int responseCode) {
-        blacklistEntries.add(new BlacklistEntry(pattern, responseCode));
+    public void blocklistRequests(String pattern, int responseCode) {
+        blocklistEntries.add(new BlocklistEntry(pattern, responseCode));
     }
 
     @Override
-    public void blacklistRequests(String pattern, int responseCode, String method) {
-        blacklistEntries.add(new BlacklistEntry(pattern, responseCode, method));
+    public void blocklistRequests(String pattern, int responseCode, String method) {
+        blocklistEntries.add(new BlocklistEntry(pattern, responseCode, method));
     }
 
     @Override
-    public void setBlacklist(Collection<BlacklistEntry> blacklist) {
-        this.blacklistEntries = new CopyOnWriteArrayList<>(blacklist);
+    public void setBlocklist(Collection<BlocklistEntry> blocklist) {
+        this.blocklistEntries = new CopyOnWriteArrayList<>(blocklist);
     }
 
     @Override
-    public Collection<BlacklistEntry> getBlacklist() {
-        return Collections.unmodifiableCollection(blacklistEntries);
+    public Collection<BlocklistEntry> getBlocklist() {
+        return Collections.unmodifiableCollection(blocklistEntries);
     }
 
     @Override
-    public boolean isWhitelistEnabled() {
-        return whitelist.get().isEnabled();
+    public boolean isAllowlistEnabled() {
+        return allowlist.get().isEnabled();
     }
 
     @Override
-    public Collection<String> getWhitelistUrls() {
+    public Collection<String> getAllowlistUrls() {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
-        whitelist.get().getPatterns().stream()
+        allowlist.get().getPatterns().stream()
                 .map(Pattern::pattern)
                 .forEach(builder::add);
 
@@ -907,71 +907,71 @@ public class BrowserUpProxyServer implements BrowserUpProxy {
     }
 
     @Override
-    public int getWhitelistStatusCode() {
-        return whitelist.get().getStatusCode();
+    public int getAllowlistStatusCode() {
+        return allowlist.get().getStatusCode();
     }
 
     @Override
-    public void clearBlacklist() {
-        blacklistEntries.clear();
+    public void clearBlocklist() {
+        blocklistEntries.clear();
     }
 
     @Override
-    public void whitelistRequests(Collection<String> urlPatterns, int statusCode) {
-        this.whitelist.set(new Whitelist(urlPatterns, statusCode));
+    public void allowlistRequests(Collection<String> urlPatterns, int statusCode) {
+        this.allowlist.set(new Allowlist(urlPatterns, statusCode));
     }
 
     @Override
-    public void addWhitelistPattern(String urlPattern) {
-        // to make sure this method is threadsafe, we need to guarantee that the "snapshot" of the whitelist taken at the beginning
-        // of the method has not been replaced by the time we have constructed a new whitelist at the end of the method
-        boolean whitelistUpdated = false;
-        while (!whitelistUpdated) {
-            Whitelist currentWhitelist = this.whitelist.get();
-            if (!currentWhitelist.isEnabled()) {
-                throw new IllegalStateException("Whitelist is disabled. Cannot add patterns to a disabled whitelist.");
+    public void addAllowlistPattern(String urlPattern) {
+        // to make sure this method is threadsafe, we need to guarantee that the "snapshot" of the allowlist taken at the beginning
+        // of the method has not been replaced by the time we have constructed a new allowlist at the end of the method
+        boolean allowlistUpdated = false;
+        while (!allowlistUpdated) {
+            Allowlist currentAllowlist = this.allowlist.get();
+            if (!currentAllowlist.isEnabled()) {
+                throw new IllegalStateException("Allowlist is disabled. Cannot add patterns to a disabled allowlist.");
             }
 
-            // retrieve the response code and list of patterns from the current whitelist, the construct a new list of patterns that contains
-            // all of the old whitelist's patterns + this new pattern
-            int statusCode = currentWhitelist.getStatusCode();
-            List<String> newPatterns = currentWhitelist.getPatterns().stream()
+            // retrieve the response code and list of patterns from the current allowlist, the construct a new list of patterns that contains
+            // all of the old allowlist's patterns + this new pattern
+            int statusCode = currentAllowlist.getStatusCode();
+            List<String> newPatterns = currentAllowlist.getPatterns().stream()
                     .map(Pattern::pattern)
-                    .collect(toCollection(() -> new ArrayList<>(currentWhitelist.getPatterns().size() + 1)));
+                    .collect(toCollection(() -> new ArrayList<>(currentAllowlist.getPatterns().size() + 1)));
             newPatterns.add(urlPattern);
 
-            // create a new (immutable) Whitelist object with the new pattern list and status code
-            Whitelist newWhitelist = new Whitelist(newPatterns, statusCode);
+            // create a new (immutable) Allowlist object with the new pattern list and status code
+            Allowlist newAllowlist = new Allowlist(newPatterns, statusCode);
 
-            // replace the current whitelist with the new whitelist only if the current whitelist has not changed since we started
-            whitelistUpdated = this.whitelist.compareAndSet(currentWhitelist, newWhitelist);
+            // replace the current allowlist with the new allowlist only if the current allowlist has not changed since we started
+            allowlistUpdated = this.allowlist.compareAndSet(currentAllowlist, newAllowlist);
         }
     }
 
     /**
-     * Whitelist the specified request patterns, returning the specified responseCode for non-whitelisted
+     * Allowlist the specified request patterns, returning the specified responseCode for non-allowlisted
      * requests.
      *
-     * @param patterns     regular expression strings matching URL patterns to whitelist. if empty or null,
-     *                     the whitelist will be enabled but will not match any URLs.
-     * @param responseCode the HTTP response code to return for non-whitelisted requests
+     * @param patterns     regular expression strings matching URL patterns to allowlist. if empty or null,
+     *                     the allowlist will be enabled but will not match any URLs.
+     * @param responseCode the HTTP response code to return for non-allowlisted requests
      */
-    public void whitelistRequests(String[] patterns, int responseCode) {
+    public void allowlistRequests(String[] patterns, int responseCode) {
         if (patterns == null || patterns.length == 0) {
-            this.enableEmptyWhitelist(responseCode);
+            this.enableEmptyAllowlist(responseCode);
         } else {
-            this.whitelistRequests(Arrays.asList(patterns), responseCode);
+            this.allowlistRequests(Arrays.asList(patterns), responseCode);
         }
     }
 
     @Override
-    public void enableEmptyWhitelist(int statusCode) {
-        whitelist.set(new Whitelist(statusCode));
+    public void enableEmptyAllowlist(int statusCode) {
+        allowlist.set(new Allowlist(statusCode));
     }
 
     @Override
-    public void disableWhitelist() {
-        whitelist.set(Whitelist.WHITELIST_DISABLED);
+    public void disableAllowlist() {
+        allowlist.set(Allowlist.ALLOWLIST_DISABLED);
     }
 
     @Override

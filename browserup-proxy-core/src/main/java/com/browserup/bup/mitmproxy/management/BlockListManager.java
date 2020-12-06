@@ -1,7 +1,7 @@
 package com.browserup.bup.mitmproxy.management;
 
 import com.browserup.bup.mitmproxy.MitmProxyProcessManager;
-import com.browserup.bup.proxy.BlacklistEntry;
+import com.browserup.bup.proxy.BlocklistEntry;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.MediaType;
@@ -16,27 +16,27 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import static java.lang.String.valueOf;
 import static org.apache.commons.lang3.tuple.Pair.of;
 
-public class BlackListManager {
+public class BlockListManager {
     private final AddonsManagerClient addonsManagerClient;
     private final MitmProxyProcessManager mitmProxyManager;
 
-    private volatile Collection<BlacklistEntry> blacklistEntries = new CopyOnWriteArrayList<>();
+    private volatile Collection<BlocklistEntry> blocklistEntries = new CopyOnWriteArrayList<>();
 
 
-    public BlackListManager(AddonsManagerClient addonsManagerClient, MitmProxyProcessManager mitmProxyManager) {
+    public BlockListManager(AddonsManagerClient addonsManagerClient, MitmProxyProcessManager mitmProxyManager) {
         this.addonsManagerClient = addonsManagerClient;
         this.mitmProxyManager = mitmProxyManager;
     }
 
-    public void blacklistRequests(String urlPattern, int statusCode) {
+    public void blocklistRequests(String urlPattern, int statusCode) {
         if (!mitmProxyManager.isRunning()) return;
 
-        blacklistEntries.add(new BlacklistEntry(urlPattern, statusCode));
+        blocklistEntries.add(new BlocklistEntry(urlPattern, statusCode));
 
         addonsManagerClient.
                 getRequestToAddonsManager(
-                        "blacklist",
-                        "blacklist_requests",
+                        "blocklist",
+                        "blocklist_requests",
                         new ArrayList<Pair<String, String>>() {{
                             add(of("urlPattern", valueOf(urlPattern)));
                             add(of("statusCode", valueOf(statusCode)));
@@ -44,15 +44,15 @@ public class BlackListManager {
                         Void.class);
     }
 
-    public void blacklistRequests(String urlPattern, int statusCode, String httpMethodPattern) {
+    public void blocklistRequests(String urlPattern, int statusCode, String httpMethodPattern) {
         if (!mitmProxyManager.isRunning()) return;
 
-        blacklistEntries.add(new BlacklistEntry(urlPattern, statusCode, httpMethodPattern));
+        blocklistEntries.add(new BlocklistEntry(urlPattern, statusCode, httpMethodPattern));
 
         addonsManagerClient.
                 getRequestToAddonsManager(
-                        "blacklist",
-                        "blacklist_requests",
+                        "blocklist",
+                        "blocklist_requests",
                         new ArrayList<Pair<String, String>>() {{
                             add(of("urlPattern", valueOf(urlPattern)));
                             add(of("statusCode", valueOf(statusCode)));
@@ -61,36 +61,36 @@ public class BlackListManager {
                         Void.class);
     }
 
-    public void setBlacklist(Collection<BlacklistEntry> blacklist) {
+    public void setBlocklist(Collection<BlocklistEntry> blocklist) {
         if (!mitmProxyManager.isRunning()) return;
 
-        this.blacklistEntries = new CopyOnWriteArrayList<>(blacklist);
+        this.blocklistEntries = new CopyOnWriteArrayList<>(blocklist);
 
-        String serializedBlackList;
+        String serializedBlockList;
         try {
-            serializedBlackList = new ObjectMapper().writeValueAsString(blacklist);
+            serializedBlockList = new ObjectMapper().writeValueAsString(blocklist);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Couldn't serialize black list", e);
+            throw new RuntimeException("Couldn't serialize block list", e);
         }
         addonsManagerClient.
                 putRequestToAddonsManager(
-                        "blacklist",
-                        "set_black_list",
+                        "blocklist",
+                        "set_block_list",
                         Collections.emptyList(),
-                        RequestBody.create(serializedBlackList, MediaType.parse("application/json; charset=utf-8")),
+                        RequestBody.create(serializedBlockList, MediaType.parse("application/json; charset=utf-8")),
                         Void.class);
     }
 
-    public Collection<BlacklistEntry> getBlacklist() {
-        return Collections.unmodifiableCollection(blacklistEntries);
+    public Collection<BlocklistEntry> getBlocklist() {
+        return Collections.unmodifiableCollection(blocklistEntries);
     }
 
-    public void clearBlackList() {
+    public void clearBlockList() {
         if (!mitmProxyManager.isRunning()) return;
 
-        blacklistEntries.clear();
+        blocklistEntries.clear();
 
-        this.setBlacklist(Collections.emptyList());
+        this.setBlocklist(Collections.emptyList());
     }
 
 }

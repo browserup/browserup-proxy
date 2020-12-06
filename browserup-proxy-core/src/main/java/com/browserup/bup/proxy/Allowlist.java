@@ -14,58 +14,58 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A URL whitelist. This object is immutable and the list of matching patterns and the HTTP status code is unmodifiable
- * after creation. Enabling, disabling, or modifying the whitelist can be safely and easily accomplished by updating the
- * whitelist reference to a new whitelist.
+ * A URL allowlist. This object is immutable and the list of matching patterns and the HTTP status code is unmodifiable
+ * after creation. Enabling, disabling, or modifying the allowlist can be safely and easily accomplished by updating the
+ * allowlist reference to a new allowlist.
  */
-public class Whitelist {
+public class Allowlist {
     private final List<Pattern> patterns;
     private final int statusCode;
     private final boolean enabled;
 
     /**
-     * A disabled Whitelist.
+     * A disabled Allowlist.
      */
-    public static final Whitelist WHITELIST_DISABLED = new Whitelist();
+    public static final Allowlist ALLOWLIST_DISABLED = new Allowlist();
 
     /**
-     * Creates an empty, disabled Whitelist.
+     * Creates an empty, disabled Allowlist.
      */
-    public Whitelist() {
+    public Allowlist() {
         this.patterns = Collections.emptyList();
         this.statusCode = -1;
         this.enabled = false;
     }
 
     /**
-     * Creates an empty, enabled whitelist with the specified response code.
+     * Creates an empty, enabled allowlist with the specified response code.
      *
-     * @param statusCode the response code that the (enabled) Whitelist will return for all URLs.
+     * @param statusCode the response code that the (enabled) Allowlist will return for all URLs.
      */
-    public Whitelist(int statusCode) {
+    public Allowlist(int statusCode) {
         this.patterns = Collections.emptyList();
         this.statusCode = statusCode;
         this.enabled = true;
     }
 
     /**
-     * @deprecated use {@link #Whitelist(java.util.Collection, int)}
+     * @deprecated use {@link #Allowlist(java.util.Collection, int)}
      * @param patterns String[] patterns
      * @param statusCode int statusCode
      */
     @Deprecated
-    public Whitelist(String[] patterns, int statusCode) {
+    public Allowlist(String[] patterns, int statusCode) {
         this(patterns == null ? null : Arrays.asList(patterns), statusCode);
     }
 
     /**
-     * Creates a whitelist for the specified patterns, returning the given statusCode when a URL does not match one of the patterns.
-     * A null or empty collection will result in an empty whitelist.
+     * Creates a allowlist for the specified patterns, returning the given statusCode when a URL does not match one of the patterns.
+     * A null or empty collection will result in an empty allowlist.
      *
-     * @param patterns URL-matching regular expression patterns to whitelist
-     * @param statusCode the HTTP status code to return when a request URL matches a whitelist pattern
+     * @param patterns URL-matching regular expression patterns to allowlist
+     * @param statusCode the HTTP status code to return when a request URL matches a allowlist pattern
      */
-    public Whitelist(Collection<String> patterns, int statusCode) {
+    public Allowlist(Collection<String> patterns, int statusCode) {
         if (patterns == null || patterns.isEmpty()) {
             this.patterns = Collections.emptyList();
         } else {
@@ -81,21 +81,21 @@ public class Whitelist {
     }
 
     /**
-     * @return true if this whitelist is enabled, otherwise false
+     * @return true if this allowlist is enabled, otherwise false
      */
     public boolean isEnabled() {
         return enabled;
     }
 
     /**
-     * @return regular expression patterns describing the URLs that should be whitelisted, or an empty collection if the whitelist is disabled
+     * @return regular expression patterns describing the URLs that should be allowlisted, or an empty collection if the allowlist is disabled
      */
     public Collection<Pattern> getPatterns() {
         return this.patterns;
     }
 
     /**
-     * @return HTTP status code returned by the whitelist, or -1 if the whitelist is disabled
+     * @return HTTP status code returned by the allowlist, or -1 if the allowlist is disabled
      */
     public int getStatusCode() {
         return statusCode;
@@ -111,11 +111,11 @@ public class Whitelist {
     }
 
     /**
-     * Returns true if the specified URL matches a whitelisted URL regular expression. If the whitelist is disabled, this
+     * Returns true if the specified URL matches a allowlisted URL regular expression. If the allowlist is disabled, this
      * method always returns false.
      *
-     * @param url URL to match against the whitelist
-     * @return true if the whitelist is enabled and the URL matched an entry in the whitelist, otherwise false
+     * @param url URL to match against the allowlist
+     * @return true if the allowlist is enabled and the URL matched an entry in the allowlist, otherwise false
      */
     public boolean matches(String url) {
         if (!enabled) {

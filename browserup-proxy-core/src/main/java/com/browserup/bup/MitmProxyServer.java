@@ -21,7 +21,7 @@ import com.browserup.bup.mitmproxy.MitmProxyProcessManager.MitmProxyLoggingLevel
 import com.browserup.bup.mitmproxy.NetworkUtils;
 import com.browserup.bup.mitmproxy.addons.AbstractAddon;
 import com.browserup.bup.mitmproxy.management.HarCaptureManager;
-import com.browserup.bup.proxy.BlacklistEntry;
+import com.browserup.bup.proxy.BlocklistEntry;
 import com.browserup.bup.proxy.CaptureType;
 import com.browserup.bup.proxy.RewriteRule;
 import com.browserup.bup.proxy.auth.AuthType;
@@ -317,63 +317,63 @@ public class MitmProxyServer implements BrowserUpProxy {
   }
 
   @Override
-  public void blacklistRequests(String urlPattern, int statusCode) {
-    this.mitmProxyManager.getBlackListManager().blacklistRequests(urlPattern, statusCode);
+  public void blocklistRequests(String urlPattern, int statusCode) {
+    this.mitmProxyManager.getBlockListManager().blocklistRequests(urlPattern, statusCode);
   }
 
   @Override
-  public void blacklistRequests(String urlPattern, int statusCode, String httpMethodPattern) {
-    this.mitmProxyManager.getBlackListManager().blacklistRequests(urlPattern, statusCode, httpMethodPattern);
+  public void blocklistRequests(String urlPattern, int statusCode, String httpMethodPattern) {
+    this.mitmProxyManager.getBlockListManager().blocklistRequests(urlPattern, statusCode, httpMethodPattern);
   }
 
   @Override
-  public void setBlacklist(Collection<BlacklistEntry> blacklist) {
-    this.mitmProxyManager.getBlackListManager().setBlacklist(blacklist);
+  public void setBlocklist(Collection<BlocklistEntry> blocklist) {
+    this.mitmProxyManager.getBlockListManager().setBlocklist(blocklist);
   }
 
   @Override
-  public Collection<BlacklistEntry> getBlacklist() {
-    return this.mitmProxyManager.getBlackListManager().getBlacklist();
+  public Collection<BlocklistEntry> getBlocklist() {
+    return this.mitmProxyManager.getBlockListManager().getBlocklist();
   }
 
   @Override
-  public void clearBlacklist() {
-    this.mitmProxyManager.getBlackListManager().clearBlackList();
+  public void clearBlocklist() {
+    this.mitmProxyManager.getBlockListManager().clearBlockList();
   }
 
   @Override
-  public void whitelistRequests(Collection<String> urlPatterns, int statusCode) {
-    this.mitmProxyManager.getWhiteListManager().whitelistRequests(urlPatterns, statusCode);
+  public void allowlistRequests(Collection<String> urlPatterns, int statusCode) {
+    this.mitmProxyManager.getAllowListManager().allowlistRequests(urlPatterns, statusCode);
   }
 
   @Override
-  public void addWhitelistPattern(String urlPattern) {
-    this.mitmProxyManager.getWhiteListManager().addWhitelistPattern(urlPattern);
+  public void addAllowlistPattern(String urlPattern) {
+    this.mitmProxyManager.getAllowListManager().addAllowlistPattern(urlPattern);
   }
 
   @Override
-  public void enableEmptyWhitelist(int statusCode) {
-    this.mitmProxyManager.getWhiteListManager().enableEmptyWhitelist(statusCode);
+  public void enableEmptyAllowlist(int statusCode) {
+    this.mitmProxyManager.getAllowListManager().enableEmptyAllowlist(statusCode);
   }
 
   @Override
-  public void disableWhitelist() {
-    this.mitmProxyManager.getWhiteListManager().disableWhitelist();
+  public void disableAllowlist() {
+    this.mitmProxyManager.getAllowListManager().disableAllowlist();
   }
 
   @Override
-  public Collection<String> getWhitelistUrls() {
-    return mitmProxyManager.getWhiteListManager().getWhitelistUrls();
+  public Collection<String> getAllowlistUrls() {
+    return mitmProxyManager.getAllowListManager().getAllowlistUrls();
   }
 
   @Override
-  public int getWhitelistStatusCode() {
-    return mitmProxyManager.getWhiteListManager().getWhitelistStatusCode();
+  public int getAllowlistStatusCode() {
+    return mitmProxyManager.getAllowListManager().getAllowlistStatusCode();
   }
 
   @Override
-  public boolean isWhitelistEnabled() {
-    return mitmProxyManager.getWhiteListManager().isWhitelistEnabled();
+  public boolean isAllowlistEnabled() {
+    return mitmProxyManager.getAllowListManager().isAllowlistEnabled();
   }
 
   @Override

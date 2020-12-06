@@ -5,7 +5,7 @@
 package com.browserup.bup.mitmproxy
 
 import com.browserup.bup.MitmProxyServer
-import com.browserup.bup.proxy.BlacklistEntry
+import com.browserup.bup.proxy.BlocklistEntry
 import com.browserup.bup.proxy.test.util.MockServerTest
 import com.browserup.bup.proxy.test.util.NewProxyServerTestUtil
 import org.apache.http.client.methods.CloseableHttpResponse
@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertThat
 
-class BlacklistTest extends MockServerTest {
+class BlocklistTest extends MockServerTest {
     MitmProxyServer proxy
 
     @After
@@ -30,64 +30,64 @@ class BlacklistTest extends MockServerTest {
     }
 
     @Test
-    void testBlacklistedHttpRequestReturnsBlacklistStatusCodeUsingSetBlackList() {
+    void testBlocklistedHttpRequestReturnsBlocklistStatusCodeUsingSetBlockList() {
         proxy = new MitmProxyServer()
         proxy.start()
         int proxyPort = proxy.getPort()
 
-        proxy.setBlacklist([new BlacklistEntry("http://www\\.blacklisted\\.domain/.*", 405)])
+        proxy.setBlocklist([new BlocklistEntry("http://www\\.blocklisted\\.domain/.*", 405)])
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            CloseableHttpResponse response = it.execute(new HttpGet("http://www.blacklisted.domain/someresource"))
-            assertEquals("Did not receive blacklisted status code in response", 405, response.getStatusLine().getStatusCode())
+            CloseableHttpResponse response = it.execute(new HttpGet("http://www.blocklisted.domain/someresource"))
+            assertEquals("Did not receive blocklisted status code in response", 405, response.getStatusLine().getStatusCode())
 
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
-            assertThat("Expected blacklisted response to contain 0-length body", responseBody, isEmptyOrNullString())
+            assertThat("Expected blocklisted response to contain 0-length body", responseBody, isEmptyOrNullString())
         }
     }
 
     @Test
-    void testBlacklistedHttpRequestNotRecordedToHar() {
+    void testBlocklistedHttpRequestNotRecordedToHar() {
         proxy = new MitmProxyServer()
         proxy.start()
         int proxyPort = proxy.getPort()
 
-        proxy.blacklistRequests("http://www\\.blacklisted\\.domain/.*", 405)
+        proxy.blocklistRequests("http://www\\.blocklisted\\.domain/.*", 405)
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            CloseableHttpResponse response = it.execute(new HttpGet("http://www.blacklisted.domain/someresource"))
-            assertEquals("Did not receive blacklisted status code in response", 405, response.getStatusLine().getStatusCode())
+            CloseableHttpResponse response = it.execute(new HttpGet("http://www.blocklisted.domain/someresource"))
+            assertEquals("Did not receive blocklisted status code in response", 405, response.getStatusLine().getStatusCode())
 
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
-            assertThat("Expected blacklisted response to contain 0-length body", responseBody, isEmptyOrNullString())
+            assertThat("Expected blocklisted response to contain 0-length body", responseBody, isEmptyOrNullString())
         }
 
         def har = proxy.getHar()
 
-        assertFalse('Expected not to find blacklisted requests in har entries',
-                har.log.entries.any { it.request.url.contains('blacklisted')} )
+        assertFalse('Expected not to find blocklisted requests in har entries',
+                har.log.entries.any { it.request.url.contains('blocklisted')} )
     }
 
     @Test
-    void testBlacklistedHttpRequestReturnsBlacklistStatusCode() {
+    void testBlocklistedHttpRequestReturnsBlocklistStatusCode() {
         proxy = new MitmProxyServer()
         proxy.start()
         int proxyPort = proxy.getPort()
 
-        proxy.blacklistRequests("http://www\\.blacklisted\\.domain/.*", 405)
+        proxy.blocklistRequests("http://www\\.blocklisted\\.domain/.*", 405)
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            CloseableHttpResponse response = it.execute(new HttpGet("http://www.blacklisted.domain/someresource"))
-            assertEquals("Did not receive blacklisted status code in response", 405, response.getStatusLine().getStatusCode())
+            CloseableHttpResponse response = it.execute(new HttpGet("http://www.blocklisted.domain/someresource"))
+            assertEquals("Did not receive blocklisted status code in response", 405, response.getStatusLine().getStatusCode())
 
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
-            assertThat("Expected blacklisted response to contain 0-length body", responseBody, isEmptyOrNullString())
+            assertThat("Expected blocklisted response to contain 0-length body", responseBody, isEmptyOrNullString())
         }
     }
 
     @Test
-    void testBlacklistedHttpsRequestReturnsBlacklistStatusCode() {
-        // need to set up a mock server to handle the CONNECT, since that is not blacklisted
+    void testBlocklistedHttpsRequestReturnsBlocklistStatusCode() {
+        // need to set up a mock server to handle the CONNECT, since that is not blocklisted
         def stubUrl = "/thisrequestshouldnotoccur"
         stubFor(get(urlEqualTo(stubUrl)).willReturn(aResponse().withStatus(500).withBody("this URL should never be called")))
 
@@ -96,79 +96,79 @@ class BlacklistTest extends MockServerTest {
         proxy.start()
         int proxyPort = proxy.getPort()
 
-        proxy.blacklistRequests("https://localhost:${mockServerHttpsPort}/.*", 405)
+        proxy.blocklistRequests("https://localhost:${mockServerHttpsPort}/.*", 405)
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
             CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/thisrequestshouldnotoccur"))
-            assertEquals("Did not receive blacklisted status code in response", 405, response.getStatusLine().getStatusCode())
+            assertEquals("Did not receive blocklisted status code in response", 405, response.getStatusLine().getStatusCode())
 
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())
-            assertThat("Expected blacklisted response to contain 0-length body", responseBody, isEmptyOrNullString())
+            assertThat("Expected blocklisted response to contain 0-length body", responseBody, isEmptyOrNullString())
         }
     }
 
     @Test
-    void testCanBlacklistSingleHttpResource() {
-        def stubUrl1 = "/blacklistedresource"
+    void testCanBlocklistSingleHttpResource() {
+        def stubUrl1 = "/blocklistedresource"
         stubFor(get(urlEqualTo(stubUrl1)).willReturn(aResponse().withStatus(500).withBody("this URL should never be called")))
 
-        def stubUrl2 = "/nonblacklistedresource"
-        stubFor(get(urlEqualTo(stubUrl2)).willReturn(ok().withBody("not blacklisted")))
+        def stubUrl2 = "/nonblocklistedresource"
+        stubFor(get(urlEqualTo(stubUrl2)).willReturn(ok().withBody("not blocklisted")))
 
         proxy = new MitmProxyServer()
         proxy.start()
         int proxyPort = proxy.getPort()
 
-        proxy.blacklistRequests("http://localhost:${mockServerPort}/blacklistedresource", 405)
+        proxy.blocklistRequests("http://localhost:${mockServerPort}/blocklistedresource", 405)
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            CloseableHttpResponse nonBlacklistedResourceResponse = it.execute(new HttpGet("http://localhost:${mockServerPort}/nonblacklistedresource"))
-            assertEquals("Did not receive blacklisted status code in response", 200, nonBlacklistedResourceResponse.getStatusLine().getStatusCode())
+            CloseableHttpResponse nonBlocklistedResourceResponse = it.execute(new HttpGet("http://localhost:${mockServerPort}/nonblocklistedresource"))
+            assertEquals("Did not receive blocklisted status code in response", 200, nonBlocklistedResourceResponse.getStatusLine().getStatusCode())
 
-            String nonBlacklistedResponseBody = NewProxyServerTestUtil.toStringAndClose(nonBlacklistedResourceResponse.getEntity().getContent())
-            assertEquals("Did not receive expected response from mock server", "not blacklisted", nonBlacklistedResponseBody)
+            String nonBlocklistedResponseBody = NewProxyServerTestUtil.toStringAndClose(nonBlocklistedResourceResponse.getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "not blocklisted", nonBlocklistedResponseBody)
 
-            CloseableHttpResponse blacklistedResourceResponse = it.execute(new HttpGet("http://localhost:${mockServerPort}/blacklistedresource"))
-            assertEquals("Did not receive blacklisted status code in response", 405, blacklistedResourceResponse.getStatusLine().getStatusCode())
+            CloseableHttpResponse blocklistedResourceResponse = it.execute(new HttpGet("http://localhost:${mockServerPort}/blocklistedresource"))
+            assertEquals("Did not receive blocklisted status code in response", 405, blocklistedResourceResponse.getStatusLine().getStatusCode())
 
-            String blacklistedResponseBody = NewProxyServerTestUtil.toStringAndClose(blacklistedResourceResponse.getEntity().getContent())
-            assertThat("Expected blacklisted response to contain 0-length body", blacklistedResponseBody, isEmptyOrNullString())
+            String blocklistedResponseBody = NewProxyServerTestUtil.toStringAndClose(blocklistedResourceResponse.getEntity().getContent())
+            assertThat("Expected blocklisted response to contain 0-length body", blocklistedResponseBody, isEmptyOrNullString())
         }
     }
 
     @Test
-    void testCanBlacklistSingleHttpsResource() {
-        def stubUrl1 = "/blacklistedresource"
+    void testCanBlocklistSingleHttpsResource() {
+        def stubUrl1 = "/blocklistedresource"
         stubFor(get(urlEqualTo(stubUrl1)).willReturn(aResponse().withStatus(500).withBody("this URL should never be called")))
 
-        def stubUrl2 = "/nonblacklistedresource"
-        stubFor(get(urlEqualTo(stubUrl2)).willReturn(ok().withBody("not blacklisted")))
+        def stubUrl2 = "/nonblocklistedresource"
+        stubFor(get(urlEqualTo(stubUrl2)).willReturn(ok().withBody("not blocklisted")))
 
         proxy = new MitmProxyServer()
         proxy.setTrustAllServers(true)
         proxy.start()
         int proxyPort = proxy.getPort()
 
-        proxy.blacklistRequests("https://localhost:${mockServerHttpsPort}/blacklistedresource", 405)
+        proxy.blocklistRequests("https://localhost:${mockServerHttpsPort}/blocklistedresource", 405)
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            CloseableHttpResponse nonBlacklistedResourceResponse = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/nonblacklistedresource"))
-            assertEquals("Did not receive blacklisted status code in response", 200, nonBlacklistedResourceResponse.getStatusLine().getStatusCode())
+            CloseableHttpResponse nonBlocklistedResourceResponse = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/nonblocklistedresource"))
+            assertEquals("Did not receive blocklisted status code in response", 200, nonBlocklistedResourceResponse.getStatusLine().getStatusCode())
 
-            String nonBlacklistedResponseBody = NewProxyServerTestUtil.toStringAndClose(nonBlacklistedResourceResponse.getEntity().getContent())
-            assertEquals("Did not receive expected response from mock server", "not blacklisted", nonBlacklistedResponseBody)
+            String nonBlocklistedResponseBody = NewProxyServerTestUtil.toStringAndClose(nonBlocklistedResourceResponse.getEntity().getContent())
+            assertEquals("Did not receive expected response from mock server", "not blocklisted", nonBlocklistedResponseBody)
 
-            CloseableHttpResponse blacklistedResourceResponse = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/blacklistedresource"))
-            assertEquals("Did not receive blacklisted status code in response", 405, blacklistedResourceResponse.getStatusLine().getStatusCode())
+            CloseableHttpResponse blocklistedResourceResponse = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/blocklistedresource"))
+            assertEquals("Did not receive blocklisted status code in response", 405, blocklistedResourceResponse.getStatusLine().getStatusCode())
 
-            String blacklistedResponseBody = NewProxyServerTestUtil.toStringAndClose(blacklistedResourceResponse.getEntity().getContent())
-            assertThat("Expected blacklisted response to contain 0-length body", blacklistedResponseBody, isEmptyOrNullString())
+            String blocklistedResponseBody = NewProxyServerTestUtil.toStringAndClose(blocklistedResourceResponse.getEntity().getContent())
+            assertThat("Expected blocklisted response to contain 0-length body", blocklistedResponseBody, isEmptyOrNullString())
         }
     }
 
     @Test
-    void testCanBlacklistConnectExplicitly() {
-        def stubUrl1 = "/blacklistconnect"
+    void testCanBlocklistConnectExplicitly() {
+        def stubUrl1 = "/blocklistconnect"
         stubFor(get(urlEqualTo(stubUrl1)).willReturn(aResponse().withStatus(500).withBody("this URL should never be called")))
 
         proxy = new MitmProxyServer()
@@ -176,20 +176,20 @@ class BlacklistTest extends MockServerTest {
         int proxyPort = proxy.getPort()
 
         // CONNECT requests don't contain the path to the resource, only the server and port
-        proxy.blacklistRequests("https://localhost:${mockServerHttpsPort}", 405, "CONNECT")
+        proxy.blocklistRequests("https://localhost:${mockServerHttpsPort}", 405, "CONNECT")
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            CloseableHttpResponse blacklistedResourceResponse = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/blacklistconnect"))
-            assertEquals("Did not receive blacklisted status code in response", 405, blacklistedResourceResponse.getStatusLine().getStatusCode())
+            CloseableHttpResponse blocklistedResourceResponse = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/blocklistconnect"))
+            assertEquals("Did not receive blocklisted status code in response", 405, blocklistedResourceResponse.getStatusLine().getStatusCode())
 
-            String blacklistedResponseBody = NewProxyServerTestUtil.toStringAndClose(blacklistedResourceResponse.getEntity().getContent())
-            assertThat("Expected blacklisted response to contain 0-length body", blacklistedResponseBody, isEmptyOrNullString())
+            String blocklistedResponseBody = NewProxyServerTestUtil.toStringAndClose(blocklistedResourceResponse.getEntity().getContent())
+            assertThat("Expected blocklisted response to contain 0-length body", blocklistedResponseBody, isEmptyOrNullString())
         }
     }
 
     @Test
-    void testBlacklistDoesNotApplyToCONNECT() {
-        def stubUrl = "/connectNotBlacklisted"
+    void testBlocklistDoesNotApplyToCONNECT() {
+        def stubUrl = "/connectNotBlocklisted"
         stubFor(get(urlEqualTo(stubUrl)).willReturn(ok().withBody("success")))
 
         proxy = new MitmProxyServer()
@@ -197,11 +197,11 @@ class BlacklistTest extends MockServerTest {
         proxy.start()
         int proxyPort = proxy.getPort()
 
-        // HTTP CONNECTs should not be blacklisted unless the method is explicitly specified
-        proxy.blacklistRequests("https://localhost:${mockServerHttpsPort}", 405)
+        // HTTP CONNECTs should not be blocklisted unless the method is explicitly specified
+        proxy.blocklistRequests("https://localhost:${mockServerHttpsPort}", 405)
 
         NewProxyServerTestUtil.getNewHttpClient(proxyPort).withCloseable {
-            CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/connectNotBlacklisted"))
+            CloseableHttpResponse response = it.execute(new HttpGet("https://localhost:${mockServerHttpsPort}/connectNotBlocklisted"))
             assertEquals("Expected to receive response from mock server after successful CONNECT", 200, response.getStatusLine().getStatusCode())
 
             String responseBody = NewProxyServerTestUtil.toStringAndClose(response.getEntity().getContent())

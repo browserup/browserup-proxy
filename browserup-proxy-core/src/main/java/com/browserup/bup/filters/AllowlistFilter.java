@@ -20,30 +20,30 @@ import java.util.regex.Pattern;
 import static java.util.Collections.*;
 
 /**
- * Checks this request against the whitelist, and returns the modified response if the request is not in the whitelist. The filter does not
- * make a defensive copy of the whitelist URLs, so there is no guarantee that the whitelist URLs at the time of construction will contain the
+ * Checks this request against the allowlist, and returns the modified response if the request is not in the allowlist. The filter does not
+ * make a defensive copy of the allowlist URLs, so there is no guarantee that the allowlist URLs at the time of construction will contain the
  * same values when the filter is actually invoked, if the URL collection is modified concurrently.
  */
-public class WhitelistFilter extends HttpsAwareFiltersAdapter {
-    private final boolean whitelistEnabled;
-    private final int whitelistResponseCode;
-    private final Collection<Pattern> whitelistUrls;
+public class AllowlistFilter extends HttpsAwareFiltersAdapter {
+    private final boolean allowlistEnabled;
+    private final int allowlistResponseCode;
+    private final Collection<Pattern> allowlistUrls;
 
-    public WhitelistFilter(HttpRequest originalRequest,
+    public AllowlistFilter(HttpRequest originalRequest,
                            ChannelHandlerContext ctx,
-                           boolean whitelistEnabled,
-                           int whitelistResponseCode,
-                           Collection<Pattern> whitelistUrls) {
+                           boolean allowlistEnabled,
+                           int allowlistResponseCode,
+                           Collection<Pattern> allowlistUrls) {
         super(originalRequest, ctx);
 
-        this.whitelistEnabled = whitelistEnabled;
-        this.whitelistResponseCode = whitelistResponseCode;
-        this.whitelistUrls = whitelistUrls != null ? whitelistUrls : emptyList();
+        this.allowlistEnabled = allowlistEnabled;
+        this.allowlistResponseCode = allowlistResponseCode;
+        this.allowlistUrls = allowlistUrls != null ? allowlistUrls : emptyList();
     }
 
     @Override
     public HttpResponse clientToProxyRequest(HttpObject httpObject) {
-        if (!whitelistEnabled) {
+        if (!allowlistEnabled) {
             return null;
         }
 
@@ -55,18 +55,18 @@ public class WhitelistFilter extends HttpsAwareFiltersAdapter {
                 return null;
             }
 
-            boolean urlWhitelisted;
+            boolean urlAllowlisted;
 
             String url = getOriginalUrl();
 
-            urlWhitelisted = whitelistUrls.stream().anyMatch(pattern -> pattern.matcher(url).matches());
+            urlAllowlisted = allowlistUrls.stream().anyMatch(pattern -> pattern.matcher(url).matches());
 
-            if (!urlWhitelisted) {
+            if (!urlAllowlisted) {
                 HttpResponseStatus status;
-                if(HttpStatusClass.UNKNOWN.equals(HttpStatusClass.valueOf(whitelistResponseCode))) {
-                    status = new HttpResponseStatus(whitelistResponseCode, BlacklistFilter.BLOCKED_PHRASE);
+                if(HttpStatusClass.UNKNOWN.equals(HttpStatusClass.valueOf(allowlistResponseCode))) {
+                    status = new HttpResponseStatus(allowlistResponseCode, BlocklistFilter.BLOCKED_PHRASE);
                 } else {
-                    status = HttpResponseStatus.valueOf(whitelistResponseCode);
+                    status = HttpResponseStatus.valueOf(allowlistResponseCode);
                 }
                 HttpResponse resp = new DefaultFullHttpResponse(httpRequest.protocolVersion(), status);
                 HttpUtil.setContentLength(resp, 0L);

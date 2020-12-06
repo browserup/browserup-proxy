@@ -246,64 +246,64 @@ public class ProxyResource {
     }
 
     @Get
-    @At("/:port/blacklist")
-    public Reply<?> getBlacklist(@Named("port") int port, Request request) {
-        LOG.info("GET /" + port + "/blacklist");
+    @At("/:port/blocklist")
+    public Reply<?> getBlocklist(@Named("port") int port, Request request) {
+        LOG.info("GET /" + port + "/blocklist");
         MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
 
-        return Reply.with(proxy.getBlacklist()).as(Json.class);
+        return Reply.with(proxy.getBlocklist()).as(Json.class);
     }
 
     @Put
-    @At("/:port/blacklist")
-    public Reply<?> blacklist(@Named("port") int port, Request request) {
-        LOG.info("PUT /" + port + "/blacklist");
+    @At("/:port/blocklist")
+    public Reply<?> blocklist(@Named("port") int port, Request request) {
+        LOG.info("PUT /" + port + "/blocklist");
         LOG.info(request.params().toString());
         MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
 
-        String blacklist = request.param("regex");
+        String blocklist = request.param("regex");
         int responseCode = parseResponseCode(request.param("status"));
         String method = request.param("method");
-        proxy.blacklistRequests(blacklist, responseCode, method);
+        proxy.blocklistRequests(blocklist, responseCode, method);
 
         return Reply.saying().ok();
     }
 
     @Delete
-    @At("/:port/blacklist")
-    public Reply<?> clearBlacklist(@Named("port") int port, Request request) {
-        LOG.info("DELETE /" + port + "/blacklist");
+    @At("/:port/blocklist")
+    public Reply<?> clearBlocklist(@Named("port") int port, Request request) {
+        LOG.info("DELETE /" + port + "/blocklist");
         MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
 
-        proxy.clearBlacklist();
+        proxy.clearBlocklist();
         return Reply.saying().ok();
     }
 
     @Get
-    @At("/:port/whitelist")
-    public Reply<?> getWhitelist(@Named("port") int port, Request request) {
-        LOG.info("GET /" + port + "/whitelist");
+    @At("/:port/allowlist")
+    public Reply<?> getAllowlist(@Named("port") int port, Request request) {
+        LOG.info("GET /" + port + "/allowlist");
         MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
 
-        return Reply.with(proxy.getWhitelistUrls()).as(Json.class);
+        return Reply.with(proxy.getAllowlistUrls()).as(Json.class);
     }
 
     @Put
-    @At("/:port/whitelist")
-    public Reply<?> whitelist(@Named("port") int port, Request request) {
-        LOG.info("PUT /" + port + "/whitelist");
+    @At("/:port/allowlist")
+    public Reply<?> allowlist(@Named("port") int port, Request request) {
+        LOG.info("PUT /" + port + "/allowlist");
         LOG.info(request.params().toString());
         MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
@@ -312,21 +312,21 @@ public class ProxyResource {
 
         String regex = request.param("regex");
         int responseCode = parseResponseCode(request.param("status"));
-        proxy.whitelistRequests(Arrays.asList(regex.split(",")), responseCode);
+        proxy.allowlistRequests(Arrays.asList(regex.split(",")), responseCode);
 
         return Reply.saying().ok();
     }
 
     @Delete
-    @At("/:port/whitelist")
-    public Reply<?> clearWhitelist(@Named("port") int port, Request request) {
-        LOG.info("DELETE /" + port + "/whitelist");
+    @At("/:port/allowlist")
+    public Reply<?> clearAllowlist(@Named("port") int port, Request request) {
+        LOG.info("DELETE /" + port + "/allowlist");
         MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
 
-        proxy.disableWhitelist();
+        proxy.disableAllowlist();
         return Reply.saying().ok();
     }
 
