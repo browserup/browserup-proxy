@@ -85,7 +85,7 @@ mainClassName = 'com.browserup.bup.proxy.Main'
 
 distributions {
     main {
-        distributionBaseName = 'browserup-proxy'
+        baseName = 'browserup-proxy'
         contents {
             from '../LICENSE'
             from '../README.md'
@@ -95,4 +95,3 @@ distributions {
         }
     }
 }
-
