@@ -8,6 +8,7 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.Payload;
 
+import com.browserup.bup.rest.validation.util.MessageSanitizer;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,9 @@ public @interface NotBlankConstraint {
       if (value != null && StringUtils.isNotEmpty(String.valueOf(value))) {
         return true;
       }
-      String errorMessage = String.format("Expected not empty value, got '%s'", value);
+
+      String escapedValue = MessageSanitizer.escape(value.toString());
+      String errorMessage = String.format("Expected not empty value, got '%s'", escapedValue);
       LOG.warn(errorMessage);
 
       context.buildConstraintViolationWithTemplate(errorMessage).addConstraintViolation();

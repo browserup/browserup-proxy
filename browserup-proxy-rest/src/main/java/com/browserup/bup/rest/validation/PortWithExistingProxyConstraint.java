@@ -11,6 +11,7 @@ import javax.ws.rs.core.Context;
 
 import com.browserup.bup.proxy.ProxyManager;
 
+import com.browserup.bup.rest.validation.util.MessageSanitizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +48,8 @@ public @interface PortWithExistingProxyConstraint {
         return true;
       }
 
-      String errorMessage = String.format("No proxy server found for specified port %d", value);
+      String escapedValue = MessageSanitizer.escape(value.toString());
+      String errorMessage = String.format("No proxy server found for specified port %d", escapedValue);
       LOG.warn(errorMessage);
 
       context.buildConstraintViolationWithTemplate(errorMessage).addPropertyNode(PARAM_NAME).addConstraintViolation();
