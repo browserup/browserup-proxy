@@ -5,11 +5,11 @@ import com.browserup.harreader.filter.HarEntriesUrlPatternFilter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -26,8 +26,8 @@ public class HarLog {
     private String version = DEFAULT_VERSION;
     private HarCreatorBrowser creator;
     private HarCreatorBrowser browser;
-    private List<HarPage> pages = new ArrayList<>();
-    private List<HarEntry> entries = new ArrayList<>();
+    private List<HarPage> pages = new CopyOnWriteArrayList<>();
+    private List<HarEntry> entries = new CopyOnWriteArrayList<>();
     private String comment;
 
     /**
@@ -75,7 +75,7 @@ public class HarLog {
      */
     public List<HarPage> getPages() {
         if (pages == null) {
-            pages = new ArrayList<>();
+            pages = new CopyOnWriteArrayList<>();
         }
         return pages;
     }
@@ -89,7 +89,7 @@ public class HarLog {
      */
     public List<HarEntry> getEntries() {
         if (entries == null) {
-            entries = new ArrayList<>();
+            entries = new CopyOnWriteArrayList<>();
         }
         return entries;
     }
