@@ -9,6 +9,7 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.Payload;
 
+import com.browserup.bup.rest.validation.util.MessageSanitizer;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +43,8 @@ public @interface PatternConstraint {
         Pattern.compile(value);
         return true;
       } catch (Exception ex) {
-        String errorMessage = String.format("URL parameter '%s' is not a valid regexp", value);
+        String escapedValue = MessageSanitizer.escape(value);
+        String errorMessage = String.format("URL parameter '%s' is not a valid regexp", escapedValue);
         LOG.warn(errorMessage);
 
         context.buildConstraintViolationWithTemplate(errorMessage).addConstraintViolation();

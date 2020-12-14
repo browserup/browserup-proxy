@@ -8,6 +8,7 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.Payload;
 
+import com.browserup.bup.rest.validation.util.MessageSanitizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,12 +42,14 @@ public @interface LongPositiveConstraint {
         longValue = Long.parseLong(value);
       } catch (NumberFormatException ex) {
         failed = true;
-        errorMessage = String.format("Invalid integer value: '%s'", value);
+        String escapedValue = MessageSanitizer.escape(value);
+        errorMessage = String.format("Invalid integer value: '%s'", escapedValue);
       }
 
       if (!failed && longValue < 0) {
         failed = true;
-        errorMessage = String.format("Expected positive integer value, got: '%s'", value);
+        String escapedValue = MessageSanitizer.escape(value);
+        errorMessage = String.format("Expected positive integer value, got: '%s'", escapedValue);
       }
 
       if (!failed) {
