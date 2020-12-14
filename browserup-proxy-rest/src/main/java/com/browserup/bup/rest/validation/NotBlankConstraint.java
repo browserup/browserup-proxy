@@ -38,7 +38,7 @@ public @interface NotBlankConstraint {
         return true;
       }
 
-      String escapedValue = MessageSanitizer.escape(value.toString());
+      String escapedValue = MessageSanitizer.escape(value == null ? null : value.toString());
       String errorMessage = String.format("Expected not empty value, got '%s'", escapedValue);
       LOG.warn(errorMessage);
 

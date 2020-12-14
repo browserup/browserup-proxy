@@ -49,7 +49,7 @@ public @interface PortWithExistingProxyConstraint {
       }
 
       String escapedValue = MessageSanitizer.escape(value.toString());
-      String errorMessage = String.format("No proxy server found for specified port %d", escapedValue);
+      String errorMessage = String.format("No proxy server found for specified port %s", escapedValue);
       LOG.warn(errorMessage);
 
       context.buildConstraintViolationWithTemplate(errorMessage).addPropertyNode(PARAM_NAME).addConstraintViolation();
