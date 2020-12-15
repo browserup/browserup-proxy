@@ -1,10 +1,9 @@
 package com.browserup.bup.rest.resource.entries;
 
-import com.browserup.bup.BrowserUpProxyServer;
 import com.browserup.bup.MitmProxyServer;
 import com.browserup.bup.assertion.model.AssertionResult;
 import com.browserup.bup.proxy.MitmProxyManager;
-import com.browserup.bup.rest.swagger.DocConstants;
+import com.browserup.bup.rest.openapi.DocConstants;
 import com.browserup.bup.rest.validation.HttpStatusCodeConstraint;
 import com.browserup.bup.rest.validation.LongPositiveConstraint;
 import com.browserup.bup.rest.validation.NotBlankConstraint;

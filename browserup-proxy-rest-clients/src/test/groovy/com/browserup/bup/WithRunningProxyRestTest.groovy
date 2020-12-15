@@ -4,14 +4,16 @@
 
 package com.browserup.bup
 
-import com.browserup.bup.BrowserUpProxyServer
-import com.browserup.bup.proxy.ProxyManager
+/*
+ * Modifications Copyright (c) 2019 BrowserUp, Inc.
+ */
+
+import com.browserup.bup.MitmProxyServer
+import com.browserup.bup.proxy.MitmProxyManager
 import com.browserup.bup.proxy.bricks.ProxyResource
 import com.browserup.bup.proxy.guice.ConfigModule
 import com.browserup.bup.proxy.guice.JettyModule
 import com.browserup.bup.util.BrowserUpProxyUtil
-import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import com.github.tomakehurst.wiremock.junit.WireMockRule
 import com.google.inject.Guice
 import com.google.inject.Injector
@@ -24,7 +26,6 @@ import org.awaitility.Awaitility
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.junit.After
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
 import org.slf4j.Logger
@@ -33,11 +34,15 @@ import org.slf4j.LoggerFactory
 import javax.servlet.ServletContextEvent
 import java.util.concurrent.TimeUnit
 
-abstract class WithRunningProxyRestTest {
-    private static final Logger LOG = LoggerFactory.getLogger(WithRunningProxyRestTest)
+import static com.github.tomakehurst.wiremock.client.WireMock.*
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
+import static org.junit.Assert.assertEquals
 
-    protected ProxyManager proxyManager
-    protected BrowserUpProxyServer proxy
+abstract class WithRunningProxyRestTest {
+    private static final Logger LOG = LoggerFactory.getLogger(MitmProxyManager)
+
+    protected MitmProxyManager proxyManager
+    protected MitmProxyServer proxy
     protected Server restServer
 
     protected String[] getArgs() {
@@ -54,7 +59,7 @@ abstract class WithRunningProxyRestTest {
     protected int mockServerHttpsPort
 
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(WireMockConfiguration.options().port(0).httpsPort(0))
+    public WireMockRule wireMockRule = new WireMockRule(options().port(0).httpsPort(0))
 
     @Before
     void setUp() throws Exception {
@@ -65,7 +70,7 @@ abstract class WithRunningProxyRestTest {
             }
         })
 
-        proxyManager = injector.getInstance(ProxyManager)
+        proxyManager = injector.getInstance(MitmProxyManager)
 
         LOG.debug("Starting BrowserUp Proxy version " + BrowserUpProxyUtil.versionString)
 
@@ -130,10 +135,10 @@ abstract class WithRunningProxyRestTest {
         targetServerClient.request(Method.GET, ContentType.TEXT_PLAIN) { req ->
             uri.path = "/${url}"
             response.success = { _, reader ->
-                Assert.assertEquals(expectedResponse, reader.text)
+                assertEquals(expectedResponse, reader.text)
             }
             response.failure = { _, reader ->
-                Assert.assertEquals(expectedResponse, reader.text)
+                assertEquals(expectedResponse, reader.text)
             }
         }
     }
@@ -178,10 +183,10 @@ abstract class WithRunningProxyRestTest {
     }
 
     protected void mockTargetServerResponse(String url, String responseBody, int delayMilliseconds=0) {
-        def response = WireMock.aResponse().withStatus(200)
+        def response = aResponse().withStatus(200)
                 .withBody(responseBody)
                 .withHeader('Content-Type', 'text/plain')
                 .withFixedDelay(delayMilliseconds)
-        WireMock.stubFor(WireMock.get(WireMock.urlEqualTo("/${url}")).willReturn(response))
+        stubFor(get(urlEqualTo("/${url}")).willReturn(response))
     }
 }

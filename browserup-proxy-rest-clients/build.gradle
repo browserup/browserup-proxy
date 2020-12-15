@@ -5,8 +5,12 @@
 plugins {
     id 'java-library'
     id 'groovy'
-    id "io.swagger.core.v3.swagger-gradle-plugin" version "2.1.1"
-    id 'org.openapi.generator' version '4.2.3'
+    id "io.swagger.core.v3.swagger-gradle-plugin" version "2.1.6"
+    id 'org.openapi.generator' version '4.3.1'
+}
+
+ext {
+    jerseyVersion = '2.32'
 }
 
 resolve {
@@ -66,7 +70,7 @@ def clients = [
 clients.each { client ->
     def lang = client.language
     def postProcessor = client.postProcessor
-    
+
     task "openApiGenerate${lang}Client"(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
         def language = lang.toLowerCase()
         generatorName = language
@@ -113,6 +117,11 @@ archivesBaseName = 'browserup-proxy-rest-clients'
 dependencies {
     implementation project(':browserup-proxy-core')
     implementation project(':browserup-proxy-rest')
+
+    testImplementation "org.glassfish.jersey.containers:jersey-container-servlet-core:${jerseyVersion}"
+    testImplementation "org.glassfish.jersey.media:jersey-media-json-jackson:${jerseyVersion}"
+    testImplementation "org.glassfish.jersey.inject:jersey-hk2:${jerseyVersion}"
+    testImplementation "org.glassfish.jersey.ext:jersey-bean-validation:${jerseyVersion}"
 
     testImplementation project(':browserup-proxy-mitm')
 
