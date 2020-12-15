@@ -1,0 +1,152 @@
+/*
+ * Modifications Copyright (c) 2019 BrowserUp, Inc.
+ */
+
+plugins {
+    id 'java-library'
+    id 'groovy'
+    id "io.swagger.core.v3.swagger-gradle-plugin" version "2.1.6"
+    id 'org.openapi.generator' version '4.3.1'
+}
+
+ext {
+    jerseyVersion = '2.32'
+}
+
+resolve {
+    outputFileName = 'openapi'
+    outputFormat = 'YAML'
+    prettyPrint = 'TRUE'
+    openApiFile = file("src/main/resources/openapi-config.json")
+    classpath = sourceSets.main.runtimeClasspath
+    readerClass = "com.browserup.bup.rest.openapi.CustomOpenApiReader"
+    resourcePackages = ['com.browserup.bup.rest.resource']
+    outputPath = "$buildDir/openapi"
+}
+
+class Constants {
+    static String apiPackage = 'browserup'
+    static String modelPackage = 'browserup.model'
+}
+
+/*
+  https://github.com/OpenAPITools/openapi-generator/issues/3285
+ */
+class PythonClientPostProcessor {
+    String projectDir
+
+    void process() {
+        def clientDir = new File("$projectDir/build/openapi-clients/python")
+        clientDir.eachFileRecurse {
+            if (it.name.endsWith(".py")) {
+                processInitFile(it)
+            }
+        }
+        new File("${clientDir}/openapi_client/${Constants.apiPackage}/model/__init__.py") <<
+                new File("${clientDir}/openapi_client/${Constants.modelPackage}/__init__.py").text
+    }
+
+    private static void processInitFile(File initFile) {
+        initFile.text = initFile.text.replaceAll(
+                ~/(from ${Constants.apiPackage}.default_api import)/,
+                "from openapi_client.${Constants.apiPackage}.default_api import"
+        )
+    }
+}
+
+class ClientInfo {
+    String language
+    Closure postProcessor
+}
+
+def clients = [
+        new ClientInfo(language: 'JavaScript'),
+        new ClientInfo(language: 'Ruby'),
+        new ClientInfo(
+                language: 'Python',
+                postProcessor:  new PythonClientPostProcessor(projectDir: projectDir).&process)
+] as ClientInfo[]
+
+clients.each { client ->
+    def lang = client.language
+    def postProcessor = client.postProcessor
+
+    task "openApiGenerate${lang}Client"(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+        def language = lang.toLowerCase()
+        generatorName = language
+        inputSpec = "$buildDir/openapi/openapi.yaml".toString()
+        outputDir = "$buildDir/openapi-clients/$language/".toString()
+        apiPackage = Constants.apiPackage
+        modelPackage = Constants.modelPackage
+        invokerPackage = "browserup.invoker"
+        systemProperties = [
+                modelDocs: 'false'
+        ]
+        skipValidateSpec = true
+        logToStderr = true
+        generateAliasAsModel = false
+    }
+    if (postProcessor) tasks.getByName("openApiGenerate${lang}Client").doLast(postProcessor)
+}
+
+test {
+    testLogging.showStandardStreams = true
+}
+
+task openApiGenerateClients(dependsOn: resolve) {
+    clients.each { c ->
+        dependsOn "openApiGenerate${c.language}Client"
+    }
+
+    doLast {
+        clients.each { client ->
+            def langName = client.language.toLowerCase()
+            delete "src/test/${langName}/client"
+            copy {
+                from "$buildDir/openapi-clients/${langName}/"
+                into "src/test/${langName}/client"
+            }
+        }
+
+        project.delete "$buildDir/openapi-clients"
+    }
+}
+
+archivesBaseName = 'browserup-proxy-rest-clients'
+
+dependencies {
+    implementation project(':browserup-proxy-core')
+    implementation project(':browserup-proxy-rest')
+
+    testImplementation "org.glassfish.jersey.containers:jersey-container-servlet-core:${jerseyVersion}"
+    testImplementation "org.glassfish.jersey.media:jersey-media-json-jackson:${jerseyVersion}"
+    testImplementation "org.glassfish.jersey.inject:jersey-hk2:${jerseyVersion}"
+    testImplementation "org.glassfish.jersey.ext:jersey-bean-validation:${jerseyVersion}"
+
+    testImplementation project(':browserup-proxy-mitm')
+
+    testImplementation "com.google.inject:guice:$guiceVersion"
+    testImplementation "com.google.inject.extensions:guice-servlet:$guiceVersion"
+    testImplementation "com.google.inject.extensions:guice-multibindings:$guiceVersion"
+
+    testImplementation 'com.google.sitebricks:sitebricks:0.8.11'
+
+    testImplementation 'junit:junit:4.12'
+    testImplementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
+    testImplementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
+    testImplementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
+    testImplementation 'org.codehaus.groovy:groovy-all:2.5.7'
+    testImplementation 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.2'
+    testImplementation 'org.hamcrest:hamcrest:2.1'
+    testImplementation 'org.hamcrest:hamcrest-library:2.1'
+    testImplementation 'org.mockito:mockito-core:3.0.0'
+    testImplementation 'org.seleniumhq.selenium:selenium-api:3.4.0'
+    testImplementation 'org.awaitility:awaitility:3.1.6'
+    testImplementation 'xyz.rogfam:littleproxy:2.0.0-beta-3'
+    testImplementation 'com.github.tomakehurst:wiremock-jre8:2.24.0'
+    testImplementation 'org.testcontainers:testcontainers:1.12.0'
+}
+
+openApiGenerateClients.mustRunAfter(resolve)
+
+test.dependsOn(openApiGenerateClients)

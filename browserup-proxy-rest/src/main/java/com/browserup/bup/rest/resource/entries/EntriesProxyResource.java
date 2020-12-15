@@ -1,10 +1,9 @@
 package com.browserup.bup.rest.resource.entries;
 
-import com.browserup.bup.BrowserUpProxyServer;
 import com.browserup.bup.MitmProxyServer;
 import com.browserup.bup.assertion.model.AssertionResult;
 import com.browserup.bup.proxy.MitmProxyManager;
-import com.browserup.bup.rest.swagger.DocConstants;
+import com.browserup.bup.rest.openapi.DocConstants;
 import com.browserup.bup.rest.validation.HttpStatusCodeConstraint;
 import com.browserup.bup.rest.validation.LongPositiveConstraint;
 import com.browserup.bup.rest.validation.NotBlankConstraint;
@@ -13,9 +12,11 @@ import com.browserup.bup.rest.validation.PatternConstraint;
 import com.browserup.bup.rest.validation.PortWithExistingProxyConstraint;
 import com.browserup.bup.util.HttpStatusClass;
 import com.browserup.harreader.model.HarEntry;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -33,8 +34,13 @@ import javax.ws.rs.core.Response;
 import java.util.Collection;
 import java.util.regex.Pattern;
 
-import static com.browserup.bup.rest.swagger.DocConstants.*;
+import static com.browserup.bup.rest.openapi.DocConstants.*;
 
+@OpenAPIDefinition(
+        info = @Info(
+                version = ""
+        )
+)
 @Path("/proxy/{port}/har/entries")
 public class EntriesProxyResource {
     private static final String URL_PATTERN = "urlPattern";

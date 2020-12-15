@@ -106,3 +106,15 @@ dependencies {
     testImplementation 'org.awaitility:awaitility:4.0.2'
     testImplementation 'com.github.tomakehurst:wiremock-jre8:2.24.1'
 }
+
+task createVersionProperties() {
+    doLast {
+        new File("$buildDir/resources/main/browserup-proxy-rest-version.properties").withWriter { w ->
+            Properties p = new Properties()
+            p['version'] = project.version.toString()
+            p.store w, null
+        }
+    }
+}
+
+build.finalizedBy(createVersionProperties)

@@ -33,18 +33,18 @@ import org.glassfish.jersey.servlet.ServletContainer;
 import javax.servlet.DispatcherType;
 
 public class JettyServerProvider implements Provider<Server> {
-    public static final String SWAGGER_CONFIG_NAME = "swagger-config.yaml";
-    public static final String SWAGGER_PACKAGE = "com.browserup.bup.rest.resource";
+    public static final String OPENAPI_CONFIG_YAML = "openapi-config.yaml";
+    public static final String OPENAPI_PACKAGE = "com.browserup.bup.rest.resource";
 
     private Server server;
 
     @Inject
     public JettyServerProvider(@Named("port") int port, @Named("address") String address, MitmProxyManager proxyManager) throws UnknownHostException {
         OpenApiResource openApiResource = new OpenApiResource();
-        openApiResource.setConfigLocation(SWAGGER_CONFIG_NAME);
+        openApiResource.setConfigLocation(OPENAPI_CONFIG_YAML);
 
         ResourceConfig resourceConfig = new ResourceConfig();
-        resourceConfig.packages(SWAGGER_PACKAGE);
+        resourceConfig.packages(OPENAPI_PACKAGE);
         resourceConfig.register(openApiResource);
         resourceConfig.register(proxyManagerToHkBinder(proxyManager));
         resourceConfig.register(JacksonFeature.class);
