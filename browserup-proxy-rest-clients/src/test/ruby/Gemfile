@@ -1,9 +1,10 @@
 source 'https://rubygems.org'
 
 group :development, :test do
-  gem 'rake', '~> 12.0.0'
+  gem 'rake', '~> 13.0.1'
   gem 'pry-byebug'
-  gem 'rspec'
-  gem 'rubocop', '~> 0.66.0'
+  gem 'json', '~> 2.4.0'
+  gem 'rspec', '~> 3.10'
+  gem 'rubocop', '~> 1.6.1'
   gem 'openapi_client', '~> 1.0.0'
 end
