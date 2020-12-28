@@ -122,6 +122,7 @@ public interface BrowserUpProxy {
     }
 
     /**
+     * @param cleanHar reset/clear the in-memory har
      * If cleanHar is false - returns current HAR.
      * If cleanHar is true - cleans current HAR and returns HAR with data it has before cleaning.
      *
