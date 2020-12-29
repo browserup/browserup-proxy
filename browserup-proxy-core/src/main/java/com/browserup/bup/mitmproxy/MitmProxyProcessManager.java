@@ -122,6 +122,7 @@ public class MitmProxyProcessManager {
 
     if (startedProcess != null) {
       Process process = startedProcess.getProcess();
+      process.children().forEach(ProcessHandle::destroy);
       process.destroy();
       Awaitility.await().atMost(10, TimeUnit.SECONDS).until(() -> !process.isAlive());
     }

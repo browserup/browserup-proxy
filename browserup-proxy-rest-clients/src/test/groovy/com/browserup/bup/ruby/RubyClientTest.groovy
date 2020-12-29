@@ -58,13 +58,16 @@ class RubyClientTest extends WithRunningProxyRestTest {
         container = new GenericContainer(
                 new ImageFromDockerfile()
                         .withDockerfile(Paths.get(dockerfile.path)))
-                        .withEnv('PROXY_REST_HOST', 'host.testcontainers.internal')
-                        .withEnv('PROXY_REST_PORT', restServer.connectors[0].localPort as String)
-                        .withEnv('PROXY_PORT', proxy.port as String)
+                .withEnv('PROXY_REST_HOST', 'host.testcontainers.internal')
+                .withEnv('PROXY_REST_PORT', restServer.connectors[0].localPort as String)
+                .withEnv('PROXY_PORT', proxy.port as String)
 
         container.start()
+        container.followOutput({
+            LOG.debug('Container log: ' + it.utf8String)
+        })
 
-        Awaitility.await().atMost(10, TimeUnit.SECONDS).until({-> !container.isRunning()})
+        Awaitility.await().atMost(10, TimeUnit.SECONDS).until({ -> !container.isRunning() })
 
         LOG.info('Docker log: ' + container.getLogs())
 

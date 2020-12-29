@@ -141,12 +141,16 @@ class HttpConnectCaptureAddOn:
 
         self.har_dump_addon.populate_har_entry_with_default_response(flow)
 
-        if 'Name or service not known' in str(original_error):
+        if self.is_dns_resolution_error(str(original_error)):
             self.proxy_to_server_resolution_failed(flow, req_host_port, original_error)
         elif isinstance(original_error, TcpTimeout):
             self.server_to_proxy_response_timed_out(flow, req_host_port, original_error)
         else:
             self.proxy_to_server_connection_failed(flow, original_error)
+
+    def is_dns_resolution_error(self, error_msg):
+        return 'getaddrinfo failed' in error_msg \
+               or 'Name or service not known' in error_msg
 
     # Populate data
 

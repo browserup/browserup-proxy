@@ -14,6 +14,8 @@ RUN gem install ./openapi_client-1.0.0.gem
 COPY . /ruby/
 WORKDIR /ruby/
 
+RUN gem install bundler
+RUN bundle update --bundler
 RUN bundle config --delete frozen
 RUN bundle install
 
