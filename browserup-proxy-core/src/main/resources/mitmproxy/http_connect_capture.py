@@ -140,7 +140,7 @@ class HttpConnectCaptureAddOn:
         original_error = HttpConnectCaptureAddOn.get_original_exception(flow.error)
 
         self.har_dump_addon.populate_har_entry_with_default_response(flow)
-
+        ctx.log.info("Error hook called: " + str(original_error))
         if self.is_dns_resolution_error(str(original_error)):
             self.proxy_to_server_resolution_failed(flow, req_host_port, original_error)
         elif isinstance(original_error, TcpTimeout):
