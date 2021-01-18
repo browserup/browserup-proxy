@@ -95,7 +95,7 @@ dependencies {
     testImplementation 'org.hamcrest:hamcrest:2.2'
     testImplementation 'org.hamcrest:hamcrest-library:2.2'
     testImplementation 'com.github.tomakehurst:wiremock-jre8:2.26.3'
-    testImplementation 'org.mockito:mockito-core:3.6.28'
+    testImplementation 'org.mockito:mockito-core:3.7.7'
     testImplementation 'org.seleniumhq.selenium:selenium-firefox-driver:3.141.59'
     testImplementation 'org.apache.httpcomponents:httpclient:4.5.13'
 }
