@@ -2,8 +2,10 @@ package com.browserup.bup.mitmproxy;
 
 import com.browserup.bup.mitmproxy.addons.*;
 import com.browserup.bup.mitmproxy.management.*;
+import org.apache.commons.lang3.SystemUtils;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -11,9 +13,6 @@ import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
-import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -23,6 +22,9 @@ import java.util.concurrent.TimeUnit;
 
 public class MitmProxyProcessManager {
   private static final Logger LOGGER = LoggerFactory.getLogger(MitmProxyProcessManager.class);
+  private static final String MITMPROXY_BINARY_PATH_PROPERTY = "MITMPROXY_BINARY_PATH";
+  private static final String MITMPROXY_HOME_PATH = System.getProperty("user.home") + "/.browserup-mitmproxy";
+  private static final String MITMPROXY_DEFAULT_BINARY_PATH = MITMPROXY_HOME_PATH + "/" + getMitmproxyBinaryFileName();
 
   public enum MitmProxyLoggingLevel {
     error,
@@ -65,6 +67,10 @@ public class MitmProxyProcessManager {
   private MitmProxyLoggingLevel mitmProxyLoggingLevel = MitmProxyLoggingLevel.info;
 
   private StringBuilder proxyLog = new StringBuilder();
+
+  private static String getMitmproxyBinaryFileName() {
+    return SystemUtils.IS_OS_WINDOWS ? "mitmdump.exe" : "mitmdump";
+  }
 
   public void start(int port) {
     start(port == 0 ? NetworkUtils.getFreePort() : port, defaultAddons());
@@ -170,20 +176,7 @@ public class MitmProxyProcessManager {
   }
 
   private void startProxy(int port, List<AbstractAddon> addons) {
-    List<String> command = new ArrayList<String>() {{
-      add("mitmdump");
-      add("-p");
-      add(String.valueOf(port));
-      add("--set");
-      add("flow_detail=3");
-    }};
-    if (trustAll) {
-      command.add("--ssl-insecure");
-    }
-
-    updateCommandWithUpstreamProxy(command);
-    updateCommandWithLogLevel(command);
-    updateCommandWithAddOns(addons, command);
+    List<String> command = createCommand(port, addons);
 
     LOGGER.info("Starting proxy using command: " + String.join(" ", command));
 
@@ -193,6 +186,10 @@ public class MitmProxyProcessManager {
     } catch (Exception ex) {
       throw new RuntimeException("Couldn't start mitmproxy process", ex);
     }
+    waitForReady();
+  }
+
+  private void waitForReady() {
     try {
       Awaitility.await()
               .atMost(5, TimeUnit.SECONDS)
@@ -200,6 +197,33 @@ public class MitmProxyProcessManager {
     } catch (ConditionTimeoutException ex) {
       handleHealthCheckFailure();
     }
+  }
+
+  @NotNull
+  private ArrayList<String> createCommand(int port, List<AbstractAddon> addons) {
+    ArrayList<String> command = new ArrayList<String>() {{
+      add(getMitmproxyBinaryPath());
+      add("-p");
+      add(String.valueOf(port));
+      add("--set");
+      add("confdir=" + MITMPROXY_HOME_PATH);
+    }};
+    if (trustAll) {
+      command.add("--ssl-insecure");
+    }
+
+    updateCommandWithUpstreamProxy(command);
+    updateCommandWithLogLevel(command);
+    updateCommandWithAddOns(addons, command);
+    return command;
+  }
+
+  private String getMitmproxyBinaryPath() {
+    String mitmproxyBinaryPathProperty = System.getProperty(MITMPROXY_BINARY_PATH_PROPERTY);
+    if (mitmproxyBinaryPathProperty != null) {
+      return mitmproxyBinaryPathProperty + "/" + getMitmproxyBinaryFileName();
+    }
+    return MITMPROXY_DEFAULT_BINARY_PATH;
   }
 
   private void handleHealthCheckFailure() {
@@ -251,8 +275,13 @@ public class MitmProxyProcessManager {
   }
 
   private void updateCommandWithLogLevel(List<String> command) {
+    MitmProxyLoggingLevel logLevel = getMitmProxyLoggingLevel();
     command.add("--set");
-    command.add("termlog_verbosity=" + getMitmProxyLoggingLevel());
+    command.add("termlog_verbosity=" + logLevel);
+    if (logLevel.equals(MitmProxyLoggingLevel.debug)) {
+      command.add("--set");
+      command.add("flow_detail=3");
+    }
   }
 
   private void updateCommandWithUpstreamProxy(List<String> command) {

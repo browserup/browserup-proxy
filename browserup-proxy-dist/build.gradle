@@ -6,6 +6,10 @@ plugins {
     id 'application'
 }
 
+application {
+    applicationDefaultJvmArgs = ['-DMITMPROXY_BINARY_PATH=mitmproxy/']
+}
+
 uploadArchives {
     repositories {
         mavenDeployer {
@@ -83,6 +87,36 @@ dependencies {
 applicationName = 'browserup-proxy'
 mainClassName = 'com.browserup.bup.proxy.Main'
 
+def mitmproxyLinuxURL = 'https://mitmproxy-linux.s3.us-east-2.amazonaws.com/mitmdump'.toURL()
+def mitmproxyWindowsURL = 'https://mitmproxy-windows.s3.us-east-2.amazonaws.com/mitmdump.exe'.toURL()
+
+static void downloadFile(URL srcUrl, File dstFile) {
+    dstFile.withOutputStream { out ->
+        srcUrl.withInputStream { from ->
+            out << from
+        }
+    }
+}
+
+task downloadMitmproxyBinaries {
+    File mitmproxyDir = file("$buildDir/mitmproxy")
+    outputs.dir mitmproxyDir
+    doLast {
+        mitmproxyDir.mkdirs()
+        println("Downloading mitmproxy dependencies...")
+        def linuxBinaryFile = file("$buildDir/mitmproxy/mitmdump")
+        def windowsBinaryFile = file("$buildDir/mitmproxy/mitmdump.exe")
+        downloadFile(mitmproxyLinuxURL, linuxBinaryFile)
+        downloadFile(mitmproxyWindowsURL, windowsBinaryFile)
+        project.exec {
+            commandLine('chmod', '+x', linuxBinaryFile.absolutePath)
+            commandLine('chmod', '+x', windowsBinaryFile.absolutePath)
+        }
+        println("Downloaded mitmproxy dependencies.")
+        mitmproxyDir
+    }
+}
+
 distributions {
     main {
         baseName = 'browserup-proxy'
@@ -91,6 +125,9 @@ distributions {
             from '../README.md'
             into ('ssl') {
                 from '../browserup-proxy-core/src/main/resources/sslSupport'
+            }
+            from(downloadMitmproxyBinaries) {
+                into 'bin/mitmproxy'
             }
         }
     }
