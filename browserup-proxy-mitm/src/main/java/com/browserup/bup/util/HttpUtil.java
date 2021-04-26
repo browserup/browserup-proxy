@@ -7,6 +7,7 @@ package com.browserup.bup.util;
 import com.google.common.net.HostAndPort;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 
 import java.net.URI;
@@ -42,6 +43,11 @@ public class HttpUtil {
             host = parseHostHeader(httpRequest, false);
         }
 
+        // if there was not a Host header, and the method is CONNECT, use that as the host
+        if (host == null || host.isEmpty()) {
+            host = hostFromConnect(httpRequest, false);
+        }
+
         return host;
     }
 
@@ -53,15 +59,26 @@ public class HttpUtil {
      * @return host and port of the request
      */
     public static String getHostAndPortFromRequest(HttpRequest httpRequest) {
+        String host = null;
         if (startsWithHttpOrHttps(httpRequest.uri())) {
             try {
-                return getHostAndPortFromUri(httpRequest.uri());
+                host = getHostAndPortFromUri(httpRequest.uri());
             } catch (URISyntaxException e) {
                 // the URI could not be parsed, so return the host and port in the Host header
             }
         }
 
-        return parseHostHeader(httpRequest, true);
+        // if there was no host in the URI, attempt to grab the host from the Host header
+        if (host == null || host.isEmpty()) {
+            host = parseHostHeader(httpRequest, true);
+        }
+
+        // if there was not Host header, and the method is CONNECT, use that as the host
+        if (host == null || host.isEmpty()) {
+            host = hostFromConnect(httpRequest, true);
+        }
+
+        return host;
     }
 
     /**
@@ -119,6 +136,26 @@ public class HttpUtil {
                 return hostAndPort;
             } else {
                 HostAndPort parsedHostAndPort = HostAndPort.fromString(hostAndPort);
+                return parsedHostAndPort.getHost();
+            }
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Retrieves the host and, optionally, the port from the specified request's URI if the method is CONNECT.
+     *
+     * @param httpRequest HTTP request
+     * @param includePort when true, include the port
+     * @return the host and, optionally, the port specified in the request's URI
+     */
+    private static String hostFromConnect(HttpRequest httpRequest, boolean includePort) {
+        if (HttpMethod.CONNECT.equals(httpRequest.method())) {
+            if (includePort) {
+                return httpRequest.uri();
+            } else {
+                HostAndPort parsedHostAndPort = HostAndPort.fromString(httpRequest.uri());
                 return parsedHostAndPort.getHost();
             }
         } else {
