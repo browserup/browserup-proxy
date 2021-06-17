@@ -142,7 +142,7 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:3.0.0'
     testImplementation 'org.seleniumhq.selenium:selenium-api:3.4.0'
     testImplementation 'org.awaitility:awaitility:3.1.6'
-    testImplementation 'xyz.rogfam:littleproxy:2.0.0-beta-3'
+    testImplementation 'xyz.rogfam:littleproxy:2.0.4'
     testImplementation 'com.github.tomakehurst:wiremock-jre8:2.24.0'
     testImplementation 'org.testcontainers:testcontainers:1.15.1'
 }
