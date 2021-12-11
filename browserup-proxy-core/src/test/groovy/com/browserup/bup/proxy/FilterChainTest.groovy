@@ -229,6 +229,11 @@ class FilterChainTest extends MockServerTest {
     static class ThrowExceptionFilter implements HttpFilters {
 
         @Override
+        boolean proxyToServerAllowMitm() {
+            throw new RuntimeException("Throwing exception from filter")
+        }
+
+        @Override
         HttpResponse clientToProxyRequest(HttpObject httpObject) {
             throw new RuntimeException("Throwing exception from filter")
         }

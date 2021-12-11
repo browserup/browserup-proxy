@@ -4,26 +4,13 @@
 
 configurations.all {
     resolutionStrategy {
-        // TODO Temporarily forcing guava to version 19 because upstream consumers
-        // do not support above 19, such as apache zookeeper curator framework.
-        // BUT ... Version 22 is needed for BrowserUpProxy, because
-        // it uses org.littleshoot.proxy.impl.ProxyToServerConnection.addressFor
-        // which calls com.google.common.net.HostAndPort.getHost(),
-        // which is not in 19.
-        // https://github.com/lightbody/BrowserMob-proxy/issues/638
-        // https://github.com/lightbody/BrowserMob-proxy/issues/398
-        // .....
-        // UPDATE Jan 21 2019: I'm upgrading to Guava 22, and will sort out upstream Minion
-        // conflicts later. BrowserUpDriver _should_ be allowed to use whatever libs it wants.
-        //resolutionStrategy.force 'com.google.guava:guava:*', 'com.google.guava:guava:22.0'
-        // UPDATE Jan 27, 2019: I forked org.littleshoot.proxy to Browserup and upgraded it to Guava 27.0.1-jre
         resolutionStrategy.force 'com.google.guava:guava:*', "com.google.guava:guava:${guavaVersion}"
     }
 }
 
 ext {
-    jerseyVersion = '2.29'
-    guiceVersion = '4.2.2'
+    jerseyVersion = '2.33'
+    guiceVersion = '5.0.1'
 }
 
 subprojects {
@@ -38,16 +25,16 @@ subprojects {
     sourceCompatibility=1.8
 
     ext {
-        bcpVersion = '1.67'
-        guiceVersion = '4.2.3'
-        jacksonVersion = '2.12.0'
-        javassistVersion = '3.27.0-GA'
-        jettyVersion = '9.4.35.v20201120'
+        bcpVersion = '1.70'
+        guiceVersion = '5.0.1'
+        jacksonVersion = '2.13.0'
+        javassistVersion = '3.28.0-GA'
+        jettyVersion = '9.4.44.v20210927'
         log4jVersion = '2.15.0'
-        nettyVersion = '4.1.55.Final'
-        littleProxyVersion = '2.0.1'
-        slf4jVersion = '1.7.30'
-        guavaVersion = '30.1-jre'
+        nettyVersion = '4.1.71.Final'
+        littleProxyVersion = '2.0.5'
+        slf4jVersion = '1.7.32'
+        guavaVersion = '31.0.1-jre'
     }
 
     repositories {
