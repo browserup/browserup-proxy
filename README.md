@@ -1,3 +1,27 @@
+ANNOUNCEMENT:  
+
+-- The BrowserUp Proxy is now deprecated. --
+
+We have moved our business over to the BrowserUp fork of the mitmproxy. It is available [here](https://github.com/browserup/mitmproxy) 
+
+The reasons:
+
+After multiple tries, we could not make the current architecture support websockets and http/2. without a massive rewrite. HTTP/3 will complicate things even further.
+
+mitm proxy is great
+
+It has HTTP/2 Support
+
+It has Websocket Support
+
+Our fork uses OpenAPI to generate Clients in many languages: Java, Ruby, Python, Javascript
+
+Our fork generates a HAR with websocket and HTTP/2 traffic included
+
+Our fork adds traffic verifications (like assertions) against the HAR
+
+-----------------------------
+
 # BrowserUp Proxy
 
 The BrowserUp Proxy allows you to manipulate HTTP requests and responses, capture HTTP content, and export performance data as a [HAR file](http://www.softwareishard.com/blog/har-12-spec/).
