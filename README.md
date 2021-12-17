@@ -14,7 +14,7 @@ mitm proxy is great! The upstream maintainers are awesome. We have, and hope to 
 
 * It has Websocket Support
 
-* Our fork adds REST API, and uses OpenAPI to generate Clients in many languages: Java, Ruby, Python, Javascript, so you can access the proxy from many languages.
+* Our fork adds a REST API, and uses OpenAPI to generate Clients in many languages: Java, Ruby, Python, Javascript, so you can access the proxy from many languages.
 
 * Our fork generates a HAR with websocket and HTTP/2 traffic included
 
