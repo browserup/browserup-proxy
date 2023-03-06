@@ -163,21 +163,25 @@ public class ProxyResource {
     public Reply<?> newHar(@Named("port") int port, Request request) {
         LOG.info("PUT /" + port + "/har");
         LOG.info(request.params().toString());
-        MitmProxyServer proxy = proxyManager.get(port);
+        final MitmProxyServer proxy = proxyManager.get(port);
         if (proxy == null) {
             return Reply.saying().notFound();
         }
 
-        String initialPageRef = request.param("initialPageRef");
-        String initialPageTitle = request.param("initialPageTitle");
-        Har oldHar = proxy.newHar(initialPageRef, initialPageTitle);
+        final String initialPageRef = request.param("initialPageRef");
+        final String initialPageTitle = request.param("initialPageTitle");
+        final Har oldHar = proxy.newHar(initialPageRef, initialPageTitle);
 
-        String captureHeaders = request.param("captureHeaders");
-        String captureContent = request.param("captureContent");
-        String captureBinaryContent = request.param("captureBinaryContent");
-        Set<CaptureType> captureTypes = new HashSet<CaptureType>();
+        final String captureHeaders = request.param("captureHeaders");
+        final String captureRequestContent = request.param("captureRequestContent");
+        final String captureContent = request.param("captureContent");
+        final String captureBinaryContent = request.param("captureBinaryContent");
+        final Set<CaptureType> captureTypes = new HashSet<CaptureType>();
         if (Boolean.parseBoolean(captureHeaders)) {
             captureTypes.addAll(CaptureType.getHeaderCaptureTypes());
+        }
+        if(Boolean.parseBoolean(captureRequestContent)){
+            captureTypes.addAll(CaptureType.getRequestCaptureTypes());
         }
         if (Boolean.parseBoolean(captureContent)) {
             captureTypes.addAll(CaptureType.getAllContentCaptureTypes());
@@ -187,9 +191,9 @@ public class ProxyResource {
         }
         proxy.setHarCaptureTypes(captureTypes);
 
-        String captureCookies = request.param("captureCookies");
+        final String captureCookies = request.param("captureCookies");
         if (proxy instanceof MitmProxyServer && Boolean.parseBoolean(captureCookies)) {
-            MitmProxyServer MitmProxyServer = (MitmProxyServer) proxy;
+            final MitmProxyServer MitmProxyServer = (MitmProxyServer) proxy;
             MitmProxyServer.enableHarCaptureTypes(CaptureType.getCookieCaptureTypes());
         }
 
