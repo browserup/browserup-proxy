@@ -81,7 +81,7 @@ dependencies {
     implementation 'org.seleniumhq.selenium:selenium-api:3.141.59'
     implementation "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
     implementation "org.slf4j:slf4j-api:${slf4jVersion}"
-    implementation "com.squareup.okhttp3:okhttp:4.9.0"
+    implementation "com.squareup.okhttp3:okhttp:4.9.1"
     implementation 'org.zeroturnaround:zt-exec:1.12'
     testImplementation 'junit:junit:4.13.1'
     testImplementation 'org.codehaus.groovy:groovy-all:3.0.7'
