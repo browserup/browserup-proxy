@@ -10,7 +10,7 @@ plugins {
 }
 
 ext {
-    jerseyVersion = '2.32'
+    jerseyVersion = '3.0.1'
 }
 
 resolve {
