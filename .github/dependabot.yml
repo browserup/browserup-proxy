@@ -1,0 +1,19 @@
+version: 2
+updates:
+- package-ecosystem: gradle
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: org.mockito:mockito-core
+    versions:
+    - 3.7.7
+    - 3.8.0
+  - dependency-name: org.openapi.generator
+    versions:
+    - 5.0.0
+    - 5.0.1
+  - dependency-name: xyz.rogfam:littleproxy
+    versions:
+    - 2.0.2
