@@ -47,7 +47,14 @@ public class AutoBasicAuthFilter extends HttpsAwareFiltersAdapter {
             String hostname = getHost(httpRequest);
 
             // if there is an entry in the credentials map matching this hostname, add the credentials to the request
-            String base64CredentialsForHostname = credentialsByHostname.get(hostname);
+            String base64CredentialsForHostname = null;
+            for (String key : credentialsByHostname.keySet()) {
+                String regex = key.replace("*", ".*?");
+                if (hostname.matches(regex)) {
+                    base64CredentialsForHostname = credentialsByHostname.get(key);
+                }
+            }
+
             if (base64CredentialsForHostname != null) {
                 httpRequest.headers().add(HttpHeaderNames.AUTHORIZATION, "Basic " + base64CredentialsForHostname);
             }
