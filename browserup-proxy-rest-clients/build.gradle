@@ -132,9 +132,12 @@ dependencies {
     testImplementation 'com.google.sitebricks:sitebricks:0.8.11'
 
     testImplementation 'junit:junit:4.12'
-    testImplementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
-    testImplementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
-    testImplementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
+
+    testImplementation platform("org.apache.logging.log4j:log4j-bom:${log4jVersion}")
+    testImplementation 'org.apache.logging.log4j:log4j-api'
+    testImplementation 'org.apache.logging.log4j:log4j-core'
+    testImplementation 'org.apache.logging.log4j:log4j-slf4j-impl'
+
     testImplementation 'org.codehaus.groovy:groovy-all:2.5.7'
     testImplementation 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.2'
     testImplementation 'org.hamcrest:hamcrest:2.1'

@@ -76,9 +76,12 @@ dependencies {
         exclude(module: 'validation-api')
     }
     implementation "io.netty:netty-all:${nettyVersion}"
-    implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
-    implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
-    implementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
+
+    implementation platform("org.apache.logging.log4j:log4j-bom:${log4jVersion}")
+    implementation 'org.apache.logging.log4j:log4j-api'
+    implementation 'org.apache.logging.log4j:log4j-core'
+    implementation 'org.apache.logging.log4j:log4j-slf4j-impl'
+
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
     implementation "org.eclipse.jetty:jetty-servlet:${jettyVersion}"
     implementation "org.javassist:javassist:${javassistVersion}"
