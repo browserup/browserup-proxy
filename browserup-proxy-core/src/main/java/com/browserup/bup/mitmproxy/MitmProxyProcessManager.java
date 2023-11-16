@@ -8,17 +8,18 @@ import org.awaitility.core.ConditionTimeoutException;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.StartedProcess;
-import org.zeroturnaround.exec.stream.LogOutputStream;
-import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class MitmProxyProcessManager {
   private static final Logger LOGGER = LoggerFactory.getLogger(MitmProxyProcessManager.class);
@@ -35,7 +36,7 @@ public class MitmProxyProcessManager {
   }
 
   private final int addonsManagerApiPort = NetworkUtils.getFreePort();
-  private StartedProcess startedProcess = null;
+  private Process startedProcess = null;
 
   private HarCaptureAddOn harCaptureFilterAddOn = new HarCaptureAddOn();
   private ProxyManagerAddOn proxyManagerAddOn = new ProxyManagerAddOn();
@@ -127,10 +128,9 @@ public class MitmProxyProcessManager {
     this.isRunning = false;
 
     if (startedProcess != null) {
-      Process process = startedProcess.getProcess();
       process.children().forEach(ProcessHandle::destroy);
-      process.destroy();
-      Awaitility.await().atMost(10, TimeUnit.SECONDS).until(() -> !process.isAlive());
+      startedProcess.destroy();
+      Awaitility.await().atMost(10, TimeUnit.SECONDS).until(() -> !startedProcess.isAlive());
     }
   }
 
@@ -180,9 +180,24 @@ public class MitmProxyProcessManager {
 
     LOGGER.info("Starting proxy using command: " + String.join(" ", command));
 
-    ProcessExecutor processExecutor = createProcessExecutor(command);
+    String logMessageFormat = "MitmProxy[" + this.proxyPort + "]: {}";
+
     try {
-      startedProcess = processExecutor.start();
+      startedProcess = new ProcessBuilder(command).redirectErrorStream(true).start();
+      new StreamGobbler(startedProcess.getInputStream(), (line) -> {
+        LOGGER.debug(logMessageFormat, line);
+        proxyLog.append(line).append("\n");
+      }, (ioException) -> {
+        LOGGER.error("", ioException);
+      }).start();
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+        try {
+          stop();
+        }
+        catch (Throwable t) {
+          LOGGER.error("Unable to terminate process during process shutdown");
+        }
+      }));
     } catch (Exception ex) {
       throw new RuntimeException("Couldn't start mitmproxy process", ex);
     }
@@ -230,44 +245,28 @@ public class MitmProxyProcessManager {
     LOGGER.error("MitmProxy might not started properly, healthcheck failed for port: " + this.proxyPort);
     if (startedProcess == null) return;
 
-    if (startedProcess.getProcess().isAlive()) {
+    if (startedProcess.isAlive()) {
       LOGGER.error("MitmProxy's healthcheck failed but process is alive, killing mitmproxy process...");
-      startedProcess.getProcess().destroyForcibly();
+      startedProcess.destroyForcibly();
       try {
         Awaitility.await()
                 .atMost(5, TimeUnit.SECONDS)
-                .until(() -> !startedProcess.getProcess().isAlive());
+                .until(() -> !startedProcess.isAlive());
         LOGGER.info("MitmProxy process was killed successfully.");
       } catch (ConditionTimeoutException ex2) {
         LOGGER.error("Didn't manage to kill MitmProxy in time, throwing error");
         throw new RuntimeException("Couldn't kill mitmproxy in time", ex2);
       }
     }
-    if (!startedProcess.getProcess().isAlive() && startedProcess.getProcess().exitValue() > 0) {
+    if (!startedProcess.isAlive() && startedProcess.exitValue() > 0) {
       Throwable cause = null;
       if (proxyLog.toString().contains("Address already in use")) {
         cause = new BindException();
       }
       throw new RuntimeException(
               "Couldn't start mitmproxy process on port: " + this.proxyPort +
-                      ", exit with code: " + startedProcess.getProcess().exitValue(), cause);
+                      ", exit with code: " + startedProcess.exitValue(), cause);
     }
-  }
-
-  private ProcessExecutor createProcessExecutor(List<String> command) {
-    String logPrefix = "MitmProxy[" + this.proxyPort + "]: ";
-
-    return new ProcessExecutor(command)
-            .readOutput(true)
-            .destroyOnExit()
-            .redirectOutput(Slf4jStream.ofCaller().asInfo())
-            .redirectOutput(new LogOutputStream() {
-              @Override
-              protected void processLine(String line) {
-                LOGGER.debug(logPrefix + line);
-                proxyLog.append(line).append("\n");
-              }
-            });
   }
 
   private void updateCommandWithAddOns(List<AbstractAddon> addons, List<String> command) {
@@ -330,5 +329,31 @@ public class MitmProxyProcessManager {
 
   public int getAddonsManagerApiPort() {
     return addonsManagerApiPort;
+  }
+
+  private static class StreamGobbler extends Thread {
+    private final InputStream inputStream;
+    private final Consumer<String> logger;
+    private final Consumer<IOException> errorHandler;
+
+    private StreamGobbler(InputStream inputStream, Consumer<String> logger, Consumer<IOException> errorHandler) {
+      this.inputStream = inputStream;
+      this.logger = logger;
+      this.errorHandler = errorHandler;
+    }
+
+    @Override
+    public void run() {
+      try {
+        InputStreamReader isr = new InputStreamReader(inputStream);
+        BufferedReader br = new BufferedReader(isr);
+        String line;
+        while ((line = br.readLine()) != null)
+          logger.accept(line);
+      }
+      catch (IOException ioException) {
+        errorHandler.accept(ioException);
+      }
+    }
   }
 }
